@@ -1,15 +1,18 @@
 /**
- * Os mapas do Palworld (§3.4 do PROMPT.md).
+ * Os mundos do Palworld (§3.4 do PROMPT.md).
  *
- * O jogo tem mais de um mundo, e eles compartilham a mesma faixa de
- * coordenada de mapa — o que só se descobre pela **altitude**. Uma base na
- * Árvore Mundial e outra em Palpagos podem ter `map_pos` quase idêntico e
- * estar a 60 mil unidades de distância na vertical.
+ * São dois mapas com artes diferentes: Ilhas Palpagos e Árvore Mundial. A
+ * arte veio do PalworldSaveTools (`T_WorldMap` e `T_TreeMap`, 8192² no
+ * original), reduzida para 4096² — o suficiente para continuar nítida no
+ * zoom sem pesar demais na página.
  *
- * ⚠️ Sem separar por altitude, as bases da Árvore Mundial são desenhadas em
- * cima de Palpagos, no lugar errado. Medido em 22/08/2026 no PVE FREE: das
- * 123 bases, **6 estão na Árvore Mundial** — e todas caíam no sudoeste da
- * ilha errada.
+ * ⚠️ **Não se constrói na Árvore Mundial**, então toda base é de Palpagos,
+ * mesmo as que aparecem com altitude altíssima — essas são ilha flutuante ou
+ * pico de montanha. Tentamos separar por altitude e estava errado: há base
+ * legítima de Palpagos a z 63.000.
+ *
+ * Jogador, esse sim, pode estar nos dois. Quem decide é
+ * `localizar()` em `lib/palworld/coordenadas.ts`, pela posição horizontal.
  */
 
 export type IdMapa = "palpagos" | "arvore";
@@ -29,18 +32,6 @@ export interface DefinicaoMapa {
   imagemLimites: { minX: number; maxX: number; minY: number; maxY: number };
 }
 
-/**
- * Altitude que separa os dois mundos.
- *
- * Palpagos vai de ~-2.100 a ~18.200 (o topo é montanha e ilha flutuante); a
- * Árvore Mundial medida ficou entre 33.529 e 63.657. O corte em 33.000 cai no
- * vazio entre os dois, então não há empate.
- */
-export const Z_ARVORE = 33_000;
-
-export const mapaDe = (worldZ: number): IdMapa =>
-  worldZ >= Z_ARVORE ? "arvore" : "palpagos";
-
 export const MAPAS: DefinicaoMapa[] = [
   {
     id: "palpagos",
@@ -54,14 +45,18 @@ export const MAPAS: DefinicaoMapa[] = [
   {
     id: "arvore",
     nome: "Árvore Mundial",
-    // 🎯 Falta a arte do terreno. Enquanto for `null`, o mapa mostra os
-    // marcadores sobre a grade — correto entre si, sem cenário atrás.
-    imagem: null,
-    // Faixa das 6 bases medidas (x -1003..-438, y -1113..1565 depois de
-    // inverter o eixo), com folga generosa: são poucas amostras e o mundo
-    // certamente é maior do que o pedaço já ocupado.
-    limites: { minX: -1500, maxX: 100, minY: 700, maxY: 2100 },
-    imagemLimites: { minX: -1500, maxX: 100, minY: 700, maxY: 2100 },
+    imagem: "/mapa-arvore.webp",
+    /*
+     * 🎯 CALIBRAÇÃO — derivada de `treemap_pixel_to_cursor` do
+     * PalworldSaveTools, que mapeia a imagem inteira para 5.000 unidades em
+     * cada eixo, deslocadas de -3575 em x e +4068 em y.
+     *
+     * ⚠️ Não foi possível conferir contra jogador real: não havia ninguém na
+     * Árvore Mundial no momento. Se os marcadores caírem deslocados, é aqui
+     * que se ajusta — mesma receita do mapa de Palpagos.
+     */
+    limites: { minX: -3575, maxX: 1425, minY: -4068, maxY: 932 },
+    imagemLimites: { minX: -3575, maxX: 1425, minY: -4068, maxY: 932 },
   },
 ];
 

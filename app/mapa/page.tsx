@@ -8,7 +8,8 @@ import {
   type BaseNoMapa,
   type JogadorNoMapa,
 } from "@/components/mapa-interativo";
-import { MAPAS, mapaDe } from "@/lib/mapas";
+import { MAPAS } from "@/lib/mapas";
+import { localizar } from "@/lib/palworld/coordenadas";
 
 export const metadata: Metadata = {
   title: "Mapa",
@@ -53,9 +54,10 @@ const loadMap = unstable_cache(
               bases.push({
                 x: b.mapX,
                 y: gameY(b.mapY),
-                // A altitude é o que diz em qual mundo a base está: sem
-                // isto, base da Árvore Mundial cai em cima de Palpagos.
-                mapa: mapaDe(b.worldZ),
+                // Sempre Palpagos: não se constrói na Árvore Mundial. Base
+                // com altitude altíssima é ilha flutuante ou pico, não outro
+                // mundo — ver o aviso em lib/mapas.ts.
+                mapa: "palpagos" as const,
                 guilda: g.name,
                 nivel: g.level,
                 lider: g.leaderName,
@@ -67,13 +69,17 @@ const loadMap = unstable_cache(
 
           for (const p of ps) {
             if (!p.online) continue;
+
+            // O `MapLocation` do PalDefender já vem convertido pela fórmula
+            // de Palpagos, então quem estiver na Árvore Mundial chegaria com
+            // coordenada errada. Reconverter a partir da posição crua é o que
+            // põe a pessoa no mundo certo.
+            const onde = localizar(p.worldX, p.worldY);
+
             players.push({
-              x: p.mapX,
-              y: gameY(p.mapY),
-              // ⚠️ `/players` do PalDefender não devolve altitude, então não
-              // dá para saber em qual mundo a pessoa está. Fica em Palpagos,
-              // que é onde quase todo mundo joga.
-              mapa: "palpagos" as const,
+              x: onde.x,
+              y: gameY(onde.y),
+              mapa: onde.mundo,
               nome: p.name || "Jogador",
               guilda: p.guildName,
               servidor: server.shortName,

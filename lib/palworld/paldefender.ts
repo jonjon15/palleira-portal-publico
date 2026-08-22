@@ -25,6 +25,16 @@ export interface PdPlayer {
   /** Coordenada já em escala de mapa — o PalDefender converte por nós */
   mapX: number;
   mapY: number;
+  /**
+   * Posição crua no mundo.
+   *
+   * ⚠️ Necessária para saber em qual mundo a pessoa está: o `MapLocation` que
+   * o PalDefender devolve já vem convertido pela fórmula de **Palpagos**,
+   * então quem estiver na Árvore Mundial chega aqui com coordenada de
+   * Palpagos errada. Ver `lib/palworld/coordenadas.ts`.
+   */
+  worldX: number;
+  worldY: number;
 }
 
 export interface PdBase {
@@ -87,6 +97,8 @@ interface RawPlayer {
   GuildUUID: string;
   Status: string;
   MapLocation?: { x: number; y: number };
+  /** Posição crua. É dela que sai em qual mundo a pessoa está. */
+  WorldLocation?: { x: number; y: number; z: number };
 }
 
 export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
@@ -100,6 +112,8 @@ export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
     online: p.Status === "Online",
     mapX: Math.round(p.MapLocation?.x ?? 0),
     mapY: Math.round(p.MapLocation?.y ?? 0),
+    worldX: p.WorldLocation?.x ?? 0,
+    worldY: p.WorldLocation?.y ?? 0,
   }));
 }
 
