@@ -34,6 +34,10 @@ import time
 
 import paramiko
 
+# Reaproveita o cliente do painel: é ele que sabe se o servidor está parado.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from energia_painel import PANEL_IDS, estado as estado_do_painel  # noqa: E402
+
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
 PLAYER_PATH = "Pal/Saved/SaveGames/0/{guid}/Players/{uid}.sav"
 
@@ -125,6 +129,18 @@ def enviar(cfg: Servidor, caminho: str, dados: bytes) -> None:
         t.close()
 
 
+def info_arquivo(cfg: Servidor, caminho: str):
+    """Tamanho e data do arquivo, ou None se não existir."""
+    t, sftp = _sftp(cfg)
+    try:
+        st = sftp.stat(caminho)
+        return st.st_size, st.st_mtime
+    except FileNotFoundError:
+        return None
+    finally:
+        t.close()
+
+
 def apagar(cfg: Servidor, caminho: str) -> bool:
     t, sftp = _sftp(cfg)
     try:
@@ -201,6 +217,12 @@ def remover_jogador(world, uid: str) -> dict:
 
     world["GroupSaveDataMap"]["value"] = guildas_restantes
     return rel
+
+
+def _abortar(motivo: str) -> int:
+    print(f"\n  ❌ ABORTADO: {motivo}")
+    print("     Nada foi sobrescrito. O mundo continua como estava.")
+    return 1
 
 
 # ---------------------------------------------------------------------- main
@@ -294,6 +316,41 @@ def main() -> int:
         print("  (simulação — nada foi gravado)")
         return 0
 
+    # ---- travas antes de gravar -----------------------------------------
+    #
+    # Gravar o mundo com o jogo rodando corrompe o save: o servidor tem tudo
+    # em memória e reescreve por cima no autosave seguinte. O workflow já
+    # para o servidor antes, mas quem roda este script na mão pode esquecer —
+    # e a consequência atinge a comunidade inteira. A trava fica aqui.
+    pid = PANEL_IDS.get(cfg.slug)
+    if not pid:
+        sys.exit(f"sem panelId para {cfg.slug} — não dá para conferir se está parado")
+
+    try:
+        atual = estado_do_painel(pid)
+    except Exception as err:  # noqa: BLE001
+        sys.exit(f"não consegui perguntar ao painel se o servidor está parado: {err}")
+
+    if atual != "offline":
+        print()
+        print(f"  ❌ O servidor está '{atual}', não 'offline'.")
+        print("     Gravar agora corromperia o mundo de todos. Pare o servidor")
+        print("     pelo painel (sinal 'stop') e rode de novo.")
+        return 1
+    print(f"\n  ✅ servidor confirmado 'offline'", flush=True)
+
+    # O `stop` do painel manda o jogo desligar com calma, e desligar limpo
+    # salva. Conferir a data do arquivo prova que isso aconteceu — se o save
+    # for velho, alguma coisa deu errado e o jogador perderia progresso.
+    info = info_arquivo(cfg, caminho)
+    if info:
+        idade = time.time() - info[1]
+        if idade > 900:
+            print(f"  ⚠️  o Level.sav tem {idade/60:.0f} minutos — o desligamento")
+            print("     pode não ter salvado. Seguindo, mas confira depois.")
+        else:
+            print(f"  ✅ mundo salvo há {idade/60:.0f} min pelo desligamento", flush=True)
+
     # ---- aplicar ---------------------------------------------------------
     t0 = time.time()
     novo = compress_gvas_to_sav(gvas.write(PALWORLD_CUSTOM_PROPERTIES), tipo)
@@ -303,7 +360,15 @@ def main() -> int:
     # salva a pele se o mundo voltar quebrado.
     backup = caminho + time.strftime(".bak-%Y%m%d-%H%M%S")
     enviar(cfg, backup, original)
-    print(f"  backup no servidor: {backup}", flush=True)
+
+    # Backup que não foi conferido não é backup. Se o upload saiu pela
+    # metade, sobrescrever o mundo agora seria trabalhar sem rede.
+    conf = info_arquivo(cfg, backup)
+    if not conf or conf[0] != len(original):
+        return _abortar(
+            f"backup incompleto ({conf[0] if conf else 0} de {len(original)} bytes)."
+        )
+    print(f"  ✅ backup conferido: {backup} ({conf[0]:,} bytes)", flush=True)
 
     enviar(cfg, caminho, novo)
     print("  Level.sav gravado", flush=True)

@@ -429,7 +429,30 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
 
       {/* --------------------------------------------------------- apagar */}
       {alvo && (
-        <form action={resetAcao} className="space-y-3 rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.05] p-5">
+        <form
+          action={resetAcao}
+          /*
+            Segunda tranca, independente da primeira. Digitar o nome no
+            formulário prova que a pessoa sabe QUEM está apagando; o popup
+            prova que ela sabe O QUE está fazendo, e tira do automático quem
+            já clicou em "Apagar" antes.
+          */
+          onSubmit={(e) => {
+            const r = window.prompt(
+              `Isto apaga ${alvo.nome} (nível ${alvo.level}) do mundo e não tem volta.
+
+` +
+                `O servidor vai parar por cerca de 1 minuto.
+
+` +
+                `Digite CONFIRMAR para prosseguir:`,
+            );
+            if (r?.trim().toUpperCase() !== "CONFIRMAR") {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-3 rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.05] p-5"
+        >
           <input type="hidden" name="servidor" value={servidor} />
           <input type="hidden" name="uid" value={alvo.uid} />
           <input type="hidden" name="nome" value={alvo.nome} />
@@ -438,9 +461,18 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
           <p className="text-sm text-muted">
             <b className="text-danger">Isto não tem volta.</b>{" "}
             <b className="text-text">{alvo.nome}</b> (nível {alvo.level}) perde
-            personagem, itens e Pals, e volta do zero. O servidor cai por cerca
-            de 1 minuto e volta sozinho. Fica um backup no servidor.
+            personagem, itens e Pals, e volta do zero.
           </p>
+
+          <ul className="space-y-1 text-xs text-muted">
+            <li>✓ O servidor é parado de verdade antes de gravar — e a gravação
+              é recusada se ele ainda estiver de pé</li>
+            <li>✓ O mundo é salvo pelo desligamento, e a data do arquivo é
+              conferida</li>
+            <li>✓ O backup é enviado <b className="text-text">e conferido byte
+              a byte</b> antes de qualquer sobrescrita</li>
+            <li>✓ O servidor volta sozinho, mesmo se algo falhar no meio</li>
+          </ul>
 
           <div>
             <label htmlFor="confirmacao" className="block text-sm text-muted">
