@@ -1054,7 +1054,48 @@ Quatro flags por personagem resolvem o equilíbrio dos 3 servidores: dá para de
 
 ### 7.4 Ficha do Pal
 
-**Origem dos dados: o template JSON do `exportpals`** — nada é digitado pelo jogador, então não tem como mentir na ficha.
+**Origem: `GET /v1/pdapi/pals/{uid}` do PalDefender** — nada é digitado pelo jogador, então não dá para mentir na ficha.
+
+#### ✅ Campos reais da API, verificados em 22/08/2026
+
+Os Pals vêm separados em três grupos: **`Team`** (os 5 do time), **`Palbox`**
+(no caso testado, 183) e **`BaseCamps`** (os que trabalham nas bases).
+
+```json
+{
+  "PalID": "GhostDragon_Fire",     "Nickname": "",  "SkinId": "",
+  "Gender": "Male",                "Level": 80,     "Exp": 144829235,
+  "Shiny": false,                  "IsAwakening": false,
+  "CondensedPals": 0,              "PartnerSkillLevel": 1,
+  "PhysicalHealth": "Healthful",   "WorkerSick": "None",
+  "HP": 11622,  "SP": 130,  "SAN": 100,  "CraftSpeed": 70,
+  "IVs":      { "Health": 25, "AttackMelee": 0, "AttackShot": 23, "Defense": 67 },
+  "PalSouls": { "Health": 20, "Attack": 20, "Defense": 20, "CraftSpeed": 0 },
+  "Passives": ["MoveSpeed_up_3", "WorldTree_MoveSpeed", "Stamina_Up_3"],
+  "ActiveSkills": [...],  "LearntSkills": [...],
+  "team_slot_index": 0
+}
+```
+
+Confirma o que a §14.3 tinha corrigido: **são 4 IVs** (Vida, Ataque corpo a
+corpo, Ataque à distância, Defesa) e **Almas são eixo separado**.
+
+#### Inventário — `GET /v1/pdapi/items/{uid}`
+
+```json
+"Inventory": { "Items": {
+  "ContainerID": "0C6C278D-…",
+  "UsedSlots": 14, "MaxSlots": 54, "FreeSlots": 40,
+  "Slots": { "0": { "ItemID": "Money", "Count": 15909576 },
+             "1": { "ItemID": "PalSphere_Ancient_1", "Count": 391 } }
+}}
+```
+
+➡️ **A tela de "escolher o que vender" está resolvida:** o jogador vê o que
+tem de verdade e clica, em vez de digitar e torcer.
+
+⚠️ **Os dois exigem o jogador ONLINE.** É a única restrição — e é justamente
+o que o modelo de cofre da §7.3 contorna.
 
 ```
 PalId (ex.: BOSS_KabukiMan — o prefixo BOSS_ marca Alpha)  ·  nº da Paldeck

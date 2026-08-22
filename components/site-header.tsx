@@ -7,7 +7,8 @@ const NAV = [
   { href: "/", label: "Início" },
   { href: "/servidores", label: "Servidores" },
   { href: "/mercado", label: "Mercado" },
-  { href: "/ranking", label: "Ranking" },
+  { href: "/ranking", label: "Placar" },
+  { href: "/mapa", label: "Mapa" },
   { href: "/conectar", label: "Como jogar" },
 ];
 
