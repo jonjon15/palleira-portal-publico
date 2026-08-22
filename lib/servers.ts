@@ -24,7 +24,18 @@ export interface PalleiraServer {
   /** RCON (TCP) — 0 quando desativado no .ini */
   rconPort: number;
   adminPassword: string;
+  /** Token da REST API do PalDefender (§3.6) */
+  palDefenderPort: number;
+  palDefenderToken: string;
   enabled: boolean;
+  /**
+   * Se as posições de jogador e base podem aparecer no mapa público.
+   *
+   * ⚠️ Em PvP, mapa é ferramenta de caçada: entrega onde a pessoa está e
+   * onde fica a base dela. O servidor aparece no placar e nas estatísticas,
+   * mas nunca no mapa.
+   */
+  mapVisible: boolean;
   mode: "PvE" | "PvP";
   tier: "free" | "vip";
 }
@@ -41,7 +52,10 @@ export const SERVERS: PalleiraServer[] = [
     restPort: 10056,
     rconPort: 10055,
     adminPassword: env("SRV1_ADMIN_PASSWORD"),
+    palDefenderPort: 10052,
+    palDefenderToken: env("SRV1_PALDEFENDER_TOKEN"),
     enabled: true,
+    mapVisible: true,
     mode: "PvE",
     tier: "free",
   },
@@ -54,7 +68,10 @@ export const SERVERS: PalleiraServer[] = [
     restPort: 10056,
     rconPort: 10055,
     adminPassword: env("SRV2_ADMIN_PASSWORD"),
+    palDefenderPort: 10064,
+    palDefenderToken: env("SRV2_PALDEFENDER_TOKEN"),
     enabled: true,
+    mapVisible: true,
     mode: "PvE",
     tier: "vip",
   },
@@ -67,8 +84,13 @@ export const SERVERS: PalleiraServer[] = [
     restPort: 10058,
     rconPort: 0, // RCONEnabled=False — ver §3.4
     adminPassword: env("SRV3_ADMIN_PASSWORD"),
-    // 🟡 standby: cadastrado e desligado. Virar para true quando o RCON subir.
-    enabled: false,
+    palDefenderPort: 10077,
+    palDefenderToken: env("SRV3_PALDEFENDER_TOKEN"),
+    // Entra no site para leitura (placar, guilds, estatísticas). O mercado
+    // ainda depende do RCON, que está desligado no .ini deste servidor.
+    enabled: true,
+    // 🔴 NUNCA no mapa: é PvP, e posição de jogador e base viram alvo.
+    mapVisible: false,
     mode: "PvP",
     tier: "free",
   },
@@ -76,6 +98,15 @@ export const SERVERS: PalleiraServer[] = [
 
 /** Só os servidores que devem aparecer no site. */
 export const activeServers = () => SERVERS.filter((s) => s.enabled);
+
+/**
+ * Servidores cujas posições podem ir para o mapa público.
+ *
+ * Separado de `activeServers` de propósito: o PvP aparece no placar, mas
+ * mostrar onde os jogadores estão ali causaria briga de verdade.
+ */
+export const mappableServers = () =>
+  SERVERS.filter((s) => s.enabled && s.mapVisible);
 
 export const serverBySlug = (slug: string) =>
   SERVERS.find((s) => s.slug === slug && s.enabled);

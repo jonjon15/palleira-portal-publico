@@ -380,7 +380,60 @@ Ou seja: **você já tem tudo que o marketplace precisa instalado.** Nada de atu
 
 **`GET /items/{uid}` e `GET /pals/{uid}` derrubam o problema de "não dá para ler o que o jogador tem"** — validação de posse vira uma consulta HTTP.
 
-#### Estado atual (verificado em 21/08/2026)
+#### ✅ FUNCIONANDO — testado em 22/08/2026
+
+O ENX liberou **uma alocação extra por servidor**, e é nela que a API sobe:
+
+| Servidor | Porta | Estado | Jogadores | Guilds |
+|---|---|---|---|---|
+| PVE FREE | **10052** | ✅ | 278 | 216 |
+| PVE VIP | **10064** | ✅ | 41 | 24 |
+| PVP FREE | **10077** | ✅ | 103 | 67 |
+| | | | **422** | **307** |
+
+**Os três estão no ar**, cada um com token próprio e permissões estreitas.
+
+⚠️ **Armadilha na configuração, aprendida na prática:** o PalDefender lê os
+tokens **uma única vez, no boot**. Se o arquivo for criado com o servidor
+ligado, o log mostra `Loaded 0 Bearer token(s)` e toda chamada volta
+`INVALID_TOKEN`. É preciso **reiniciar depois** de criar o arquivo. O log
+confirma quando dá certo: `[RESTAPI] Loaded 1 Bearer token(s)`.
+
+⚠️ **O arquivo de token vai em `RESTAPI/Tokens/`**, não em `RESTAPI/`. Um
+nível errado e o mod ignora em silêncio.
+
+📌 **O servidor coleta o game-data a cada 60s** (`-collect-gamedata-interval=60`
+na linha de comando). Cachear por 60s do nosso lado está casado com a origem:
+pedir mais rápido não traz dado novo, só carga.
+
+#### 🔴 PvP não entra no mapa — decisão de 22/08/2026
+
+O PVP FREE **entra no placar e nas estatísticas**, mas **nunca no mapa**:
+mostrar posição de jogador e de base ali é entregar alvo de raide.
+
+No código isso virou duas listas separadas em `lib/servers.ts`:
+`activeServers()` para placar, `mappableServers()` para o mapa — com
+`mapVisible: false` no PVP. Assim não vaza por descuido: precisaria alguém
+mudar a flag de propósito.
+
+**O que a API entrega de verdade** (medido, não suposto):
+
+| Endpoint | Resultado real | Precisa online? |
+|---|---|---|
+| `/v1/pdapi/players` | **278 jogadores, incluindo offline** — nome, guild, `Status`, posição de mundo **e de mapa** | ❌ não |
+| `/v1/pdapi/guilds` | **216 guilds** — nome, **Level**, **líder**, bases com `map_pos` pronto, membros | ❌ não |
+| `/v1/pdapi/pals/{uid}` | Pals do jogador | ✅ **sim** |
+| `/v1/pdapi/items/{uid}` | Inventário do jogador | ✅ **sim** |
+
+🔴 **`/pals` e `/items` só funcionam com o jogador conectado** — respondem `Failed to find APalPlayerController` quando ele está offline. O inventário só existe na memória enquanto ele joga.
+
+**Isso não atrapalha: valida o modelo de cofre da §7.3.** O jogador importa para o cofre enquanto joga (quando o dado existe) e vende depois, a qualquer hora, sem precisar estar online.
+
+> 📌 **Coordenada de mapa vem pronta.** O `map_pos` das bases e o `MapLocation` dos jogadores dispensam a conversão que eu tinha deixado pendente na §3.4. Um problema a menos.
+
+⚠️ **Permissão faltando no token:** pus seis permissões e esqueci `REST.Version.Read` — o health check responde `MISSING_PERMISSION`. Acrescentar na próxima edição do arquivo de token.
+
+#### Estado anterior (verificado em 21/08/2026)
 
 `/home/container/Pal/Binaries/Win64/PalDefender/RESTAPI/RESTConfig.json` **já está ligado**:
 
@@ -815,6 +868,18 @@ O coração do site: jogador **sobe seus Pals e itens** e **vende por Paletas**,
 
 #### De onde vem Paleta hoje (as torneiras)
 
+#### ✅ Configuração real, lida no dashboard do Palbot (22/08/2026)
+
+| Sistema | Estado |
+|---|---|
+| **Economy** | ✅ ligado — moeda com o nome **Paletas** |
+| **Pal Game** | ⛔ **desligado** |
+| **Kit Shop** | ✅ ligado — já existe onde gastar |
+
+**Por que o Pal Game desligado importa:** se estivesse ligado, ele pagaria **30 a 80 Paletas por aventura (a cada 4 min)** e **20 a 60 por batalha (a cada 3 min)** — mais de 1.500/hora para quem farmasse. Isso tornaria a doação de R$100 (250 Paletas) irrelevante e derrubaria toda a tabela de preços desta seção. **Se algum dia for ligado, esta calibração precisa ser refeita do zero.**
+
+⚠️ **`/work` está configurado com recompensa negativa (−2 a −1) e cooldown de 31 anos** — na prática, desligado. Confirmar se foi intencional.
+
 **Três torneiras, confirmadas:**
 
 | Fonte | Como | Perfil |
@@ -895,9 +960,9 @@ A Paleta é **sempre inteira** (§7.1). Com preços na casa das dezenas, **5% de
 
 | | Opção | Como funciona | Custo / risco |
 |---|---|---|---|
-| **A** | Palbot continua dono | Site lê e debita via API do Palbot | 🔴 **Provavelmente inviável** — você usa o hospedado e não há API pública documentada. Só sobrevive se achar token no dashboard (§4.7) |
+| ~~**A**~~ | ~~Palbot continua dono~~ | — | ⛔ **DESCARTADA em 22/08/2026.** O dashboard foi vasculhado: a única coisa parecida com API é um "API Tester", que apenas testa as credenciais **do servidor Palworld** — não expõe nada do Palbot. Sem API, sem acesso a banco, sem caminho |
 | **B** | **Self-host do Palbot** | Subir o [código arquivado](https://github.com/dkoz/palworld-palbot) (Python + Docker); o site lê e escreve **direto no banco do bot** | Controle total e saldo único. Assume um projeto congelado desde 29/01/2026 |
-| **C** | **Site vira dono da economia** | Migra os saldos uma vez, desliga a economia do Palbot, e o site passa a mandar em `/daily`, `/work`, ganhos e gastos | Mais trabalho na largada, mas é o que dá liberdade total pro marketplace — **minha recomendação** |
+| **C** | **Site vira dono da economia** ✅ | Migra os saldos uma vez, desliga a economia do Palbot, e o site passa a mandar em `/daily`, ganhos e gastos | 🟢 **É o caminho.** Com a (A) descartada e a (B) presa a um projeto arquivado, sobra ela — e ela é a melhor de qualquer forma. **O site hospeda o bot por HTTP Interactions**, sem VPS: os comandos do Discord viram chamadas na Vercel, na mesma base de dados do portal. Uma economia só, sem sincronizar nada |
 | **D** | Saldos separados | Duas moedas com transferência manual | ❌ **Evitar.** Diverge, confunde e vira suporte infinito |
 
 - **Decisão:** `_____________________`
