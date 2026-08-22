@@ -47,19 +47,27 @@ export const MAPAS: DefinicaoMapa[] = [
     nome: "Árvore Mundial",
     imagem: "/mapa-arvore.webp",
     /*
-     * 🎯 CALIBRAÇÃO — primeira estimativa, precisa de conferência.
+     * 🎯 CALIBRAÇÃO — segunda iteração, medida de dois prints do jogo.
      *
-     * Centrada nos 6 jogadores medidos em 22/08 (x de −1935 a −1508, y de
-     * 1306 a 1512, já com o eixo Y invertido), com folga para os cantos da
-     * ilha que ninguém estava ocupando na hora.
+     * Método: dois prints do mapa cheio, com o personagem em lugares
+     * diferentes e a coordenada visível. Medindo a posição da seta dentro da
+     * moldura nos dois, sai quantas unidades de mapa a moldura cobre:
      *
-     * ⚠️ A CONVERSÃO está provada — bate com o jogo em dois pontos distantes.
-     * O que ainda é chute é **quanto do mundo a imagem cobre**. Se os pinos
-     * caírem certos entre si mas deslocados como grupo, é só empurrar estes
-     * números; se caírem espalhados errado entre si, aí o problema é outro.
+     *   print 1: coord −1715 a 43,3% da largura da moldura
+     *   print 2: coord −1506 a 69,7% da largura
+     *   → 209 unidades para 26,4% da moldura = 792 unidades de ponta a ponta
+     *
+     * A primeira estimativa (700 de largura, centrada nos jogadores) ficava
+     * estreita e deslocada para oeste, e o pino caía perto da região vinho em
+     * vez de a leste dela.
+     *
+     * ⚠️ A CONVERSÃO está provada e não se mexe (ver `coordenadas.ts`). Isto
+     * aqui é só **quanto do mundo a imagem cobre**, e sai de medição em
+     * pixel, então tem erro de alguns pontos. Se ainda ficar deslocado, é
+     * este retângulo que se empurra.
      */
-    limites: { minX: -2070, maxX: -1370, minY: -1759, maxY: -1059 },
-    imagemLimites: { minX: -2070, maxX: -1370, minY: -1759, maxY: -1059 },
+    limites: { minX: -2058, maxX: -1266, minY: -1824, maxY: -1032 },
+    imagemLimites: { minX: -2058, maxX: -1266, minY: -1824, maxY: -1032 },
   },
 ];
 

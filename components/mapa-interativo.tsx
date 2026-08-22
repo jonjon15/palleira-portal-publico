@@ -858,8 +858,17 @@ export function MapaInterativo({
 
         {/* Coordenada: é o que a pessoa digita na bússola do jogo para achar
             o lugar. Sem isto o mapa é bonito e inútil. */}
+        {/*
+          ⚠️ O Y sai negado de propósito.
+
+          Internamente o mapa usa o eixo Y invertido (para baixo, como todo
+          SVG), mas o jogo mostra a coordenada com o sinal contrário. Exibir
+          o valor interno faz a pessoa comparar `-1395` na tela com `1394` na
+          bússola e achar que o site errou — foi exatamente o que aconteceu
+          na calibração de 22/08.
+        */}
         <div className="tabular absolute right-3 bottom-3 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2.5 py-1 text-xs text-muted backdrop-blur">
-          {cursor ? `${cursor.x}, ${cursor.y}` : "—"}
+          {cursor ? `${cursor.x}, ${-cursor.y}` : "—"}
           <span className="ml-2 text-gold">{zoom.toFixed(1)}×</span>
         </div>
 
@@ -892,7 +901,7 @@ export function MapaInterativo({
                   <dd className="truncate text-right">{sel.dado.servidor}</dd>
                   <dt className="text-muted">Onde</dt>
                   <dd className="tabular text-right">
-                    {Math.round(sel.dado.x)}, {Math.round(sel.dado.y)}
+                    {Math.round(sel.dado.x)}, {Math.round(-sel.dado.y)}
                   </dd>
                 </dl>
               </>
@@ -911,7 +920,7 @@ export function MapaInterativo({
                   <dd className="truncate text-right">{sel.dado.servidor}</dd>
                   <dt className="text-muted">Onde</dt>
                   <dd className="tabular text-right">
-                    {Math.round(sel.dado.x)}, {Math.round(sel.dado.y)}
+                    {Math.round(sel.dado.x)}, {Math.round(-sel.dado.y)}
                   </dd>
                 </dl>
               </>
