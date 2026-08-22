@@ -301,9 +301,28 @@ def servers_from_env() -> list[ServerCfg]:
     return [ServerCfg(**item) for item in json.loads(raw)]
 
 
+# Só estas duas seções são decodificadas de verdade. Todo o resto do save
+# (mapa, objetos, itens do mundo) fica como bytes crus — é o que faz o parse
+# caber no tempo: decodificar o save inteiro estourou 20 minutos no runner.
+NEEDED_SECTIONS = (
+    ".worldSaveData.GroupSaveDataMap",  # guilds e membros
+    ".worldSaveData.CharacterSaveParameterMap",  # jogadores e Pals
+)
+
+
 def main() -> int:
     from palworld_save_tools.gvas import GvasFile
-    from palworld_save_tools.paltypes import PALWORLD_CUSTOM_PROPERTIES
+    from palworld_save_tools.paltypes import (
+        PALWORLD_CUSTOM_PROPERTIES,
+        PALWORLD_TYPE_HINTS,
+    )
+
+    custom = {
+        key: value
+        for key, value in PALWORLD_CUSTOM_PROPERTIES.items()
+        if key in NEEDED_SECTIONS
+    }
+    print(f"decodificando {len(custom)} de {len(PALWORLD_CUSTOM_PROPERTIES)} seções")
 
     conn = psycopg.connect(os.environ["DATABASE_URL"])
     failures = 0
@@ -318,7 +337,9 @@ def main() -> int:
             gvas_bytes = decompress_plm(raw)
             print(f"  descomprimido: {len(gvas_bytes):,} bytes", flush=True)
 
-            gvas = GvasFile.read(gvas_bytes, PALWORLD_CUSTOM_PROPERTIES)
+            parse_started = time.time()
+            gvas = GvasFile.read(gvas_bytes, PALWORLD_TYPE_HINTS, custom)
+            print(f"  parse: {time.time() - parse_started:.0f}s", flush=True)
             world = gvas.properties["worldSaveData"]["value"]
             data = extract(world)
 
