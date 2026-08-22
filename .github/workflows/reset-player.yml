@@ -1,0 +1,79 @@
+# Apaga um jogador de dentro do mundo (§3.8 do PROMPT.md).
+#
+# Roda aqui e não na Vercel: o mundo tem 339 MB descomprimidos, e função
+# serverless tem 1 GB de RAM e 60s. O runner tem 7,8 GB e gcc para compilar
+# o Oodle.
+#
+# ⚠️ O modo `aplicar` REESCREVE O MUNDO DE TODOS. Comece sempre por
+# `verificar` num servidor vazio.
+name: reset-player
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-vip
+      modo:
+        description: "verificar = só testa o ciclo | simular = mostra o que mudaria | aplicar = grava"
+        required: true
+        type: choice
+        options: [verificar, simular, aplicar]
+        default: verificar
+      uid:
+        description: "UID do jogador (32 hex). Dispensável em 'verificar'"
+        required: false
+        default: ""
+      parar_servidor:
+        description: "Parar o servidor antes de gravar (obrigatório em 'aplicar')"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+          python -c "import palsav, palooz, paramiko; print('tudo pronto')"
+
+      # Só para gravar. Parada pelo painel é intencional: o `shutdown` da
+      # REST do jogo não serve, porque a ENX religa o servidor sozinha.
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Executar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/reset_player.py \
+            --servidor "${{ inputs.servidor }}" \
+            ${{ inputs.uid && format('--uid {0}', inputs.uid) || '' }} \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        # `always()` de propósito: se a gravação falhar no meio, o pior
+        # desfecho é o servidor ficar parado sem ninguém saber.
+        if: always() && inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running
