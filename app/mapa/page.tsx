@@ -3,6 +3,11 @@ import { unstable_cache } from "next/cache";
 import { PageHeader } from "@/components/page-header";
 import { mappableServers, SERVERS } from "@/lib/servers";
 import { getGuilds, getPlayers } from "@/lib/palworld/paldefender";
+import {
+  MapaInterativo,
+  type BaseNoMapa,
+  type JogadorNoMapa,
+} from "@/components/mapa-interativo";
 
 export const metadata: Metadata = {
   title: "Mapa",
@@ -20,8 +25,6 @@ export const revalidate = 120;
  * alguém construir num canto novo.
  */
 const BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
-const W = BOUNDS.maxX - BOUNDS.minX;
-const H = BOUNDS.maxY - BOUNDS.minY;
 
 /**
  * 🎯 CALIBRAÇÃO DO MAPA — mexer só aqui.
@@ -44,17 +47,12 @@ const IMAGE_BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
  */
 const gameY = (mapY: number) => -mapY;
 
-interface Marker {
-  x: number;
-  y: number;
-  label: string;
-  server: string;
-}
+
 
 const loadMap = unstable_cache(
   async () => {
-    const bases: Marker[] = [];
-    const players: Marker[] = [];
+    const bases: BaseNoMapa[] = [];
+    const players: JogadorNoMapa[] = [];
     const failed: string[] = [];
 
     // ⚠️ mappableServers(), não activeServers(): o PvP fica de fora de
@@ -75,8 +73,11 @@ const loadMap = unstable_cache(
               bases.push({
                 x: b.mapX,
                 y: gameY(b.mapY),
-                label: g.name,
-                server: server.shortName,
+                guilda: g.name,
+                nivel: g.level,
+                lider: g.leaderName,
+                membros: g.memberCount,
+                servidor: server.shortName,
               });
             }
           }
@@ -86,8 +87,9 @@ const loadMap = unstable_cache(
             players.push({
               x: p.mapX,
               y: gameY(p.mapY),
-              label: p.name || "Jogador",
-              server: server.shortName,
+              nome: p.name || "Jogador",
+              guilda: p.guildName,
+              servidor: server.shortName,
             });
           }
         } catch {
@@ -115,136 +117,13 @@ export default async function Mapa() {
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
-          <svg
-            viewBox={`${BOUNDS.minX} ${BOUNDS.minY} ${W} ${H}`}
-            className="block h-auto w-full"
-            role="img"
-            aria-label={`Mapa com ${bases.length} bases e ${players.length} jogadores online`}
-          >
-            <defs>
-              <pattern
-                id="grade"
-                width="200"
-                height="200"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 200 0 L 0 0 0 200"
-                  fill="none"
-                  stroke="var(--line)"
-                  strokeWidth="2"
-                />
-              </pattern>
-              <radialGradient id="brilho">
-                <stop offset="0%" stopColor="var(--gold)" stopOpacity="0.16" />
-                <stop offset="100%" stopColor="var(--gold)" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-
-            <rect
-              x={BOUNDS.minX}
-              y={BOUNDS.minY}
-              width={W}
-              height={H}
-              fill="var(--bg)"
-            />
-
-            {/* Mapa de Palpagos. Escurecido de propósito: é textura de fundo,
-                não protagonista — o ouro dos marcadores precisa dominar. */}
-            <image
-              href="/mapa-palpagos.webp"
-              x={IMAGE_BOUNDS.minX}
-              y={IMAGE_BOUNDS.minY}
-              width={IMAGE_BOUNDS.maxX - IMAGE_BOUNDS.minX}
-              height={IMAGE_BOUNDS.maxY - IMAGE_BOUNDS.minY}
-              opacity="0.58"
-              preserveAspectRatio="none"
-            />
-
-            <rect
-              x={BOUNDS.minX}
-              y={BOUNDS.minY}
-              width={W}
-              height={H}
-              fill="url(#grade)"
-            />
-
-            {/* Halo por base: onde muita gente construiu, o brilho soma e
-                aparece a região "quente" da comunidade. */}
-            {bases.map((b, i) => (
-              <circle
-                key={`h${i}`}
-                cx={b.x}
-                cy={b.y}
-                r={90}
-                fill="url(#brilho)"
-              />
-            ))}
-
-            {bases.map((b, i) => (
-              <g key={`b${i}`}>
-                <title>{`${b.label} · ${b.server}`}</title>
-                <rect
-                  x={b.x - 11}
-                  y={b.y - 11}
-                  width={22}
-                  height={22}
-                  transform={`rotate(45 ${b.x} ${b.y})`}
-                  fill="var(--gold)"
-                  fillOpacity="0.85"
-                  stroke="var(--bg)"
-                  strokeWidth="3"
-                />
-              </g>
-            ))}
-
-            {players.map((p, i) => (
-              <g key={`p${i}`}>
-                <title>{`${p.label} · ${p.server}`}</title>
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={26}
-                  fill="var(--color-success)"
-                  fillOpacity="0.2"
-                />
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={11}
-                  fill="var(--color-success)"
-                  stroke="var(--bg)"
-                  strokeWidth="3"
-                />
-              </g>
-            ))}
-          </svg>
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-          <span className="flex items-center gap-2">
-            <span className="size-3 rotate-45 bg-gold/85" />
-            <span className="text-muted">{bases.length} bases</span>
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="size-3 rounded-full bg-success" />
-            <span className="text-muted">
-              {players.length} jogando agora
-            </span>
-          </span>
-          <span className="text-muted">
-            Passe o mouse num marcador para ver a guild.
-          </span>
-          <span className="ml-auto text-xs text-muted">
-            Mapa de Palworld © Pocketpair, Inc.
-          </span>
-        </div>
-
-
-
-        <div className="hidden">
-        </div>
+        <MapaInterativo
+          bases={bases}
+          jogadores={players}
+          servidores={mappableServers().map((s) => s.shortName)}
+          limites={BOUNDS}
+          imagem={IMAGE_BOUNDS}
+        />
 
         {hidden.length > 0 && (
           <div className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-5">
