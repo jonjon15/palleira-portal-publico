@@ -1,0 +1,323 @@
+import { randomInt } from "node:crypto";
+import { auth } from "@/auth";
+import { sql } from "@/lib/db";
+import { serverBySlug, activeServers } from "@/lib/servers";
+import { getPlayers } from "@/lib/palworld/paldefender";
+import { sendToPlayer } from "@/lib/palworld/rcon";
+
+/**
+ * Vínculo entre a conta do Discord e o personagem do jogo (§4.2 do PROMPT.md).
+ *
+ * A prova é entregue **dentro do jogo**: o site manda um código de 6 dígitos
+ * por RCON direto para aquele personagem. Para roubar o personagem de alguém
+ * seria preciso estar com o Discord dela E com o jogo dela aberto ao mesmo
+ * tempo — que é o nível de prova que a carteira de Paletas exige.
+ *
+ * Só server-side: RCON abre socket TCP com a senha de admin.
+ */
+
+const VALIDADE_MIN = 10;
+const MAX_TENTATIVAS = 5;
+
+export interface Personagem {
+  serverSlug: string;
+  serverName: string;
+  uid: string;
+  name: string;
+  guildName: string;
+}
+
+export interface Vinculo {
+  serverSlug: string;
+  serverName: string;
+  uid: string;
+  playerName: string;
+  linkedAt: string;
+}
+
+export interface Pendente {
+  serverSlug: string;
+  serverName: string;
+  playerName: string;
+  tentativasRestantes: number;
+}
+
+export interface Resultado {
+  ok: boolean;
+  mensagem: string;
+}
+
+/* --------------------------------------------------------------- consultas */
+
+const nomeDoServidor = (slug: string) => serverBySlug(slug)?.shortName ?? slug;
+
+/** O vínculo atual do usuário, se existir. */
+export async function meuVinculo(discordId: string): Promise<Vinculo | null> {
+  const rows = (await sql`
+    select server_slug, palworld_uid, player_name, linked_at
+    from account_links
+    where discord_id = ${discordId}
+  `) as {
+    server_slug: string;
+    palworld_uid: string;
+    player_name: string;
+    linked_at: string;
+  }[];
+
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    serverSlug: r.server_slug,
+    serverName: nomeDoServidor(r.server_slug),
+    uid: r.palworld_uid,
+    playerName: r.player_name,
+    linkedAt: r.linked_at,
+  };
+}
+
+/** Código já enviado, esperando confirmação. Expirado conta como inexistente. */
+export async function meuPedido(discordId: string): Promise<Pendente | null> {
+  const rows = (await sql`
+    select server_slug, player_name, attempts
+    from link_codes
+    where discord_id = ${discordId} and expires_at > now()
+  `) as { server_slug: string; player_name: string; attempts: number }[];
+
+  const p = rows[0];
+  if (!p) return null;
+  return {
+    serverSlug: p.server_slug,
+    serverName: nomeDoServidor(p.server_slug),
+    playerName: p.player_name,
+    tentativasRestantes: Math.max(0, MAX_TENTATIVAS - p.attempts),
+  };
+}
+
+/**
+ * Personagens conectados agora, nos servidores com RCON ligado.
+ *
+ * Só quem está online aparece: o código chega pelo chat do jogo, então não
+ * adianta oferecer um personagem que ninguém está segurando. Quem já
+ * pertence a outro Discord também some da lista.
+ */
+export async function personagensOnline(): Promise<Personagem[]> {
+  const lista: Personagem[] = [];
+
+  await Promise.all(
+    activeServers().map(async (server) => {
+      // Sem RCON não há como entregar o código — nem adianta listar.
+      if (!server.rconPort) return;
+      try {
+        for (const p of await getPlayers(server)) {
+          if (!p.online || !p.name || !p.playerUid) continue;
+          lista.push({
+            serverSlug: server.slug,
+            serverName: server.shortName,
+            uid: p.playerUid,
+            name: p.name,
+            guildName: p.guildName,
+          });
+        }
+      } catch {
+        // Um servidor mudo não pode derrubar a lista dos outros.
+      }
+    }),
+  );
+
+  const tomados = new Set(
+    (
+      (await sql`select server_slug, palworld_uid from account_links`) as {
+        server_slug: string;
+        palworld_uid: string;
+      }[]
+    ).map((r) => `${r.server_slug}:${r.palworld_uid}`),
+  );
+
+  return lista
+    .filter((c) => !tomados.has(`${c.serverSlug}:${c.uid}`))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
+/** Servidores que ainda não aceitam vínculo, para explicar quem ficou de fora. */
+export const servidoresSemRcon = () =>
+  activeServers().filter((s) => !s.rconPort);
+
+/* ------------------------------------------------------------------- ações */
+
+export async function pedirCodigo(
+  serverSlug: string,
+  uid: string,
+): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) {
+    return {
+      ok: false,
+      mensagem: "Só quem está no Discord da Palleira pode vincular.",
+    };
+  }
+
+  const discordId = session.user.discordId;
+
+  if (await meuVinculo(discordId)) {
+    return {
+      ok: false,
+      mensagem: "Sua conta já tem personagem. Desvincule antes de trocar.",
+    };
+  }
+
+  const server = serverBySlug(serverSlug);
+  if (!server?.rconPort) {
+    return { ok: false, mensagem: "Esse servidor não aceita vínculo agora." };
+  }
+
+  // O nome vem da fonte, não do navegador: o formulário só escolhe o alvo.
+  const alvo = (await getPlayers(server)).find(
+    (p) => p.playerUid === uid && p.online,
+  );
+  if (!alvo) {
+    return {
+      ok: false,
+      mensagem:
+        "Esse personagem não está mais online. Entre no jogo e recarregue a página.",
+    };
+  }
+
+  const tomado = (await sql`
+    select 1 from account_links
+    where server_slug = ${serverSlug} and palworld_uid = ${uid}
+  `) as unknown[];
+  if (tomado.length) {
+    return { ok: false, mensagem: "Esse personagem já é de outra conta." };
+  }
+
+  const codigo = String(randomInt(100_000, 1_000_000));
+
+  // Um pedido por pessoa: pedir de novo apaga o anterior. O `on conflict`
+  // cobre o caso raro de dois jogadores sorteando o mesmo número.
+  await sql`delete from link_codes where discord_id = ${discordId}`;
+  await sql`
+    insert into link_codes
+      (code, discord_id, server_slug, palworld_uid, player_name, expires_at)
+    values (${codigo}, ${discordId}, ${serverSlug}, ${uid}, ${alvo.name},
+            now() + make_interval(mins => ${VALIDADE_MIN}))
+    on conflict (code) do update
+      set discord_id   = excluded.discord_id,
+          server_slug  = excluded.server_slug,
+          palworld_uid = excluded.palworld_uid,
+          player_name  = excluded.player_name,
+          attempts     = 0,
+          expires_at   = excluded.expires_at,
+          created_at   = now()
+  `;
+
+  const entregue = await sendToPlayer(
+    server,
+    uid,
+    `PALLEIRA: seu codigo eh ${codigo} - digite no site em ${VALIDADE_MIN} min`,
+  ).catch(() => false);
+
+  if (!entregue) {
+    await sql`delete from link_codes where discord_id = ${discordId}`;
+    return {
+      ok: false,
+      mensagem:
+        "Não consegui falar com o servidor do jogo agora. Tenta de novo em instantes.",
+    };
+  }
+
+  return {
+    ok: true,
+    mensagem: `Código enviado para ${alvo.name} no chat do jogo.`,
+  };
+}
+
+export async function confirmarCodigo(digitado: string): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  const discordId = session.user.discordId;
+
+  const limpo = digitado.replace(/\D/g, "");
+  if (limpo.length !== 6) {
+    return { ok: false, mensagem: "O código tem 6 dígitos." };
+  }
+
+  const rows = (await sql`
+    select code, server_slug, palworld_uid, player_name, attempts,
+           expires_at < now() as expirado
+    from link_codes
+    where discord_id = ${discordId}
+  `) as {
+    code: string;
+    server_slug: string;
+    palworld_uid: string;
+    player_name: string;
+    attempts: number;
+    expirado: boolean;
+  }[];
+
+  const pedido = rows[0];
+  if (!pedido) {
+    return { ok: false, mensagem: "Nenhum código pendente. Peça um novo." };
+  }
+  if (pedido.expirado) {
+    await sql`delete from link_codes where discord_id = ${discordId}`;
+    return { ok: false, mensagem: "O código expirou. Peça outro." };
+  }
+  if (pedido.attempts >= MAX_TENTATIVAS) {
+    await sql`delete from link_codes where discord_id = ${discordId}`;
+    return { ok: false, mensagem: "Tentativas demais. Peça um código novo." };
+  }
+
+  if (pedido.code !== limpo) {
+    await sql`
+      update link_codes set attempts = attempts + 1
+      where discord_id = ${discordId}
+    `;
+    const restam = MAX_TENTATIVAS - pedido.attempts - 1;
+    return {
+      ok: false,
+      mensagem:
+        restam > 0
+          ? `Código errado. Restam ${restam} tentativa${restam > 1 ? "s" : ""}.`
+          : "Código errado. Peça um novo.",
+    };
+  }
+
+  // Corrida: dois Discords mirando o mesmo personagem. O índice único da
+  // tabela decide, e o perdedor recebe uma mensagem honesta.
+  try {
+    await sql`
+      insert into account_links
+        (discord_id, server_slug, palworld_uid, player_name)
+      values (${discordId}, ${pedido.server_slug}, ${pedido.palworld_uid},
+              ${pedido.player_name})
+    `;
+  } catch {
+    await sql`delete from link_codes where discord_id = ${discordId}`;
+    return {
+      ok: false,
+      mensagem: "Esse personagem acabou de ser vinculado a outra conta.",
+    };
+  }
+
+  await sql`delete from link_codes where discord_id = ${discordId}`;
+  return { ok: true, mensagem: `Pronto! ${pedido.player_name} é você.` };
+}
+
+export async function cancelarPedido(): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  await sql`delete from link_codes where discord_id = ${session.user.discordId}`;
+  return { ok: true, mensagem: "Pedido cancelado." };
+}
+
+export async function desvincular(): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  const discordId = session.user.discordId;
+
+  await sql`delete from account_links where discord_id = ${discordId}`;
+  await sql`delete from link_codes   where discord_id = ${discordId}`;
+  return { ok: true, mensagem: "Personagem desvinculado." };
+}

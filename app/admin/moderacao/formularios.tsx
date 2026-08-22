@@ -1,0 +1,254 @@
+"use client";
+
+import { useActionState } from "react";
+import {
+  salvarMundo,
+  enviarAnuncio,
+  agirSobreJogador,
+  banirManual,
+  desbanirManual,
+  desligarServidor,
+  type Estado,
+} from "./actions";
+
+const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
+
+const botao =
+  "inline-flex items-center justify-center rounded-[var(--radius-control)] bg-gold px-5 py-2.5 font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50";
+
+const botaoFantasma =
+  "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-line-strong px-5 py-2.5 font-semibold transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+const botaoPerigo =
+  "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-danger/40 bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-50";
+
+const campo =
+  "w-full rounded-[var(--radius-control)] border border-line bg-bg px-4 py-2.5 outline-none focus:border-gold";
+
+function Aviso({ ok, mensagem }: Estado) {
+  if (!mensagem) return null;
+  return (
+    <p
+      role="status"
+      className={`mt-3 rounded-[var(--radius-control)] border px-4 py-3 text-sm ${
+        ok
+          ? "border-success/30 bg-success/[0.08] text-success"
+          : "border-danger/30 bg-danger/[0.08] text-danger"
+      }`}
+    >
+      {mensagem}
+    </p>
+  );
+}
+
+/* -------------------------------------------------------------- ações rápidas */
+
+export function SalvarMundo({ servidor }: { servidor: string }) {
+  const [estado, acao, pendente] = useActionState(salvarMundo, SEM_ESTADO);
+  return (
+    <form action={acao}>
+      <input type="hidden" name="servidor" value={servidor} />
+      <button type="submit" disabled={pendente} className={botaoFantasma}>
+        {pendente ? "Salvando…" : "Salvar mundo"}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+export function Desligar({ servidor }: { servidor: string }) {
+  const [estado, acao, pendente] = useActionState(desligarServidor, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3">
+      <input type="hidden" name="servidor" value={servidor} />
+      <div className="flex gap-3">
+        <div className="w-28 shrink-0">
+          <label htmlFor="espera" className="block text-sm text-muted">
+            Segundos
+          </label>
+          <input
+            id="espera"
+            name="espera"
+            type="number"
+            min={0}
+            max={3600}
+            required
+            defaultValue={60}
+            className={`${campo} tabular mt-1.5`}
+          />
+        </div>
+        <div className="flex-1">
+          <label htmlFor="mensagem-shutdown" className="block text-sm text-muted">
+            Motivo, aparece no chat
+          </label>
+          <input
+            id="mensagem-shutdown"
+            name="mensagem"
+            required
+            placeholder="Manutenção rápida, volta já já"
+            className={`${campo} mt-1.5`}
+          />
+        </div>
+      </div>
+      <button
+        type="submit"
+        disabled={pendente}
+        className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-danger/40 bg-danger/10 px-5 py-2.5 font-semibold text-danger transition-colors hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pendente ? "Desligando…" : "Desligar servidor"}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+/* ----------------------------------------------------------------- anúncio */
+
+export function Anuncio({ servidor }: { servidor: string }) {
+  const [estado, acao, pendente] = useActionState(enviarAnuncio, SEM_ESTADO);
+  return (
+    <form action={acao}>
+      <input type="hidden" name="servidor" value={servidor} />
+      <label htmlFor="mensagem" className="block text-sm text-muted">
+        Aparece no chat de todo mundo que estiver dentro do jogo agora
+      </label>
+      <textarea
+        id="mensagem"
+        name="mensagem"
+        rows={2}
+        maxLength={300}
+        required
+        placeholder="Servidor reinicia às 22h para manutenção — salvem o progresso"
+        className={`${campo} mt-2`}
+      />
+      <div className="mt-3">
+        <button type="submit" disabled={pendente} className={botao}>
+          {pendente ? "Enviando…" : "Publicar anúncio"}
+        </button>
+      </div>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+/* --------------------------------------------------------- ban/unban manual */
+
+export function BanManual({ servidor }: { servidor: string }) {
+  const [estado, acao, pendente] = useActionState(banirManual, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3">
+      <input type="hidden" name="servidor" value={servidor} />
+      <div>
+        <label htmlFor="ban-userId" className="block text-sm text-muted">
+          userId do jogador
+        </label>
+        <input
+          id="ban-userId"
+          name="userId"
+          required
+          placeholder="steam_76561198000866703"
+          className={`${campo} mt-1.5 font-mono text-sm`}
+        />
+      </div>
+      <div>
+        <label htmlFor="ban-motivo" className="block text-sm text-muted">
+          Motivo — fica no log de auditoria
+        </label>
+        <input
+          id="ban-motivo"
+          name="motivo"
+          required
+          placeholder="Griefing na base X, denúncia de fulano"
+          className={`${campo} mt-1.5`}
+        />
+      </div>
+      <button type="submit" disabled={pendente} className={botaoPerigo}>
+        {pendente ? "Banindo…" : "Banir por userId"}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+export function UnbanManual({ servidor }: { servidor: string }) {
+  const [estado, acao, pendente] = useActionState(desbanirManual, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3">
+      <input type="hidden" name="servidor" value={servidor} />
+      <div>
+        <label htmlFor="unban-userId" className="block text-sm text-muted">
+          userId do jogador
+        </label>
+        <input
+          id="unban-userId"
+          name="userId"
+          required
+          placeholder="steam_76561198000866703"
+          className={`${campo} mt-1.5 font-mono text-sm`}
+        />
+      </div>
+      <button type="submit" disabled={pendente} className={botaoFantasma}>
+        {pendente ? "Desbanindo…" : "Desbanir por userId"}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+/* --------------------------------------------------- linha de jogador online */
+
+export function LinhaJogador({
+  servidor,
+  userId,
+  nome,
+}: {
+  servidor: string;
+  userId: string;
+  nome: string;
+}) {
+  const [estado, acao, pendente] = useActionState(agirSobreJogador, SEM_ESTADO);
+  return (
+    <>
+      <tr className="text-sm">
+        <td className="px-4 py-3 font-medium">{nome}</td>
+        <td className="px-4 py-3">
+          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs text-muted">
+            {userId}
+          </code>
+        </td>
+        <td className="px-4 py-3">
+          <form action={acao} className="flex justify-end gap-2">
+            <input type="hidden" name="servidor" value={servidor} />
+            <input type="hidden" name="userId" value={userId} />
+            <input type="hidden" name="nome" value={nome} />
+            <button
+              type="submit"
+              name="acao"
+              value="kick"
+              disabled={pendente}
+              className="rounded-[var(--radius-control)] border border-warning/40 bg-warning/10 px-3 py-1.5 text-xs font-semibold text-warning transition-colors hover:bg-warning/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Kick
+            </button>
+            <button
+              type="submit"
+              name="acao"
+              value="ban"
+              disabled={pendente}
+              className="rounded-[var(--radius-control)] border border-danger/40 bg-danger/10 px-3 py-1.5 text-xs font-semibold text-danger transition-colors hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Ban
+            </button>
+          </form>
+        </td>
+      </tr>
+      {estado.mensagem && (
+        <tr>
+          <td colSpan={3} className="px-4 pb-3">
+            <Aviso {...estado} />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}

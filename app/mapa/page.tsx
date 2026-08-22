@@ -19,7 +19,7 @@ export const revalidate = 120;
  * 426) e arredondados com folga, para o enquadramento não pular quando
  * alguém construir num canto novo.
  */
-const BOUNDS = { minX: -1695, maxX: 1105, minY: -1040, maxY: 1760 };
+const BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
 const W = BOUNDS.maxX - BOUNDS.minX;
 const H = BOUNDS.maxY - BOUNDS.minY;
 
@@ -33,7 +33,7 @@ const H = BOUNDS.maxY - BOUNDS.minY;
  * Como afinar: escolha uma base conhecida, veja onde ela cai no mapa e
  * empurre estes números na direção contrária à diferença.
  */
-const IMAGE_BOUNDS = { minX: -1695, maxX: 1105, minY: -1040, maxY: 1760 };
+const IMAGE_BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
 
 /**
  * ⚠️ O eixo Y do `map_pos` do PalDefender vem INVERTIDO em relação ao que o
@@ -153,12 +153,12 @@ export default async function Mapa() {
             {/* Mapa de Palpagos. Escurecido de propósito: é textura de fundo,
                 não protagonista — o ouro dos marcadores precisa dominar. */}
             <image
-              href="/mapa-palpagos.png"
+              href="/mapa-palpagos.webp"
               x={IMAGE_BOUNDS.minX}
               y={IMAGE_BOUNDS.minY}
               width={IMAGE_BOUNDS.maxX - IMAGE_BOUNDS.minX}
               height={IMAGE_BOUNDS.maxY - IMAGE_BOUNDS.minY}
-              opacity="0.42"
+              opacity="0.58"
               preserveAspectRatio="none"
             />
 
@@ -241,11 +241,7 @@ export default async function Mapa() {
           </span>
         </div>
 
-        <p className="mt-3 text-xs text-muted">
-          O mapa de fundo é anterior à 1.1 e não traz as ilhas novas de
-          Palpagos — algumas bases aparecem sobre o mar por causa disso, não
-          por erro de posição.
-        </p>
+
 
         <div className="hidden">
         </div>

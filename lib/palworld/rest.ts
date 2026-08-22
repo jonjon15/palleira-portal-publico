@@ -94,7 +94,7 @@ function guildLabel(name: string): string {
 
 /* ----------------------------------------------------------------- fetcher */
 
-class PalworldError extends Error {
+export class PalworldError extends Error {
   constructor(
     message: string,
     readonly status?: number,
@@ -141,6 +141,49 @@ async function call<T>(
   }
 
   return (await res.json()) as T;
+}
+
+/**
+ * Comandos de admin (§3.1, §5.3) — a REST oficial devolve `{"message":"OK"}`
+ * em alguns e texto puro em outros, então aceita os dois formatos.
+ *
+ * ⚠️ Sem cache de propósito: cada chamada aqui é uma ação de verdade
+ * (expulsar, banir, desligar), nunca uma leitura repetível.
+ */
+async function command(
+  server: PalleiraServer,
+  endpoint: string,
+  body?: Record<string, unknown>,
+  timeoutMs = 15_000,
+): Promise<string> {
+  if (!server.adminPassword) {
+    throw new PalworldError(
+      `Senha de admin ausente para ${server.slug}. Configure no vercel env.`,
+    );
+  }
+
+  const auth = Buffer.from(`admin:${server.adminPassword}`).toString("base64");
+  const url = `http://${server.host}:${server.restPort}/v1/api/${endpoint}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body ?? {}),
+    signal: AbortSignal.timeout(timeoutMs),
+    cache: "no-store",
+  });
+
+  const texto = await res.text();
+  if (!res.ok) {
+    throw new PalworldError(
+      `${endpoint} respondeu ${res.status} em ${server.slug}${texto ? `: ${texto}` : ""}`,
+      res.status,
+    );
+  }
+  return texto;
 }
 
 /* ---------------------------------------------------------------- endpoints */
@@ -224,6 +267,43 @@ function toSafePlayer(p: RawPlayer): SafePlayer {
     locationY: p.location_y ?? 0,
   };
 }
+
+/**
+ * Ações de admin (§3.1, §5.3) — a REST oficial escreve no mundo de verdade.
+ * Todas passam pelo painel de moderação, nunca chamadas direto de página.
+ */
+
+/** Anúncio no chat do jogo. */
+export const announce = (s: PalleiraServer, message: string) =>
+  command(s, "announce", { message });
+
+/** Expulsa o jogador; ele pode voltar a entrar. */
+export const kickPlayer = (
+  s: PalleiraServer,
+  userid: string,
+  message = "Expulso pela administração",
+) => command(s, "kick", { userid, message });
+
+/** Bane o jogador do servidor. */
+export const banPlayer = (
+  s: PalleiraServer,
+  userid: string,
+  message = "Banido pela administração",
+) => command(s, "ban", { userid, message });
+
+/** Reverte um ban. */
+export const unbanPlayer = (s: PalleiraServer, userid: string) =>
+  command(s, "unban", { userid });
+
+/** Salva o mundo agora, sem esperar o autosave. */
+export const saveWorld = (s: PalleiraServer) => command(s, "save");
+
+/** Desliga com contagem regressiva — a mensagem aparece no chat do jogo. */
+export const shutdownServer = (
+  s: PalleiraServer,
+  waittime: number,
+  message: string,
+) => command(s, "shutdown", { waittime, message });
 
 /**
  * Snapshot do mundo — jogadores, bases e guilds numa chamada só (§3.4).

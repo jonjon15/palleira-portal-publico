@@ -6,7 +6,15 @@ import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { SignOut } from "@/components/sign-in-button";
 import { Pick } from "@/components/pick";
-import { levelOf, planoOf, LEVEL_LABEL, isStaff } from "@/lib/roles";
+import {
+  levelOf,
+  planoOf,
+  LEVEL_LABEL,
+  isStaff,
+  canManageEconomy,
+} from "@/lib/roles";
+import { meuVinculo } from "@/lib/linking";
+import { saldo, jaPegouODaily, DAILY_PALETAS } from "@/lib/economia";
 
 export const metadata: Metadata = { title: "Meu painel" };
 
@@ -17,13 +25,18 @@ export default async function Painel() {
   const { user } = session;
   const level = levelOf(user.roles, user.isMember);
   const plano = planoOf(user.roles);
+  const [vinculo, paletas, pegouDaily] = await Promise.all([
+    meuVinculo(user.discordId),
+    saldo(user.discordId),
+    jaPegouODaily(user.discordId),
+  ]);
 
   return (
     <>
       <PageHeader
         kicker="Painel"
         title={`Salve, ${user.nick || user.name || "roqueiro"}`}
-        description="Sua central na Palleira. Por enquanto tem o básico — carteira e mercado vêm a seguir."
+        description="Sua central na Palleira. Carteira e personagem já funcionam — o mercado vem a seguir."
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -80,13 +93,22 @@ export default async function Painel() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card
             title="Carteira de Paletas"
-            body="Saldo e extrato de tudo que entrou e saiu."
-            soon
+            body={
+              vinculo && !pegouDaily
+                ? `${paletas} no saldo · o daily de ${DAILY_PALETAS} está esperando`
+                : `${paletas} ${paletas === 1 ? "Paleta" : "Paletas"} · extrato de tudo que entrou e saiu`
+            }
+            href="/painel/carteira"
           />
           <Card
-            title="Vincular personagem"
-            body="Conecte sua conta do jogo — Steam, Xbox ou PlayStation."
-            soon
+            title={vinculo ? "Personagem vinculado" : "Vincular personagem"}
+            body={
+              vinculo
+                ? `${vinculo.playerName} · ${vinculo.serverName}`
+                : "Prove que o personagem é seu com um código no chat do jogo."
+            }
+            href="/vincular"
+            done={Boolean(vinculo)}
           />
           <Card
             title="Meus anúncios"
@@ -98,11 +120,18 @@ export default async function Painel() {
             body="Veja onde você está no ranking da comunidade."
             href="/ranking"
           />
+          {canManageEconomy(level) && (
+            <Card
+              title="Economia"
+              body="Trazer saldos do Palbot, ajustar carteira e ver a circulação."
+              href="/admin/economia"
+            />
+          )}
           {isStaff(level) && (
             <Card
               title="Moderação"
               body="Jogadores online, anúncio no jogo e log de auditoria."
-              soon
+              href="/admin/moderacao"
             />
           )}
         </div>
@@ -116,11 +145,13 @@ function Card({
   body,
   href,
   soon,
+  done,
 }: {
   title: string;
   body: string;
   href?: string;
   soon?: boolean;
+  done?: boolean;
 }) {
   const inner = (
     <>
@@ -130,6 +161,11 @@ function Card({
         {soon && (
           <span className="ml-auto rounded-full border border-line px-2 py-0.5 text-[0.65rem] tracking-wide text-muted uppercase">
             Em breve
+          </span>
+        )}
+        {done && (
+          <span className="ml-auto rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[0.65rem] font-bold tracking-wide text-success uppercase">
+            Feito
           </span>
         )}
       </div>

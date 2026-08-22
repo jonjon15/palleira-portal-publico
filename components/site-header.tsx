@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
 import { Pick } from "@/components/pick";
+import { saldo } from "@/lib/economia";
 
 const NAV = [
   { href: "/", label: "Início" },
@@ -14,6 +15,8 @@ const NAV = [
 
 export async function SiteHeader() {
   const session = await auth();
+  // Saldo no cabeçalho (§7.1): a Paleta precisa estar sempre à vista.
+  const paletas = session ? await saldo(session.user.discordId) : 0;
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-md">
@@ -42,7 +45,18 @@ export async function SiteHeader() {
         </ul>
 
         <div className="ml-auto flex items-center gap-2">
-          {/* BalanceChip com o saldo de Paletas entra aqui na Fase 4 */}
+          {session && (
+            <Link
+              href="/painel/carteira"
+              className="hidden items-center gap-1.5 rounded-full border border-line py-1 pr-3 pl-2 text-sm transition-colors hover:border-line-strong hover:bg-surface sm:flex"
+              title="Sua carteira de Paletas"
+            >
+              <Pick className="size-4" withLetter={false} />
+              <span className="tabular font-semibold">
+                {paletas}
+              </span>
+            </Link>
+          )}
           {session ? (
             <Link
               href="/painel"
