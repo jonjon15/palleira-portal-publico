@@ -1,6 +1,6 @@
 # Prova de conceito: o processamento do Level.sav (formato PlM/Oodle) cabe
-# num runner do GitHub Actions? Aqui nao ha segredo nem save real — so
-# verificamos que o palooz COMPILA e que o Oodle roda ida e volta sem perda.
+# num runner do GitHub Actions? Sem segredo e sem save real — verificamos
+# que o palooz COMPILA e que o Oodle roda ida e volta sem perda.
 name: spec-check
 
 on:
@@ -15,41 +15,47 @@ jobs:
 
       - name: Compilar o palooz (extensao C++ do Oodle)
         run: |
-          cd pst/src/palsav
           python3 -m pip install --quiet --upgrade pip wheel setuptools
-          time python3 -m pip install . 2>&1 | tail -5
-          echo "--- instalado ---"
-          python3 -c "import palooz; print('palooz OK')"
+          # O palooz e declarado via tool.uv.sources, que o pip nao resolve:
+          # instalar explicitamente, do diretorio dele.
+          cd pst/src/palsav/palooz
+          time python3 -m pip install .
+          cd /tmp && python3 -c "import palooz; print('palooz importado de:', palooz.__file__)"
 
-      - name: Oodle ida e volta, com medicao
+      - name: Instalar o palsav
         run: |
+          cd pst/src/palsav
+          python3 -m pip install --quiet --no-deps .
+          python3 -m pip install --quiet orjson
+          cd /tmp && python3 -c "import palsav; print('palsav OK')"
+
+      - name: Oodle ida e volta, no tamanho real do mundo
+        run: |
+          cd /tmp
           python3 - <<'PY'
           import os, time, resource, hashlib
           import palooz
 
-          # 339 MB e o tamanho real do mundo do PVE FREE descomprimido.
-          N = 339 * 1024 * 1024
+          N = 339 * 1024 * 1024   # tamanho real do mundo do PVE FREE
           print(f"gerando {N/1048576:.0f} MB de dados de teste...")
-          # dados compressiveis, parecido com save de verdade
           bloco = (b"PalWorldSaveGame" * 64) + os.urandom(1024)
           dados = (bloco * (N // len(bloco) + 1))[:N]
           h_antes = hashlib.sha256(dados).hexdigest()
 
           t = time.time()
           comp = palooz.compress(8, 4, dados, len(dados))   # Kraken, Normal
-          t_comp = time.time() - t
-          print(f"comprimiu:   {len(comp)/1048576:.1f} MB em {t_comp:.1f}s")
+          print(f"comprimiu:    {len(comp)/1048576:8.1f} MB em {time.time()-t:.1f}s")
 
           t = time.time()
           volta = palooz.decompress(comp, len(comp), len(dados))
-          t_dec = time.time() - t
-          print(f"descomprimiu: {len(volta)/1048576:.1f} MB em {t_dec:.1f}s")
+          print(f"descomprimiu: {len(volta)/1048576:8.1f} MB em {time.time()-t:.1f}s")
 
-          h_depois = hashlib.sha256(bytes(volta)).hexdigest()
-          print("integridade:", "OK - identico" if h_antes == h_depois else "FALHOU")
+          igual = h_antes == hashlib.sha256(bytes(volta)).hexdigest()
+          print("integridade:", "OK - byte a byte identico" if igual else "FALHOU")
 
           pico = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576
-          print(f"pico de RAM do processo: {pico:.2f} GB de 7.8 GB")
+          print(f"pico de RAM:  {pico:.2f} GB de 7.8 GB disponiveis")
+          raise SystemExit(0 if igual else 1)
           PY
 
       - name: RAM que sobrou
