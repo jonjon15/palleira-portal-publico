@@ -7,8 +7,10 @@ import {
   MapaInterativo,
   type BaseNoMapa,
   type JogadorNoMapa,
+  type ViagemRapida,
 } from "@/components/mapa-interativo";
 import { MAPAS } from "@/lib/mapas";
+import viagensRapidas from "@/lib/viagem-rapida.json";
 import { localizar } from "@/lib/palworld/coordenadas";
 import { auth } from "@/auth";
 import { meuVinculo } from "@/lib/linking";
@@ -142,6 +144,7 @@ export default async function Mapa() {
           bases={bases}
           jogadores={players}
           servidores={mappableServers().map((s) => s.shortName)}
+          viagens={viagensRapidas as ViagemRapida[]}
           mapas={MAPAS}
         />
 

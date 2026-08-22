@@ -39,6 +39,25 @@ export interface BaseNoMapa {
   minha: boolean;
 }
 
+/**
+ * Ponto de viagem rápida — dado do jogo, não da comunidade.
+ *
+ * Extraído do `fast_travel_points.json` do PalworldSaveTools e convertido
+ * pela mesma fórmula do resto do mapa. São 174 no total: 157 em Palpagos e
+ * 17 na Árvore Mundial.
+ *
+ * Serve para duas coisas ao mesmo tempo: é camada útil para quem joga, e é
+ * régua de calibração — 17 pontos espalhados pela Árvore mostram na hora se
+ * o encaixe da arte está certo, que era o que faltava lá (Palpagos sempre
+ * teve as 158 bases fazendo esse papel).
+ */
+export interface ViagemRapida {
+  x: number;
+  y: number;
+  nome: string;
+  mapa: IdMapa;
+}
+
 export interface JogadorNoMapa {
   x: number;
   y: number;
@@ -51,6 +70,7 @@ export interface JogadorNoMapa {
 interface Props {
   bases: BaseNoMapa[];
   jogadores: JogadorNoMapa[];
+  viagens: ViagemRapida[];
   servidores: string[];
   mapas: DefinicaoMapa[];
 }
@@ -108,6 +128,7 @@ function agrupar(pontos: Ponto[], celula: number): Grupo[] {
 export function MapaInterativo({
   bases: todasBases,
   jogadores: jogadoresIniciais,
+  viagens: todasViagens,
   servidores,
   mapas,
 }: Props) {
@@ -173,6 +194,7 @@ export function MapaInterativo({
     [todosJogadores, idMapa],
   );
 
+
   const [zoom, setZoom] = useState(ZOOM_MIN);
   const [centro, setCentro] = useState({
     x: limites.minX + W / 2,
@@ -181,6 +203,9 @@ export function MapaInterativo({
   const [ligados, setLigados] = useState<Set<string>>(new Set(servidores));
   const [verBases, setVerBases] = useState(true);
   const [verJogadores, setVerJogadores] = useState(true);
+  // Desligada por padrão: são 157 pontos em Palpagos, e ligada de saída
+  // esconderia as bases da comunidade, que é o assunto do mapa.
+  const [verViagens, setVerViagens] = useState(false);
   const [busca, setBusca] = useState("");
   const [sel, setSel] = useState<Selecionado>(null);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
@@ -334,6 +359,11 @@ export function MapaInterativo({
             }))
         : [],
     [jogadores, ligados, verJogadores, termo, casa],
+  );
+
+  const viagens = useMemo(
+    () => (verViagens ? todasViagens.filter((v) => v.mapa === idMapa) : []),
+    [todasViagens, idMapa, verViagens],
   );
 
   // Célula proporcional ao zoom: agrupa de longe, solta de perto.
@@ -552,6 +582,13 @@ export function MapaInterativo({
               nome="Jogando agora"
               quantos={jogadores.filter((j) => ligados.has(j.servidor)).length}
             />
+            <Camada
+              ligada={verViagens}
+              alternar={() => setVerViagens((v) => !v)}
+              cor="rounded-full bg-[#5cc8f0]"
+              nome="Viagem rápida"
+              quantos={todasViagens.filter((v) => v.mapa === idMapa).length}
+            />
 
             <p className="mt-4 px-2 pb-1.5 text-xs font-bold tracking-[0.14em] text-muted uppercase">
               Servidores
@@ -739,6 +776,25 @@ export function MapaInterativo({
             pinos, um filtro por elemento derruba o quadro.
           */}
           <g filter="url(#sombra)">
+            {/*
+              Viagem rápida por baixo de tudo: é referência de terreno, não
+              o assunto. Base e jogador continuam por cima.
+            */}
+            {viagens.map((v, i) => (
+              <g key={`v${i}`} opacity="0.9">
+                <title>{v.nome}</title>
+                <circle
+                  cx={v.x}
+                  cy={v.y}
+                  r={esc(7)}
+                  fill="#0b1a24"
+                  stroke="#5cc8f0"
+                  strokeWidth={esc(1.8)}
+                />
+                <circle cx={v.x} cy={v.y} r={esc(2.4)} fill="#5cc8f0" />
+              </g>
+            ))}
+
             {gruposBases.map((g, i) => {
               const n = g.itens.length;
               const r = esc(n > 1 ? 15 : 12);
