@@ -47,16 +47,19 @@ export const MAPAS: DefinicaoMapa[] = [
     nome: "Árvore Mundial",
     imagem: "/mapa-arvore.webp",
     /*
-     * 🎯 CALIBRAÇÃO — derivada de `treemap_pixel_to_cursor` do
-     * PalworldSaveTools, que mapeia a imagem inteira para 5.000 unidades em
-     * cada eixo, deslocadas de -3575 em x e +4068 em y.
+     * 🎯 CALIBRAÇÃO — primeira estimativa, precisa de conferência.
      *
-     * ⚠️ Não foi possível conferir contra jogador real: não havia ninguém na
-     * Árvore Mundial no momento. Se os marcadores caírem deslocados, é aqui
-     * que se ajusta — mesma receita do mapa de Palpagos.
+     * Centrada nos 6 jogadores medidos em 22/08 (x de −1935 a −1508, y de
+     * 1306 a 1512, já com o eixo Y invertido), com folga para os cantos da
+     * ilha que ninguém estava ocupando na hora.
+     *
+     * ⚠️ A CONVERSÃO está provada — bate com o jogo em dois pontos distantes.
+     * O que ainda é chute é **quanto do mundo a imagem cobre**. Se os pinos
+     * caírem certos entre si mas deslocados como grupo, é só empurrar estes
+     * números; se caírem espalhados errado entre si, aí o problema é outro.
      */
-    limites: { minX: -3575, maxX: 1425, minY: -4068, maxY: 932 },
-    imagemLimites: { minX: -3575, maxX: 1425, minY: -4068, maxY: 932 },
+    limites: { minX: -2070, maxX: -1370, minY: -1759, maxY: -1059 },
+    imagemLimites: { minX: -2070, maxX: -1370, minY: -1759, maxY: -1059 },
   },
 ];
 

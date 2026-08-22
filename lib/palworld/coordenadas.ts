@@ -1,62 +1,55 @@
 /**
  * Conversão de coordenada do Palworld (§3.4 do PROMPT.md).
  *
- * Portado de `src/palworld_coord/__init__.py` do
- * [PalworldSaveTools](https://github.com/deafdudecomputers/PalworldSaveTools),
- * que é a referência da comunidade para isso. As constantes são delas — não
- * foram derivadas aqui, e mexer nelas sem motivo quebra o mapa.
+ * ⚠️ **Os dois mundos usam a MESMA fórmula.** A Árvore Mundial não tem
+ * sistema próprio de coordenada — ela fica noutro pedaço do mesmo mundo, e a
+ * conversão é idêntica à de Palpagos.
  *
- * ⚠️ **O que separa os dois mundos NÃO é a altitude.** Foi a primeira coisa
- * que tentamos e está errado: existem bases em Palpagos a z 63.000 (ilha
- * flutuante, pico de montanha). O que distingue é a **posição horizontal** —
- * a Árvore Mundial fica num pedaço completamente diferente do mundo, a
- * ~382 mil unidades de distância no eixo Y.
+ * Isso contraria o `src/palworld_coord` do PalworldSaveTools, que tem
+ * constantes separadas de `treemap`. **Elas estão erradas** — provavelmente
+ * de uma versão antiga do jogo, e ninguém percebeu porque quase ninguém vai
+ * lá. Medido em 22/08/2026 com o dono parado dentro da Árvore, dois pontos
+ * distantes:
+ *
+ * | posição no mundo | fórmula daqui | o jogo mostrou |
+ * |---|---|---|
+ * | 569160, -687284 | −1841,6 · 1509,9 | **−1841 · 1510** |
+ * | 516229, -534185 | −1508,0 · 1394,6 | **−1506 · 1393** |
+ *
+ * As constantes do `treemap` deles davam −435 · 1197 no primeiro ponto: fora
+ * por mais de mil unidades.
  *
  * ⚠️ Repare que `x` e `y` **trocam de lugar** na conversão. É assim no jogo,
  * não é engano de digitação.
  */
 
-/* --------------------------------------------------- constantes do jogo */
+/**
+ * A conversão, uma só.
+ *
+ * Bate com o que o PalDefender devolve em `MapLocation` — conferido nos 7
+ * jogadores de Palpagos e nos 2 pontos medidos na Árvore Mundial.
+ */
+const TRANSLADO_X = 123_888;
+const TRANSLADO_Y = 158_000;
+const ESCALA = 459;
 
-// Palpagos, fórmula antiga — é a que o PalDefender usa. Conferido com base
-// real: world (-234517, 239250) → map (177, -241), que bate exatamente.
-const PALPAGOS_ANTIGO = { tx: 123_888, ty: 158_000, escala: 459 };
-
-// Palpagos, fórmula nova — usada para decidir a que mundo um ponto pertence.
-const PALPAGOS_NOVO = { tx: 375_247, ty: -18, escala: 725 };
-
-const ARVORE = { tx: 358_540, ty: -382_365, escala: 724 };
-
-/** Fora deste raio, o ponto não é de Palpagos. */
-const LIMITE_PALPAGOS = 1000;
-
-/** Fora deste raio, o ponto não é da Árvore Mundial. */
-const LIMITE_ARVORE = 2500;
+/**
+ * `world_x` que separa os dois mundos.
+ *
+ * Não é altitude — isso foi tentado e está errado, porque existe base
+ * legítima de Palpagos a z 63.000 (ilha flutuante, pico de montanha).
+ *
+ * O que separa é a posição no eixo X do mundo, e a separação é gritante: das
+ * 279 posições lidas em 22/08, Palpagos vai de −889.530 a 117.842 e a Árvore
+ * de 475.728 a 570.332. **Um vazio de 357.886 unidades** entre os dois, sem
+ * nada no meio. O corte fica no meio desse vazio.
+ */
+export const X_ARVORE = 300_000;
 
 export interface Ponto {
   x: number;
   y: number;
 }
-
-/* ------------------------------------------------------------- conversão */
-
-function converter(
-  x: number,
-  y: number,
-  c: { tx: number; ty: number; escala: number },
-): Ponto {
-  return {
-    x: Math.round((y - c.ty) / c.escala),
-    y: Math.round((x + c.tx) / c.escala),
-  };
-}
-
-/** Coordenada de mundo → coordenada do mapa de Palpagos (fórmula antiga). */
-export const paraPalpagos = (x: number, y: number) =>
-  converter(x, y, PALPAGOS_ANTIGO);
-
-/** Coordenada de mundo → coordenada do mapa da Árvore Mundial. */
-export const paraArvore = (x: number, y: number) => converter(x, y, ARVORE);
 
 export type IdMundo = "palpagos" | "arvore";
 
@@ -64,24 +57,18 @@ export interface PontoNoMundo extends Ponto {
   mundo: IdMundo;
 }
 
-/**
- * Descobre em qual mundo o ponto está e devolve a coordenada daquele mapa.
- *
- * A regra é a do PalworldSaveTools: converte por Palpagos e, se o resultado
- * escapar do raio dela, tenta a Árvore Mundial. Se couber lá, é de lá.
- *
- * Não usa altitude de propósito — ver o aviso no topo do arquivo.
- */
+/** Coordenada de mundo → coordenada de mapa. Vale para os dois mundos. */
+export function paraMapa(x: number, y: number): Ponto {
+  return {
+    x: Math.round((y - TRANSLADO_Y) / ESCALA),
+    y: Math.round((x + TRANSLADO_X) / ESCALA),
+  };
+}
+
+/** Em qual mundo o ponto está, e a coordenada de mapa dele. */
 export function localizar(x: number, y: number): PontoNoMundo {
-  const p = converter(x, y, PALPAGOS_NOVO);
-
-  if (Math.abs(p.x) > LIMITE_PALPAGOS || Math.abs(p.y) > LIMITE_PALPAGOS) {
-    const a = paraArvore(x, y);
-    if (Math.abs(a.x) <= LIMITE_ARVORE && Math.abs(a.y) <= LIMITE_ARVORE) {
-      return { ...a, mundo: "arvore" };
-    }
-  }
-
-  // Palpagos: devolver na fórmula antiga, que é a que o resto do site usa.
-  return { ...paraPalpagos(x, y), mundo: "palpagos" };
+  return {
+    ...paraMapa(x, y),
+    mundo: x >= X_ARVORE ? "arvore" : "palpagos",
+  };
 }
