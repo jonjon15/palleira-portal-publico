@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { levelOf, canModerate } from "@/lib/roles";
+import { levelOf, canModerate, canPowerServer } from "@/lib/roles";
 import { serverBySlug, type PalleiraServer } from "@/lib/servers";
 import {
   announce,
@@ -14,6 +14,7 @@ import {
 } from "@/lib/palworld/rest";
 import { registrar, ACAO_LABEL, type AcaoModeracao } from "@/lib/moderacao";
 import { espelharAnuncio, logarNoDiscord } from "@/lib/discord";
+import { enviarEnergia, SINAL_LABEL, type Sinal } from "@/lib/painel";
 
 export interface Estado {
   ok: boolean;
@@ -26,6 +27,15 @@ async function exigirModeracao() {
   if (!session) throw new Error("Sem sessão");
   const nivel = levelOf(session.user.roles, session.user.isMember);
   if (!canModerate(nivel)) throw new Error("Sem permissão");
+  return session.user.discordId;
+}
+
+/** Energia é mais restrito que moderação: derruba todo mundo, não uma pessoa. */
+async function exigirEnergia() {
+  const session = await auth();
+  if (!session) throw new Error("Sem sessão");
+  const nivel = levelOf(session.user.roles, session.user.isMember);
+  if (!canPowerServer(nivel)) throw new Error("Sem permissão");
   return session.user.discordId;
 }
 
@@ -230,5 +240,42 @@ export async function desligarServidor(_anterior: Estado, form: FormData): Promi
     detail: `${mensagem} (${espera}s)`,
     rodar: () => shutdownServer(server, espera, mensagem),
     sucesso: `Desligamento de ${server.shortName} iniciado — ${espera}s até cair.`,
+  });
+}
+
+/* ----------------------------------------------------------------- energia */
+
+/**
+ * Liga, reinicia ou finaliza pelo painel da ENX.
+ *
+ * O `stop` do painel não está aqui de propósito: para desligar já existe o
+ * `shutdown` da REST, que avisa o jogador com contagem regressiva antes de
+ * cair. Cortar pelo painel sem aviso seria um jeito pior de fazer a mesma
+ * coisa.
+ */
+export async function energiaServidor(_anterior: Estado, form: FormData): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const sinal = String(form.get("sinal") ?? "") as Sinal;
+
+  if (sinal !== "start" && sinal !== "restart" && sinal !== "kill") {
+    return { ok: false, mensagem: "Comando de energia inválido." };
+  }
+
+  if (!server.panelId) {
+    return {
+      ok: false,
+      mensagem: `Falta cadastrar o ID do painel para ${server.shortName}.`,
+    };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "power",
+    detail: SINAL_LABEL[sinal],
+    rodar: () => enviarEnergia(server, sinal),
+    // O painel aceita e executa em segundo plano — daí "pedido", não "feito".
+    sucesso: `${SINAL_LABEL[sinal]} pedido ao painel para ${server.shortName}. Pode levar um minuto até voltar a responder.`,
   });
 }

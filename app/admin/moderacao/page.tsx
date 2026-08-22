@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
-import { levelOf, canModerate } from "@/lib/roles";
+import { levelOf, canModerate, canPowerServer } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
 import { getInfo, getMetrics, getPlayers } from "@/lib/palworld/rest";
 import { recentes, ACAO_LABEL } from "@/lib/moderacao";
@@ -11,6 +11,7 @@ import { buscarMembro } from "@/lib/discord";
 import {
   SalvarMundo,
   Desligar,
+  Energia,
   Anuncio,
   BanManual,
   UnbanManual,
@@ -36,9 +37,11 @@ export default async function Moderacao({
   if (!session) redirect("/entrar");
 
   // Quem não é staff nem descobre que a página existe.
-  if (!canModerate(levelOf(session.user.roles, session.user.isMember))) {
-    notFound();
-  }
+  const nivel = levelOf(session.user.roles, session.user.isMember);
+  if (!canModerate(nivel)) notFound();
+
+  // Energia é só da cúpula: moderador vê a página, não vê estes botões.
+  const podeEnergia = canPowerServer(nivel);
 
   const servidores = activeServers();
   const { servidor: slugPedido } = await searchParams;
@@ -178,12 +181,34 @@ export default async function Moderacao({
             <h2 className="text-lg font-semibold">Mundo</h2>
             <p className="mt-1.5 text-sm text-muted">
               Salvar agora, sem esperar o autosave, ou desligar com contagem
-              regressiva avisada no chat. Desligar é só de ida: religar é no
-              painel da ENX.
+              regressiva avisada no chat.
+              {podeEnergia && server.panelId
+                ? " Ligar e reiniciar passam pelo painel da ENX, porque o jogo não sabe fazer isso."
+                : " Desligar é só de ida: religar é no painel da ENX."}
             </p>
             <div className="mt-4 flex flex-col gap-4">
               <SalvarMundo servidor={server.slug} />
-              <Desligar servidor={server.slug} />
+              {podeEnergia && server.panelId && (
+                <div className="border-t border-line pt-4">
+                  <h3 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
+                    Energia
+                  </h3>
+                  <p className="mt-1.5 mb-3 text-sm text-muted">
+                    Passa pelo painel da ENX, não pelo jogo — é o único caminho
+                    que liga um servidor desligado.
+                  </p>
+                  <Energia
+                    servidor={server.slug}
+                    ligado={metrics !== null}
+                  />
+                </div>
+              )}
+              <div className="border-t border-line pt-4">
+                <Desligar
+                  servidor={server.slug}
+                  temPainel={podeEnergia && Boolean(server.panelId)}
+                />
+              </div>
             </div>
           </section>
         </div>

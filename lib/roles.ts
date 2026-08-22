@@ -79,6 +79,16 @@ export const canModerate = isStaff;
 export const canManageEconomy = (level: AccessLevel) =>
   level === "dono" || level === "admin";
 
+/**
+ * Pode ligar, reiniciar e desligar servidor pelo painel do host.
+ *
+ * Mais restrito que `canModerate` de propósito: kick e ban atingem uma
+ * pessoa, energia derruba todo mundo que está online. Moderador modera
+ * jogador; servidor é da cúpula.
+ */
+export const canPowerServer = (level: AccessLevel) =>
+  level === "dono" || level === "admin";
+
 export const LEVEL_LABEL: Record<AccessLevel, string> = {
   dono: "Dono",
   admin: "Admin",

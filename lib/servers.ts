@@ -27,6 +27,14 @@ export interface PalleiraServer {
   /** Token da REST API do PalDefender (§3.6) */
   palDefenderPort: number;
   palDefenderToken: string;
+  /**
+   * ID do servidor no painel da ENX — o pedaço da URL em `/server/XXXXXXXX`.
+   *
+   * É o que permite ligar e reiniciar: a REST do Palworld só desliga, porque
+   * ela morre junto com o processo. Não é segredo (a chave é que é), então
+   * mora aqui e não em env. Vazio = botão de energia desligado no site.
+   */
+  panelId: string;
   enabled: boolean;
   /**
    * Se as posições de jogador e base podem aparecer no mapa público.
@@ -54,6 +62,7 @@ export const SERVERS: PalleiraServer[] = [
     adminPassword: env("SRV1_ADMIN_PASSWORD"),
     palDefenderPort: 10052,
     palDefenderToken: env("SRV1_PALDEFENDER_TOKEN"),
+    panelId: "", // pendente — pegar em painel.enxadahost.com/server/XXXXXXXX
     enabled: true,
     mapVisible: true,
     mode: "PvE",
@@ -70,6 +79,7 @@ export const SERVERS: PalleiraServer[] = [
     adminPassword: env("SRV2_ADMIN_PASSWORD"),
     palDefenderPort: 10064,
     palDefenderToken: env("SRV2_PALDEFENDER_TOKEN"),
+    panelId: "6eb8d521",
     enabled: true,
     mapVisible: true,
     mode: "PvE",
@@ -86,6 +96,7 @@ export const SERVERS: PalleiraServer[] = [
     adminPassword: env("SRV3_ADMIN_PASSWORD"),
     palDefenderPort: 10077,
     palDefenderToken: env("SRV3_PALDEFENDER_TOKEN"),
+    panelId: "", // pendente — pegar em painel.enxadahost.com/server/XXXXXXXX
     // Entra no site para leitura (placar, guilds, estatísticas). O mercado
     // ainda depende do RCON, que está desligado no .ini deste servidor.
     enabled: true,

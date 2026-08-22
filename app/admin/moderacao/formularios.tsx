@@ -8,6 +8,7 @@ import {
   banirManual,
   desbanirManual,
   desligarServidor,
+  energiaServidor,
   type Estado,
 } from "./actions";
 
@@ -56,7 +57,13 @@ export function SalvarMundo({ servidor }: { servidor: string }) {
   );
 }
 
-export function Desligar({ servidor }: { servidor: string }) {
+export function Desligar({
+  servidor,
+  temPainel,
+}: {
+  servidor: string;
+  temPainel: boolean;
+}) {
   const [estado, acao, pendente] = useActionState(desligarServidor, SEM_ESTADO);
   return (
     <form action={acao} className="space-y-3">
@@ -96,10 +103,21 @@ export function Desligar({ servidor }: { servidor: string }) {
         Quem religa é o painel da ENX, então o aviso fica colado no botão.
       */}
       <p className="rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.07] px-4 py-3 text-sm text-muted">
-        <b className="text-danger">Isto desliga, não reinicia.</b> O site não
-        consegue ligar de volta — quando o servidor cai, a API cai junto. Para
-        subir de novo é o botão <b className="text-text">Start</b> no painel da
-        ENX.
+        <b className="text-danger">Isto desliga, não reinicia.</b>{" "}
+        {temPainel ? (
+          <>
+            Para trazer de volta, use <b className="text-text">Iniciar</b> em
+            Energia, logo acima. Quem quer só reiniciar avisando os jogadores
+            deve usar <b className="text-text">Reiniciar</b> — ele faz as duas
+            pontas sozinho.
+          </>
+        ) : (
+          <>
+            O site ainda não consegue ligar de volta neste servidor: falta
+            cadastrar o ID do painel. Para subir de novo, o botão{" "}
+            <b className="text-text">Iniciar</b> no painel da ENX.
+          </>
+        )}
       </p>
 
       <button
@@ -262,5 +280,67 @@ export function LinhaJogador({
         </tr>
       )}
     </>
+  );
+}
+
+/* ----------------------------------------------------------------- energia */
+
+/**
+ * Iniciar / Reiniciar / Finalizar pelo painel da ENX.
+ *
+ * Não tem "Desligar" aqui de propósito: para desligar existe o formulário
+ * com contagem regressiva, que avisa quem está jogando. Repetir o corte
+ * seco do painel seria oferecer o jeito pior de fazer a mesma coisa.
+ */
+export function Energia({
+  servidor,
+  ligado,
+}: {
+  servidor: string;
+  ligado: boolean;
+}) {
+  const [estado, acao, pendente] = useActionState(energiaServidor, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3">
+      <input type="hidden" name="servidor" value={servidor} />
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="submit"
+          name="sinal"
+          value="start"
+          disabled={pendente || ligado}
+          title={ligado ? "O servidor já está no ar" : undefined}
+          className={botaoFantasma}
+        >
+          Iniciar
+        </button>
+        <button
+          type="submit"
+          name="sinal"
+          value="restart"
+          disabled={pendente}
+          className={botao}
+        >
+          {pendente ? "Enviando…" : "Reiniciar"}
+        </button>
+        <button
+          type="submit"
+          name="sinal"
+          value="kill"
+          disabled={pendente || !ligado}
+          title="Corta o processo na hora, sem salvar. Só quando travar."
+          className={botaoPerigo}
+        >
+          Finalizar
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        <b className="text-text">Reiniciar</b> derruba e sobe de novo, sem
+        avisar ninguém dentro do jogo — mande um anúncio antes.{" "}
+        <b className="text-text">Finalizar</b> mata o processo sem salvar:
+        último recurso, quando o servidor travou e não responde.
+      </p>
+      <Aviso {...estado} />
+    </form>
   );
 }
