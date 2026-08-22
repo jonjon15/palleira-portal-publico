@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Mapa da comunidade — tela cheia, painel de camadas, agrupamento e busca.
@@ -105,41 +105,11 @@ export function MapaInterativo({
   const W = limites.maxX - limites.minX;
   const H = limites.maxY - limites.minY;
 
-  /**
-   * Enquadramento inicial: onde a comunidade realmente está, não o quadrado
-   * inteiro do mundo.
-   *
-   * Os limites do mundo são muito maiores que a ilha, então abrir no mundo
-   * todo deixava uma moldura preta enorme em volta — era o que mais fazia o
-   * mapa parecer amador. Aqui a vista nasce colada nos marcadores, com uma
-   * folga para o terreno em volta dar contexto.
-   */
-  const inicial = useMemo(() => {
-    const todos = [...bases, ...jogadores];
-    if (todos.length === 0) {
-      return { zoom: 1, x: limites.minX + W / 2, y: limites.minY + H / 2 };
-    }
-    const xs = todos.map((p) => p.x);
-    const ys = todos.map((p) => p.y);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-
-    const folga = 1.35; // 35% de terreno em volta
-    const z = Math.min(
-      W / Math.max(maxX - minX, 1) / folga,
-      H / Math.max(maxY - minY, 1) / folga,
-    );
-    return {
-      zoom: Math.min(ZOOM_MAX, Math.max(1, z)),
-      x: (minX + maxX) / 2,
-      y: (minY + maxY) / 2,
-    };
-  }, [bases, jogadores, limites, W, H]);
-
-  const [zoom, setZoom] = useState(inicial.zoom);
-  const [centro, setCentro] = useState({ x: inicial.x, y: inicial.y });
+  const [zoom, setZoom] = useState(ZOOM_MIN);
+  const [centro, setCentro] = useState({
+    x: limites.minX + W / 2,
+    y: limites.minY + H / 2,
+  });
   const [ligados, setLigados] = useState<Set<string>>(new Set(servidores));
   const [verBases, setVerBases] = useState(true);
   const [verJogadores, setVerJogadores] = useState(true);
@@ -152,6 +122,73 @@ export function MapaInterativo({
   const arrastando = useRef<{ x: number; y: number } | null>(null);
   const arrastou = useRef(false);
 
+  /**
+   * O tamanho real do container em pixels.
+   *
+   * Sem isto não dá para acertar o enquadramento: a área visível precisa ter
+   * o mesmo formato do quadro, senão o SVG ou corta o que sobra (`slice`) ou
+   * deixa tarja preta (`meet`). Foi o `slice` que fazia o mapa não caber
+   * inteiro nem no zoom mínimo.
+   */
+  const [quadro, setQuadro] = useState({ w: 16, h: 9 });
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([e]) => {
+      const { width, height } = e.contentRect;
+      if (width > 0 && height > 0) setQuadro({ w: width, h: height });
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  /** Pixels por unidade de mundo no zoom 1 — o mundo inteiro cabendo. */
+  const escalaBase = Math.min(quadro.w / W, quadro.h / H);
+
+  /**
+   * Onde a comunidade está — e não o quadrado inteiro do mundo.
+   *
+   * Os limites do mundo são bem maiores que a área construída, então abrir no
+   * mundo todo deixava uma moldura preta enorme. Isto só pode ser calculado
+   * depois que o container foi medido, por isso é função e não valor inicial
+   * de estado.
+   */
+  const enquadramento = useCallback(() => {
+    const todos = [...bases, ...jogadores];
+    if (todos.length === 0 || quadro.w < 2) return null;
+
+    const xs = todos.map((p) => p.x);
+    const ys = todos.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const folga = 1.25; // 25% de terreno em volta, para dar contexto
+    const z = Math.min(
+      quadro.w / (escalaBase * Math.max(maxX - minX, 1) * folga),
+      quadro.h / (escalaBase * Math.max(maxY - minY, 1) * folga),
+    );
+    return {
+      zoom: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)),
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2,
+    };
+  }, [bases, jogadores, quadro, escalaBase]);
+
+  // Enquadrar uma vez, quando o container ganha tamanho de verdade. Depois
+  // disso a vista é da pessoa: reenquadrar só pelo botão.
+  const jaEnquadrou = useRef(false);
+  useEffect(() => {
+    if (jaEnquadrou.current) return;
+    const e = enquadramento();
+    if (!e) return;
+    jaEnquadrou.current = true;
+    setZoom(e.zoom);
+    setCentro({ x: e.x, y: e.y });
+  }, [enquadramento]);
+
   const termo = busca.trim().toLowerCase();
   const casa = useCallback(
     (texto: string) => texto.toLowerCase().includes(termo),
@@ -160,23 +197,37 @@ export function MapaInterativo({
 
   /* ---------------------------------------------------------------- vista */
 
-  const vw = W / zoom;
-  const vh = H / zoom;
+  const vw = quadro.w / (escalaBase * zoom);
+  const vh = quadro.h / (escalaBase * zoom);
 
-  const cx = Math.min(
-    Math.max(centro.x, limites.minX + vw / 2),
-    limites.maxX - vw / 2,
-  );
-  const cy = Math.min(
-    Math.max(centro.y, limites.minY + vh / 2),
-    limites.maxY - vh / 2,
-  );
+  // Quando a vista é mais larga que o mundo, prender no meio em vez de
+  // empurrar contra a borda — senão o mundo cola num canto.
+  const cx =
+    vw >= W
+      ? limites.minX + W / 2
+      : Math.min(
+          Math.max(centro.x, limites.minX + vw / 2),
+          limites.maxX - vw / 2,
+        );
+  const cy =
+    vh >= H
+      ? limites.minY + H / 2
+      : Math.min(
+          Math.max(centro.y, limites.minY + vh / 2),
+          limites.maxY - vh / 2,
+        );
 
   const viewBox = `${cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`;
 
-  /** Marcador fixo em coordenada de jogo cresceria com o zoom; dividir mantém
-      o tamanho na tela, que é o que se espera de um mapa. */
-  const esc = (n: number) => n / zoom;
+  /**
+   * Converte pixel de tela em unidade de mundo.
+   *
+   * Marcador medido em coordenada de jogo cresce junto com o zoom e vira
+   * bolha. Aqui os números são o tamanho que se quer **na tela**, e a conta
+   * devolve quanto isso vale no mundo no zoom atual — então o marcador tem
+   * sempre o mesmo tamanho, aproximado ou afastado.
+   */
+  const esc = (px: number) => px / (escalaBase * zoom);
 
   /* -------------------------------------------------------------- pontos */
 
@@ -300,8 +351,10 @@ export function MapaInterativo({
 
   /** Volta para onde a comunidade está — não para o quadrado do mundo. */
   const reenquadrar = () => {
-    setZoom(inicial.zoom);
-    setCentro({ x: inicial.x, y: inicial.y });
+    const e = enquadramento();
+    if (!e) return;
+    setZoom(e.zoom);
+    setCentro({ x: e.x, y: e.y });
   };
 
   const alternarServidor = (s: string) =>
@@ -442,7 +495,7 @@ export function MapaInterativo({
           ref={svgRef}
           viewBox={viewBox}
           className="block size-full cursor-grab touch-none active:cursor-grabbing"
-          preserveAspectRatio="xMidYMid slice"
+          preserveAspectRatio="xMidYMid meet"
           onWheel={aoRolar}
           onPointerDown={aoPressionar}
           onPointerMove={aoMover}
