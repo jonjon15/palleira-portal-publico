@@ -746,6 +746,36 @@ comando **`alert <mensagem>`** do PalDefender, por RCON, que mostra a mensagem
 grande na tela. Testado: responde `Command execution succeeded.` e o log
 registra `[BroadcastAlert] -> ...`. **Sem barra** no começo.
 
+#### 🔧 Receita: consertar "carregamento infinito" de um jogador
+
+**Sintoma:** o jogador não consegue entrar — fica na tela de carregamento
+para sempre. **Mas o servidor loga ele sem erro nenhum** (`has logged in` no
+log), ele aparece em `/players` com ping normal, e o `getpos` devolve
+coordenada válida.
+
+**Causa:** o `Players/{UID}.sav` dele está corrompido. O personagem em si
+está íntegro — ele mora no `Level.sav`.
+
+**Conserto (não perde progresso):**
+
+1. Parar o servidor pelo painel (o `stop`, não o `shutdown` da REST)
+2. Apagar `Pal/Saved/SaveGames/0/{guid}/Players/{UID}.sav`
+3. Religar
+
+O servidor **regenera o arquivo individual a partir do `Level.sav`** no
+primeiro autosave, limpo. O jogador volta a entrar **com o personagem, o
+nível e tudo no lugar**.
+
+> 📌 Confirmado com o Gadl em 22/08: apagamos o arquivo achando que
+> zeraríamos o personagem, ele voltou sozinho, e tratamos como fracasso.
+> Não era: **o carregamento infinito acabou.** Ele voltou a jogar com o
+> nível 40 intacto. Zerar é outra operação (mexer no `Level.sav`); isto
+> aqui é **reparo**.
+
+⚠️ Não confundir as duas coisas:
+> **apagar `Players/{UID}.sav` = reparar o jogador**
+> **editar o `Level.sav` = zerar o jogador**
+
 #### Caso Gadl (22/08/2026) — não concluído
 
 Pediu reset por não conseguir entrar: **carregamento infinito**. Descobertas:
