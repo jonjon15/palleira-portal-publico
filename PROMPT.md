@@ -1809,6 +1809,45 @@ vercel domains add palleira.com.br
 
 ---
 
+### 11.1 Domínio — estado em 22/08/2026
+
+**Onde está o quê:** o `.com.br` é registrado no **Registro.br**, mas quem
+responde pelo DNS é a **Hostinger** (nameservers `horizon.dns-parking.com` e
+`orbit.dns-parking.com`). Os registros se mexem no painel da Hostinger, em
+**DNS / Nameservers → Registros DNS**.
+
+**Decisão de forma:** o endereço oficial é o **apex** (`palleira.com.br`), e o
+`www` redireciona para ele. Ao adicionar na Vercel, **desmarcar** a caixa
+"Redirect apex domains to www", que faz o contrário do combinado.
+
+🔴 **O domínio está vinculado a OUTRA conta Vercel** — quase certamente a do
+ex-dev, do site anterior. A Vercel exige um TXT de posse para liberar:
+
+| Tipo | Nome | Valor |
+|---|---|---|
+| `TXT` | `_vercel` | `vc-domain-verify=palleira.com.br,4cea5b19623b67cbad19` |
+
+No campo Nome vai só `_vercel`, sem o domínio — a Hostinger completa.
+
+**A ordem dos passos, e nenhum pode pular:**
+
+1. TXT de verificação na Hostinger → **Refresh** na Vercel até validar
+2. A Vercel então pede os registros de apontamento — provavelmente
+   `A @ → 76.76.21.21` e `CNAME www → cname.vercel-dns.com`
+3. ⚠️ **No Discord Developer Portal → OAuth2 → Redirects**, acrescentar:
+   - `https://palleira.com.br/api/auth/callback/discord`
+   - `https://www.palleira.com.br/api/auth/callback/discord`
+
+   **Sem isso o login quebra** com `redirect_uri_mismatch` no domínio novo.
+   **Não apagar** a entrada do `palleira.vercel.app`: as três convivem, e é
+   para onde voltar se algo der errado.
+
+📌 `AUTH_URL` **não** está cadastrada na Vercel — o Auth.js detecta a URL pelo
+cabeçalho da requisição, então acompanha o domínio novo sozinho. Só o
+`NEXT_PUBLIC_SITE_URL` merece revisão quando o domínio entrar.
+
+---
+
 ## 12. Fases de entrega
 
 | Fase | Escopo | Pronto quando |
@@ -1854,7 +1893,7 @@ vercel domains add palleira.com.br
 
 ### 🟡 Para definir antes de codar
 
-5. 🔴 **`palleira.com.br`: registrado e no seu nome ✅ — mas o dev anterior, que abandonou o projeto, ainda tem acesso à conta.** Resolver **antes** de mexer em DNS:
+5. 🟡 **`palleira.com.br`: registrado e no seu nome ✅.** O dono confirmou em 22/08 que **o ex-dev nunca teve acesso ao registro** — era o próprio dono quem aplicava as mudanças que ele pedia. O alerta abaixo fica como boa prática, não como emergência:
    1. Trocar a senha do Registro.br
    2. **Conferir e-mail e telefone da conta** — se o e-mail for dele, trocar a senha não adianta (ele recupera por "esqueci a senha"). É o item mais importante
    3. Ativar verificação em duas etapas
