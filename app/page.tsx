@@ -3,6 +3,7 @@ import { Pick } from "@/components/pick";
 import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
 import { getMetrics, getRates } from "@/lib/palworld/rest";
+import { communityStats, topPlayers } from "@/lib/db";
 
 // Status ao vivo, com cache — os servidores não aguentam uma chamada por
 // visita de página (§3.3).
@@ -21,7 +22,11 @@ async function loadServers(): Promise<ServerCardData[]> {
 }
 
 export default async function Home() {
-  const servers = await loadServers();
+  const [servers, stats, best] = await Promise.all([
+    loadServers(),
+    communityStats().catch(() => null),
+    topPlayers(5).catch(() => []),
+  ]);
   const online = servers.reduce(
     (n, s) => n + (s.metrics?.currentplayernum ?? 0),
     0,
@@ -105,6 +110,79 @@ export default async function Home() {
           ))}
         </div>
       </section>
+
+      {/* Prova de que a comunidade é viva, visível antes de qualquer login */}
+      {stats && (
+        <section className="border-t border-line bg-surface/40">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <h2 className="text-2xl font-bold tracking-tight">
+              A comunidade em números
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              Somando os dois mundos, contado direto do save.
+            </p>
+
+            <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Stat label="Jogadores" value={stats.players} />
+              <Stat label="Pals capturados" value={stats.pals} />
+              <Stat label="Guilds" value={stats.guilds} />
+              <Stat label="Bases construídas" value={stats.bases} />
+            </dl>
+
+            {best.length > 0 && (
+              <>
+                <h3 className="mt-12 text-lg font-semibold">
+                  Os melhores da Palleira
+                </h3>
+                <ol className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                  {best.map((p, i) => (
+                    <li
+                      key={`${p.server_slug}-${p.palworld_uid}`}
+                      className="flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-3"
+                    >
+                      <span
+                        className={`tabular w-6 text-center text-lg font-bold ${
+                          ["text-gold", "text-[#c9c9c9]", "text-[#c08457]"][i] ??
+                          "text-muted"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">
+                          {p.name}
+                        </span>
+                        <span className="tabular block text-sm text-muted">
+                          Level {p.level} ·{" "}
+                          {p.pal_count.toLocaleString("pt-BR")} Pals
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+
+                <Link
+                  href="/ranking"
+                  className="mt-6 inline-block text-sm font-semibold text-gold hover:text-gold-hi"
+                >
+                  Ver o placar completo →
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
+      )}
     </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-[var(--radius-card)] border border-line bg-surface px-4 py-4">
+      <dd className="tabular text-3xl font-bold text-gold">
+        {value.toLocaleString("pt-BR")}
+      </dd>
+      <dt className="mt-1 text-sm text-muted">{label}</dt>
+    </div>
   );
 }

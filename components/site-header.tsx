@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { auth } from "@/auth";
 import { Pick } from "@/components/pick";
 
 const NAV = [
@@ -9,7 +11,9 @@ const NAV = [
   { href: "/conectar", label: "Como jogar" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await auth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-md">
       <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
@@ -37,13 +41,36 @@ export function SiteHeader() {
         </ul>
 
         <div className="ml-auto flex items-center gap-2">
-          {/* BalanceChip entra aqui na Fase 4 (carteira de Paletas) */}
-          <Link
-            href="/entrar"
-            className="rounded-[var(--radius-control)] bg-gold px-3.5 py-1.5 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi"
-          >
-            Entrar
-          </Link>
+          {/* BalanceChip com o saldo de Paletas entra aqui na Fase 4 */}
+          {session ? (
+            <Link
+              href="/painel"
+              className="flex items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1 text-sm transition-colors hover:bg-surface"
+            >
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt=""
+                  width={26}
+                  height={26}
+                  className="rounded-full"
+                  unoptimized
+                />
+              ) : (
+                <span className="size-[26px] rounded-full bg-surface-2" />
+              )}
+              <span className="max-w-28 truncate">
+                {session.user.nick || session.user.name}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/entrar"
+              className="rounded-[var(--radius-control)] bg-gold px-3.5 py-1.5 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi"
+            >
+              Entrar
+            </Link>
+          )}
         </div>
       </nav>
     </header>
