@@ -611,6 +611,126 @@ O `.sav` é comprimido: 16 MB viram **centenas de MB de JSON** depois de parsead
 
 **Notas de conexão** (para o robô): protocolo **SFTP** (não FTP simples), porta **2022**, um usuário por servidor. ⚠️ O `curl` com libssh2 **não** negocia a criptografia desse servidor — usar `paramiko` (Python) ou cliente OpenSSH.
 
+### 3.8 Editar o mundo: `Level.sav`, Oodle e o motor no GitHub Actions
+
+> Tudo desta seção foi **medido em 22/08/2026**, não é suposição. Serve para
+> ninguém repetir o caminho das pedras.
+
+#### O que NÃO funciona (testado)
+
+**1. Apagar `Players/{UID}.sav` não zera jogador.** O personagem mora no
+`Level.sav`; a pasta `Players/` é derivada dele. Apagamos o arquivo do Gadl
+com o servidor **desligado**, confirmamos que sumiu, religamos — e no primeiro
+autosave o arquivo **voltou com o mesmo tamanho** (11.700 B, contra 11.701 B
+antes). Os 319 arquivos da pasta foram regravados no mesmo segundo. O mundo é
+a fonte da verdade.
+
+**2. O PalDefender não tem comando de reset.** Sondados por RCON, todos
+respondem `Unknown command`: `deleteplayer`, `resetplayer`, `removeplayer`,
+`wipeplayer`, `deletecharacter`, `resetcharacter`, `delplayer`, `pgdelete`,
+`deleteguild`, `removeguild`, `leaveguild`, `kickfromguild`, `unstuck`,
+`teleport`. A sondagem é confiável: `getpos` respondeu com a forma de uso
+correta, provando que comando existente responde diferente de inexistente.
+
+**3. O `shutdown` da REST não desliga — a ENX religa sozinha.** No log do
+painel: `REST API stopped` -> `Server marked as offline...` ->
+`Server marked as starting...`, sem ninguém pedir. **Para parar de verdade é o
+`stop` do painel** (parada intencional). Consequência: o botão "Desligar" do
+site, que usa a REST, na prática é um reinício.
+
+**4. Rodar isso na Vercel é impossível.** O mundo tem 339 MB descomprimidos;
+o plano Hobby dá ~1 GB de RAM e 60s. Não cabe, e não adianta tentar.
+
+#### O formato
+
+| | |
+|---|---|
+| Magic | `PlM` (byte de tipo `0x31`) — **Oodle Kraken**, não zlib |
+| `Level.sav` do PVE FREE | 16,6 MB -> **339 MB** descomprimidos |
+| World GUID PVE FREE | `E99CD9CFE959478C865A90EF645786B7` |
+
+⚠️ Saves antigos eram `PlZ` (zlib, dava para ler com a stdlib do Python).
+**Os atuais são `PlM` e exigem biblioteca nativa** (`palooz`, extensão C++).
+
+#### Correção importante ao que estava escrito na §3.7
+
+Está registrado que o PalworldSaveTools é *"GUI, sem linha de comando"*. Isso
+vale para o **aplicativo**, mas **a biblioteca por baixo dele é scriptável**:
+`palsav` tem CLI (`palsav/commands/convert.py`, `diag.py` e console script
+declarado no `pyproject`). **Automatizar é possível** — a anotação anterior
+leva à conclusão errada.
+
+API útil: `decompress_sav_to_gvas(bytes) -> (gvas, tipo)`,
+`GvasFile.read(...)`, `compress_gvas_to_sav(gvas, tipo)`, e
+`--custom-properties` para decodificar só o que interessa (corta RAM e tempo).
+Cuidado: `palooz` é declarado via `tool.uv.sources`, que **o pip comum não
+resolve** — instalar de `src/palsav/palooz` explicitamente. E não teste o
+import de dentro de `src/palsav`: existe ali uma **pasta** `palooz/` que o
+Python 3 aceita como namespace package e dá falso positivo.
+
+#### O motor: GitHub Actions (medido, não estimado)
+
+Runner padrão de repositório **privado** (`ubuntu-latest`):
+
+| | |
+|---|---|
+| CPU | 2 núcleos |
+| RAM | **7,8 GB** (+3 GB swap) — 7x a Vercel |
+| Disco | 14 GB livres |
+| gcc | 13.3.0 ✅ |
+| Python | 3.12.3 |
+| Cota | 2.000 min/mês grátis no plano Free |
+
+⚠️ **Os 16 GB que se lê por aí são de repositório PÚBLICO.** Privado dá 7,8 GB.
+
+Teste de ponta a ponta que passou: `palooz` **compila em 16,7s** com o gcc do
+runner, e o Oodle faz ida e volta em 339 MB **byte a byte idêntico**, com
+**pico de 1,07 GB de RAM**. Sobra folga larga.
+
+Isso mata de uma vez os três bloqueios da máquina do dono: falta de compilador
+C++, RAM insuficiente e a rede com TLS quebrado (proxy) que impede `pip` e
+`uv` de baixar pacote.
+
+**Desenho que isso libera:**
+
+```
+Site (Vercel)                      GitHub Actions
+-------------                      --------------
+admin clica a ação
+  -> workflow_dispatch com o UID --> compila palooz
+                                     baixa Level.sav pela API do painel
+                                     edita o mundo
+                                     sobe e reinicia o servidor
+  <- lê o status pela API GitHub  <-- conclui
+```
+
+Melhor que agente local no PC do dono: **não depende do PC estar ligado.**
+
+#### Anúncio no jogo: `alert`, não `/announce`
+
+O `POST /v1/api/announce` da REST **não aparece de forma visível** para quem
+está jogando — confirmado com o dono dentro do servidor. O que funciona é o
+comando **`alert <mensagem>`** do PalDefender, por RCON, que mostra a mensagem
+grande na tela. Testado: responde `Command execution succeeded.` e o log
+registra `[BroadcastAlert] -> ...`. **Sem barra** no começo.
+
+#### Caso Gadl (22/08/2026) — não concluído
+
+Pediu reset por não conseguir entrar: **carregamento infinito**. Descobertas:
+
+- UID `F721F85B000000000000000000000000`, nível 40, sozinho na guild
+  `AF356E5448E8E4B14F1AACA75EDD23B0` ("Unnamed Guild", 0 bases)
+- **O servidor loga ele sem erro** (`has logged in`), e ele sai ~40s depois —
+  o travamento é no cliente, não no servidor
+- Apagar o save individual **não resolveu** (voltou pelo `Level.sav`)
+- ⚠️ **Não confirmamos que a causa é o personagem no mundo.** Antes de operar
+  o `Level.sav`, rodar `getpos <user_id>` com ele conectado: se a coordenada
+  vier absurda, achamos a causa e talvez baste teleportar.
+
+Backups guardados em `Downloads/palleira-backups/`:
+`Gadl_F721F85B_pve-free_2026-08-22.sav` e `Level_pve-free_2026-08-22.sav`
+(15,89 MB, sha256 `5299911fdf0cfa2e...`).
+
 ## 4. Integração com o Discord (Palleira BR + Palbot)
 
 ### 4.1 Login e identidade — **Discord é o único login**
