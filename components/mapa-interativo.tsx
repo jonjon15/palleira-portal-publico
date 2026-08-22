@@ -105,11 +105,41 @@ export function MapaInterativo({
   const W = limites.maxX - limites.minX;
   const H = limites.maxY - limites.minY;
 
-  const [zoom, setZoom] = useState(1);
-  const [centro, setCentro] = useState({
-    x: limites.minX + W / 2,
-    y: limites.minY + H / 2,
-  });
+  /**
+   * Enquadramento inicial: onde a comunidade realmente está, não o quadrado
+   * inteiro do mundo.
+   *
+   * Os limites do mundo são muito maiores que a ilha, então abrir no mundo
+   * todo deixava uma moldura preta enorme em volta — era o que mais fazia o
+   * mapa parecer amador. Aqui a vista nasce colada nos marcadores, com uma
+   * folga para o terreno em volta dar contexto.
+   */
+  const inicial = useMemo(() => {
+    const todos = [...bases, ...jogadores];
+    if (todos.length === 0) {
+      return { zoom: 1, x: limites.minX + W / 2, y: limites.minY + H / 2 };
+    }
+    const xs = todos.map((p) => p.x);
+    const ys = todos.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const folga = 1.35; // 35% de terreno em volta
+    const z = Math.min(
+      W / Math.max(maxX - minX, 1) / folga,
+      H / Math.max(maxY - minY, 1) / folga,
+    );
+    return {
+      zoom: Math.min(ZOOM_MAX, Math.max(1, z)),
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2,
+    };
+  }, [bases, jogadores, limites, W, H]);
+
+  const [zoom, setZoom] = useState(inicial.zoom);
+  const [centro, setCentro] = useState({ x: inicial.x, y: inicial.y });
   const [ligados, setLigados] = useState<Set<string>>(new Set(servidores));
   const [verBases, setVerBases] = useState(true);
   const [verJogadores, setVerJogadores] = useState(true);
@@ -268,9 +298,10 @@ export function MapaInterativo({
     );
   };
 
+  /** Volta para onde a comunidade está — não para o quadrado do mundo. */
   const reenquadrar = () => {
-    setZoom(1);
-    setCentro({ x: limites.minX + W / 2, y: limites.minY + H / 2 });
+    setZoom(inicial.zoom);
+    setCentro({ x: inicial.x, y: inicial.y });
   };
 
   const alternarServidor = (s: string) =>
@@ -550,7 +581,7 @@ export function MapaInterativo({
             [
               ["+", () => aplicarZoom(1.5), "Aproximar"],
               ["−", () => aplicarZoom(1 / 1.5), "Afastar"],
-              ["⤢", reenquadrar, "Ver o mundo inteiro"],
+              ["⤢", reenquadrar, "Voltar ao enquadramento"],
             ] as const
           ).map(([texto, acao, titulo]) => (
             <button
