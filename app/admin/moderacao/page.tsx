@@ -42,8 +42,28 @@ export default async function Moderacao({
 
   const servidores = activeServers();
   const { servidor: slugPedido } = await searchParams;
-  const server =
-    serverBySlug(slugPedido ?? "") ?? servidores[0] ?? null;
+
+  // Quantos estão online em cada servidor — o `/metrics` é leve e vem com
+  // cache de 60s (§3.4), então dá para perguntar aos três sem pesar.
+  const contagem = new Map<string, number | null>(
+    await Promise.all(
+      servidores.map(
+        async (s) =>
+          [
+            s.slug,
+            (await getMetrics(s).catch(() => null))?.currentplayernum ?? null,
+          ] as [string, number | null],
+      ),
+    ),
+  );
+
+  // Sem escolha explícita, abre onde tem gente. Painel de moderação existe
+  // para agir sobre jogador — cair num servidor vazio faz caçar aba por aba.
+  const maisCheio = [...servidores].sort(
+    (a, b) => (contagem.get(b.slug) ?? -1) - (contagem.get(a.slug) ?? -1),
+  )[0];
+
+  const server = serverBySlug(slugPedido ?? "") ?? maisCheio ?? null;
 
   if (!server) {
     return (
@@ -84,19 +104,39 @@ export default async function Moderacao({
       <div className="mx-auto max-w-6xl px-4 py-12">
         {/* --------------------------------------------------- seletor */}
         <div className="flex flex-wrap gap-2 border-b border-line pb-4">
-          {servidores.map((s) => (
-            <Link
-              key={s.slug}
-              href={`/admin/moderacao?servidor=${s.slug}`}
-              className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                s.slug === server.slug
-                  ? "border-gold/40 bg-gold/10 text-gold"
-                  : "border-line text-muted hover:border-line-strong hover:text-text"
-              }`}
-            >
-              {s.shortName}
-            </Link>
-          ))}
+          {servidores.map((s) => {
+            const online = contagem.get(s.slug) ?? null;
+            const ativo = s.slug === server.slug;
+            return (
+              <Link
+                key={s.slug}
+                href={`/admin/moderacao?servidor=${s.slug}`}
+                className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+                  ativo
+                    ? "border-gold/40 bg-gold/10 text-gold"
+                    : "border-line text-muted hover:border-line-strong hover:text-text"
+                }`}
+              >
+                {s.shortName}
+                <span
+                  className={`tabular rounded-full px-1.5 py-0.5 text-[0.7rem] ${
+                    online === null
+                      ? "bg-danger/15 text-danger"
+                      : online > 0
+                        ? "bg-success/15 text-success"
+                        : "bg-surface-2 text-muted"
+                  }`}
+                  title={
+                    online === null
+                      ? "Servidor sem resposta"
+                      : `${online} online`
+                  }
+                >
+                  {online === null ? "—" : online}
+                </span>
+              </Link>
+            );
+          })}
         </div>
 
         {/* -------------------------------------------- info + métricas */}
