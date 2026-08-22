@@ -4,8 +4,11 @@ name: Import do save
 # vira centenas de MB. Não cabe em função serverless, e o parser é Python.
 on:
   schedule:
-    # 06:00 UTC = 03:00 de Brasília, servidor vazio
-    - cron: "0 6 * * *"
+    # De 2 em 2 horas. Baixar e processar os três saves leva menos de 1 min,
+    # e são só 26 MB — o servidor nem sente. O limite real é o minuto de CI
+    # do GitHub (2.000/mês no plano grátis): 12 execuções por dia consomem
+    # ~720, com folga. Aumentar a frequência daqui exige olhar essa conta.
+    - cron: "0 */2 * * *"
   workflow_dispatch: # permite rodar na mão pelo painel do GitHub
 
 jobs:
