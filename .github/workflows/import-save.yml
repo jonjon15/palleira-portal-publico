@@ -20,17 +20,23 @@ jobs:
         with:
           python-version: "3.12"
 
-      # ooz: descompressor Kraken open source. Precisa dele porque o Palworld
-      # passou a usar Oodle (container PlM) na v0.6, e a lib Python só lê o
-      # formato antigo (PlZ/zlib).
-      - name: Compilar o ooz
+      # Descompressor Kraken open source. Precisa dele porque o Palworld passou
+      # a usar Oodle (container PlM) na v0.6, e a lib Python só lê o formato
+      # antigo (PlZ/zlib).
+      #
+      # ⚠️ O powzix/ooz original é só Windows (depende do SDK da Microsoft).
+      # O oozlin é a porta para Linux — é ele que compila no runner.
+      - name: Compilar o oozlin
         run: |
-          git clone --depth 1 https://github.com/powzix/ooz.git /tmp/ooz
-          cd /tmp/ooz
-          g++ -O2 -fPIC -o ooz *.cpp -std=c++17 2>/dev/null \
-            || g++ -O2 -fPIC -o ooz $(ls *.cpp | grep -v test) -std=c++17
-          echo "OOZ_BIN=/tmp/ooz/ooz" >> "$GITHUB_ENV"
-          /tmp/ooz/ooz 2>&1 | head -3 || true
+          git clone --depth 1 https://github.com/synnfynn/oozlin.git /tmp/oozlin
+          cd /tmp/oozlin
+          ls
+          make 2>&1 | tail -5 || cmake . && make 2>&1 | tail -5
+          BIN=$(find /tmp/oozlin -maxdepth 2 -type f -perm -u+x \
+                 ! -name "*.sh" ! -name "*.o" ! -path "*/.git/*" | head -1)
+          echo "binario encontrado: $BIN"
+          echo "OOZ_BIN=$BIN" >> "$GITHUB_ENV"
+          "$BIN" 2>&1 | head -5 || true
 
       - name: Dependências Python
         run: pip install --quiet paramiko "psycopg[binary]" palworld-save-tools
