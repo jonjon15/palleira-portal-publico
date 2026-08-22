@@ -62,9 +62,22 @@ def dig(obj, *caminho, default=None):
 
 
 def scalar(node, default=None):
-    """A lib embrulha valores em {'value': x}; às vezes não."""
-    if isinstance(node, dict) and "value" in node:
-        return node["value"]
+    """
+    Desce pelos `{'value': ...}` até chegar num valor simples.
+
+    O GVAS aninha em profundidade variável — `Level` às vezes é
+    `{'value': 30}`, às vezes `{'value': {'value': 30}}`. Desembrulhar um
+    nível só quebra com `TypeError: int() argument ... not 'dict'`, que foi
+    exatamente o que aconteceu na primeira tentativa. Mesma solução do
+    `import_save.py`.
+    """
+    for _ in range(6):
+        if isinstance(node, dict) and "value" in node:
+            node = node["value"]
+        else:
+            break
+    if isinstance(node, dict):
+        return default
     return default if node is None else node
 
 
