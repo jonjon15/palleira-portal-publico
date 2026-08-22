@@ -1,0 +1,23 @@
+# Mede o runner do GitHub para decidir se o processamento do Level.sav
+# (339 MB descomprimidos) cabe aqui. Descartar depois de responder isso.
+name: spec-check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  spec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hardware do runner
+        run: |
+          echo "=== CPU ==="
+          nproc
+          echo "=== RAM ==="
+          free -h
+          echo "=== DISCO ==="
+          df -h / | tail -1
+          echo "=== compilador ==="
+          gcc --version | head -1
+          echo "=== python ==="
+          python3 --version
