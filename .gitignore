@@ -45,3 +45,8 @@ next-env.d.ts
 
 # claude code (permissoes locais)
 .claude/settings.local.json
+
+# credenciais soltas na pasta do projeto
+credencial*.txt
+*credencial*
+*.key
