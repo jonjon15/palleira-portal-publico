@@ -231,7 +231,9 @@ def servers_from_env() -> list[ServerCfg]:
 # caber no tempo: decodificar o save inteiro estourou 20 minutos no runner.
 NEEDED_SECTIONS = (
     ".worldSaveData.GroupSaveDataMap",  # guilds e membros
-    ".worldSaveData.CharacterSaveParameterMap",  # jogadores e Pals
+    # ⚠️ A chave é o RawData do valor, não o mapa inteiro — apontar para
+    # `.CharacterSaveParameterMap` não casa com nada e o level vem zerado.
+    ".worldSaveData.CharacterSaveParameterMap.Value.RawData",  # jogadores e Pals
 )
 
 
