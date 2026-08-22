@@ -60,19 +60,28 @@ export const MAPAS: DefinicaoMapa[] = [
      * A primeira estimativa (700 de largura, centrada nos jogadores) ficava
      * estreita e deslocada para oeste.
      *
-     * Terceira medição (22/08, dono parado em −1613 · 1413): o pino caía na
-     * área azul com a região vinho ~295 px à direita, num zoom de 2,5×. Com
-     * 792 unidades de largura isso dá **63 unidades**, e o retângulo foi
-     * empurrado para oeste nesse tanto — o pino anda para dentro do vinho,
-     * que é onde o jogo mostra.
+     * Calibração final por **ponto de referência**, que é o método que
+     * fecha: em vez de estimar deslocamento contando pixel em captura de
+     * tela, o dono pôs o cursor na mesma roda-gigante nos dois mapas.
+     *
+     *   site dizia:  −1681 · 1424
+     *   jogo dizia:  −1714 · 1395
+     *   diferença:     −33 ·  −29
+     *
+     * O retângulo anda esse tanto e pronto — sem chute. (Em Y o sinal
+     * inverte nos limites internos, porque o eixo do SVG cresce para baixo.)
+     *
+     * ⚠️ Um ponto só corrige **deslocamento**, não escala. Se o pino ficar
+     * certo perto da roda-gigante mas errado nas bordas da ilha, aí falta
+     * escala, e para isso são precisos dois pontos distantes.
      *
      * ⚠️ A CONVERSÃO está provada e não se mexe (ver `coordenadas.ts`). Isto
      * aqui é só **quanto do mundo a imagem cobre**, e sai de medição em
      * pixel, então tem erro de alguns pontos. Se ainda ficar deslocado, é
      * este retângulo que se empurra.
      */
-    limites: { minX: -2121, maxX: -1329, minY: -1824, maxY: -1032 },
-    imagemLimites: { minX: -2121, maxX: -1329, minY: -1824, maxY: -1032 },
+    limites: { minX: -2154, maxX: -1362, minY: -1795, maxY: -1003 },
+    imagemLimites: { minX: -2154, maxX: -1362, minY: -1795, maxY: -1003 },
   },
 ];
 
