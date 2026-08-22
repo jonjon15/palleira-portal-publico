@@ -957,6 +957,12 @@ givepal {userid} Anubis 10
 - [x] Jogadores online com ações: **kick / ban / anunciar / salvar mundo / desligar** — e também **ligar / reiniciar**, que a REST do Palworld não faz e passam pelo painel da ENX.
 - [x] Broadcast in-game com espelho automático no Discord. ⚠️ O espelho fica inerte até `DISCORD_WEBHOOK_STATUS` e `DISCORD_WEBHOOK_ADMIN_LOG` existirem no `vercel env` — no jogo o anúncio já sai.
 - [x] Log de auditoria (quem fez o quê e quando), persistido no banco — tabela `admin_actions`, grava sucesso **e** falha.
+- [x] **Apagar jogador do mundo** — quem pede recomeço é zerado pelo site, com
+  quatro travas: nome digitado à mão, popup pedindo CONFIRMAR, recusa de
+  gravar se o servidor não estiver parado, e backup conferido byte a byte
+  antes de sobrescrever. O trabalho pesado roda no GitHub Actions (§3.8).
+- [x] **Ligar / reiniciar servidor** — pelo painel da ENX, restrito a dono e
+  admin. A REST do Palworld não faz isso.
 - [ ] Editor de anúncios/notícias do site.
 - [ ] Cadastro e configuração dos servidores.
 - [x] **Economia**: ajustar saldo (com motivo obrigatório). ⚠️ Moderar anúncios e resolver disputas só existem depois do mercado.
