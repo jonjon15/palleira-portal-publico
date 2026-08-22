@@ -1848,6 +1848,52 @@ cabeçalho da requisição, então acompanha o domínio novo sozinho. Só o
 
 ---
 
+### 11.2 🔴 Um Discord só vincula UM personagem — e 18% jogam em mais de um servidor
+
+Descoberto pelo dono em 22/08/2026, olhando o mapa: ele tem personagem nos
+três servidores, mas o site só reconhece um.
+
+**A causa está no schema:**
+
+```sql
+create table account_links (
+  discord_id  text  primary key,   -- <= UM vinculo por conta
+  ...
+)
+```
+
+Sendo chave primária, cada Discord só cabe uma vez. O `lib/linking.ts`
+reforça: *"Sua conta já tem personagem. Desvincule antes de trocar."*
+
+**O tamanho do problema, medido no banco:**
+
+> **61 jogadores de 346 estão em mais de um servidor** — 18% da comunidade.
+> Cinco deles nos três (Blackout, DEMON, Lincao, Mari, Zé Ruela).
+
+**O que quebra hoje para essas 61 pessoas:**
+
+- **Mapa** — a base sai em verde só no servidor vinculado; nos outros ela
+  aparece dourada, como a de um estranho
+- **Carteira** — a Paleta é global, mas quem vinculou num servidor não é
+  reconhecido nos outros
+- **Placar e perfil** — aparecem com um personagem só
+
+**O conserto:** trocar a chave primária para `(discord_id, server_slug)` —
+uma pessoa, um personagem **por servidor**. Toca em:
+
+| Arquivo | O quê |
+|---|---|
+| `db/schema.sql` | Chave primária composta + migração dos vínculos existentes |
+| `lib/linking.ts` | `meuVinculo` devolve lista; permitir um por servidor |
+| `app/vincular` | Listar os vínculos e permitir acrescentar |
+| `app/mapa/page.tsx` | A base verde precisa considerar **todos** os UIDs da pessoa |
+| `app/painel` | Perfil com os personagens |
+
+⚠️ A migração não pode perder os vínculos que já existem. São poucos hoje
+(2 em 22/08), então dá para fazer com calma antes de a comunidade adotar.
+
+---
+
 ## 12. Fases de entrega
 
 | Fase | Escopo | Pronto quando |
