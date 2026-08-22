@@ -746,6 +746,30 @@ comando **`alert <mensagem>`** do PalDefender, por RCON, que mostra a mensagem
 grande na tela. Testado: responde `Command execution succeeded.` e o log
 registra `[BroadcastAlert] -> ...`. **Sem barra** no começo.
 
+#### ✅ Como conferir que uma edição do mundo não perdeu nada
+
+Editar o `Level.sav` reescreve o arquivo de **todos**. A conferência que dá
+segurança, feita depois do reset do Gadl em 22/08:
+
+1. **Nível de quem está online** contra o que a tabela `players` tinha antes
+   (ela é do último import, anterior à edição). Todos bateram: DumpNLoads- 53,
+   PLm 78, AndersonOXS666 39.
+2. **Rodar o `import-save.yml` na mão** e comparar as linhas da tabela
+   `imports`, que guarda `players`, `guilds` e `pals` de cada execução:
+
+| | jogadores | guilds | pals |
+|---|---|---|---|
+| antes | 278 | 216 | 30.569 |
+| depois | 277 | 215 | 30.585 |
+| **diferença** | **−1** | **−1** | **+16** |
+
+−1 jogador e −1 guild = exatamente o alvo e a guild vazia dele. Os Pals
+**subiram** porque a comunidade continuou jogando entre os dois imports — a
+série vinha 30.554 → 30.557 → 30.569 → 30.585, sem queda em momento nenhum.
+
+> 📌 A tabela `imports` existe justamente para isso. Sem ela, "não perdeu
+> nada" seria opinião; com ela, é número.
+
 #### 🔧 Receita: consertar "carregamento infinito" de um jogador
 
 **Sintoma:** o jogador não consegue entrar — fica na tela de carregamento
