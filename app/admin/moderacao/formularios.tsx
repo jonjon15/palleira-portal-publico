@@ -335,10 +335,12 @@ export function Energia({
         </button>
       </div>
       <p className="text-xs text-muted">
-        <b className="text-text">Reiniciar</b> derruba e sobe de novo, sem
-        avisar ninguém dentro do jogo — mande um anúncio antes.{" "}
-        <b className="text-text">Finalizar</b> mata o processo sem salvar:
-        último recurso, quando o servidor travou e não responde.
+        <b className="text-text">Reiniciar</b> salva o mundo sozinho antes de
+        derrubar, e leva cerca de 40s para voltar. O que ele não faz é avisar
+        quem está jogando — mande um anúncio antes.{" "}
+        <b className="text-text">Finalizar</b> mata o processo{" "}
+        <b className="text-danger">sem salvar</b>: último recurso, quando o
+        servidor travou e não responde a mais nada.
       </p>
       <Aviso {...estado} />
     </form>

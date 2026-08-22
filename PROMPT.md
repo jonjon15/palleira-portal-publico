@@ -727,34 +727,34 @@ givepal {userid} Anubis 10
 
 ### 5.1 Público (sem login)
 
-- [ ] **Home** — hero com a identidade Palleira, status ao vivo (jogadores online / capacidade), CTA "Entrar no Discord" e "Como conectar".
-- [ ] **Status** — um card por servidor: online/offline, jogadores, uptime, FPS, versão, dias no mundo, gráfico de jogadores nas últimas 24h.
-- [ ] **Como jogar / Conectar** — IP, porta, senha `[?]`, passo a passo com imagens, requisitos, mods `[?]`.
+- [x] **Home** — hero com a identidade Palleira, status ao vivo (jogadores online / capacidade), CTA "Entrar no Discord" e "Como conectar".
+- [x] **Status** — um card por servidor: online/offline, jogadores, uptime, FPS, versão, dias no mundo. ⚠️ Falta só o **gráfico das últimas 24h** — depende de guardar histórico no banco, que ainda não existe.
+- [x] **Como jogar / Conectar** — IP, porta, senha `[?]`, passo a passo com imagens, requisitos, mods `[?]`.
 - [ ] **Regras** — regras da comunidade e do servidor.
 - [ ] **Mercado (vitrine)** — qualquer um vê os anúncios de Pals e itens e os preços em Paletas; para comprar ou vender, precisa logar com o Discord.
-- [ ] **Ranking** — top por horas jogadas / level / capturas `[?]`.
+- [x] **Ranking** — top por horas jogadas / level / capturas `[?]`.
 - [ ] **Notícias e wipes** — posts em MDX ou CMS `[?]`.
 - [ ] **FAQ**.
 
 ### 5.2 Área do jogador (login com Discord)
 
-- [ ] **Meu perfil** — avatar do Discord, conta Palworld vinculada, horas, level, guild in-game, últimas sessões.
-- [ ] **Vincular conta** (§4.2).
+- [x] **Meu perfil** — avatar do Discord, conta Palworld vinculada, horas, level, guild in-game, últimas sessões.
+- [x] **Vincular conta** (§4.2).
 - [ ] **Meus Pals e itens** — inventário que o jogador sobe para o site (§7.3), base para anunciar.
 - [ ] **Anunciar** — wizard de venda em 3 passos.
 - [ ] **Meus anúncios** — ativos, vendidos, expirados, cancelar.
-- [ ] **Carteira** — saldo de Paletas, extrato completo, compras e vendas.
+- [x] **Carteira** — saldo de Paletas, extrato completo, compras e vendas.
 - [ ] **Tickets / suporte** — abre thread no Discord através do bot.
 
 ### 5.3 Painel admin (cargo admin/mod)
 
-- [ ] Jogadores online com ações: **kick / ban / anunciar / salvar mundo / desligar**.
-- [ ] Broadcast in-game com espelho automático no Discord.
-- [ ] Log de auditoria (quem fez o quê e quando), persistido no banco.
+- [x] Jogadores online com ações: **kick / ban / anunciar / salvar mundo / desligar** — e também **ligar / reiniciar**, que a REST do Palworld não faz e passam pelo painel da ENX.
+- [x] Broadcast in-game com espelho automático no Discord. ⚠️ O espelho fica inerte até `DISCORD_WEBHOOK_STATUS` e `DISCORD_WEBHOOK_ADMIN_LOG` existirem no `vercel env` — no jogo o anúncio já sai.
+- [x] Log de auditoria (quem fez o quê e quando), persistido no banco — tabela `admin_actions`, grava sucesso **e** falha.
 - [ ] Editor de anúncios/notícias do site.
 - [ ] Cadastro e configuração dos servidores.
-- [ ] **Economia**: ajustar saldo (com motivo obrigatório), moderar anúncios, resolver disputas.
-- [ ] **Painel de economia** — entrou × saiu por origem, Paletas em circulação, volume do mercado, quantos pegaram daily (§7.12).
+- [x] **Economia**: ajustar saldo (com motivo obrigatório). ⚠️ Moderar anúncios e resolver disputas só existem depois do mercado.
+- [x] **Painel de economia** — entrou × saiu por origem, Paletas em circulação, maiores saldos. ⚠️ Volume do mercado depende do mercado existir.
 - [ ] **Configuração da economia** — taxa, preço de slot, preço mínimo e limites editáveis **sem deploy**, com log de alteração.
 
 ### 5.4 Ideias em aberto `[?]`

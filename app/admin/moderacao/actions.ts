@@ -269,13 +269,44 @@ export async function energiaServidor(_anterior: Estado, form: FormData): Promis
     };
   }
 
+  /*
+   * Reiniciar corta o processo na hora — sem salvar antes, perde-se tudo
+   * desde o último autosave. No teste de 22/08 isso foi feito na mão, e é
+   * exatamente o tipo de passo que a mão esquece às 3h da manhã. Fica no
+   * código.
+   *
+   * Um save que falha NÃO impede o reinício: servidor travado é justamente
+   * quando mais se precisa reiniciar, e é quando o save tem mais chance de
+   * não responder. O resultado vai para o log, para depois se saber se o
+   * mundo estava salvo ou não.
+   *
+   * `kill` não salva de propósito (é para servidor que já não responde) e
+   * `start` não tem o que salvar.
+   */
+  const salvou =
+    sinal === "restart"
+      ? await saveWorld(server).then(
+          () => true,
+          () => false,
+        )
+      : null;
+
+  const nota =
+    salvou === null ? "" : salvou ? " · mundo salvo antes" : " · o save falhou antes";
+
   return executar({
     actorId,
     server,
     action: "power",
-    detail: SINAL_LABEL[sinal],
+    detail: SINAL_LABEL[sinal] + nota,
     rodar: () => enviarEnergia(server, sinal),
     // O painel aceita e executa em segundo plano — daí "pedido", não "feito".
-    sucesso: `${SINAL_LABEL[sinal]} pedido ao painel para ${server.shortName}. Pode levar um minuto até voltar a responder.`,
+    sucesso:
+      `${SINAL_LABEL[sinal]} pedido ao painel para ${server.shortName}. Pode levar um minuto até voltar a responder.` +
+      (salvou === false
+        ? " ⚠️ O save não respondeu antes do reinício — o mundo voltou ao último autosave."
+        : salvou
+          ? " O mundo foi salvo antes."
+          : ""),
   });
 }
