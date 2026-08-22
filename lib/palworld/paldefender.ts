@@ -31,6 +31,12 @@ export interface PdBase {
   id: string;
   mapX: number;
   mapY: number;
+  /**
+   * Altitude no mundo. Serve para saber em qual mapa a base está: Palpagos
+   * fica abaixo de ~18.000, e a Árvore Mundial (adicionada na 1.1) passa dos
+   * 33.000. São mapas diferentes, com imagens diferentes.
+   */
+  worldZ: number;
 }
 
 export interface PdGuild {
@@ -104,7 +110,11 @@ interface RawGuild {
   Level: number;
   admin?: { id: string; name: string };
   camp_count: number;
-  camps?: { id: string; map_pos?: { x: number; y: number } }[];
+  camps?: {
+    id: string;
+    map_pos?: { x: number; y: number };
+    world_pos?: { x: number; y: number; z: number };
+  }[];
   member_count: number;
   members?: string[];
 }
@@ -128,11 +138,15 @@ export async function getGuilds(server: PalleiraServer): Promise<PdGuild[]> {
       id: c.id,
       mapX: Math.round(c.map_pos?.x ?? 0),
       mapY: Math.round(c.map_pos?.y ?? 0),
+      worldZ: Math.round(c.world_pos?.z ?? 0),
     })),
   }));
 }
 
 /* --------------------------------------------------------------- utilidades */
+
+/** Acima disso, a base está na Árvore Mundial e não em Palpagos. */
+export const ARVORE_MUNDIAL_Z = 25_000;
 
 /** O jogo devolve "Unnamed Guild" cru; ninguém merece ler isso em português. */
 function guildLabel(name: string | undefined): string {

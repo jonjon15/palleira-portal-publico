@@ -19,7 +19,7 @@ export const revalidate = 120;
  * 426) e arredondados com folga, para o enquadramento não pular quando
  * alguém construir num canto novo.
  */
-const BOUNDS = { minX: -1500, maxX: 1100, minY: -1700, maxY: 600 };
+const BOUNDS = { minX: -1695, maxX: 1105, minY: -1040, maxY: 1760 };
 const W = BOUNDS.maxX - BOUNDS.minX;
 const H = BOUNDS.maxY - BOUNDS.minY;
 
@@ -33,7 +33,16 @@ const H = BOUNDS.maxY - BOUNDS.minY;
  * Como afinar: escolha uma base conhecida, veja onde ela cai no mapa e
  * empurre estes números na direção contrária à diferença.
  */
-const IMAGE_BOUNDS = { minX: -1500, maxX: 1100, minY: -1700, maxY: 600 };
+const IMAGE_BOUNDS = { minX: -1695, maxX: 1105, minY: -1040, maxY: 1760 };
+
+/**
+ * ⚠️ O eixo Y do `map_pos` do PalDefender vem INVERTIDO em relação ao que o
+ * jogo mostra. Confirmado comparando o mesmo jogador nas duas fontes:
+ * o jogo exibia `-430, -169` e a API devolvia `(-430, +169)`.
+ *
+ * Sem isso o mapa inteiro sai espelhado na vertical.
+ */
+const gameY = (mapY: number) => -mapY;
 
 interface Marker {
   x: number;
@@ -60,9 +69,12 @@ const loadMap = unstable_cache(
 
           for (const g of gs) {
             for (const b of g.bases) {
+              // Não filtrar por altitude: não dá para construir na Árvore
+              // Mundial, então base em z alto é ilha flutuante de Palpagos
+              // mesmo — e precisa aparecer.
               bases.push({
                 x: b.mapX,
-                y: b.mapY,
+                y: gameY(b.mapY),
                 label: g.name,
                 server: server.shortName,
               });
@@ -73,7 +85,7 @@ const loadMap = unstable_cache(
             if (!p.online) continue;
             players.push({
               x: p.mapX,
-              y: p.mapY,
+              y: gameY(p.mapY),
               label: p.name || "Jogador",
               server: server.shortName,
             });
@@ -227,6 +239,15 @@ export default async function Mapa() {
           <span className="ml-auto text-xs text-muted">
             Mapa de Palworld © Pocketpair, Inc.
           </span>
+        </div>
+
+        <p className="mt-3 text-xs text-muted">
+          O mapa de fundo é anterior à 1.1 e não traz as ilhas novas de
+          Palpagos — algumas bases aparecem sobre o mar por causa disso, não
+          por erro de posição.
+        </p>
+
+        <div className="hidden">
         </div>
 
         {hidden.length > 0 && (
