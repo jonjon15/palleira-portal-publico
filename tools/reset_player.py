@@ -141,6 +141,31 @@ def info_arquivo(cfg: Servidor, caminho: str):
         t.close()
 
 
+def renomear(cfg: Servidor, de: str, para: str) -> None:
+    """
+    Troca o arquivo por rename, não por escrita direta.
+
+    Rename no mesmo sistema de arquivos é atômico: ou o mundo novo está lá
+    inteiro, ou o antigo continua intacto. Escrever direto por cima deixa a
+    porta aberta para a conexão cair no meio e o servidor subir com o
+    `Level.sav` truncado — o mundo de todos, pela metade.
+    """
+    t, sftp = _sftp(cfg)
+    try:
+        try:
+            sftp.posix_rename(de, para)   # sobrescreve atomicamente
+        except (AttributeError, OSError):
+            # Servidor SFTP sem a extensão POSIX: remover e renomear é o
+            # melhor possível, com uma janela curtíssima entre os dois.
+            try:
+                sftp.remove(para)
+            except FileNotFoundError:
+                pass
+            sftp.rename(de, para)
+    finally:
+        t.close()
+
+
 def apagar(cfg: Servidor, caminho: str) -> bool:
     t, sftp = _sftp(cfg)
     try:
@@ -258,6 +283,26 @@ def main() -> int:
     caminho = SAVE_PATH.format(guid=cfg.guid)
 
     print(f"=== {cfg.slug} ===", flush=True)
+
+    # Conferir ANTES de baixar. O ciclo leva ~40s; descobrir no fim que não
+    # dá para gravar joga esse tempo fora — e pior, com o servidor parado
+    # esperando, cada segundo é jogador sem conseguir entrar.
+    if args.aplicar:
+        pid = PANEL_IDS.get(cfg.slug)
+        if not pid:
+            sys.exit(f"sem panelId para {cfg.slug} — não dá para conferir se está parado")
+        try:
+            atual = estado_do_painel(pid)
+        except Exception as err:  # noqa: BLE001
+            sys.exit(f"não consegui perguntar ao painel se está parado: {err}")
+        if atual != "offline":
+            print(f"  ❌ O servidor está '{atual}', não 'offline'.")
+            print("     Gravar com o jogo rodando corrompe o mundo de todos: o")
+            print("     servidor tem tudo em memória e reescreve por cima no")
+            print("     autosave seguinte. Pare pelo painel e rode de novo.")
+            return 1
+        print("  ✅ servidor confirmado 'offline'", flush=True)
+
     t0 = time.time()
     original = baixar(cfg, caminho)
     print(f"  baixado:       {len(original):,} bytes em {time.time()-t0:.0f}s", flush=True)
@@ -316,29 +361,7 @@ def main() -> int:
         print("  (simulação — nada foi gravado)")
         return 0
 
-    # ---- travas antes de gravar -----------------------------------------
-    #
-    # Gravar o mundo com o jogo rodando corrompe o save: o servidor tem tudo
-    # em memória e reescreve por cima no autosave seguinte. O workflow já
-    # para o servidor antes, mas quem roda este script na mão pode esquecer —
-    # e a consequência atinge a comunidade inteira. A trava fica aqui.
-    pid = PANEL_IDS.get(cfg.slug)
-    if not pid:
-        sys.exit(f"sem panelId para {cfg.slug} — não dá para conferir se está parado")
-
-    try:
-        atual = estado_do_painel(pid)
-    except Exception as err:  # noqa: BLE001
-        sys.exit(f"não consegui perguntar ao painel se o servidor está parado: {err}")
-
-    if atual != "offline":
-        print()
-        print(f"  ❌ O servidor está '{atual}', não 'offline'.")
-        print("     Gravar agora corromperia o mundo de todos. Pare o servidor")
-        print("     pelo painel (sinal 'stop') e rode de novo.")
-        return 1
-    print(f"\n  ✅ servidor confirmado 'offline'", flush=True)
-
+    # ---- conferir que o desligamento salvou ------------------------------
     # O `stop` do painel manda o jogo desligar com calma, e desligar limpo
     # salva. Conferir a data do arquivo prova que isso aconteceu — se o save
     # for velho, alguma coisa deu errado e o jogador perderia progresso.
@@ -370,8 +393,20 @@ def main() -> int:
         )
     print(f"  ✅ backup conferido: {backup} ({conf[0]:,} bytes)", flush=True)
 
-    enviar(cfg, caminho, novo)
-    print("  Level.sav gravado", flush=True)
+    # Sobe com nome temporário, confere o tamanho e só então troca por
+    # rename. Escrever direto sobre o Level.sav significaria que uma queda de
+    # conexão no meio deixa o mundo de todos truncado no disco do servidor.
+    temporario = caminho + ".novo"
+    enviar(cfg, temporario, novo)
+    conf_novo = info_arquivo(cfg, temporario)
+    if not conf_novo or conf_novo[0] != len(novo):
+        apagar(cfg, temporario)
+        return _abortar(
+            f"upload incompleto ({conf_novo[0] if conf_novo else 0} de {len(novo)} bytes)."
+        )
+
+    renomear(cfg, temporario, caminho)
+    print(f"  ✅ Level.sav trocado ({len(novo):,} bytes, por rename)", flush=True)
 
     individual = PLAYER_PATH.format(guid=cfg.guid, uid=uid)
     print(f"  Players/{uid}.sav: "
