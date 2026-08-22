@@ -62,7 +62,7 @@ export const SERVERS: PalleiraServer[] = [
     adminPassword: env("SRV1_ADMIN_PASSWORD"),
     palDefenderPort: 10052,
     palDefenderToken: env("SRV1_PALDEFENDER_TOKEN"),
-    panelId: "", // pendente — pegar em painel.enxadahost.com/server/XXXXXXXX
+    panelId: "0c079595",
     enabled: true,
     mapVisible: true,
     mode: "PvE",
@@ -96,7 +96,7 @@ export const SERVERS: PalleiraServer[] = [
     adminPassword: env("SRV3_ADMIN_PASSWORD"),
     palDefenderPort: 10077,
     palDefenderToken: env("SRV3_PALDEFENDER_TOKEN"),
-    panelId: "", // pendente — pegar em painel.enxadahost.com/server/XXXXXXXX
+    panelId: "59ec87fa",
     // Entra no site para leitura (placar, guilds, estatísticas). O mercado
     // ainda depende do RCON, que está desligado no .ini deste servidor.
     enabled: true,

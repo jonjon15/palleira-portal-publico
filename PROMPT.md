@@ -287,6 +287,25 @@ Isso é o desenho certo de qualquer jeito: servidor entra e sai da rotação sem
 
 **Painel:** ENX / Enxada Host, nos moldes do Pterodactyl — console, gerenciador de arquivos, backups e configurações. Caminho do container: `/home/container/`.
 
+##### API do painel — o único caminho para LIGAR um servidor
+
+`https://painel.enxadahost.com` · API de cliente do Pterodactyl em `/api/client` (confirmada em 22/08/2026).
+
+A REST do Palworld **só desliga**: ela é servida pelo próprio processo do servidor, morre junto com ele, e por isso não existe — nem pode existir — um endpoint `start`. Ligar e reiniciar passam obrigatoriamente pelo painel:
+`POST /api/client/servers/{id}/power` com `{"signal": "start" | "restart" | "stop" | "kill"}` → 204.
+
+| Servidor | `panelId` |
+|---|---|
+| [BR] Palleira PVE FREE | `0c079595` |
+| [BR] Palleira PVE VIP | `6eb8d521` |
+| [BR] Palleira PVP FREE NEW | `59ec87fa` |
+
+Os IDs não são segredo e moram em `lib/servers.ts`. A **chave** (`ENX_API_KEY`, formato `ptlc_…`) é criada em **painel → Configurações da conta → Credenciais de API**, com o campo de IPs **em branco** — função serverless da Vercel não tem IP fixo. Ela vive só em `.env.local` (ignorado pelo git) e no `vercel env` como *sensitive*.
+
+⚠️ Essa chave é **mais poderosa que a senha de admin do jogo**: dá acesso a arquivos, backups e energia dos três servidores de uma vez. Nunca commitar, nunca colar em chat, nunca mandar para o navegador.
+
+⚠️ **O painel mente sobre o estado do servidor.** O egg de Palworld da ENX procura no log uma frase que o servidor não escreve mais, então os três aparecem como **"INICIANDO" para sempre** — verificado em 22/08/2026 com jogador dentro e 1h45m / 2h55m / 44m de uptime. **Nunca usar o painel para saber se o servidor está no ar**; quem responde isso é o `getMetrics` da REST oficial. (Corrigir de vez é chamado na ENX pedindo ajuste da linha de detecção do egg.)
+
 ⚠️ **O PVE FREE estava com CPU em 584% de 600%** no momento da checagem. Praticamente no teto. Isso pesa no projeto: o portal precisa ser **leve com o servidor** — cache agressivo (30–60s), polling espaçado, nunca uma chamada à API do jogo por visita de página. Se o servidor engasgar, a culpa não pode ser do site.
 
 #### 🔴 Pendências dos servidores
