@@ -42,8 +42,8 @@ jobs:
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: |
           python3 - <<'PY'
-          import os, urllib.request, json
-          sid  = os.environ.get("SID")  or "${{ inputs.servidor }}"
+          import os, urllib.request, urllib.parse, json
+          sid  = "${{ inputs.servidor }}"
           guid = "${{ inputs.mundo }}"
           key  = os.environ["ENX_API_KEY"]
           arq  = f"/Pal/Saved/SaveGames/0/{guid}/Level.sav"
