@@ -301,6 +301,38 @@ def servers_from_env() -> list[ServerCfg]:
     return [ServerCfg(**item) for item in json.loads(raw)]
 
 
+def patch_reader() -> None:
+    """
+    A `palworld-save-tools` 0.24 só conhece 5 tipos dentro de mapa
+    (Struct, Enum, Name, Int, Bool). O Palworld v1.0 passou a usar
+    `Int64Property` em `LevelObjectRecoverPartySaveData`, e o parse morre ali.
+
+    Como a gente **só lê** o save — nunca escreve —, estender o leitor resolve
+    sem risco: os tipos extras são primitivos de tamanho fixo.
+    """
+    from palworld_save_tools.archive import FArchiveReader
+
+    original = FArchiveReader.prop_value
+    extras = {
+        "Int64Property": lambda r: r.i64(),
+        "UInt64Property": lambda r: r.u64(),
+        "UInt32Property": lambda r: r.u32(),
+        "Int16Property": lambda r: r.i16(),
+        "FloatProperty": lambda r: r.float(),
+        "DoubleProperty": lambda r: r.double(),
+        "StrProperty": lambda r: r.fstring(),
+        "ByteProperty": lambda r: r.byte(),
+    }
+
+    def prop_value(self, type_name: str, struct_type_name: str, path: str):
+        reader = extras.get(type_name)
+        if reader is not None:
+            return reader(self)
+        return original(self, type_name, struct_type_name, path)
+
+    FArchiveReader.prop_value = prop_value
+
+
 # Só estas duas seções são decodificadas de verdade. Todo o resto do save
 # (mapa, objetos, itens do mundo) fica como bytes crus — é o que faz o parse
 # caber no tempo: decodificar o save inteiro estourou 20 minutos no runner.
@@ -316,6 +348,8 @@ def main() -> int:
         PALWORLD_CUSTOM_PROPERTIES,
         PALWORLD_TYPE_HINTS,
     )
+
+    patch_reader()
 
     custom = {
         key: value
