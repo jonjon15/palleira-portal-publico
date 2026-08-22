@@ -8,6 +8,7 @@ import {
   type BaseNoMapa,
   type JogadorNoMapa,
 } from "@/components/mapa-interativo";
+import { MAPAS, mapaDe } from "@/lib/mapas";
 
 export const metadata: Metadata = {
   title: "Mapa",
@@ -16,27 +17,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 120;
-
-/**
- * Limites do mapa em coordenada de jogo.
- *
- * Medidos das 158 bases reais dos dois PvE (x de -1357 a 948, y de -1565 a
- * 426) e arredondados com folga, para o enquadramento não pular quando
- * alguém construir num canto novo.
- */
-const BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
-
-/**
- * 🎯 CALIBRAÇÃO DO MAPA — mexer só aqui.
- *
- * Qual retângulo em coordenada de jogo a imagem de fundo cobre. É a única
- * coisa que precisa de ajuste fino: se os losangos caírem deslocados em
- * relação ao terreno, é este retângulo que está errado.
- *
- * Como afinar: escolha uma base conhecida, veja onde ela cai no mapa e
- * empurre estes números na direção contrária à diferença.
- */
-const IMAGE_BOUNDS = { minX: -1929, maxX: 1229, minY: -1031, maxY: 2127 };
 
 /**
  * ⚠️ O eixo Y do `map_pos` do PalDefender vem INVERTIDO em relação ao que o
@@ -73,6 +53,9 @@ const loadMap = unstable_cache(
               bases.push({
                 x: b.mapX,
                 y: gameY(b.mapY),
+                // A altitude é o que diz em qual mundo a base está: sem
+                // isto, base da Árvore Mundial cai em cima de Palpagos.
+                mapa: mapaDe(b.worldZ),
                 guilda: g.name,
                 nivel: g.level,
                 lider: g.leaderName,
@@ -87,6 +70,10 @@ const loadMap = unstable_cache(
             players.push({
               x: p.mapX,
               y: gameY(p.mapY),
+              // ⚠️ `/players` do PalDefender não devolve altitude, então não
+              // dá para saber em qual mundo a pessoa está. Fica em Palpagos,
+              // que é onde quase todo mundo joga.
+              mapa: "palpagos" as const,
               nome: p.name || "Jogador",
               guilda: p.guildName,
               servidor: server.shortName,
@@ -121,8 +108,7 @@ export default async function Mapa() {
           bases={bases}
           jogadores={players}
           servidores={mappableServers().map((s) => s.shortName)}
-          limites={BOUNDS}
-          imagem={IMAGE_BOUNDS}
+          mapas={MAPAS}
         />
 
         {hidden.length > 0 && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { DefinicaoMapa, IdMapa } from "@/lib/mapas";
 
 /**
  * Mapa da comunidade — tela cheia, painel de camadas, agrupamento e busca.
@@ -22,6 +23,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export interface BaseNoMapa {
   x: number;
   y: number;
+  /** Em qual mundo a base está — decidido pela altitude, ver `lib/mapas`. */
+  mapa: IdMapa;
   guilda: string;
   nivel: number;
   lider: string;
@@ -32,6 +35,7 @@ export interface BaseNoMapa {
 export interface JogadorNoMapa {
   x: number;
   y: number;
+  mapa: IdMapa;
   nome: string;
   guilda: string;
   servidor: string;
@@ -41,8 +45,7 @@ interface Props {
   bases: BaseNoMapa[];
   jogadores: JogadorNoMapa[];
   servidores: string[];
-  limites: { minX: number; maxX: number; minY: number; maxY: number };
-  imagem: { minX: number; maxX: number; minY: number; maxY: number };
+  mapas: DefinicaoMapa[];
 }
 
 type Selecionado =
@@ -96,14 +99,29 @@ function agrupar(pontos: Ponto[], celula: number): Grupo[] {
 }
 
 export function MapaInterativo({
-  bases,
-  jogadores,
+  bases: todasBases,
+  jogadores: todosJogadores,
   servidores,
-  limites,
-  imagem,
+  mapas,
 }: Props) {
+  const [idMapa, setIdMapa] = useState<IdMapa>(mapas[0].id);
+  const mapa = mapas.find((m) => m.id === idMapa) ?? mapas[0];
+  const limites = mapa.limites;
+  const imagem = mapa.imagemLimites;
+
   const W = limites.maxX - limites.minX;
   const H = limites.maxY - limites.minY;
+
+  // Cada mundo mostra só o que é dele. Sem este corte, base da Árvore
+  // Mundial aparece em cima de Palpagos, no lugar errado.
+  const bases = useMemo(
+    () => todasBases.filter((b) => b.mapa === idMapa),
+    [todasBases, idMapa],
+  );
+  const jogadores = useMemo(
+    () => todosJogadores.filter((j) => j.mapa === idMapa),
+    [todosJogadores, idMapa],
+  );
 
   const [zoom, setZoom] = useState(ZOOM_MIN);
   const [centro, setCentro] = useState({
@@ -180,6 +198,13 @@ export function MapaInterativo({
   // Enquadrar uma vez, quando o container ganha tamanho de verdade. Depois
   // disso a vista é da pessoa: reenquadrar só pelo botão.
   const jaEnquadrou = useRef(false);
+
+  // Trocar de mundo precisa reenquadrar: a área construída de um não tem
+  // nada a ver com a do outro.
+  useEffect(() => {
+    jaEnquadrou.current = false;
+  }, [idMapa]);
+
   useEffect(() => {
     if (jaEnquadrou.current) return;
     const e = enquadramento();
@@ -498,6 +523,39 @@ export function MapaInterativo({
 
       {/* ---------------------------------------------------------- mapa */}
       <div className="relative flex-1">
+        {/* Seletor de mundo, no topo — o mesmo lugar onde o Paldeck põe. */}
+        {mapas.length > 1 && (
+          <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface/90 backdrop-blur">
+            {mapas.map((m) => {
+              const quantos =
+                todasBases.filter((b) => b.mapa === m.id).length +
+                todosJogadores.filter((j) => j.mapa === m.id).length;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setIdMapa(m.id)}
+                  aria-pressed={m.id === idMapa}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                    m.id === idMapa
+                      ? "bg-gold text-[#14120f]"
+                      : "text-muted hover:text-text"
+                  }`}
+                >
+                  {m.nome}
+                  <span
+                    className={`tabular rounded-full px-1.5 text-xs ${
+                      m.id === idMapa ? "bg-[#14120f]/15" : "bg-surface-2"
+                    }`}
+                  >
+                    {quantos}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {!painel && (
           <button
             type="button"
@@ -562,15 +620,44 @@ export function MapaInterativo({
 
           {/* Terreno quase limpo. Escurecer demais foi o que fazia o mapa
               antigo parecer amador: o mapa é o produto, não papel de parede. */}
-          <image
-            href="/mapa-palpagos.webp"
-            x={imagem.minX}
-            y={imagem.minY}
-            width={imagem.maxX - imagem.minX}
-            height={imagem.maxY - imagem.minY}
-            opacity="0.92"
-            preserveAspectRatio="none"
-          />
+          {mapa.imagem ? (
+            <image
+              href={mapa.imagem}
+              x={imagem.minX}
+              y={imagem.minY}
+              width={imagem.maxX - imagem.minX}
+              height={imagem.maxY - imagem.minY}
+              opacity="0.92"
+              preserveAspectRatio="none"
+            />
+          ) : (
+            /* Sem arte do terreno ainda: grade de coordenada, para os
+               marcadores terem referência em vez de flutuarem no vazio. */
+            <>
+              <defs>
+                <pattern
+                  id="grade"
+                  width={esc(64)}
+                  height={esc(64)}
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d={`M ${esc(64)} 0 L 0 0 0 ${esc(64)}`}
+                    fill="none"
+                    stroke="var(--line)"
+                    strokeWidth={esc(1)}
+                  />
+                </pattern>
+              </defs>
+              <rect
+                x={limites.minX}
+                y={limites.minY}
+                width={W}
+                height={H}
+                fill="url(#grade)"
+              />
+            </>
+          )}
 
           {/* ------------------------------------------------ marcadores */}
           {/*
