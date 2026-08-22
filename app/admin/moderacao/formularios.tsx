@@ -90,6 +90,18 @@ export function Desligar({ servidor }: { servidor: string }) {
           />
         </div>
       </div>
+      {/*
+        A REST do Palworld é servida pelo próprio processo do servidor: quando
+        ele cai, a API cai junto. Não existe `start` — e não teria como existir.
+        Quem religa é o painel da ENX, então o aviso fica colado no botão.
+      */}
+      <p className="rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.07] px-4 py-3 text-sm text-muted">
+        <b className="text-danger">Isto desliga, não reinicia.</b> O site não
+        consegue ligar de volta — quando o servidor cai, a API cai junto. Para
+        subir de novo é o botão <b className="text-text">Start</b> no painel da
+        ENX.
+      </p>
+
       <button
         type="submit"
         disabled={pendente}

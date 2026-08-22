@@ -178,7 +178,8 @@ export default async function Moderacao({
             <h2 className="text-lg font-semibold">Mundo</h2>
             <p className="mt-1.5 text-sm text-muted">
               Salvar agora, sem esperar o autosave, ou desligar com contagem
-              regressiva avisada no chat.
+              regressiva avisada no chat. Desligar é só de ida: religar é no
+              painel da ENX.
             </p>
             <div className="mt-4 flex flex-col gap-4">
               <SalvarMundo servidor={server.slug} />
