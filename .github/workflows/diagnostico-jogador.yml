@@ -1,0 +1,92 @@
+# Diagnóstico de um jogador dentro do Level.sav — SOMENTE LEITURA.
+#
+# Existe porque a REST do Palworld e o PalDefender não expõem nada sobre
+# jogador offline: o personagem vive dentro do mundo, e o mundo é um GVAS
+# comprimido com Oodle (formato PlM) de 339 MB. Isso não cabe na Vercel
+# (1 GB de RAM, 60s), mas cabe aqui com folga.
+#
+# ⚠️ Este workflow NÃO escreve nada no servidor. Só baixa, lê e relata.
+name: diagnostico-jogador
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "ID do servidor no painel da ENX"
+        required: true
+        default: "0c079595"
+      mundo:
+        description: "World GUID (pasta do save)"
+        required: true
+        default: "E99CD9CFE959478C865A90EF645786B7"
+      uid:
+        description: "UID do jogador (32 hex, o nome do arquivo .sav)"
+        required: true
+        default: "F721F85B000000000000000000000000"
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preparar a biblioteca de save
+        run: |
+          git clone --depth 1 https://github.com/deafdudecomputers/PalworldSaveTools.git pst
+          python3 -m pip install --quiet --upgrade pip wheel setuptools
+          python3 -m pip install --quiet ./pst/src/palsav/palooz
+          python3 -m pip install --quiet --no-deps ./pst/src/palsav
+          python3 -m pip install --quiet orjson
+          cd /tmp && python3 -c "import palooz, palsav; print('biblioteca pronta')"
+
+      - name: Baixar o Level.sav do painel
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os, urllib.request, json
+          sid  = os.environ.get("SID")  or "${{ inputs.servidor }}"
+          guid = "${{ inputs.mundo }}"
+          key  = os.environ["ENX_API_KEY"]
+          arq  = f"/Pal/Saved/SaveGames/0/{guid}/Level.sav"
+          url  = f"https://painel.enxadahost.com/api/client/servers/{sid}/files/download?file={urllib.parse.quote(arq, safe='')}"
+          req  = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"})
+          link = json.load(urllib.request.urlopen(req, timeout=60))["attributes"]["url"]
+          urllib.request.urlretrieve(link, "/tmp/Level.sav")
+          print("baixado:", os.path.getsize("/tmp/Level.sav"), "bytes")
+          PY
+
+      - name: Ler o mundo e procurar o jogador
+        run: |
+          cd /tmp
+          UID="${{ inputs.uid }}" python3 - <<'PY'
+          import os, time, resource, struct
+          from palsav.core import decompress_sav_to_gvas
+
+          uid = os.environ["UID"]
+          def ram():
+              return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576
+
+          bruto = open("/tmp/Level.sav","rb").read()
+          print(f"arquivo: {len(bruto)/1048576:.2f} MB")
+
+          t = time.time()
+          gvas, tipo = decompress_sav_to_gvas(bruto)
+          print(f"descomprimido: {len(gvas)/1048576:.1f} MB em {time.time()-t:.1f}s (tipo 0x{tipo:02x})")
+          print(f"RAM ate aqui: {ram():.2f} GB")
+          del bruto
+
+          # O UID vira GUID de 16 bytes: 4 uint32 little-endian.
+          partes = [int(uid[i:i+8],16) for i in (0,8,16,24)]
+          agulha = struct.pack("<4I", *partes)
+          n = gvas.count(agulha)
+          print(f"\nocorrencias do GUID do jogador no mundo: {n}")
+          if n == 0:
+              print("=> O jogador NAO esta no Level.sav. O save individual dele e orfao.")
+          else:
+              print("=> O jogador ESTA no mundo. Apagar so o arquivo Players/ nao adianta;")
+              print("   o servidor regrava a partir daqui.")
+          print(f"RAM final: {ram():.2f} GB de 7.8 GB")
+          PY
+
+      - name: RAM da maquina
+        if: always()
+        run: free -h
