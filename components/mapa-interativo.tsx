@@ -299,10 +299,28 @@ export function MapaInterativo({
     setZoom(novo);
   };
 
-  const aoRolar = (e: React.WheelEvent) => {
+  /**
+   * Roda do mouse — registrada na mão, fora do React.
+   *
+   * ⚠️ O `onWheel` do React entra como listener **passivo**, e listener
+   * passivo não pode chamar `preventDefault()`. O resultado é o zoom
+   * funcionando E a página rolando junto, que é exatamente o que não se quer
+   * dentro de um mapa. Só `addEventListener` com `passive: false` resolve.
+   */
+  const rolarRef = useRef<(e: WheelEvent) => void>(() => {});
+  rolarRef.current = (e: WheelEvent) => {
+    e.preventDefault();
     const alvo = paraJogo(e);
     aplicarZoom(e.deltaY < 0 ? 1.3 : 1 / 1.3, alvo ?? undefined);
   };
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const h = (e: WheelEvent) => rolarRef.current(e);
+    el.addEventListener("wheel", h, { passive: false });
+    return () => el.removeEventListener("wheel", h);
+  }, []);
 
   const aoPressionar = (e: React.PointerEvent) => {
     arrastando.current = { x: e.clientX, y: e.clientY };
@@ -494,9 +512,8 @@ export function MapaInterativo({
         <svg
           ref={svgRef}
           viewBox={viewBox}
-          className="block size-full cursor-grab touch-none active:cursor-grabbing"
+          className="block size-full cursor-grab touch-none overscroll-contain active:cursor-grabbing"
           preserveAspectRatio="xMidYMid meet"
-          onWheel={aoRolar}
           onPointerDown={aoPressionar}
           onPointerMove={aoMover}
           onPointerUp={aoSoltar}
@@ -507,6 +524,34 @@ export function MapaInterativo({
           role="img"
           aria-label={`Mapa com ${pontosBases.length} bases e ${pontosJogadores.length} jogadores`}
         >
+          <defs>
+            {/*
+              Sombra do pino. É ela que descola o marcador do terreno — sem
+              isso o ícone parece adesivo colado, que era o aspecto amador
+              dos losangos chapados de antes.
+            */}
+            <filter id="sombra" x="-60%" y="-60%" width="220%" height="220%">
+              <feDropShadow
+                dx="0"
+                dy={esc(1.5)}
+                stdDeviation={esc(1.6)}
+                floodColor="#000"
+                floodOpacity="0.6"
+              />
+            </filter>
+
+            {/* Acampamento: telhado e corpo. Silhueta cheia de propósito —
+                traço fino some no tamanho de um pino. */}
+            <symbol id="glifo-base" viewBox="0 0 24 24">
+              <path d="M12 3.2 2.6 11h2.6v9.8h5.1v-5.6h3.4v5.6h5.1V11h2.6L12 3.2Z" />
+            </symbol>
+
+            {/* Jogador: cabeça e ombros. */}
+            <symbol id="glifo-jogador" viewBox="0 0 24 24">
+              <path d="M12 4.4a3.7 3.7 0 1 1 0 7.4 3.7 3.7 0 0 1 0-7.4Zm0 9.1c4.1 0 7.4 2.2 7.4 4.9v1.2H4.6v-1.2c0-2.7 3.3-4.9 7.4-4.9Z" />
+            </symbol>
+          </defs>
+
           <rect
             x={limites.minX}
             y={limites.minY}
@@ -527,105 +572,119 @@ export function MapaInterativo({
             preserveAspectRatio="none"
           />
 
-          {/* --------------------------------------------------- bases */}
-          {gruposBases.map((g, i) => {
-            const n = g.itens.length;
-            const r = esc(n > 1 ? 15 : 9);
-            return (
-              <g
-                key={`b${i}`}
-                className="cursor-pointer"
-                opacity={g.aceso ? 1 : 0.22}
-                onClick={() => aoClicarGrupo(g)}
-              >
-                <title>
-                  {n > 1
-                    ? `${n} bases aqui`
-                    : `${g.itens[0].base!.guilda} · ${g.itens[0].base!.servidor}`}
-                </title>
-                {n > 1 ? (
-                  <>
-                    <circle
-                      cx={g.x}
-                      cy={g.y}
-                      r={r}
-                      fill="var(--gold)"
-                      stroke="#14120f"
-                      strokeWidth={esc(2)}
-                    />
+          {/* ------------------------------------------------ marcadores */}
+          {/*
+            Sombra aplicada na camada inteira, não por marcador: com 158
+            pinos, um filtro por elemento derruba o quadro.
+          */}
+          <g filter="url(#sombra)">
+            {gruposBases.map((g, i) => {
+              const n = g.itens.length;
+              const r = esc(n > 1 ? 15 : 12);
+              const gl = r * 1.05;
+              return (
+                <g
+                  key={`b${i}`}
+                  className="cursor-pointer"
+                  opacity={g.aceso ? 1 : 0.2}
+                  onClick={() => aoClicarGrupo(g)}
+                >
+                  <title>
+                    {n > 1
+                      ? `${n} bases aqui`
+                      : `${g.itens[0].base!.guilda} · ${g.itens[0].base!.servidor}`}
+                  </title>
+                  <circle
+                    cx={g.x}
+                    cy={g.y}
+                    r={r}
+                    fill="#12100c"
+                    stroke="var(--gold)"
+                    strokeWidth={esc(2)}
+                  />
+                  {n > 1 ? (
                     <text
                       x={g.x}
-                      y={g.y + esc(4.5)}
+                      y={g.y + esc(4.6)}
                       textAnchor="middle"
                       fontSize={esc(13)}
                       fontWeight="700"
-                      fill="#14120f"
+                      fill="var(--gold)"
                     >
                       {n}
                     </text>
-                  </>
-                ) : (
-                  <rect
-                    x={g.x - r}
-                    y={g.y - r}
-                    width={r * 2}
-                    height={r * 2}
-                    transform={`rotate(45 ${g.x} ${g.y})`}
-                    fill="var(--gold)"
-                    stroke="#14120f"
+                  ) : (
+                    <use
+                      href="#glifo-base"
+                      x={g.x - gl / 2}
+                      y={g.y - gl / 2}
+                      width={gl}
+                      height={gl}
+                      fill="var(--gold)"
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {gruposJogadores.map((g, i) => {
+              const n = g.itens.length;
+              const r = esc(n > 1 ? 15 : 12);
+              const gl = r * 1.05;
+              return (
+                <g
+                  key={`p${i}`}
+                  className="cursor-pointer"
+                  opacity={g.aceso ? 1 : 0.2}
+                  onClick={() => aoClicarGrupo(g)}
+                >
+                  <title>
+                    {n > 1
+                      ? `${n} jogadores aqui`
+                      : `${g.itens[0].jogador!.nome} · ${g.itens[0].jogador!.servidor}`}
+                  </title>
+                  {/* Pulso: quem está jogando agora precisa saltar à vista
+                      entre 158 bases paradas. */}
+                  <circle
+                    cx={g.x}
+                    cy={g.y}
+                    r={esc(22)}
+                    fill="var(--color-success)"
+                    fillOpacity="0.18"
+                  />
+                  <circle
+                    cx={g.x}
+                    cy={g.y}
+                    r={r}
+                    fill="#0c1410"
+                    stroke="var(--color-success)"
                     strokeWidth={esc(2)}
                   />
-                )}
-              </g>
-            );
-          })}
-
-          {/* ----------------------------------------------- jogadores */}
-          {gruposJogadores.map((g, i) => {
-            const n = g.itens.length;
-            const r = esc(n > 1 ? 14 : 9);
-            return (
-              <g
-                key={`p${i}`}
-                className="cursor-pointer"
-                opacity={g.aceso ? 1 : 0.22}
-                onClick={() => aoClicarGrupo(g)}
-              >
-                <title>
-                  {n > 1
-                    ? `${n} jogadores aqui`
-                    : `${g.itens[0].jogador!.nome} · ${g.itens[0].jogador!.servidor}`}
-                </title>
-                <circle
-                  cx={g.x}
-                  cy={g.y}
-                  r={esc(n > 1 ? 24 : 18)}
-                  fill="var(--color-success)"
-                  fillOpacity="0.22"
-                />
-                <circle
-                  cx={g.x}
-                  cy={g.y}
-                  r={r}
-                  fill="var(--color-success)"
-                  stroke="#14120f"
-                  strokeWidth={esc(2)}
-                />
-                {n > 1 && (
-                  <text
-                    x={g.x}
-                    y={g.y + esc(4.5)}
-                    textAnchor="middle"
-                    fontSize={esc(12)}
-                    fontWeight="700"
-                    fill="#14120f"
-                  >
-                    {n}
-                  </text>
-                )}
-              </g>
-            );
-          })}
+                  {n > 1 ? (
+                    <text
+                      x={g.x}
+                      y={g.y + esc(4.6)}
+                      textAnchor="middle"
+                      fontSize={esc(13)}
+                      fontWeight="700"
+                      fill="var(--color-success)"
+                    >
+                      {n}
+                    </text>
+                  ) : (
+                    <use
+                      href="#glifo-jogador"
+                      x={g.x - gl / 2}
+                      y={g.y - gl / 2}
+                      width={gl}
+                      height={gl}
+                      fill="var(--color-success)"
+                    />
+                  )}
+                </g>
+              );
+            })}
+          </g>
         </svg>
 
         {/* ------------------------------------------------------- zoom */}
