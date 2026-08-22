@@ -65,6 +65,21 @@ export function paraMapa(x: number, y: number): Ponto {
   };
 }
 
+/**
+ * Coordenada de mapa → coordenada de mundo. A volta de `paraMapa`.
+ *
+ * É o número que as ferramentas de save mostram como `World`, e o que se usa
+ * para conferir a calibração contra elas. Confere com os dois pontos medidos
+ * na Árvore Mundial: mapa (−1841,6 · 1509,9) volta como mundo
+ * (569.155 · −687.294), contra os (569.160 · −687.284) lidos no jogo.
+ */
+export function paraMundo(mapaX: number, mapaY: number): Ponto {
+  return {
+    x: Math.round(mapaY * ESCALA - TRANSLADO_X),
+    y: Math.round(mapaX * ESCALA + TRANSLADO_Y),
+  };
+}
+
 /** Em qual mundo o ponto está, e a coordenada de mapa dele. */
 export function localizar(x: number, y: number): PontoNoMundo {
   return {

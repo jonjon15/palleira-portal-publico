@@ -1,0 +1,39 @@
+name: Sondar o mundo
+
+# Investigação sob demanda: o Level.sav já sabe onde ficam as dungeons, os
+# acampamentos e as torres? Não grava nada — lê, mede e imprime no log.
+#
+# Roda aqui e não na Vercel pelo mesmo motivo do import: o save descomprimido
+# passa de 300 MB e o parser é Python (§3.8 do PROMPT.md).
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Servidor (pve-free, pve-vip, pvp-free)"
+        required: false
+        default: "pve-free"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SLUG: ${{ inputs.slug }}
+        run: python tools/sondar_mundo.py

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DefinicaoMapa, IdMapa } from "@/lib/mapas";
+import { paraMundo } from "@/lib/palworld/coordenadas";
 
 /**
  * Mapa da comunidade — tela cheia, painel de camadas, agrupamento e busca.
@@ -975,9 +976,33 @@ export function MapaInterativo({
           bússola e achar que o site errou — foi exatamente o que aconteceu
           na calibração de 22/08.
         */}
-        <div className="tabular absolute right-3 bottom-3 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2.5 py-1 text-xs text-muted backdrop-blur">
-          {cursor ? `${cursor.x}, ${-cursor.y}` : "—"}
-          <span className="ml-2 text-gold">{zoom.toFixed(1)}×</span>
+        <div className="tabular absolute right-3 bottom-3 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2.5 py-1 text-right text-xs text-muted backdrop-blur">
+          {cursor ? (
+            <>
+              <div>
+                <span className="text-muted/70">mapa</span> {cursor.x},{" "}
+                {-cursor.y}
+                <span className="ml-2 text-gold">{zoom.toFixed(1)}×</span>
+              </div>
+              {/*
+                A coordenada de mundo é a que as ferramentas de save mostram
+                como `World`. Serve para conferir a calibração contra elas sem
+                ter que abrir uma calculadora — foi o que faltou nas três
+                tentativas de encaixar a arte da Árvore.
+              */}
+              <div className="text-muted/60">
+                <span className="text-muted/50">mundo</span>{" "}
+                {(() => {
+                  const m = paraMundo(cursor.x, -cursor.y);
+                  return `${m.x}, ${m.y}`;
+                })()}
+              </div>
+            </>
+          ) : (
+            <>
+              —<span className="ml-2 text-gold">{zoom.toFixed(1)}×</span>
+            </>
+          )}
         </div>
 
         {/* ----------------------------------------------------- ficha */}
