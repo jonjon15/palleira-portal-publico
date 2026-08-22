@@ -100,10 +100,53 @@ function agrupar(pontos: Ponto[], celula: number): Grupo[] {
 
 export function MapaInterativo({
   bases: todasBases,
-  jogadores: todosJogadores,
+  jogadores: jogadoresIniciais,
   servidores,
   mapas,
 }: Props) {
+  /**
+   * Jogadores ao vivo.
+   *
+   * Começa com o que o servidor renderizou (para o mapa já nascer povoado,
+   * sem piscar) e passa a vir de `/api/mapa` a cada poucos segundos.
+   *
+   * ⚠️ Só jogador se move — base fica no que veio da página. É o que permite
+   * atualizar de 3 em 3 segundos sem pedir as guilds junto.
+   */
+  const [todosJogadores, setTodosJogadores] = useState(jogadoresIniciais);
+  const [aoVivo, setAoVivo] = useState(true);
+
+  useEffect(() => {
+    if (!aoVivo) return;
+    let vivo = true;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const puxar = async () => {
+      // ⚠️ Aba escondida não gasta chamada. Sem isto, uma janela esquecida
+      // aberta a noite toda martela o servidor do jogo à toa.
+      if (typeof document !== "undefined" && document.hidden) {
+        timer = setTimeout(puxar, 5_000);
+        return;
+      }
+      try {
+        const r = await fetch("/api/mapa", { cache: "no-store" });
+        if (r.ok && vivo) {
+          const d = (await r.json()) as { jogadores: JogadorNoMapa[] };
+          setTodosJogadores(d.jogadores);
+        }
+      } catch {
+        // Falha de rede é passageira: mantém o que está na tela e tenta de novo.
+      }
+      if (vivo) timer = setTimeout(puxar, 3_000);
+    };
+
+    timer = setTimeout(puxar, 3_000);
+    return () => {
+      vivo = false;
+      clearTimeout(timer);
+    };
+  }, [aoVivo]);
+
   const [idMapa, setIdMapa] = useState<IdMapa>(mapas[0].id);
   const mapa = mapas.find((m) => m.id === idMapa) ?? mapas[0];
   const limites = mapa.limites;
@@ -515,8 +558,26 @@ export function MapaInterativo({
             ))}
           </div>
 
-          <div className="border-t border-line px-4 py-2.5 text-xs text-muted">
-            Arraste para mover · role para aproximar
+          <div className="flex items-center gap-2 border-t border-line px-4 py-2.5 text-xs text-muted">
+            <button
+              type="button"
+              onClick={() => setAoVivo((v) => !v)}
+              aria-pressed={aoVivo}
+              title={
+                aoVivo
+                  ? "Atualizando a cada 3 segundos"
+                  : "Atualização pausada"
+              }
+              className="flex items-center gap-1.5 hover:text-text"
+            >
+              <span
+                className={`size-2 rounded-full ${
+                  aoVivo ? "animate-pulse bg-success" : "bg-line-strong"
+                }`}
+              />
+              {aoVivo ? "Ao vivo" : "Pausado"}
+            </button>
+            <span className="ml-auto">arraste · role</span>
           </div>
         </aside>
       )}
