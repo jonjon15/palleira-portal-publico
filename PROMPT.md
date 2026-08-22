@@ -698,13 +698,45 @@ Site (Vercel)                      GitHub Actions
 -------------                      --------------
 admin clica a ação
   -> workflow_dispatch com o UID --> compila palooz
-                                     baixa Level.sav pela API do painel
+                                     baixa Level.sav por SFTP (porta 2022)
                                      edita o mundo
-                                     sobe e reinicia o servidor
+                                     sobe por SFTP e reinicia pelo painel
   <- lê o status pela API GitHub  <-- conclui
 ```
 
 Melhor que agente local no PC do dono: **não depende do PC estar ligado.**
+
+🔴 **Baixar pela API HTTP do painel NÃO funciona do runner: devolve 403.**
+O painel está atrás do Cloudflare, que barra IP de datacenter — do PC do dono
+funciona, do GitHub Actions não. **O caminho é SFTP na porta 2022**, que não
+passa por CDN. É o que o `tools/import_save.py` já faz, com `paramiko` e as
+credenciais no segredo `PALLEIRA_SERVERS` (JSON: `slug`, `host`, `user`,
+`password`, `guid`).
+
+#### Já existe infraestrutura pronta — não reinventar
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| `.github/workflows/import-save.yml` | repo | Roda de 2 em 2h, importa os três saves |
+| `tools/import_save.py` | repo | SFTP + parse + grava no banco |
+| Segredos | GitHub | `PALLEIRA_SERVERS`, `DATABASE_URL`, `ENX_API_KEY` |
+
+⚠️ **Parsear o save inteiro estoura 20 minutos no runner.** O
+`import_save.py` decodifica **só duas seções** (`NEEDED_SECTIONS`), e é por
+isso que ele roda em menos de 1 minuto. Qualquer ferramenta nova deve fazer o
+mesmo.
+
+⚠️ **Pegadinha do caminho:** a chave é
+`.worldSaveData.CharacterSaveParameterMap.Value.RawData` — apontar para
+`.CharacterSaveParameterMap` **não casa com nada** e o level volta zerado.
+
+Instalação que funciona no runner (mais limpa que clonar o repo):
+
+```bash
+REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+pip install "git+$REPO#subdirectory=src/palsav/palooz"
+pip install "git+$REPO#subdirectory=src/palsav"
+```
 
 #### Anúncio no jogo: `alert`, não `/announce`
 
