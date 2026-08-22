@@ -42,15 +42,40 @@ jobs:
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: |
           python3 - <<'PY'
-          import os, urllib.request, urllib.parse, json
+          import os, sys, urllib.request, urllib.parse, json
           sid  = "${{ inputs.servidor }}"
           guid = "${{ inputs.mundo }}"
           key  = os.environ["ENX_API_KEY"]
           arq  = f"/Pal/Saved/SaveGames/0/{guid}/Level.sav"
-          url  = f"https://painel.enxadahost.com/api/client/servers/{sid}/files/download?file={urllib.parse.quote(arq, safe='')}"
-          req  = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"})
-          link = json.load(urllib.request.urlopen(req, timeout=60))["attributes"]["url"]
-          urllib.request.urlretrieve(link, "/tmp/Level.sav")
+
+          # O painel esta atras do Cloudflare: User-Agent de biblioteca vindo
+          # de IP de datacenter e bloqueado (403). Fingir navegador comum.
+          UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+
+          def pedir(url, extra=None):
+              h = {"User-Agent": UA, "Accept": "application/json",
+                   "Accept-Language": "pt-BR,pt;q=0.9"}
+              if extra: h.update(extra)
+              return urllib.request.Request(url, headers=h)
+
+          url = (f"https://painel.enxadahost.com/api/client/servers/{sid}"
+                 f"/files/download?file={urllib.parse.quote(arq, safe='')}")
+          try:
+              r = urllib.request.urlopen(pedir(url, {"Authorization": f"Bearer {key}"}), timeout=60)
+              link = json.load(r)["attributes"]["url"]
+          except urllib.error.HTTPError as e:
+              print(f"FALHOU ao pedir o link: HTTP {e.code}")
+              print("corpo:", e.read()[:400].decode("utf-8","replace"))
+              print("
+=> 403 aqui costuma ser Cloudflare barrando IP de datacenter.")
+              print("   Nesse caso o caminho e o FTP do host, que nao passa por CDN.")
+              sys.exit(1)
+
+          req = pedir(link)
+          with urllib.request.urlopen(req, timeout=300) as r, open("/tmp/Level.sav","wb") as f:
+              while (c := r.read(1024*1024)):
+                  f.write(c)
           print("baixado:", os.path.getsize("/tmp/Level.sav"), "bytes")
           PY
 
