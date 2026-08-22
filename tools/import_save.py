@@ -109,18 +109,22 @@ def decompress_plm(raw: bytes) -> bytes:
 
 
 def run_ooz(payload: bytes, expected_len: int) -> bytes:
-    """Chama o binário do ooz. Caminho vem de OOZ_BIN (o workflow compila)."""
-    ooz = os.environ.get("OOZ_BIN", "ooz")
+    """
+    Chama o binário do oozlin (caminho em OOZ_BIN; o workflow compila).
+
+    Assinatura: `oozlin [opções] entrada [saída]` — o tamanho não é argumento,
+    ele sai do próprio fluxo Kraken. Conferimos depois contra o cabeçalho do
+    container do Palworld.
+    """
+    ooz = os.environ.get("OOZ_BIN", "oozlin")
     with open("_chunk.bin", "wb") as fh:
         fh.write(payload)
     proc = subprocess.run(
-        [ooz, "-d", "_chunk.bin", "_chunk.out", str(expected_len)],
-        capture_output=True,
+        [ooz, "-d", "-f", "_chunk.bin", "_chunk.out"], capture_output=True
     )
     if proc.returncode != 0 or not os.path.exists("_chunk.out"):
-        raise RuntimeError(
-            f"ooz falhou ({proc.returncode}): {proc.stderr.decode(errors='replace')[:300]}"
-        )
+        detail = (proc.stderr or proc.stdout or b"").decode(errors="replace")
+        raise RuntimeError(f"oozlin falhou ({proc.returncode}): {detail[:300]}")
     with open("_chunk.out", "rb") as fh:
         out = fh.read()
     for tmp in ("_chunk.bin", "_chunk.out"):
