@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Palleira — design tokens (§6.2 do PROMPT.md)
+   Ouro sobre preto quente. O ouro é caro: um acento por tela.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Superfícies — preto quente, nunca #000 puro */
+  --bg: #0b0a09;
+  --surface: #14120f;
+  --surface-2: #1e1a15;
+
+  /* Ouro — vem da moeda (a palheta) */
+  --gold: #e8b923;
+  --gold-hi: #f7dc7a;
+  --gold-deep: #8b6914;
+
+  /* Texto */
+  --text: #f2efe9;
+  --muted: #a39b8c;
+
+  /* Estado */
+  --success: #6fa84a;
+  --danger: #c8442e;
+  --warning: #d99320;
+
+  /* Borda: ouro a 14%, não cinza */
+  --line: rgb(232 185 35 / 0.14);
+  --line-strong: rgb(232 185 35 / 0.28);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-gold: var(--gold);
+  --color-gold-hi: var(--gold-hi);
+  --color-gold-deep: var(--gold-deep);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-card: 12px;
+  --radius-control: 8px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Números de preço, saldo e métrica sempre alinhados */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Foco visível — acessibilidade (§6.2) */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--gold);
+  color: #14120f;
+}
+
+/* Movimento: 150–200ms, só opacity e transform */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton — estado de carregamento (nunca spinner solto) */
+@keyframes palleira-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton {
+  animation: palleira-pulse 1.6s ease-in-out infinite;
+  background: var(--surface-2);
+  border-radius: var(--radius-control);
 }
