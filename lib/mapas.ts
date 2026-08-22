@@ -58,16 +58,21 @@ export const MAPAS: DefinicaoMapa[] = [
      *   → 209 unidades para 26,4% da moldura = 792 unidades de ponta a ponta
      *
      * A primeira estimativa (700 de largura, centrada nos jogadores) ficava
-     * estreita e deslocada para oeste, e o pino caía perto da região vinho em
-     * vez de a leste dela.
+     * estreita e deslocada para oeste.
+     *
+     * Terceira medição (22/08, dono parado em −1613 · 1413): o pino caía na
+     * área azul com a região vinho ~295 px à direita, num zoom de 2,5×. Com
+     * 792 unidades de largura isso dá **63 unidades**, e o retângulo foi
+     * empurrado para oeste nesse tanto — o pino anda para dentro do vinho,
+     * que é onde o jogo mostra.
      *
      * ⚠️ A CONVERSÃO está provada e não se mexe (ver `coordenadas.ts`). Isto
      * aqui é só **quanto do mundo a imagem cobre**, e sai de medição em
      * pixel, então tem erro de alguns pontos. Se ainda ficar deslocado, é
      * este retângulo que se empurra.
      */
-    limites: { minX: -2058, maxX: -1266, minY: -1824, maxY: -1032 },
-    imagemLimites: { minX: -2058, maxX: -1266, minY: -1824, maxY: -1032 },
+    limites: { minX: -2121, maxX: -1329, minY: -1824, maxY: -1032 },
+    imagemLimites: { minX: -2121, maxX: -1329, minY: -1824, maxY: -1032 },
   },
 ];
 
