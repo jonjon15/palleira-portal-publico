@@ -15,6 +15,8 @@ import {
 import { registrar, ACAO_LABEL, type AcaoModeracao } from "@/lib/moderacao";
 import { espelharAnuncio, logarNoDiscord } from "@/lib/discord";
 import { enviarEnergia, SINAL_LABEL, type Sinal } from "@/lib/painel";
+import { dispararWorkflow } from "@/lib/github";
+import { sql } from "@/lib/db";
 
 export interface Estado {
   ok: boolean;
@@ -308,5 +310,124 @@ export async function energiaServidor(_anterior: Estado, form: FormData): Promis
         : salvou
           ? " O mundo foi salvo antes."
           : ""),
+  });
+}
+
+/* ------------------------------------------------------- reset de jogador */
+
+export interface Achado {
+  uid: string;
+  nome: string;
+  level: number;
+  guild: string | null;
+}
+
+export interface EstadoBusca extends Estado {
+  achados?: Achado[];
+}
+
+/**
+ * Procura jogador pelo nome, no servidor escolhido.
+ *
+ * Vem da tabela `players`, alimentada pelo robô de import de 2 em 2 horas —
+ * então o nível pode estar algumas horas atrasado. O que importa aqui é o
+ * `uid`, que não muda.
+ */
+export async function buscarJogador(
+  _anterior: EstadoBusca,
+  form: FormData,
+): Promise<EstadoBusca> {
+  await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const termo = String(form.get("termo") ?? "").trim();
+
+  if (termo.length < 2) {
+    return { ok: false, mensagem: "Escreva pelo menos 2 letras do nome." };
+  }
+
+  const linhas = (await sql`
+    select palworld_uid, name, level, guild_id
+    from players
+    where server_slug = ${server.slug} and name ilike ${"%" + termo + "%"}
+    order by level desc
+    limit 12
+  `) as { palworld_uid: string; name: string; level: number; guild_id: string | null }[];
+
+  if (linhas.length === 0) {
+    return {
+      ok: false,
+      mensagem: `Ninguém com "${termo}" em ${server.shortName}. O nome vem do último import, que roda de 2 em 2 horas.`,
+    };
+  }
+
+  return {
+    ok: true,
+    mensagem: `${linhas.length} encontrado(s).`,
+    achados: linhas.map((l) => ({
+      uid: l.palworld_uid,
+      nome: l.name,
+      level: l.level,
+      guild: l.guild_id,
+    })),
+  };
+}
+
+const MODOS = ["verificar", "simular", "aplicar"] as const;
+type Modo = (typeof MODOS)[number];
+
+const MODO_TEXTO: Record<Modo, string> = {
+  verificar: "Teste de integridade pedido — ele só lê o mundo e confere que reescrever não corrompe nada.",
+  simular: "Simulação pedida — mostra o que seria removido, sem gravar.",
+  aplicar: "Reset disparado. O servidor vai parar, o jogador será apagado do mundo e o servidor volta sozinho.",
+};
+
+/**
+ * Dispara o reset no GitHub Actions.
+ *
+ * ⚠️ Não faz o trabalho aqui: descomprimir 339 MB de mundo não cabe em
+ * função serverless (1 GB de RAM, 60s). O site é o botão; o motor é o
+ * Actions. Ver `lib/github.ts`.
+ */
+export async function dispararReset(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as Modo;
+  const uid = String(form.get("uid") ?? "").trim().toUpperCase();
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+  const nome = String(form.get("nome") ?? "").trim();
+
+  if (!MODOS.includes(modo)) {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+  if (modo !== "verificar" && !/^[0-9A-F]{32}$/.test(uid)) {
+    return { ok: false, mensagem: "UID inválido — são 32 caracteres hexadecimais." };
+  }
+
+  // Apagar personagem não tem volta. Exigir o nome digitado à mão é o que
+  // separa "cliquei sem querer" de "eu quis fazer isto".
+  if (modo === "aplicar" && confirmacao.toLowerCase() !== nome.toLowerCase()) {
+    return {
+      ok: false,
+      mensagem: `Para apagar, digite o nome do jogador exatamente: ${nome}`,
+    };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "power",
+    target: uid || undefined,
+    detail: `reset (${modo})${nome ? " de " + nome : ""}`,
+    rodar: () =>
+      dispararWorkflow("reset-player.yml", {
+        servidor: server.slug,
+        modo,
+        uid,
+        parar_servidor: String(modo === "aplicar"),
+      }),
+    sucesso: MODO_TEXTO[modo] + " Acompanhe em Ações recentes ou no GitHub.",
   });
 }

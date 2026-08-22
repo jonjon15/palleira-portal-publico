@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   salvarMundo,
   enviarAnuncio,
@@ -9,7 +9,11 @@ import {
   desbanirManual,
   desligarServidor,
   energiaServidor,
+  buscarJogador,
+  dispararReset,
   type Estado,
+  type EstadoBusca,
+  type Achado,
 } from "./actions";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
@@ -344,5 +348,140 @@ export function Energia({
       </p>
       <Aviso {...estado} />
     </form>
+  );
+}
+
+/* ---------------------------------------------------------- reset de jogador */
+
+const SEM_BUSCA: EstadoBusca = { ok: false, mensagem: "" };
+
+/**
+ * Apagar jogador do mundo — o site é só o botão.
+ *
+ * O trabalho roda no GitHub Actions: descomprimir 339 MB de mundo com Oodle
+ * não cabe em função serverless. Ver `lib/github.ts` e §3.8 do PROMPT.md.
+ */
+export function ResetarJogador({ servidor }: { servidor: string }) {
+  const [busca, buscarAcao, buscando] = useActionState(buscarJogador, SEM_BUSCA);
+  const [reset, resetAcao, resetando] = useActionState(dispararReset, SEM_ESTADO);
+  const [alvo, setAlvo] = useState<Achado | null>(null);
+  const [digitado, setDigitado] = useState("");
+
+  const confere =
+    alvo && digitado.trim().toLowerCase() === alvo.nome.toLowerCase();
+
+  return (
+    <div className="space-y-5">
+      {/* ------------------------------------------------------- procurar */}
+      <form action={buscarAcao} className="space-y-3">
+        <input type="hidden" name="servidor" value={servidor} />
+        <label htmlFor="termo" className="block text-sm text-muted">
+          Nome do jogador — vem do último import, que roda de 2 em 2 horas
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="termo"
+            name="termo"
+            required
+            minLength={2}
+            placeholder="Gadl"
+            className={`${campo} flex-1`}
+          />
+          <button type="submit" disabled={buscando} className={botaoFantasma}>
+            {buscando ? "Procurando…" : "Procurar"}
+          </button>
+        </div>
+        {!busca.achados && <Aviso {...busca} />}
+      </form>
+
+      {/* -------------------------------------------------------- achados */}
+      {busca.achados && busca.achados.length > 0 && (
+        <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line">
+          {busca.achados.map((a) => {
+            const escolhido = alvo?.uid === a.uid;
+            return (
+              <li
+                key={a.uid}
+                className={`flex items-center gap-3 px-4 py-3 text-sm ${
+                  escolhido ? "bg-danger/[0.07]" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{a.nome}</p>
+                  <p className="truncate font-mono text-xs text-muted">{a.uid}</p>
+                </div>
+                <span className="tabular shrink-0 text-muted">lvl {a.level}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAlvo(escolhido ? null : a);
+                    setDigitado("");
+                  }}
+                  className={escolhido ? botaoPerigo : botaoFantasma}
+                >
+                  {escolhido ? "Cancelar" : "Escolher"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* --------------------------------------------------------- apagar */}
+      {alvo && (
+        <form action={resetAcao} className="space-y-3 rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.05] p-5">
+          <input type="hidden" name="servidor" value={servidor} />
+          <input type="hidden" name="uid" value={alvo.uid} />
+          <input type="hidden" name="nome" value={alvo.nome} />
+          <input type="hidden" name="modo" value="aplicar" />
+
+          <p className="text-sm text-muted">
+            <b className="text-danger">Isto não tem volta.</b>{" "}
+            <b className="text-text">{alvo.nome}</b> (nível {alvo.level}) perde
+            personagem, itens e Pals, e volta do zero. O servidor cai por cerca
+            de 1 minuto e volta sozinho. Fica um backup no servidor.
+          </p>
+
+          <div>
+            <label htmlFor="confirmacao" className="block text-sm text-muted">
+              Para confirmar, digite <b className="text-text">{alvo.nome}</b>
+            </label>
+            <input
+              id="confirmacao"
+              name="confirmacao"
+              autoComplete="off"
+              value={digitado}
+              onChange={(e) => setDigitado(e.target.value)}
+              className={`${campo} mt-1.5`}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={resetando || !confere}
+            className={botaoPerigo}
+          >
+            {resetando ? "Disparando…" : `Apagar ${alvo.nome} do mundo`}
+          </button>
+          <Aviso {...reset} />
+        </form>
+      )}
+
+      {/* ------------------------------------------------ teste sem risco */}
+      {!alvo && (
+        <form action={resetAcao} className="border-t border-line pt-4">
+          <input type="hidden" name="servidor" value={servidor} />
+          <input type="hidden" name="modo" value="verificar" />
+          <button type="submit" disabled={resetando} className={botaoFantasma}>
+            {resetando ? "Rodando…" : "Testar integridade do mundo"}
+          </button>
+          <p className="mt-2 text-xs text-muted">
+            Lê o mundo e confere que reescrever não corrompe nada. Não altera
+            e não derruba o servidor — é seguro rodar a qualquer hora.
+          </p>
+          <Aviso {...reset} />
+        </form>
+      )}
+    </div>
   );
 }

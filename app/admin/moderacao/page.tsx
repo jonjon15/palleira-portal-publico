@@ -12,6 +12,7 @@ import {
   SalvarMundo,
   Desligar,
   Energia,
+  ResetarJogador,
   Anuncio,
   BanManual,
   UnbanManual,
@@ -212,6 +213,26 @@ export default async function Moderacao({
             </div>
           </section>
         </div>
+
+        {/* --------------------------------------------- reset de jogador */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
+            <h2 className="text-lg font-semibold">Apagar jogador do mundo</h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              Zera alguém de verdade: personagem, itens e Pals somem, e ele
+              recomeça do nível 1. Serve para quem pede recomeço, não para
+              punir — para isso existem kick e ban.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              O trabalho não roda aqui: o mundo tem centenas de MB e o site não
+              aguenta. O botão dispara o GitHub Actions, que para o servidor,
+              faz backup, edita e religa — cerca de 2 minutos ao todo.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <ResetarJogador servidor={server.slug} />
+            </div>
+          </section>
+        )}
 
         {/* ------------------------------------------------ jogadores online */}
         <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
