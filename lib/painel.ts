@@ -29,6 +29,11 @@ const PANEL_URL = (
 
 const apiKey = () => process.env.ENX_API_KEY ?? "";
 
+/** Ver o comentário em `call`: sem isto o Cloudflare do painel devolve 403. */
+const NAVEGADOR =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
+
 /** Os quatro comandos do menu "Enviar energia" do painel. */
 export type Sinal = "start" | "restart" | "stop" | "kill";
 
@@ -66,6 +71,12 @@ async function call(
       Authorization: `Bearer ${chave}`,
       Accept: "application/json",
       "Content-Type": "application/json",
+      // ⚠️ OBRIGATÓRIO. O painel está atrás do Cloudflare com bloqueio por
+      // assinatura de navegador (erro 1010): sem isto, o `fetch` do Node
+      // manda User-Agent de biblioteca e toma 403 — medido no GitHub
+      // Actions, onde o UA padrão dá 403 e o de navegador dá 200. Do PC de
+      // casa passa mesmo sem, o que esconde o problema no teste local.
+      "User-Agent": NAVEGADOR,
       ...init.headers,
     },
     cache: "no-store",
