@@ -8,8 +8,9 @@ Python.
 
 O que faz, por servidor:
   1. baixa Level.sav por SFTP (porta 2022 — SFTP, não FTP simples)
-  2. descomprime o container PlM (Oodle/Kraken) via ooz
-  3. lê o GVAS e extrai jogadores e guilds
+  2. lê o save com `palsav-flex`, que entende o container PlM (Oodle) usado
+     desde a v0.6 — a `palworld-save-tools` do PyPI parou na v0.24 e não lê
+  3. extrai jogadores e guilds
   4. grava no Neon
 
 ⚠️ Nunca baixar a pasta Players/ inteira: no PVE VIP ela tem 394 MB.
@@ -18,11 +19,9 @@ O Level.sav já traz jogador, guild e contagem de Pal.
 
 from __future__ import annotations
 
-import ctypes
 import io
 import json
 import os
-import struct
 import sys
 import time
 from dataclasses import dataclass, field
@@ -65,80 +64,6 @@ class Player:
 class Extract:
     players: dict[str, Player] = field(default_factory=dict)
     guilds: dict[str, Guild] = field(default_factory=dict)
-
-
-# --------------------------------------------------------------- descompressão
-
-def decompress_plm(raw: bytes) -> bytes:
-    """
-    Container do Palworld: [tamanho_descomprimido u32][tamanho_comprimido u32]
-    [magic 3 bytes][tipo 1 byte][payload].
-
-    PlZ = zlib (formato antigo). PlM = Oodle/Kraken, usado desde a v0.6.
-    Para PlM chamamos o `ooz`, um descompressor Kraken open source — a gente
-    só lê o save, então descompressão basta.
-    """
-    if len(raw) < 12:
-        raise ValueError("arquivo pequeno demais para ser um save")
-
-    uncompressed_len, compressed_len = struct.unpack_from("<II", raw, 0)
-    magic = raw[8:11]
-    save_type = raw[11]
-    payload = raw[12:]
-
-    if magic == b"PlZ":
-        import zlib
-
-        data = zlib.decompress(payload)
-        # tipo 0x31 = comprimido duas vezes
-        return zlib.decompress(data) if save_type == 0x31 else data
-
-    if magic != b"PlM":
-        raise ValueError(f"magic desconhecido: {magic!r}")
-
-    if len(payload) < compressed_len:
-        raise ValueError(
-            f"payload truncado: {len(payload)} < {compressed_len} declarados"
-        )
-
-    out = run_ooz(payload[:compressed_len], uncompressed_len)
-    if save_type == 0x32:  # duplamente comprimido
-        inner_uncompressed, inner_compressed = struct.unpack_from("<II", out, 0)
-        out = run_ooz(out[12 : 12 + inner_compressed], inner_uncompressed)
-    return out
-
-
-# O descompressor Kraken é carregado uma vez e reaproveitado entre servidores.
-_OOZ: ctypes.CDLL | None = None
-
-# Kraken escreve um pouco além do fim do buffer; o próprio ooz reserva 64 bytes.
-SAFE_SPACE = 64
-
-
-def _ooz_lib() -> ctypes.CDLL:
-    global _OOZ
-    if _OOZ is None:
-        path = os.environ.get("OOZ_LIB", "/tmp/libooz.so")
-        _OOZ = ctypes.CDLL(path)
-        _OOZ.ooz_decompress.argtypes = [
-            ctypes.c_char_p,
-            ctypes.c_size_t,
-            ctypes.c_char_p,
-            ctypes.c_size_t,
-        ]
-        _OOZ.ooz_decompress.restype = ctypes.c_int
-    return _OOZ
-
-
-def run_ooz(payload: bytes, expected_len: int) -> bytes:
-    """Descomprime um bloco Kraken chamando a lib compilada pelo workflow."""
-    dst = ctypes.create_string_buffer(expected_len + SAFE_SPACE)
-    written = _ooz_lib().ooz_decompress(payload, len(payload), dst, expected_len)
-    if written != expected_len:
-        raise RuntimeError(
-            f"Kraken devolveu {written} bytes, esperado {expected_len}"
-        )
-    return dst.raw[:expected_len]
 
 
 # ------------------------------------------------------------------ extração
@@ -301,38 +226,6 @@ def servers_from_env() -> list[ServerCfg]:
     return [ServerCfg(**item) for item in json.loads(raw)]
 
 
-def patch_reader() -> None:
-    """
-    A `palworld-save-tools` 0.24 só conhece 5 tipos dentro de mapa
-    (Struct, Enum, Name, Int, Bool). O Palworld v1.0 passou a usar
-    `Int64Property` em `LevelObjectRecoverPartySaveData`, e o parse morre ali.
-
-    Como a gente **só lê** o save — nunca escreve —, estender o leitor resolve
-    sem risco: os tipos extras são primitivos de tamanho fixo.
-    """
-    from palworld_save_tools.archive import FArchiveReader
-
-    original = FArchiveReader.prop_value
-    extras = {
-        "Int64Property": lambda r: r.i64(),
-        "UInt64Property": lambda r: r.u64(),
-        "UInt32Property": lambda r: r.u32(),
-        "Int16Property": lambda r: r.i16(),
-        "FloatProperty": lambda r: r.float(),
-        "DoubleProperty": lambda r: r.double(),
-        "StrProperty": lambda r: r.fstring(),
-        "ByteProperty": lambda r: r.byte(),
-    }
-
-    def prop_value(self, type_name: str, struct_type_name: str, path: str):
-        reader = extras.get(type_name)
-        if reader is not None:
-            return reader(self)
-        return original(self, type_name, struct_type_name, path)
-
-    FArchiveReader.prop_value = prop_value
-
-
 # Só estas duas seções são decodificadas de verdade. Todo o resto do save
 # (mapa, objetos, itens do mundo) fica como bytes crus — é o que faz o parse
 # caber no tempo: decodificar o save inteiro estourou 20 minutos no runner.
@@ -343,13 +236,9 @@ NEEDED_SECTIONS = (
 
 
 def main() -> int:
-    from palworld_save_tools.gvas import GvasFile
-    from palworld_save_tools.paltypes import (
-        PALWORLD_CUSTOM_PROPERTIES,
-        PALWORLD_TYPE_HINTS,
-    )
-
-    patch_reader()
+    from palsav.core import decompress_sav_to_gvas
+    from palsav.gvas import GvasFile
+    from palsav.paltypes import PALWORLD_CUSTOM_PROPERTIES, PALWORLD_TYPE_HINTS
 
     custom = {
         key: value
@@ -368,7 +257,7 @@ def main() -> int:
             raw = fetch_save(cfg)
             print(f"  save: {len(raw):,} bytes", flush=True)
 
-            gvas_bytes = decompress_plm(raw)
+            gvas_bytes, _ = decompress_sav_to_gvas(raw)
             print(f"  descomprimido: {len(gvas_bytes):,} bytes", flush=True)
 
             parse_started = time.time()
