@@ -1848,49 +1848,74 @@ cabeçalho da requisição, então acompanha o domínio novo sozinho. Só o
 
 ---
 
-### 11.2 🔴 Um Discord só vincula UM personagem — e 18% jogam em mais de um servidor
+### 11.2 ✅ Um Discord vincula UMA conta de jogo — e ela vale nos três servidores
 
-Descoberto pelo dono em 22/08/2026, olhando o mapa: ele tem personagem nos
-três servidores, mas o site só reconhece um.
+> Escrito primeiro como "um Discord só vincula um personagem, e isso quebra
+> para 18% da comunidade". **Medido depois, e o diagnóstico estava errado.**
+> Fica registrado inteiro porque o erro ensina mais que a conclusão.
 
-**A causa está no schema:**
+#### O que foi medido (22/08/2026, na API dos dois PVE e no banco)
 
-```sql
-create table account_links (
-  discord_id  text  primary key,   -- <= UM vinculo por conta
-  ...
-)
+🔴 **O `palworld_uid` é da CONTA, não do mundo.** O mesmo UID responde nos
+três servidores:
+
+| Pessoa | PVE Free | PVE VIP |
+|---|---|---|
+| dono | `AA7C26DC-…` como **ADM_JONJON** | `AA7C26DC-…` como **jonjon7D** |
+| DEMON | `058C8A05-…` | `058C8A05-…` |
+
+No banco: **86 dos 324 UIDs distintos aparecem em mais de um servidor** —
+mesmo UID, mesmo nome, pessoas diferentes de jeito nenhum.
+
+#### O que o diagnóstico anterior errou
+
+| Afirmação anterior | Realidade |
+|---|---|
+| "o mapa pinta a base de verde só no servidor vinculado" | ❌ **Falso.** O mapa compara só o UID, sem olhar servidor (`app/mapa/page.tsx`). Como o UID é global, as bases dos dois PVE já saem verdes |
+| "a carteira não reconhece nos outros servidores" | ❌ **Falso.** A carteira só pergunta *"tem vínculo?"* — o daily é global e nunca olhou servidor |
+| "trocar a chave primária para `(discord_id, server_slug)`" | ❌ **Seria o conserto errado.** Um personagem por servidor é justamente o que **não** existe: é uma conta só, em vários mundos |
+
+➡️ A lição é a regra 🟡 da §4 do HANDOFF, de novo: **ler a fonte antes de
+chutar.** O sintoma era real, o mecanismo imaginado não era.
+
+#### Os dois problemas que a medição encontrou de verdade
+
+🔴 **1. O UID vinha em duas grafias, e nenhuma casava com a outra.**
+
+```
+save / tabela players     AA7C26DC000000000000000000000000    sem hífen
+PalDefender / API         AA7C26DC-00000000-00000000-00000000  com hífen
 ```
 
-Sendo chave primária, cada Discord só cabe uma vez. O `lib/linking.ts`
-reforça: *"Sua conta já tem personagem. Desvincule antes de trocar."*
+Nenhum `join` entre `players` e `account_links` encontrava ninguém — e a
+falha é **silenciosa**: nada estoura, a tela só fica vazia. Era isso que
+deixava o perfil de quem vinculou sem level e sem personagem, e é a parede
+em que o cofre do mercado (§7.3) bateria em seguida.
 
-**O tamanho do problema, medido no banco:**
+🔴 **2. Dois Discords podiam reivindicar a mesma pessoa.** A trava era
+`unique (server_slug, palworld_uid)`. Com o UID global, bastava eu vincular o
+`ADM_JONJON` no Free enquanto o dono tinha o `jonjon7D` no VIP: pares
+diferentes, mesma pessoa, e o banco aceitava os dois.
 
-> **61 jogadores de 346 estão em mais de um servidor** — 18% da comunidade.
-> Cinco deles nos três (Blackout, DEMON, Lincao, Mari, Zé Ruela).
+#### O conserto aplicado
 
-**O que quebra hoje para essas 61 pessoas:**
-
-- **Mapa** — a base sai em verde só no servidor vinculado; nos outros ela
-  aparece dourada, como a de um estranho
-- **Carteira** — a Paleta é global, mas quem vinculou num servidor não é
-  reconhecido nos outros
-- **Placar e perfil** — aparecem com um personagem só
-
-**O conserto:** trocar a chave primária para `(discord_id, server_slug)` —
-uma pessoa, um personagem **por servidor**. Toca em:
-
-| Arquivo | O quê |
+| Onde | O quê |
 |---|---|
-| `db/schema.sql` | Chave primária composta + migração dos vínculos existentes |
-| `lib/linking.ts` | `meuVinculo` devolve lista; permitir um por servidor |
-| `app/vincular` | Listar os vínculos e permitir acrescentar |
-| `app/mapa/page.tsx` | A base verde precisa considerar **todos** os UIDs da pessoa |
-| `app/painel` | Perfil com os personagens |
+| **`lib/palworld/uid.ts`** (novo) | `normalizarUid` e `uidParaComando`. Dentro do site o UID vive **sempre** canônico (hex maiúsculo, sem hífen); o formato 8-8-8-8 existe só na borda do RCON |
+| `lib/palworld/paldefender.ts` | Normaliza na **entrada** — jogadores, membros de guild e líder |
+| `lib/palworld/rcon.ts` | `sendToPlayer` reconverte para 8-8-8-8 ao montar o `send msg` |
+| `db/schema.sql` | `palworld_uid` passa a ser **único na tabela inteira**; `server_slug` vira registro de onde a prova aconteceu |
+| `db/migrations/001-…sql` | Reescreve os vínculos existentes no formato canônico e troca a trava. Aborta se achar personagem reivindicado duas vezes, em vez de escolher sozinho |
+| `lib/linking.ts` | `temVinculo`, `meusPersonagens` (cruza com o save, então enxerga offline), e a checagem de "já é de outra conta" passa a ser pelo UID puro |
+| `app/painel`, `app/vincular` | Mostram **todos** os personagens da pessoa, um por servidor, com nível e Pals |
 
-⚠️ A migração não pode perder os vínculos que já existem. São poucos hoje
-(2 em 22/08), então dá para fazer com calma antes de a comunidade adotar.
+⚠️ **A migração e o deploy andam juntos, migração primeiro.** Código novo com
+banco velho compara canônico contra hifenizado: a trava de "personagem já
+tomado" para de reconhecer, e dois Discords conseguiriam vincular a mesma
+pessoa. É a única ordem segura.
+
+📌 **`UserId` vem vazio** na resposta do PalDefender — o identificador útil é
+o `PlayerUID`. Os comandos de RCON aceitam ele, e é o que o vínculo usa.
 
 ---
 

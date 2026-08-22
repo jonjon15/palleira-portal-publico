@@ -1,5 +1,6 @@
 import { Socket } from "node:net";
 import type { PalleiraServer } from "@/lib/servers";
+import { uidParaComando } from "@/lib/palworld/uid";
 
 /**
  * Cliente RCON do Palworld (§3.2 e §3.5 do PROMPT.md).
@@ -113,6 +114,10 @@ export function rcon(
  * Testado: com UID inexistente o comando responde "Failed to find player by
  * UserId", ou seja, ele procura o jogador antes de entregar — é direcionado,
  * não anúncio geral.
+ *
+ * Recebe o UID canônico (sem hífen) e devolve o formato 8-8-8-8 na hora de
+ * montar o comando — que é a forma comprovada com o jogo. Esta é a única
+ * fronteira do site onde o UID com hífen existe.
  */
 export async function sendToPlayer(
   server: PalleiraServer,
@@ -120,6 +125,9 @@ export async function sendToPlayer(
   message: string,
 ): Promise<boolean> {
   // O comando quebra em espaço; o PalDefender aceita a mensagem no fim.
-  const res = await rcon(server, `send msg ${playerUid} ${message}`);
+  const res = await rcon(
+    server,
+    `send msg ${uidParaComando(playerUid)} ${message}`,
+  );
   return res.toLowerCase().includes("succeeded");
 }

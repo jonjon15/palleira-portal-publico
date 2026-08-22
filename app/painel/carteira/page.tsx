@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { Pick } from "@/components/pick";
-import { meuVinculo } from "@/lib/linking";
+import { temVinculo } from "@/lib/linking";
 import {
   saldo,
   extrato,
@@ -29,11 +29,11 @@ export default async function Carteira() {
   if (!session) redirect("/entrar");
 
   const discordId = session.user.discordId;
-  const [total, linhas, pegou, vinculo] = await Promise.all([
+  const [total, linhas, pegou, vinculado] = await Promise.all([
     saldo(discordId),
     extrato(discordId),
     jaPegouODaily(discordId),
-    meuVinculo(discordId),
+    temVinculo(discordId),
   ]);
 
   return (
@@ -69,7 +69,7 @@ export default async function Carteira() {
           {/* ------------------------------------------------------- daily */}
           <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
             <h2 className="font-semibold">Daily</h2>
-            {!vinculo ? (
+            {!vinculado ? (
               <>
                 <p className="mt-2 text-sm text-muted">
                   Vincule seu personagem para liberar o daily. É o que impede

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { PageHeader } from "@/components/page-header";
 import { activeServers, SERVERS } from "@/lib/servers";
+import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers } from "@/lib/db";
@@ -19,9 +20,6 @@ const SERVER_NAME = Object.fromEntries(
 );
 
 const MEDAL = ["text-gold", "text-[#c9c9c9]", "text-[#c08457]"];
-
-/** O mesmo UID aparece com e sem hífen dependendo da API. */
-const normUid = (v: string) => v.replace(/-/g, "").toUpperCase();
 
 interface GuildRow {
   id: string;
@@ -63,7 +61,7 @@ const loadLive = unstable_cache(
           ]);
 
           for (const p of live) {
-            liveLevel.set(normUid(p.playerId), p.level);
+            liveLevel.set(p.playerId, p.level);
           }
 
           totalPlayers += players.length;
@@ -73,7 +71,7 @@ const loadLive = unstable_cache(
               name: p.name || "Jogador sem nome",
               guild: p.guildName,
               server: server.shortName,
-              level: liveLevel.get(normUid(p.playerUid)) ?? 0,
+              level: liveLevel.get(p.playerUid) ?? 0,
             });
           }
 
@@ -186,7 +184,7 @@ export default async function Ranking() {
                     {SERVER_NAME[p.server_slug] ?? p.server_slug}
                   </td>
                   <td className="tabular px-4 py-3 text-right font-semibold">
-                    {live.liveLevel[normUid(p.palworld_uid)] ?? p.level}
+                    {live.liveLevel[normalizarUid(p.palworld_uid)] ?? p.level}
                   </td>
                   <td className="tabular px-4 py-3 text-right">
                     {p.pal_count.toLocaleString("pt-BR")}

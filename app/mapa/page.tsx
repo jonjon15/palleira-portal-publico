@@ -119,6 +119,10 @@ export default async function Mapa() {
    * Os UIDs dos membros ficam no servidor — o navegador recebe só um
    * booleano. Não há motivo para mandar a lista de quem é de qual guild para
    * a máquina de cada visitante.
+   *
+   * 📌 Um UID só cobre os dois mapas: ele é da conta, não do mundo. Quem
+   * jogou no Free e no VIP vê as bases das duas guilds em verde, mesmo tendo
+   * provado o personagem num servidor só.
    */
   const session = await auth();
   const vinculo = session?.user?.discordId

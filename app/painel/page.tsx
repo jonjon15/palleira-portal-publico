@@ -13,7 +13,7 @@ import {
   isStaff,
   canManageEconomy,
 } from "@/lib/roles";
-import { meuVinculo } from "@/lib/linking";
+import { meuVinculo, meusPersonagens } from "@/lib/linking";
 import { saldo, jaPegouODaily, DAILY_PALETAS } from "@/lib/economia";
 
 export const metadata: Metadata = { title: "Meu painel" };
@@ -25,8 +25,10 @@ export default async function Painel() {
   const { user } = session;
   const level = levelOf(user.roles, user.isMember);
   const plano = planoOf(user.roles);
-  const [vinculo, paletas, pegouDaily] = await Promise.all([
+  const [vinculo, personagens, paletas, pegouDaily] = await Promise.all([
     meuVinculo(user.discordId),
+    // Um vínculo, vários personagens: o UID é o mesmo nos três servidores.
+    meusPersonagens(user.discordId),
     saldo(user.discordId),
     jaPegouODaily(user.discordId),
   ]);
@@ -104,7 +106,9 @@ export default async function Painel() {
             title={vinculo ? "Personagem vinculado" : "Vincular personagem"}
             body={
               vinculo
-                ? `${vinculo.playerName} · ${vinculo.serverName}`
+                ? personagens.length > 1
+                  ? `${vinculo.playerName} · em ${personagens.length} servidores`
+                  : `${vinculo.playerName} · ${personagens[0]?.serverName ?? vinculo.serverName}`
                 : "Prove que o personagem é seu com um código no chat do jogo."
             }
             href="/vincular"
@@ -135,6 +139,35 @@ export default async function Painel() {
             />
           )}
         </div>
+
+        {personagens.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-lg font-semibold">Seus personagens</h2>
+            <p className="mt-1 text-sm text-muted">
+              O vínculo é um só e vale em todos os servidores. Estes números
+              vêm do save, então valem mesmo com você offline.
+            </p>
+            <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+              {personagens.map((p) => (
+                <li
+                  key={`${p.serverSlug}:${p.name}`}
+                  className="flex items-center gap-4 px-5 py-3.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{p.name}</p>
+                    <p className="truncate text-sm text-muted">{p.serverName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="tabular font-bold">Nível {p.level}</p>
+                    <p className="tabular text-xs text-muted">
+                      {p.palCount} {p.palCount === 1 ? "Pal" : "Pals"}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </>
   );

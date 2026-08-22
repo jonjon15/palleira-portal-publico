@@ -6,9 +6,11 @@ import { PageHeader } from "@/components/page-header";
 import { Pick } from "@/components/pick";
 import {
   meuVinculo,
+  meusPersonagens,
   meuPedido,
   personagensOnline,
   servidoresSemRcon,
+  type PersonagemNoServidor,
 } from "@/lib/linking";
 import {
   acaoCancelar,
@@ -32,8 +34,10 @@ export default async function Vincular() {
   if (!session) redirect("/entrar");
 
   const discordId = session.user.discordId;
-  const [vinculo, pendente] = await Promise.all([
+  const [vinculo, meus, pendente] = await Promise.all([
     meuVinculo(discordId),
+    // Os personagens da pessoa em cada servidor — um vínculo cobre todos.
+    meusPersonagens(discordId),
     meuPedido(discordId),
   ]);
 
@@ -67,6 +71,7 @@ export default async function Vincular() {
                 nome={vinculo.playerName}
                 servidor={vinculo.serverName}
                 desde={vinculo.linkedAt}
+                personagens={meus}
               />
             ) : pendente ? (
               <Passo
@@ -169,10 +174,12 @@ function Vinculado({
   nome,
   servidor,
   desde,
+  personagens,
 }: {
   nome: string;
   servidor: string;
   desde: string;
+  personagens: PersonagemNoServidor[];
 }) {
   const data = new Date(desde).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -187,12 +194,32 @@ function Vinculado({
       </p>
       <h2 className="mt-2 text-2xl font-bold tracking-tight">{nome}</h2>
       <p className="mt-1 text-sm text-muted">
-        {servidor} · desde {data}
+        provado no {servidor} · desde {data}
       </p>
       <p className="mt-4 max-w-xl text-sm text-muted">
-        Tudo que você fizer no jogo com esse personagem conta para a sua conta
-        aqui: placar, carteira e, em breve, o mercado.
+        Tudo que você fizer no jogo conta para a sua conta aqui: placar,
+        carteira e, em breve, o mercado. Você provou num servidor, mas{" "}
+        <b className="text-text">o vínculo vale nos três</b> — é a mesma conta
+        de jogo em todos eles.
       </p>
+
+      {personagens.length > 0 && (
+        <ul className="mt-5 space-y-1.5">
+          {personagens.map((p) => (
+            <li
+              key={`${p.serverSlug}:${p.name}`}
+              className="flex flex-wrap items-baseline gap-x-2 text-sm"
+            >
+              <span className="font-medium">{p.name}</span>
+              <span className="text-muted">no {p.serverName}</span>
+              <span className="tabular ml-auto text-muted">
+                nível {p.level} · {p.palCount}{" "}
+                {p.palCount === 1 ? "Pal" : "Pals"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Link

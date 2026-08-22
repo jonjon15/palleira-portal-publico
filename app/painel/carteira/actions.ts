@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { meuVinculo } from "@/lib/linking";
+import { temVinculo } from "@/lib/linking";
 import { lancar, chaveDoDaily, DAILY_PALETAS } from "@/lib/economia";
 
 export type Estado = { ok: boolean; mensagem: string };
@@ -28,7 +28,7 @@ export async function pegarDaily(): Promise<Estado> {
 
   const discordId = session.user.discordId;
 
-  if (!(await meuVinculo(discordId))) {
+  if (!(await temVinculo(discordId))) {
     return {
       ok: false,
       mensagem: "Vincule seu personagem antes de pegar o daily.",

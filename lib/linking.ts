@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { serverBySlug, activeServers } from "@/lib/servers";
 import { getPlayers } from "@/lib/palworld/paldefender";
 import { sendToPlayer } from "@/lib/palworld/rcon";
+import { normalizarUid } from "@/lib/palworld/uid";
 
 /**
  * Vínculo entre a conta do Discord e o personagem do jogo (§4.2 do PROMPT.md).
@@ -12,6 +13,11 @@ import { sendToPlayer } from "@/lib/palworld/rcon";
  * por RCON direto para aquele personagem. Para roubar o personagem de alguém
  * seria preciso estar com o Discord dela E com o jogo dela aberto ao mesmo
  * tempo — que é o nível de prova que a carteira de Paletas exige.
+ *
+ * 📌 **O vínculo vale na comunidade inteira, não num servidor.** O
+ * `palworld_uid` é da conta e não muda de mundo para mundo — medido em
+ * 22/08/2026: o mesmo UID responde nos três servidores. O `serverSlug`
+ * guardado é só o registro de **onde a prova aconteceu**.
  *
  * Só server-side: RCON abre socket TCP com a senha de admin.
  */
@@ -28,11 +34,29 @@ export interface Personagem {
 }
 
 export interface Vinculo {
-  serverSlug: string;
-  serverName: string;
+  /** Canônico, sem hífen — o mesmo formato de `players` (uid.ts) */
   uid: string;
   playerName: string;
   linkedAt: string;
+  /** Onde o código foi entregue. Registro de origem, não limite de alcance. */
+  serverSlug: string;
+  serverName: string;
+}
+
+/**
+ * Como a pessoa aparece em cada servidor.
+ *
+ * Vem da tabela `players`, alimentada pelo save (§3.8) — então mostra
+ * **também quem está offline**, que é justamente o que a API não sabe.
+ * Só encontra alguém porque os dois lados agora falam o mesmo formato de
+ * UID; foi o descasamento entre eles que deixava este perfil vazio.
+ */
+export interface PersonagemNoServidor {
+  serverSlug: string;
+  serverName: string;
+  name: string;
+  level: number;
+  palCount: number;
 }
 
 export interface Pendente {
@@ -51,7 +75,7 @@ export interface Resultado {
 
 const nomeDoServidor = (slug: string) => serverBySlug(slug)?.shortName ?? slug;
 
-/** O vínculo atual do usuário, se existir. */
+/** A conta de jogo do usuário, se ele já provou alguma. Vale nos três servidores. */
 export async function meuVinculo(discordId: string): Promise<Vinculo | null> {
   const rows = (await sql`
     select server_slug, palworld_uid, player_name, linked_at
@@ -67,12 +91,51 @@ export async function meuVinculo(discordId: string): Promise<Vinculo | null> {
   const r = rows[0];
   if (!r) return null;
   return {
-    serverSlug: r.server_slug,
-    serverName: nomeDoServidor(r.server_slug),
     uid: r.palworld_uid,
     playerName: r.player_name,
     linkedAt: r.linked_at,
+    serverSlug: r.server_slug,
+    serverName: nomeDoServidor(r.server_slug),
   };
+}
+
+/** Só a pergunta "essa pessoa já provou um personagem?" — sem trazer o resto. */
+export async function temVinculo(discordId: string): Promise<boolean> {
+  const rows = (await sql`
+    select 1 from account_links where discord_id = ${discordId}
+  `) as unknown[];
+  return rows.length > 0;
+}
+
+/**
+ * Os personagens da pessoa, um por servidor onde ela jogou.
+ *
+ * Um vínculo só, vários personagens: é o UID que os liga. Quem joga no Free
+ * e no VIP aparece nos dois, com o nome e o level de cada mundo.
+ */
+export async function meusPersonagens(
+  discordId: string,
+): Promise<PersonagemNoServidor[]> {
+  const rows = (await sql`
+    select p.server_slug, p.name, p.level, p.pal_count
+    from account_links a
+    join players p on p.palworld_uid = a.palworld_uid
+    where a.discord_id = ${discordId}
+    order by p.level desc, p.pal_count desc
+  `) as {
+    server_slug: string;
+    name: string;
+    level: number;
+    pal_count: number;
+  }[];
+
+  return rows.map((r) => ({
+    serverSlug: r.server_slug,
+    serverName: nomeDoServidor(r.server_slug),
+    name: r.name,
+    level: r.level,
+    palCount: r.pal_count,
+  }));
 }
 
 /** Código já enviado, esperando confirmação. Expirado conta como inexistente. */
@@ -98,7 +161,8 @@ export async function meuPedido(discordId: string): Promise<Pendente | null> {
  *
  * Só quem está online aparece: o código chega pelo chat do jogo, então não
  * adianta oferecer um personagem que ninguém está segurando. Quem já
- * pertence a outro Discord também some da lista.
+ * pertence a algum Discord também some da lista — a checagem é pelo UID
+ * puro, não pelo par com o servidor, porque a mesma conta responde nos três.
  */
 export async function personagensOnline(): Promise<Personagem[]> {
   const lista: Personagem[] = [];
@@ -126,15 +190,14 @@ export async function personagensOnline(): Promise<Personagem[]> {
 
   const tomados = new Set(
     (
-      (await sql`select server_slug, palworld_uid from account_links`) as {
-        server_slug: string;
+      (await sql`select palworld_uid from account_links`) as {
         palworld_uid: string;
       }[]
-    ).map((r) => `${r.server_slug}:${r.palworld_uid}`),
+    ).map((r) => r.palworld_uid),
   );
 
   return lista
-    .filter((c) => !tomados.has(`${c.serverSlug}:${c.uid}`))
+    .filter((c) => !tomados.has(c.uid))
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
@@ -146,7 +209,7 @@ export const servidoresSemRcon = () =>
 
 export async function pedirCodigo(
   serverSlug: string,
-  uid: string,
+  uidCru: string,
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
@@ -159,10 +222,14 @@ export async function pedirCodigo(
 
   const discordId = session.user.discordId;
 
-  if (await meuVinculo(discordId)) {
+  // Vem do formulário: normaliza antes de comparar com qualquer coisa.
+  const uid = normalizarUid(uidCru);
+
+  if (await temVinculo(discordId)) {
     return {
       ok: false,
-      mensagem: "Sua conta já tem personagem. Desvincule antes de trocar.",
+      mensagem:
+        "Sua conta já tem personagem, e ele vale nos três servidores. Desvincule antes de trocar.",
     };
   }
 
@@ -183,9 +250,11 @@ export async function pedirCodigo(
     };
   }
 
+  // Sem `server_slug` na condição de propósito: o UID é o mesmo nos três
+  // servidores, então checar só o par deixaria outro Discord reivindicar a
+  // mesma pessoa em outro mundo.
   const tomado = (await sql`
-    select 1 from account_links
-    where server_slug = ${serverSlug} and palworld_uid = ${uid}
+    select 1 from account_links where palworld_uid = ${uid}
   `) as unknown[];
   if (tomado.length) {
     return { ok: false, mensagem: "Esse personagem já é de outra conta." };
@@ -285,7 +354,8 @@ export async function confirmarCodigo(digitado: string): Promise<Resultado> {
   }
 
   // Corrida: dois Discords mirando o mesmo personagem. O índice único da
-  // tabela decide, e o perdedor recebe uma mensagem honesta.
+  // tabela decide, e o perdedor recebe uma mensagem honesta. Vale para
+  // qualquer servidor: `palworld_uid` é único na tabela inteira.
   try {
     await sql`
       insert into account_links
@@ -302,7 +372,10 @@ export async function confirmarCodigo(digitado: string): Promise<Resultado> {
   }
 
   await sql`delete from link_codes where discord_id = ${discordId}`;
-  return { ok: true, mensagem: `Pronto! ${pedido.player_name} é você.` };
+  return {
+    ok: true,
+    mensagem: `Pronto! ${pedido.player_name} é você — nos três servidores.`,
+  };
 }
 
 export async function cancelarPedido(): Promise<Resultado> {
@@ -312,6 +385,7 @@ export async function cancelarPedido(): Promise<Resultado> {
   return { ok: true, mensagem: "Pedido cancelado." };
 }
 
+/** Desfaz o vínculo inteiro: ele é um só, e vale em todos os servidores. */
 export async function desvincular(): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };

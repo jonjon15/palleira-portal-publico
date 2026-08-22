@@ -12,11 +12,13 @@
  */
 
 import type { PalleiraServer } from "@/lib/servers";
+import { normalizarUid } from "@/lib/palworld/uid";
 
 /* ------------------------------------------------------------------- tipos */
 
 export interface PdPlayer {
   name: string;
+  /** Canônico: hex maiúsculo sem hífen (`lib/palworld/uid.ts`) */
   playerUid: string;
   userId: string;
   guildName: string;
@@ -54,8 +56,10 @@ export interface PdGuild {
   name: string;
   level: number;
   leaderName: string;
+  /** Canônico, como todo UID que sai deste arquivo */
   leaderUid: string;
   memberCount: number;
+  /** Canônicos — é assim que o mapa reconhece a base de quem está olhando */
   members: string[];
   bases: PdBase[];
 }
@@ -105,7 +109,9 @@ export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
   const raw = await call<{ Players: RawPlayer[] }>(server, "players");
   return (raw.Players ?? []).map((p) => ({
     name: p.Name ?? "",
-    playerUid: p.PlayerUID ?? "",
+    // ⚠️ A API devolve com hífen e o save sem. Aqui vira canônico, para o
+    // resto do site nunca precisar saber disso (uid.ts).
+    playerUid: normalizarUid(p.PlayerUID),
     userId: p.UserId ?? "",
     guildName: guildLabel(p.GuildName),
     guildId: p.GuildUUID ?? "",
@@ -145,9 +151,9 @@ export async function getGuilds(server: PalleiraServer): Promise<PdGuild[]> {
     name: guildLabel(g.name),
     level: g.Level ?? 0,
     leaderName: g.admin?.name ?? "",
-    leaderUid: g.admin?.id ?? "",
+    leaderUid: normalizarUid(g.admin?.id),
     memberCount: g.member_count ?? 0,
-    members: g.members ?? [],
+    members: (g.members ?? []).map(normalizarUid),
     bases: (g.camps ?? []).map((c) => ({
       id: c.id,
       mapX: Math.round(c.map_pos?.x ?? 0),

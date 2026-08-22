@@ -80,13 +80,25 @@ create index if not exists imports_recent_idx
 -- §4.2: a conta do Discord é a identidade mestre. Um personagem só pode
 -- estar ligado a um Discord, e vice-versa — senão vira porta para lavar
 -- item entre contas.
+--
+-- 🔴 O vínculo é GLOBAL, não por servidor. Medido em 22/08/2026: o
+-- `palworld_uid` é da conta e não muda de mundo para mundo — DEMON é
+-- `058C8A05…` nos três servidores. Por isso o UID é único na tabela inteira:
+-- se fosse único só por servidor, dois Discords poderiam reivindicar a mesma
+-- pessoa em servidores diferentes.
+--
+-- ⚠️ `palworld_uid` guarda o formato CANÔNICO: hex maiúsculo, sem hífen — o
+-- mesmo de `players`. O PalDefender devolve com hífen e a conversão acontece
+-- em `lib/palworld/uid.ts`, na borda. Se as duas formas circularem juntas, o
+-- cruzamento entre save e API para de encontrar as pessoas, em silêncio.
 create table if not exists account_links (
   discord_id    text        primary key,
+  -- Onde e com que nome o código foi provado. É registro de origem, não
+  -- limite de alcance: o vínculo vale nos três servidores.
   server_slug   text        not null,
-  palworld_uid  text        not null,
+  palworld_uid  text        not null unique,
   player_name   text        not null,
-  linked_at     timestamptz not null default now(),
-  unique (server_slug, palworld_uid)
+  linked_at     timestamptz not null default now()
 );
 
 -- Códigos de 6 dígitos entregues DENTRO DO JOGO. Quem não está com o

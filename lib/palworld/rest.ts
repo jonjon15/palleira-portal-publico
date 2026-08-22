@@ -10,6 +10,7 @@
  */
 
 import type { PalleiraServer } from "@/lib/servers";
+import { normalizarUid } from "@/lib/palworld/uid";
 
 /* ------------------------------------------------------------------ tipos */
 
@@ -35,6 +36,7 @@ export interface ServerMetrics {
 export interface SafePlayer {
   name: string;
   accountName: string;
+  /** Canônico: hex maiúsculo sem hífen, como todo UID dentro do site (uid.ts) */
   playerId: string;
   userId: string;
   /** steam | gdk (Xbox) | ps5 | mac — a comunidade é cross-platform (§3.5) */
@@ -258,7 +260,9 @@ function toSafePlayer(p: RawPlayer): SafePlayer {
   return {
     name: p.name,
     accountName: p.accountName,
-    playerId: p.playerId,
+    // Canônico na borda: é o que deixa o cruzamento com o save encontrar
+    // a pessoa. O `userId` (steam_…/gdk_…/ps5_…) é outra coisa e fica cru.
+    playerId: normalizarUid(p.playerId),
     userId: p.userId,
     platform: platformOf(p.userId ?? ""),
     ping: Math.round(p.ping ?? 0),
@@ -352,7 +356,7 @@ export async function getWorldSnapshot(
       players.push({
         name: a.NickName,
         accountName: a.NickName,
-        playerId: a.InstanceID,
+        playerId: normalizarUid(a.InstanceID),
         userId: a.userid ?? "",
         platform: platformOf(a.userid ?? ""),
         ping: 0,

@@ -112,7 +112,13 @@ Provado que é direcionado: com UID inválido o comando responde
 *"Failed to find player by UserId"*. Testado ponta a ponta com o `jonjon7D`.
 
 Código em [`lib/linking.ts`](lib/linking.ts). Vale 10 minutos, 5 tentativas,
-um personagem por Discord e vice-versa.
+**uma conta de jogo por Discord e vice-versa**.
+
+📌 **O vínculo vale nos três servidores.** Medido em 22/08: o `palworld_uid` é
+da conta e não muda de mundo — o dono é o mesmo `AA7C26DC…` como `jonjon7D` no
+VIP e como `ADM_JONJON` no Free, e 86 dos 324 UIDs do banco aparecem em mais de
+um servidor. Prova num servidor, reconhecido em todos. O detalhe inteiro, com o
+que o diagnóstico anterior errou, está na **§11.2 do PROMPT.md**.
 
 > ⚠️ Só funciona nos PvE. Quem joga **só no PvP não consegue vincular** até o
 > `RCONEnabled=True` ser ligado lá.
@@ -225,19 +231,24 @@ O `player_daily` é o único histórico, e é uma linha por jogador por dia.
 
 ## 9. Aberto, na ordem em que importa
 
-1. **O mercado** (`/mercado`) — a peça que falta para o site ter razão de
+1. ⚠️ **Aplicar `db/migrations/001-uid-canonico-e-vinculo-global.sql` no Neon
+   ANTES do próximo deploy.** Ela põe os vínculos no formato canônico do UID e
+   torna o personagem único na comunidade inteira. Código novo com banco velho
+   deixa de reconhecer "personagem já tomado" — a ordem importa (§11.2 do
+   PROMPT).
+2. **O mercado** (`/mercado`) — a peça que falta para o site ter razão de
    existir. Depende do **cofre** (§7.3): o Pal fica em custódia enquanto o
    anúncio está no ar, porque `/pals` só responde com o jogador online.
-2. **Os sinks** (§7.7). Hoje a economia **só tem entrada**. Sem slot de cofre,
+3. **Os sinks** (§7.7). Hoje a economia **só tem entrada**. Sem slot de cofre,
    taxa queimada e cosmético, em três meses tudo custa milhão.
-3. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o problema
+4. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o problema
    que o Jonjon lamentava ("não sabíamos onde hospedar"), sem VPS.
-4. **RCON no PvP** — decisão dele. Destrava o vínculo para quem só joga lá.
-5. **DNS do palleira.com.br** — e limpar o acesso do ex-dev no Registro.br.
-6. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New Metal /
+5. **RCON no PvP** — decisão dele. Destrava o vínculo para quem só joga lá.
+6. **DNS do palleira.com.br** — e limpar o acesso do ex-dev no Registro.br.
+7. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New Metal /
    Palleira; o Discord tem Bronze/Prata/Ouro/Diamante/Colossal, todos com 0
    membros. Conferir qual é a verdade antes de publicar benefício.
-7. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
+8. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
    real, hoje na mão. É a maior oportunidade de automação do projeto.
 
 ---
