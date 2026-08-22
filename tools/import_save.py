@@ -85,6 +85,24 @@ def dig(node, *path, default=None):
     return default if node is None else node
 
 
+def scalar(node, default=None):
+    """
+    Desce pelos `{'value': ...}` até chegar num valor simples.
+
+    O GVAS aninha em profundidade variável — `Level` às vezes é
+    `{'value': 30}`, às vezes `{'value': {'value': 30}}`. Em vez de fixar um
+    caminho e quebrar quando o jogo muda, desce até achar o escalar.
+    """
+    for _ in range(6):
+        if isinstance(node, dict) and "value" in node:
+            node = node["value"]
+        else:
+            break
+    if node is None or isinstance(node, (dict, list)):
+        return default
+    return node
+
+
 def extract(world) -> Extract:
     out = Extract()
 
@@ -121,18 +139,17 @@ def extract(world) -> Extract:
         if not isinstance(param, dict):
             continue
 
-        is_player = bool(dig(param, "IsPlayer", "value", default=False))
-        if is_player:
-            uid = norm_uid(dig(entry, "key", "PlayerUId", "value", default=""))
+        if bool(scalar(param.get("IsPlayer"), False)):
+            uid = norm_uid(scalar(dig(entry, "key", "PlayerUId"), ""))
             if not uid:
                 continue
             player = out.players.setdefault(uid, Player(uid=uid))
-            name = dig(param, "NickName", "value", default="")
+            name = scalar(param.get("NickName"), "")
             if name:
-                player.name = name
-            player.level = int(dig(param, "Level", "value", default=1) or 1)
+                player.name = str(name)
+            player.level = int(scalar(param.get("Level"), 1) or 1)
         else:
-            owner = norm_uid(dig(param, "OwnerPlayerUId", "value", default=""))
+            owner = norm_uid(scalar(param.get("OwnerPlayerUId"), ""))
             if owner and owner != "0" * 32:
                 out.players.setdefault(owner, Player(uid=owner)).pals += 1
 
