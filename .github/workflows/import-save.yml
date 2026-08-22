@@ -1,0 +1,42 @@
+name: Import do save
+
+# Roda aqui e não na Vercel: o save é comprimido com Oodle e, ao parsear,
+# vira centenas de MB. Não cabe em função serverless, e o parser é Python.
+on:
+  schedule:
+    # 06:00 UTC = 03:00 de Brasília, servidor vazio
+    - cron: "0 6 * * *"
+  workflow_dispatch: # permite rodar na mão pelo painel do GitHub
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ooz: descompressor Kraken open source. Precisa dele porque o Palworld
+      # passou a usar Oodle (container PlM) na v0.6, e a lib Python só lê o
+      # formato antigo (PlZ/zlib).
+      - name: Compilar o ooz
+        run: |
+          git clone --depth 1 https://github.com/powzix/ooz.git /tmp/ooz
+          cd /tmp/ooz
+          g++ -O2 -fPIC -o ooz *.cpp -std=c++17 2>/dev/null \
+            || g++ -O2 -fPIC -o ooz $(ls *.cpp | grep -v test) -std=c++17
+          echo "OOZ_BIN=/tmp/ooz/ooz" >> "$GITHUB_ENV"
+          /tmp/ooz/ooz 2>&1 | head -3 || true
+
+      - name: Dependências Python
+        run: pip install --quiet paramiko "psycopg[binary]" palworld-save-tools
+
+      - name: Importar
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: python tools/import_save.py
