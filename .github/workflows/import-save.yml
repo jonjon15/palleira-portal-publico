@@ -26,19 +26,28 @@ jobs:
       #
       # ⚠️ O powzix/ooz original é só Windows (depende do SDK da Microsoft).
       # O oozlin é a porta para Linux — é ele que compila no runner.
-      - name: Compilar o oozlin
+      #
+      # ⚠️ Não usar o executável `oozlin` pronto: o main.cpp dele carrega
+      # `libs/liblinoodle.so`, que é wrapper da DLL PROPRIETÁRIA do Oodle e
+      # falha na hora sem ela. O descompressor limpo (kraken.cpp e cia) não
+      # precisa de DLL nenhuma — então compilamos só ele, com um shim em C.
+      - name: Compilar o descompressor Kraken
         run: |
           git clone --depth 1 https://github.com/synnfynn/oozlin.git /tmp/oozlin
           cd /tmp/oozlin
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j2 2>&1 | tail -8
-          BIN=$(find /tmp/oozlin/build -maxdepth 2 -type f -perm -u+x \
-                 ! -name "*.sh" ! -name "*.o" ! -name "*.cmake" | head -1)
-          echo "binario: $BIN"
-          test -n "$BIN" || { echo "compilacao nao gerou binario"; exit 1; }
-          echo "OOZ_BIN=$BIN" >> "$GITHUB_ENV"
-          echo "--- modo de uso ---"
-          "$BIN" 2>&1 | head -20 || true
+          cat > shim.cpp <<'CPP'
+          #include "stdafx.h"
+          #include "kraken.h"
+          extern "C" int ooz_decompress(const byte *src, size_t src_len,
+                                        byte *dst, size_t dst_len) {
+            return Kraken_Decompress(src, src_len, dst, dst_len);
+          }
+          CPP
+          g++ -O2 -fPIC -shared -std=c++17 -o /tmp/libooz.so \
+            shim.cpp bitknit.cpp huff.cpp kraken.cpp kraken_bits.cpp \
+            mermaid.cpp leviathan.cpp lzna.cpp stdafx.cpp utilities.cpp
+          ls -la /tmp/libooz.so
+          echo "OOZ_LIB=/tmp/libooz.so" >> "$GITHUB_ENV"
 
       - name: Dependências Python
         run: pip install --quiet paramiko "psycopg[binary]" palworld-save-tools

@@ -18,11 +18,11 @@ O Level.sav já traz jogador, guild e contagem de Pal.
 
 from __future__ import annotations
 
+import ctypes
 import io
 import json
 import os
 import struct
-import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -108,33 +108,37 @@ def decompress_plm(raw: bytes) -> bytes:
     return out
 
 
-def run_ooz(payload: bytes, expected_len: int) -> bytes:
-    """
-    Chama o binário do oozlin (caminho em OOZ_BIN; o workflow compila).
+# O descompressor Kraken é carregado uma vez e reaproveitado entre servidores.
+_OOZ: ctypes.CDLL | None = None
 
-    Assinatura: `oozlin [opções] entrada [saída]` — o tamanho não é argumento,
-    ele sai do próprio fluxo Kraken. Conferimos depois contra o cabeçalho do
-    container do Palworld.
-    """
-    ooz = os.environ.get("OOZ_BIN", "oozlin")
-    with open("_chunk.bin", "wb") as fh:
-        fh.write(payload)
-    proc = subprocess.run(
-        [ooz, "-d", "-f", "_chunk.bin", "_chunk.out"], capture_output=True
-    )
-    if proc.returncode != 0 or not os.path.exists("_chunk.out"):
-        detail = (proc.stderr or proc.stdout or b"").decode(errors="replace")
-        raise RuntimeError(f"oozlin falhou ({proc.returncode}): {detail[:300]}")
-    with open("_chunk.out", "rb") as fh:
-        out = fh.read()
-    for tmp in ("_chunk.bin", "_chunk.out"):
-        try:
-            os.remove(tmp)
-        except OSError:
-            pass
-    if len(out) != expected_len:
-        raise RuntimeError(f"tamanho inesperado: {len(out)} != {expected_len}")
-    return out
+# Kraken escreve um pouco além do fim do buffer; o próprio ooz reserva 64 bytes.
+SAFE_SPACE = 64
+
+
+def _ooz_lib() -> ctypes.CDLL:
+    global _OOZ
+    if _OOZ is None:
+        path = os.environ.get("OOZ_LIB", "/tmp/libooz.so")
+        _OOZ = ctypes.CDLL(path)
+        _OOZ.ooz_decompress.argtypes = [
+            ctypes.c_char_p,
+            ctypes.c_size_t,
+            ctypes.c_char_p,
+            ctypes.c_size_t,
+        ]
+        _OOZ.ooz_decompress.restype = ctypes.c_int
+    return _OOZ
+
+
+def run_ooz(payload: bytes, expected_len: int) -> bytes:
+    """Descomprime um bloco Kraken chamando a lib compilada pelo workflow."""
+    dst = ctypes.create_string_buffer(expected_len + SAFE_SPACE)
+    written = _ooz_lib().ooz_decompress(payload, len(payload), dst, expected_len)
+    if written != expected_len:
+        raise RuntimeError(
+            f"Kraken devolveu {written} bytes, esperado {expected_len}"
+        )
+    return dst.raw[:expected_len]
 
 
 # ------------------------------------------------------------------ extração
