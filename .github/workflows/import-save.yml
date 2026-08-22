@@ -30,13 +30,15 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/synnfynn/oozlin.git /tmp/oozlin
           cd /tmp/oozlin
-          ls
-          make 2>&1 | tail -5 || cmake . && make 2>&1 | tail -5
-          BIN=$(find /tmp/oozlin -maxdepth 2 -type f -perm -u+x \
-                 ! -name "*.sh" ! -name "*.o" ! -path "*/.git/*" | head -1)
-          echo "binario encontrado: $BIN"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2 2>&1 | tail -8
+          BIN=$(find /tmp/oozlin/build -maxdepth 2 -type f -perm -u+x \
+                 ! -name "*.sh" ! -name "*.o" ! -name "*.cmake" | head -1)
+          echo "binario: $BIN"
+          test -n "$BIN" || { echo "compilacao nao gerou binario"; exit 1; }
           echo "OOZ_BIN=$BIN" >> "$GITHUB_ENV"
-          "$BIN" 2>&1 | head -5 || true
+          echo "--- modo de uso ---"
+          "$BIN" 2>&1 | head -20 || true
 
       - name: Dependências Python
         run: pip install --quiet paramiko "psycopg[binary]" palworld-save-tools
