@@ -10,6 +10,8 @@ import {
 } from "@/components/mapa-interativo";
 import { MAPAS } from "@/lib/mapas";
 import { localizar } from "@/lib/palworld/coordenadas";
+import { auth } from "@/auth";
+import { meuVinculo } from "@/lib/linking";
 
 export const metadata: Metadata = {
   title: "Mapa",
@@ -32,7 +34,10 @@ const gameY = (mapY: number) => -mapY;
 
 const loadMap = unstable_cache(
   async () => {
-    const bases: BaseNoMapa[] = [];
+    // Guarda os membros da guild junto: é com eles que se descobre, depois,
+    // qual base é de quem está olhando. Fica DENTRO do cache porque não
+    // depende de quem pediu a página.
+    const bases: (BaseNoMapa & { uids: string[] })[] = [];
     const players: JogadorNoMapa[] = [];
     const failed: string[] = [];
 
@@ -63,6 +68,8 @@ const loadMap = unstable_cache(
                 lider: g.leaderName,
                 membros: g.memberCount,
                 servidor: server.shortName,
+                uids: g.members,
+                minha: false,
               });
             }
           }
@@ -98,7 +105,28 @@ const loadMap = unstable_cache(
 );
 
 export default async function Mapa() {
-  const { bases, players, failed } = await loadMap();
+  const { bases: brutas, players, failed } = await loadMap();
+
+  /*
+   * Marcar a base de quem está olhando.
+   *
+   * Feito FORA do `unstable_cache` de propósito: o cache é compartilhado por
+   * todo mundo, e enfiar identidade nele serviria a base de uma pessoa para
+   * as outras.
+   *
+   * Os UIDs dos membros ficam no servidor — o navegador recebe só um
+   * booleano. Não há motivo para mandar a lista de quem é de qual guild para
+   * a máquina de cada visitante.
+   */
+  const session = await auth();
+  const vinculo = session?.user?.discordId
+    ? await meuVinculo(session.user.discordId).catch(() => null)
+    : null;
+
+  const bases = brutas.map(({ uids, ...b }) => ({
+    ...b,
+    minha: Boolean(vinculo && uids.includes(vinculo.uid)),
+  }));
   const hidden = SERVERS.filter((s) => s.enabled && !s.mapVisible);
 
   return (

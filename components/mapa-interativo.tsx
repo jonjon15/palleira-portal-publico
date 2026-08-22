@@ -30,6 +30,13 @@ export interface BaseNoMapa {
   lider: string;
   membros: number;
   servidor: string;
+  /**
+   * Se esta base é da guild de quem está olhando.
+   *
+   * Decidido no servidor a partir do vínculo de conta — o navegador recebe
+   * só o booleano, nunca a lista de membros das guilds.
+   */
+  minha: boolean;
 }
 
 export interface JogadorNoMapa {
@@ -532,6 +539,12 @@ export function MapaInterativo({
               nome="Bases"
               quantos={bases.filter((b) => ligados.has(b.servidor)).length}
             />
+            {todasBases.some((b) => b.minha) && (
+              <p className="mt-1 flex items-center gap-2 px-2 pb-1 text-xs text-muted">
+                <span className="size-2.5 shrink-0 rounded-full bg-success" />
+                em verde, a base da sua guild
+              </p>
+            )}
             <Camada
               ligada={verJogadores}
               alternar={() => setVerJogadores((v) => !v)}
@@ -730,6 +743,10 @@ export function MapaInterativo({
               const n = g.itens.length;
               const r = esc(n > 1 ? 15 : 12);
               const gl = r * 1.05;
+              // Basta uma base sua no grupo para ele se destacar: procurar a
+              // própria base é o motivo número um de abrir este mapa.
+              const minha = g.itens.some((p) => p.base?.minha);
+              const cor = minha ? "var(--color-success)" : "var(--gold)";
               return (
                 <g
                   key={`b${i}`}
@@ -742,13 +759,23 @@ export function MapaInterativo({
                       ? `${n} bases aqui`
                       : `${g.itens[0].base!.guilda} · ${g.itens[0].base!.servidor}`}
                   </title>
+                  {/* Anel a mais na sua base, para achar de longe. */}
+                  {minha && (
+                    <circle
+                      cx={g.x}
+                      cy={g.y}
+                      r={esc(22)}
+                      fill="var(--color-success)"
+                      fillOpacity="0.18"
+                    />
+                  )}
                   <circle
                     cx={g.x}
                     cy={g.y}
                     r={r}
-                    fill="#12100c"
-                    stroke="var(--gold)"
-                    strokeWidth={esc(2)}
+                    fill={minha ? "#0c1410" : "#12100c"}
+                    stroke={cor}
+                    strokeWidth={esc(minha ? 2.6 : 2)}
                   />
                   {n > 1 ? (
                     <text
@@ -757,7 +784,7 @@ export function MapaInterativo({
                       textAnchor="middle"
                       fontSize={esc(13)}
                       fontWeight="700"
-                      fill="var(--gold)"
+                      fill={cor}
                     >
                       {n}
                     </text>
@@ -768,7 +795,7 @@ export function MapaInterativo({
                       y={g.y - gl / 2}
                       width={gl}
                       height={gl}
-                      fill="var(--gold)"
+                      fill={cor}
                     />
                   )}
                 </g>
@@ -820,14 +847,39 @@ export function MapaInterativo({
                       {n}
                     </text>
                   ) : (
-                    <use
-                      href="#glifo-jogador"
-                      x={g.x - gl / 2}
-                      y={g.y - gl / 2}
-                      width={gl}
-                      height={gl}
-                      fill="var(--color-success)"
-                    />
+                    <>
+                      <use
+                        href="#glifo-jogador"
+                        x={g.x - gl / 2}
+                        y={g.y - gl / 2}
+                        width={gl}
+                        height={gl}
+                        fill="var(--color-success)"
+                      />
+                      {/*
+                        Nome sempre visível, como nos mapas de servidor que a
+                        comunidade já conhece. Só quando o pino está sozinho:
+                        em grupo, os nomes empilhariam e virariam borrão.
+
+                        O contorno escuro por baixo é o que mantém o texto
+                        legível tanto sobre gelo branco quanto sobre lava.
+                      */}
+                      <text
+                        x={g.x}
+                        y={g.y + esc(22)}
+                        textAnchor="middle"
+                        fontSize={esc(11)}
+                        fontWeight="600"
+                        stroke="#000"
+                        strokeWidth={esc(3)}
+                        strokeLinejoin="round"
+                        paintOrder="stroke"
+                        fill="var(--color-success)"
+                        className="pointer-events-none select-none"
+                      >
+                        {g.itens[0].jogador!.nome}
+                      </text>
+                    </>
                   )}
                 </g>
               );
