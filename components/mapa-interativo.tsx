@@ -3,16 +3,20 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 /**
- * Mapa da comunidade — zoom, pan, filtro e busca.
+ * Mapa da comunidade — tela cheia, painel de camadas, agrupamento e busca.
  *
- * A mecânica é inspirada nos mapas grandes de Palworld (paldb, paldeck): dá
- * para navegar, filtrar camada e clicar num marcador para ver o detalhe.
+ * A mecânica veio dos mapas grandes de Palworld (paldb, paldeck): painel à
+ * esquerda com camadas e contagem, agrupamento de marcadores, leitura de
+ * coordenada e zoom ancorado no cursor.
  *
  * ⚠️ O **conteúdo** é o oposto do deles, de propósito. Eles mostram o que o
- * jogo tem — dungeon, alfa, minério — e fazem isso melhor do que nós faríamos.
- * Aqui é o que só nós temos: onde **a Palleira** construiu e quem está jogando
- * **agora**. Reconstruir o mapa de conhecimento seria competir onde já se
- * perdeu (§ do PROMPT sobre não refazer o que o PalAPI já entrega).
+ * jogo tem — dungeon, alfa, baú — e fazem melhor do que nós faríamos. Aqui é
+ * o que só nós temos: onde **a Palleira** construiu e quem está jogando
+ * **agora**. Refazer o mapa de conhecimento seria competir onde já se perdeu.
+ *
+ * ⚠️ O agrupamento não é enfeite: com 158 bases num servidor, marcador solto
+ * vira mancha. Agrupar é o que faz o mapa continuar legível de longe e revelar
+ * onde a comunidade se concentra.
  */
 
 export interface BaseNoMapa {
@@ -47,7 +51,49 @@ type Selecionado =
   | null;
 
 const ZOOM_MIN = 1;
-const ZOOM_MAX = 12;
+const ZOOM_MAX = 16;
+
+/** Um ponto no mapa, já com o que precisa para desenhar e para a ficha. */
+interface Ponto {
+  x: number;
+  y: number;
+  base?: BaseNoMapa;
+  jogador?: JogadorNoMapa;
+  aceso: boolean;
+}
+
+interface Grupo {
+  x: number;
+  y: number;
+  itens: Ponto[];
+  aceso: boolean;
+}
+
+/**
+ * Junta pontos que cairiam quase no mesmo pixel.
+ *
+ * Grade simples em vez de k-means: é O(n), estável enquanto a pessoa navega
+ * (grupo não fica pulando entre quadros) e o resultado visual é o mesmo neste
+ * volume de marcadores.
+ */
+function agrupar(pontos: Ponto[], celula: number): Grupo[] {
+  const caixas = new Map<string, Ponto[]>();
+  for (const p of pontos) {
+    const chave = `${Math.floor(p.x / celula)}:${Math.floor(p.y / celula)}`;
+    const lista = caixas.get(chave);
+    if (lista) lista.push(p);
+    else caixas.set(chave, [p]);
+  }
+
+  return [...caixas.values()].map((itens) => ({
+    // Centro no meio real dos pontos, não no meio da célula: o grupo pousa
+    // em cima das bases, não numa grade invisível.
+    x: itens.reduce((s, p) => s + p.x, 0) / itens.length,
+    y: itens.reduce((s, p) => s + p.y, 0) / itens.length,
+    itens,
+    aceso: itens.some((p) => p.aceso),
+  }));
+}
 
 export function MapaInterativo({
   bases,
@@ -60,7 +106,6 @@ export function MapaInterativo({
   const H = limites.maxY - limites.minY;
 
   const [zoom, setZoom] = useState(1);
-  // Centro da vista, em coordenada de jogo.
   const [centro, setCentro] = useState({
     x: limites.minX + W / 2,
     y: limites.minY + H / 2,
@@ -71,45 +116,23 @@ export function MapaInterativo({
   const [busca, setBusca] = useState("");
   const [sel, setSel] = useState<Selecionado>(null);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
+  const [painel, setPainel] = useState(true);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const arrastando = useRef<{ x: number; y: number } | null>(null);
-
-  /* ------------------------------------------------------------- filtros */
+  const arrastou = useRef(false);
 
   const termo = busca.trim().toLowerCase();
-
   const casa = useCallback(
-    (texto: string) => termo.length > 0 && texto.toLowerCase().includes(termo),
+    (texto: string) => texto.toLowerCase().includes(termo),
     [termo],
   );
 
-  const basesVisiveis = useMemo(
-    () => (verBases ? bases.filter((b) => ligados.has(b.servidor)) : []),
-    [bases, ligados, verBases],
-  );
+  /* ---------------------------------------------------------------- vista */
 
-  const jogadoresVisiveis = useMemo(
-    () =>
-      verJogadores ? jogadores.filter((j) => ligados.has(j.servidor)) : [],
-    [jogadores, ligados, verJogadores],
-  );
-
-  const achados = useMemo(() => {
-    if (!termo) return 0;
-    return (
-      basesVisiveis.filter((b) => casa(b.guilda) || casa(b.lider)).length +
-      jogadoresVisiveis.filter((j) => casa(j.nome) || casa(j.guilda)).length
-    );
-  }, [basesVisiveis, jogadoresVisiveis, casa, termo]);
-
-  /* --------------------------------------------------------------- vista */
-
-  // Quanto do mundo cabe na tela no zoom atual.
   const vw = W / zoom;
   const vh = H / zoom;
 
-  // Prender a vista dentro do mundo: sem isto o mapa "escapa" e some.
   const cx = Math.min(
     Math.max(centro.x, limites.minX + vw / 2),
     limites.maxX - vw / 2,
@@ -121,15 +144,62 @@ export function MapaInterativo({
 
   const viewBox = `${cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`;
 
-  /**
-   * Marcador cresce junto com o zoom se o tamanho for fixo em coordenada de
-   * jogo. Dividir pelo zoom mantém ele do mesmo tamanho na tela, que é o que
-   * a pessoa espera de um mapa.
-   */
+  /** Marcador fixo em coordenada de jogo cresceria com o zoom; dividir mantém
+      o tamanho na tela, que é o que se espera de um mapa. */
   const esc = (n: number) => n / zoom;
 
-  /** Converte pixel do ponteiro para coordenada de jogo. */
-  const paraJogo = (e: React.PointerEvent | React.WheelEvent) => {
+  /* -------------------------------------------------------------- pontos */
+
+  const pontosBases = useMemo<Ponto[]>(
+    () =>
+      verBases
+        ? bases
+            .filter((b) => ligados.has(b.servidor))
+            .map((b) => ({
+              x: b.x,
+              y: b.y,
+              base: b,
+              aceso: !termo || casa(b.guilda) || casa(b.lider),
+            }))
+        : [],
+    [bases, ligados, verBases, termo, casa],
+  );
+
+  const pontosJogadores = useMemo<Ponto[]>(
+    () =>
+      verJogadores
+        ? jogadores
+            .filter((j) => ligados.has(j.servidor))
+            .map((j) => ({
+              x: j.x,
+              y: j.y,
+              jogador: j,
+              aceso: !termo || casa(j.nome) || casa(j.guilda),
+            }))
+        : [],
+    [jogadores, ligados, verJogadores, termo, casa],
+  );
+
+  // Célula proporcional ao zoom: agrupa de longe, solta de perto.
+  const celula = vw / 26;
+
+  const gruposBases = useMemo(
+    () => agrupar(pontosBases, celula),
+    [pontosBases, celula],
+  );
+  const gruposJogadores = useMemo(
+    () => agrupar(pontosJogadores, celula),
+    [pontosJogadores, celula],
+  );
+
+  const achados = termo
+    ? pontosBases.filter((p) => p.aceso).length +
+      pontosJogadores.filter((p) => p.aceso).length
+    : 0;
+
+  /* ------------------------------------------------------------ interação */
+
+  const paraJogo = (e: { clientX: number; clientY: number }) => {
     const r = svgRef.current?.getBoundingClientRect();
     if (!r) return null;
     return {
@@ -138,22 +208,24 @@ export function MapaInterativo({
     };
   };
 
-  /** Zoom ancorado no ponteiro: o ponto sob o cursor não se mexe. */
+  const aplicarZoom = (fator: number, alvo?: { x: number; y: number }) => {
+    const novo = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom * fator));
+    if (novo === zoom) return;
+    if (alvo) {
+      const k = 1 - zoom / novo;
+      setCentro({ x: cx + (alvo.x - cx) * k, y: cy + (alvo.y - cy) * k });
+    }
+    setZoom(novo);
+  };
+
   const aoRolar = (e: React.WheelEvent) => {
     const alvo = paraJogo(e);
-    if (!alvo) return;
-    const novo = Math.min(
-      ZOOM_MAX,
-      Math.max(ZOOM_MIN, zoom * (e.deltaY < 0 ? 1.25 : 0.8)),
-    );
-    if (novo === zoom) return;
-    const k = 1 - zoom / novo;
-    setCentro({ x: cx + (alvo.x - cx) * k, y: cy + (alvo.y - cy) * k });
-    setZoom(novo);
+    aplicarZoom(e.deltaY < 0 ? 1.3 : 1 / 1.3, alvo ?? undefined);
   };
 
   const aoPressionar = (e: React.PointerEvent) => {
     arrastando.current = { x: e.clientX, y: e.clientY };
+    arrastou.current = false;
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -163,6 +235,9 @@ export function MapaInterativo({
 
     const a = arrastando.current;
     if (!a) return;
+    if (Math.abs(e.clientX - a.x) + Math.abs(e.clientY - a.y) > 3) {
+      arrastou.current = true;
+    }
     const r = svgRef.current?.getBoundingClientRect();
     if (!r) return;
     setCentro({
@@ -176,89 +251,167 @@ export function MapaInterativo({
     arrastando.current = null;
   };
 
+  /** Clique em grupo aproxima; em marcador solto abre a ficha. */
+  const aoClicarGrupo = (g: Grupo) => {
+    // Arrastar termina num clique; sem isto, mover o mapa abriria fichas.
+    if (arrastou.current) return;
+    if (g.itens.length > 1) {
+      setCentro({ x: g.x, y: g.y });
+      setZoom((z) => Math.min(ZOOM_MAX, z * 2.2));
+      return;
+    }
+    const p = g.itens[0];
+    setSel(
+      p.base
+        ? { tipo: "base", dado: p.base }
+        : { tipo: "jogador", dado: p.jogador! },
+    );
+  };
+
   const reenquadrar = () => {
     setZoom(1);
     setCentro({ x: limites.minX + W / 2, y: limites.minY + H / 2 });
   };
 
-  const alternarServidor = (s: string) => {
+  const alternarServidor = (s: string) =>
     setLigados((antes) => {
       const novo = new Set(antes);
       if (novo.has(s)) novo.delete(s);
       else novo.add(s);
       return novo;
     });
-  };
 
   /* ------------------------------------------------------------ interface */
 
+  const Camada = ({
+    ligada,
+    alternar,
+    cor,
+    nome,
+    quantos,
+  }: {
+    ligada: boolean;
+    alternar: () => void;
+    cor: string;
+    nome: string;
+    quantos: number;
+  }) => (
+    <button
+      type="button"
+      onClick={alternar}
+      aria-pressed={ligada}
+      className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-left text-sm transition-colors hover:bg-surface-2"
+    >
+      <span
+        className={`grid size-4 shrink-0 place-items-center rounded border text-[0.6rem] ${
+          ligada ? "border-gold bg-gold text-[#14120f]" : "border-line-strong"
+        }`}
+      >
+        {ligada ? "✓" : ""}
+      </span>
+      <span className={`size-2.5 shrink-0 ${cor}`} />
+      <span className={`flex-1 ${ligada ? "" : "text-muted"}`}>{nome}</span>
+      <span className="tabular text-xs text-muted">{quantos}</span>
+    </button>
+  );
+
   return (
-    <div className="space-y-4">
-      {/* ------------------------------------------------------ controles */}
-      <div className="flex flex-wrap items-center gap-2">
-        {servidores.map((s) => (
+    <div className="relative flex h-[calc(100vh-13rem)] min-h-[560px] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+      {/* ------------------------------------------------------- painel */}
+      {painel && (
+        <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-surface">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <div>
+              <p className="text-xs font-bold tracking-[0.16em] text-gold uppercase">
+                Palleira
+              </p>
+              <p className="text-xs text-muted">Mapa da comunidade</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPainel(false)}
+              aria-label="Esconder painel"
+              className="text-muted hover:text-text"
+            >
+              ‹
+            </button>
+          </div>
+
+          <div className="border-b border-line p-3">
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Procurar guild ou jogador"
+              className="w-full rounded-[var(--radius-control)] border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-gold"
+            />
+            {termo && (
+              <p className="mt-2 text-xs text-muted">
+                {achados} {achados === 1 ? "resultado aceso" : "resultados acesos"}
+              </p>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-3">
+            <p className="px-2 pb-1.5 text-xs font-bold tracking-[0.14em] text-muted uppercase">
+              Camadas
+            </p>
+            <Camada
+              ligada={verBases}
+              alternar={() => setVerBases((v) => !v)}
+              cor="rotate-45 bg-gold"
+              nome="Bases"
+              quantos={bases.filter((b) => ligados.has(b.servidor)).length}
+            />
+            <Camada
+              ligada={verJogadores}
+              alternar={() => setVerJogadores((v) => !v)}
+              cor="rounded-full bg-success"
+              nome="Jogando agora"
+              quantos={jogadores.filter((j) => ligados.has(j.servidor)).length}
+            />
+
+            <p className="mt-4 px-2 pb-1.5 text-xs font-bold tracking-[0.14em] text-muted uppercase">
+              Servidores
+            </p>
+            {servidores.map((s) => (
+              <Camada
+                key={s}
+                ligada={ligados.has(s)}
+                alternar={() => alternarServidor(s)}
+                cor="rounded-sm bg-line-strong"
+                nome={s}
+                quantos={
+                  bases.filter((b) => b.servidor === s).length +
+                  jogadores.filter((j) => j.servidor === s).length
+                }
+              />
+            ))}
+          </div>
+
+          <div className="border-t border-line px-4 py-2.5 text-xs text-muted">
+            Arraste para mover · role para aproximar
+          </div>
+        </aside>
+      )}
+
+      {/* ---------------------------------------------------------- mapa */}
+      <div className="relative flex-1">
+        {!painel && (
           <button
-            key={s}
             type="button"
-            onClick={() => alternarServidor(s)}
-            aria-pressed={ligados.has(s)}
-            className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
-              ligados.has(s)
-                ? "border-gold/40 bg-gold/10 text-gold"
-                : "border-line text-muted hover:text-text"
-            }`}
+            onClick={() => setPainel(true)}
+            aria-label="Mostrar painel"
+            className="absolute top-3 left-3 z-10 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2 py-1 text-sm backdrop-blur"
           >
-            {s}
+            ›
           </button>
-        ))}
+        )}
 
-        <span className="mx-1 h-5 w-px bg-[var(--line)]" />
-
-        <button
-          type="button"
-          onClick={() => setVerBases((v) => !v)}
-          aria-pressed={verBases}
-          className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-            verBases ? "border-line-strong" : "border-line text-muted"
-          }`}
-        >
-          <span className="size-2.5 rotate-45 bg-gold" />
-          Bases
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setVerJogadores((v) => !v)}
-          aria-pressed={verJogadores}
-          className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-            verJogadores ? "border-line-strong" : "border-line text-muted"
-          }`}
-        >
-          <span className="size-2.5 rounded-full bg-success" />
-          Jogando agora
-        </button>
-
-        <div className="ml-auto flex items-center gap-2">
-          <input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Procurar guild ou jogador"
-            className="w-52 rounded-[var(--radius-control)] border border-line bg-bg px-3 py-1.5 text-sm outline-none focus:border-gold"
-          />
-          {termo && (
-            <span className="text-xs text-muted">
-              {achados} {achados === 1 ? "resultado" : "resultados"}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ----------------------------------------------------------- mapa */}
-      <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
         <svg
           ref={svgRef}
           viewBox={viewBox}
-          className="block h-auto w-full cursor-grab touch-none active:cursor-grabbing"
+          className="block size-full cursor-grab touch-none active:cursor-grabbing"
+          preserveAspectRatio="xMidYMid slice"
           onWheel={aoRolar}
           onPointerDown={aoPressionar}
           onPointerMove={aoMover}
@@ -268,28 +421,8 @@ export function MapaInterativo({
             setCursor(null);
           }}
           role="img"
-          aria-label={`Mapa com ${basesVisiveis.length} bases e ${jogadoresVisiveis.length} jogadores`}
+          aria-label={`Mapa com ${pontosBases.length} bases e ${pontosJogadores.length} jogadores`}
         >
-          <defs>
-            <pattern
-              id="grade"
-              width="200"
-              height="200"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 200 0 L 0 0 0 200"
-                fill="none"
-                stroke="var(--line)"
-                strokeWidth={esc(2)}
-              />
-            </pattern>
-            <radialGradient id="brilho">
-              <stop offset="0%" stopColor="var(--gold)" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="var(--gold)" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
           <rect
             x={limites.minX}
             y={limites.minY}
@@ -298,128 +431,150 @@ export function MapaInterativo({
             fill="var(--bg)"
           />
 
-          {/* Textura de fundo, não protagonista: o ouro dos marcadores
-              precisa dominar. */}
+          {/* Terreno quase limpo. Escurecer demais foi o que fazia o mapa
+              antigo parecer amador: o mapa é o produto, não papel de parede. */}
           <image
             href="/mapa-palpagos.webp"
             x={imagem.minX}
             y={imagem.minY}
             width={imagem.maxX - imagem.minX}
             height={imagem.maxY - imagem.minY}
-            opacity="0.58"
+            opacity="0.92"
             preserveAspectRatio="none"
           />
 
-          <rect
-            x={limites.minX}
-            y={limites.minY}
-            width={W}
-            height={H}
-            fill="url(#grade)"
-          />
-
-          {/* Halo por base: onde muita gente construiu, o brilho soma e a
-              região "quente" da comunidade aparece sozinha. */}
-          {basesVisiveis.map((b, i) => (
-            <circle
-              key={`h${i}`}
-              cx={b.x}
-              cy={b.y}
-              r={esc(90)}
-              fill="url(#brilho)"
-            />
-          ))}
-
-          {basesVisiveis.map((b, i) => {
-            const destacada = !termo || casa(b.guilda) || casa(b.lider);
-            const r = esc(11);
+          {/* --------------------------------------------------- bases */}
+          {gruposBases.map((g, i) => {
+            const n = g.itens.length;
+            const r = esc(n > 1 ? 15 : 9);
             return (
-              <rect
+              <g
                 key={`b${i}`}
-                x={b.x - r}
-                y={b.y - r}
-                width={r * 2}
-                height={r * 2}
-                transform={`rotate(45 ${b.x} ${b.y})`}
-                fill="var(--gold)"
-                fillOpacity={destacada ? 0.9 : 0.15}
-                stroke="var(--bg)"
-                strokeWidth={esc(3)}
                 className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSel({ tipo: "base", dado: b });
-                }}
+                opacity={g.aceso ? 1 : 0.22}
+                onClick={() => aoClicarGrupo(g)}
               >
-                <title>{`${b.guilda} · ${b.servidor}`}</title>
-              </rect>
+                <title>
+                  {n > 1
+                    ? `${n} bases aqui`
+                    : `${g.itens[0].base!.guilda} · ${g.itens[0].base!.servidor}`}
+                </title>
+                {n > 1 ? (
+                  <>
+                    <circle
+                      cx={g.x}
+                      cy={g.y}
+                      r={r}
+                      fill="var(--gold)"
+                      stroke="#14120f"
+                      strokeWidth={esc(2)}
+                    />
+                    <text
+                      x={g.x}
+                      y={g.y + esc(4.5)}
+                      textAnchor="middle"
+                      fontSize={esc(13)}
+                      fontWeight="700"
+                      fill="#14120f"
+                    >
+                      {n}
+                    </text>
+                  </>
+                ) : (
+                  <rect
+                    x={g.x - r}
+                    y={g.y - r}
+                    width={r * 2}
+                    height={r * 2}
+                    transform={`rotate(45 ${g.x} ${g.y})`}
+                    fill="var(--gold)"
+                    stroke="#14120f"
+                    strokeWidth={esc(2)}
+                  />
+                )}
+              </g>
             );
           })}
 
-          {jogadoresVisiveis.map((j, i) => {
-            const destacado = !termo || casa(j.nome) || casa(j.guilda);
+          {/* ----------------------------------------------- jogadores */}
+          {gruposJogadores.map((g, i) => {
+            const n = g.itens.length;
+            const r = esc(n > 1 ? 14 : 9);
             return (
               <g
                 key={`p${i}`}
                 className="cursor-pointer"
-                opacity={destacado ? 1 : 0.2}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSel({ tipo: "jogador", dado: j });
-                }}
+                opacity={g.aceso ? 1 : 0.22}
+                onClick={() => aoClicarGrupo(g)}
               >
-                <title>{`${j.nome} · ${j.servidor}`}</title>
+                <title>
+                  {n > 1
+                    ? `${n} jogadores aqui`
+                    : `${g.itens[0].jogador!.nome} · ${g.itens[0].jogador!.servidor}`}
+                </title>
                 <circle
-                  cx={j.x}
-                  cy={j.y}
-                  r={esc(26)}
+                  cx={g.x}
+                  cy={g.y}
+                  r={esc(n > 1 ? 24 : 18)}
                   fill="var(--color-success)"
-                  fillOpacity="0.2"
+                  fillOpacity="0.22"
                 />
                 <circle
-                  cx={j.x}
-                  cy={j.y}
-                  r={esc(11)}
+                  cx={g.x}
+                  cy={g.y}
+                  r={r}
                   fill="var(--color-success)"
-                  stroke="var(--bg)"
-                  strokeWidth={esc(3)}
+                  stroke="#14120f"
+                  strokeWidth={esc(2)}
                 />
+                {n > 1 && (
+                  <text
+                    x={g.x}
+                    y={g.y + esc(4.5)}
+                    textAnchor="middle"
+                    fontSize={esc(12)}
+                    fontWeight="700"
+                    fill="#14120f"
+                  >
+                    {n}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
 
-        {/* ------------------------------------------------ zoom e coord */}
-        <div className="absolute top-3 right-3 flex flex-col gap-1">
-          {[
-            ["+", () => setZoom((z) => Math.min(ZOOM_MAX, z * 1.5)), "Aproximar"],
-            ["−", () => setZoom((z) => Math.max(ZOOM_MIN, z / 1.5)), "Afastar"],
-            ["⤢", reenquadrar, "Ver o mundo inteiro"],
-          ].map(([texto, acao, titulo]) => (
+        {/* ------------------------------------------------------- zoom */}
+        <div className="absolute top-3 right-3 flex flex-col overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface/90 backdrop-blur">
+          {(
+            [
+              ["+", () => aplicarZoom(1.5), "Aproximar"],
+              ["−", () => aplicarZoom(1 / 1.5), "Afastar"],
+              ["⤢", reenquadrar, "Ver o mundo inteiro"],
+            ] as const
+          ).map(([texto, acao, titulo]) => (
             <button
-              key={titulo as string}
+              key={titulo}
               type="button"
-              title={titulo as string}
-              onClick={acao as () => void}
-              className="size-8 rounded-[var(--radius-control)] border border-line bg-surface/90 text-lg leading-none font-semibold backdrop-blur transition-colors hover:bg-surface-2"
+              title={titulo}
+              onClick={acao}
+              className="size-8 border-b border-line text-lg leading-none font-semibold transition-colors last:border-0 hover:bg-surface-2"
             >
-              {texto as string}
+              {texto}
             </button>
           ))}
         </div>
 
-        {/* Coordenada do cursor: é assim que a pessoa acha o lugar dentro do
-            jogo, que mostra as mesmas coordenadas na bússola. */}
-        {cursor && (
-          <div className="tabular absolute bottom-3 left-3 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2.5 py-1 text-xs text-muted backdrop-blur">
-            {cursor.x}, {cursor.y}
-            {zoom > 1 && <span className="ml-2">· {zoom.toFixed(1)}×</span>}
-          </div>
-        )}
+        {/* Coordenada: é o que a pessoa digita na bússola do jogo para achar
+            o lugar. Sem isto o mapa é bonito e inútil. */}
+        <div className="tabular absolute right-3 bottom-3 rounded-[var(--radius-control)] border border-line bg-surface/90 px-2.5 py-1 text-xs text-muted backdrop-blur">
+          {cursor ? `${cursor.x}, ${cursor.y}` : "—"}
+          <span className="ml-2 text-gold">{zoom.toFixed(1)}×</span>
+        </div>
 
-        {/* ------------------------------------------------------ detalhe */}
+        {/* ----------------------------------------------------- ficha */}
         {sel && (
-          <div className="absolute bottom-3 left-1/2 w-[min(22rem,calc(100%-1.5rem))] -translate-x-1/2 rounded-[var(--radius-card)] border border-line bg-surface/95 p-4 backdrop-blur">
+          <div className="absolute bottom-3 left-3 w-72 rounded-[var(--radius-card)] border border-line bg-surface/95 p-4 backdrop-blur">
             <button
               type="button"
               onClick={() => setSel(null)}
@@ -434,9 +589,7 @@ export function MapaInterativo({
                 <p className="text-xs font-bold tracking-[0.14em] text-gold uppercase">
                   Base de guild
                 </p>
-                <h3 className="mt-1 truncate font-semibold">
-                  {sel.dado.guilda}
-                </h3>
+                <h3 className="mt-1 truncate font-semibold">{sel.dado.guilda}</h3>
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                   <dt className="text-muted">Nível</dt>
                   <dd className="tabular text-right">{sel.dado.nivel}</dd>
@@ -474,26 +627,10 @@ export function MapaInterativo({
             )}
           </div>
         )}
-      </div>
 
-      {/* ------------------------------------------------------- rodapé */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        <span className="flex items-center gap-2">
-          <span className="size-3 rotate-45 bg-gold/85" />
-          <span className="text-muted">{basesVisiveis.length} bases</span>
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-success" />
-          <span className="text-muted">
-            {jogadoresVisiveis.length} jogando agora
-          </span>
-        </span>
-        <span className="text-muted">
-          Arraste para mover, role para aproximar, clique num marcador.
-        </span>
-        <span className="ml-auto text-xs text-muted">
+        <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[0.65rem] text-muted/70">
           Mapa de Palworld © Pocketpair, Inc.
-        </span>
+        </p>
       </div>
     </div>
   );

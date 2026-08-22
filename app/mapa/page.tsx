@@ -116,7 +116,7 @@ export default async function Mapa() {
         description={`${bases.length} bases espalhadas pelo mundo, e quem está jogando agora.`}
       />
 
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-[110rem] px-3 pt-4 pb-10">
         <MapaInterativo
           bases={bases}
           jogadores={players}
@@ -126,7 +126,7 @@ export default async function Mapa() {
         />
 
         {hidden.length > 0 && (
-          <div className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+          <div className="mx-auto mt-6 max-w-3xl rounded-[var(--radius-card)] border border-line bg-surface p-5">
             <h2 className="font-semibold">
               Por que {hidden.map((s) => s.shortName).join(" e ")} não aparece
               aqui
