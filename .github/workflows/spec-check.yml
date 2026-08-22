@@ -38,7 +38,7 @@ jobs:
 
           N = 339 * 1024 * 1024   # tamanho real do mundo do PVE FREE
           print(f"gerando {N/1048576:.0f} MB de dados de teste...")
-          bloco = (b"PalWorldSaveGame" * 64) + os.urandom(1024)
+          bloco = (b"PalWorldSaveGame" * 8) + os.urandom(4096)
           dados = (bloco * (N // len(bloco) + 1))[:N]
           h_antes = hashlib.sha256(dados).hexdigest()
 
@@ -47,7 +47,7 @@ jobs:
           print(f"comprimiu:    {len(comp)/1048576:8.1f} MB em {time.time()-t:.1f}s")
 
           t = time.time()
-          volta = palooz.decompress(comp, len(comp), len(dados))
+          volta = palooz.decompress(comp, len(dados))
           print(f"descomprimiu: {len(volta)/1048576:8.1f} MB em {time.time()-t:.1f}s")
 
           igual = h_antes == hashlib.sha256(bytes(volta)).hexdigest()
