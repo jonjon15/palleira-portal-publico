@@ -6,11 +6,9 @@
  * serifado. O trocadilho é o nome: Palleira → palheta → o servidor mais
  * rock'n'roll de Palworld.
  *
- * ⚠️ Aparece de 16px (rodapé) a 36px (carteira). Por isso os anéis da moeda
- * têm opacidade baixa: no tamanho pequeno eles somem em vez de virar
- * sujeira, e a silhueta continua legível.
- *
- * `withLetter={false}` dá só a silhueta, para quando o "P" não couber.
+ * ⚠️ Aparece de 16px (rodapé) a 36px (carteira). `withLetter={false}` tira
+ * o "P" **e os anéis da moeda** — é o modo pequeno, onde detalhe fino vira
+ * borrão em vez de desenho. Só a silhueta e o brilho ficam.
  */
 export function Pick({
   className = "size-5",
@@ -56,24 +54,38 @@ export function Pick({
 
       {/* Moeda em relevo. */}
       <circle cx="12" cy="9.1" r="6.1" fill="url(#pick-coin)" />
-      <circle
-        cx="12"
-        cy="9.1"
-        r="5.5"
-        fill="none"
-        stroke="var(--gold-deep, #8b6914)"
-        strokeWidth="0.45"
-        opacity="0.5"
-      />
-      <circle
-        cx="12"
-        cy="9.1"
-        r="4.6"
-        fill="none"
-        stroke="var(--gold-deep, #8b6914)"
-        strokeWidth="0.3"
-        opacity="0.35"
-      />
+
+      {/*
+        Anéis e letra saem juntos de propósito.
+
+        `withLetter={false}` é usado exatamente onde o ícone fica a 16px
+        (cabeçalho, rodapé, listas). Nesse tamanho um traço de 0.45 no
+        viewBox de 24 vira 0.3px de tela: não desenha anel, desenha borrão.
+        Sumir com eles ali deixa a silhueta limpa, que é o que precisa ser
+        reconhecível de longe.
+      */}
+      {withLetter && (
+        <>
+          <circle
+            cx="12"
+            cy="9.1"
+            r="5.5"
+            fill="none"
+            stroke="var(--gold-deep, #8b6914)"
+            strokeWidth="0.45"
+            opacity="0.5"
+          />
+          <circle
+            cx="12"
+            cy="9.1"
+            r="4.6"
+            fill="none"
+            stroke="var(--gold-deep, #8b6914)"
+            strokeWidth="0.3"
+            opacity="0.35"
+          />
+        </>
+      )}
 
       {withLetter && (
         <text
