@@ -6,6 +6,7 @@ import {
   iniciarResgateDePal,
   continuarResgate,
   statusDoResgate,
+  semearPalDeTeste,
   type Resultado,
   type StatusResgate,
 } from "@/lib/pal-cofre";
@@ -22,6 +23,16 @@ export type Estado = Resultado;
 function atualiza() {
   revalidatePath("/painel/cofre/pals");
   revalidatePath("/painel/carteira");
+}
+
+/** Staff apenas — checagem de verdade mora em `semearPalDeTeste` (§9.2). */
+export async function acaoSemearTeste(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const r = await semearPalDeTeste(String(form.get("json") ?? ""));
+  atualiza();
+  return r;
 }
 
 export async function acaoGuardarPal(

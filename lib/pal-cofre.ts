@@ -7,6 +7,7 @@ import { delPal, givePalTemplate } from "@/lib/palworld/rcon";
 import { paraTemplate, filtroDeExclusao, nomeDoArquivo } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
 import { ondeEstouOnline, type PersonagemOnline } from "@/lib/cofre";
+import { isStaff, levelOf } from "@/lib/roles";
 
 /**
  * O cofre de Pals, e a entrega em duas fases (§7.3 do PROMPT.md).
@@ -378,3 +379,54 @@ export async function continuarResgate(transferId: number): Promise<StatusResgat
 
 export type { PersonagemOnline };
 export { ondeEstouOnline };
+
+/* ------------------------------------------------------- semear para teste */
+
+/**
+ * Põe um Pal no cofre **sem passar pelo jogo** — só para staff testar a
+ * entrega (§9.2 do HANDOFF).
+ *
+ * Existe porque a metade que falta validar é justamente a de risco: escrever
+ * o arquivo por SFTP e entregar por RCON, de verdade, contra um servidor.
+ * Testar isso "importando" primeiro exigiria tirar um Pal de um jogador de
+ * carne e osso — desnecessário, quando o que se quer confirmar é só se a
+ * ENTREGA funciona. Um editor externo (paldeck.cc/palcreator, que gera o
+ * mesmo formato `PalTemplate`) dá um JSON válido sem precisar de ninguém
+ * online.
+ *
+ * O JSON colado passa pelo mesmo `paraTemplate()` que normaliza o que vem
+ * da API — então um campo a mais, faltando ou com nome diferente não quebra
+ * nem entra sujo: vira exatamente a forma que a entrega espera.
+ *
+ * 🔒 Só staff. Isso cria Pal do nada, sem retirar de ninguém — mesma
+ * classe de poder de um ajuste de saldo (§7.8), e some do cofre assim que
+ * for resgatado ou apagado.
+ */
+export async function semearPalDeTeste(jsonTexto: string): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!isStaff(levelOf(session.user.roles, session.user.isMember))) {
+    return { ok: false, mensagem: "Só staff pode semear Pal de teste." };
+  }
+
+  let cru: unknown;
+  try {
+    cru = JSON.parse(jsonTexto);
+  } catch {
+    return { ok: false, mensagem: "Isso não é um JSON válido." };
+  }
+  if (!cru || typeof cru !== "object" || !("PalID" in cru) || !(cru as { PalID: unknown }).PalID) {
+    return { ok: false, mensagem: "Falta o campo PalID no JSON." };
+  }
+
+  const template = paraTemplate(cru as PalCru);
+  await sql`
+    insert into vault_pals (discord_id, pal_id, template)
+    values (${session.user.discordId}, ${template.PalID}, ${JSON.stringify(template)})
+  `;
+
+  return {
+    ok: true,
+    mensagem: `${template.PalID} de teste guardado no seu cofre — vá em "No cofre" para resgatar.`,
+  };
+}

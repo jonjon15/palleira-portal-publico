@@ -10,7 +10,8 @@ import {
   ondeEstouOnline,
 } from "@/lib/pal-cofre";
 import { nomeDoPal, ehAlpha } from "@/lib/pals";
-import { GuardarPals, ResgatarPal } from "./formularios";
+import { isStaff, levelOf } from "@/lib/roles";
+import { GuardarPals, ResgatarPal, SemearPalDeTeste } from "./formularios";
 
 export const metadata: Metadata = {
   title: "Seus Pals",
@@ -159,6 +160,10 @@ export default async function CofreDePals({
           trabalhando numa base ficam de fora, para a base não perder
           produção sem avisar.
         </p>
+
+        {isStaff(levelOf(session.user.roles, session.user.isMember)) && (
+          <SemearPalDeTeste />
+        )}
       </div>
     </>
   );

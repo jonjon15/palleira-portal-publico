@@ -407,6 +407,16 @@ deixar rastro — é para isso que ela existe.
 
 ### 9.2 O primeiro teste do cofre de Pal — comece por aqui, não pelo cofre
 
+📌 **Achado um jeito mais fácil de testar a entrega, em 23/08:** em
+`/painel/cofre/pals`, staff vê uma caixa "🔧 semear Pal de teste" no fim da
+página. Cole ali o JSON exportado de
+[paldeck.cc/palcreator](https://paldeck.cc/palcreator) (ou qualquer
+`PalTemplate` válido) e ele entra direto no seu cofre — **sem tirar nada de
+ninguém**. Dá para testar o resgate inteiro (GitHub Actions escrevendo o
+arquivo + a Vercel entregando por RCON) com um Pal descartável, antes de
+arriscar o de um jogador de verdade. É o caminho recomendado para o passo
+"com um Pal de verdade" mais abaixo — troque por um Pal semeado.
+
 **Antes de tocar num Pal de verdade**, valide o workflow no modo seguro:
 
 ```

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import {
   acaoGuardarPal,
   acaoResgatarPal,
+  acaoSemearTeste,
   consultarResgate,
   type Estado,
   type EstadoResgate,
@@ -216,5 +217,57 @@ function Acompanhar({ transferId, palId }: { transferId: number; palId: string }
         <p className="text-xs text-muted">{nomeDoPal(palId)}</p>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------ semear Pal de teste (§9.2) */
+
+/**
+ * Cola um `PalTemplate` (ex.: exportado de paldeck.cc/palcreator) e guarda
+ * no cofre de quem está logado — sem passar pelo jogo. Só aparece na tela
+ * para staff (a checagem de verdade mora em `semearPalDeTeste`).
+ *
+ * Serve para testar a metade que importa validar: a **entrega**. Um Pal de
+ * teste percorre exatamente o mesmo caminho de risco (SFTP + `givepal_j`)
+ * que um Pal vendido de verdade, sem precisar tirar nada de ninguém.
+ */
+export function SemearPalDeTeste() {
+  const [estado, acao] = useActionState(acaoSemearTeste, INICIAL);
+
+  return (
+    <details className="mt-10 rounded-[var(--radius-card)] border border-dashed border-line-strong bg-surface p-5">
+      <summary className="cursor-pointer text-sm font-semibold text-muted">
+        🔧 Staff — semear Pal de teste
+      </summary>
+
+      <p className="mt-3 max-w-xl text-sm text-muted">
+        Cole aqui o JSON de um <code>PalTemplate</code> — por exemplo,
+        exportado do{" "}
+        <a
+          href="https://paldeck.cc/palcreator"
+          target="_blank"
+          rel="noreferrer"
+          className="text-gold hover:text-gold-hi"
+        >
+          paldeck.cc/palcreator
+        </a>
+        . Ele entra direto no seu cofre, sem tocar em Pal de ninguém — dá
+        para testar o resgate (SFTP + entrega) sem risco.
+      </p>
+
+      <form action={acao} className="mt-3">
+        <textarea
+          name="json"
+          required
+          rows={6}
+          placeholder='{ "PalID": "Anubis", "Level": 20, ... }'
+          className="w-full rounded-[var(--radius-control)] border border-line-strong bg-bg px-3 py-2 font-mono text-xs outline-none focus:border-gold"
+        />
+        <div className="mt-3">
+          <Enviar>Guardar no meu cofre</Enviar>
+        </div>
+        <Aviso estado={estado} />
+      </form>
+    </details>
   );
 }
