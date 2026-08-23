@@ -1873,7 +1873,21 @@ vercel domains add palleira.com.br
 
 ---
 
-### 11.1 Domínio — estado em 22/08/2026
+### 11.1 Domínio — ✅ NO AR desde 23/08/2026
+
+> **O apontamento funcionou.** `https://palleira.com.br` serve o portal, com
+> certificado válido, e `http://` redireciona para `https://`. O site do
+> ex-dev deixou de ser alcançável pelo domínio, exatamente como a §15.1
+> previu — sem precisar pedir nada a ninguém.
+>
+> ⚠️ **Falta um passo:** `www.palleira.com.br` responde **200 servindo o
+> site**, em vez de redirecionar para o apex. A decisão registrada abaixo é
+> a oposta. Duas URLs com o mesmo conteúdo dividem SEO e confundem link.
+> Arrumar em Vercel → Settings → Domains, deixando o `www` como redirect.
+
+O histórico de como se chegou aqui:
+
+#### Estado em 22/08/2026
 
 **Onde está o quê:** o `.com.br` é registrado no **Registro.br**, mas quem
 responde pelo DNS é a **Hostinger** (nameservers `horizon.dns-parking.com` e

@@ -14,8 +14,12 @@ com jogador offline, mapa ao vivo e — o objetivo final — um **mercado onde o
 jogador vende Pal e item por Paletas**. O mercado de **itens** está de pé
 desde 23/08; o de **Pals** é o próximo passo.
 
-- **Produção:** https://palleira.vercel.app
-- **Domínio alvo:** palleira.com.br (DNS ainda não apontado)
+- **Produção:** https://palleira.com.br ✅ **no ar desde 23/08** — o DNS foi
+  apontado e o domínio serve o portal novo, com HTTPS e redirect de HTTP.
+  O `palleira.vercel.app` continua respondendo.
+  ⚠️ O `www` **serve direto** em vez de redirecionar para o apex, ao
+  contrário do que a §11.1 do PROMPT combinou. São duas URLs com o mesmo
+  conteúdo — arrumar na Vercel, em Domains.
 - **Repositório:** `jonjon15/palleira-portal` (privado)
 - **Dono:** Jonjon — `jonjon7D` no Discord, `ADM_JONJON` no jogo,
   Discord ID `882283198518804500`
@@ -38,6 +42,9 @@ desde 23/08; o de **Pals** é o próximo passo.
 2. **O build usa Turbopack** (`next build --turbopack`). O webpack derruba o
    build na Vercel de vez em quando com um crash no WasmHash.
 3. **`engines.node: "22.x"`** no `package.json`. No 24 o crash acima volta.
+   ⚠️ O projeto na Vercel está configurado em **24.x** — quem manda hoje é o
+   `engines` do `package.json`, e é só por isso que o build passa. Tirar
+   aquela linha derruba o deploy sem aviso.
 
 O build local falha ao buscar o Geist no Google Fonts (coisa da rede daqui, o
 `curl` no mesmo endereço responde 200). **Na Vercel funciona** — validar com
@@ -305,7 +312,9 @@ O `player_daily` é o único histórico, e é uma linha por jogador por dia.
    §6, que só o Jonjon pode ligar.
 8. **RCON no PvP** — decisão dele. Destrava vínculo e cofre para quem só
    joga lá.
-9. **DNS do palleira.com.br** — e limpar o acesso do ex-dev no Registro.br.
+9. **Domínio:** o `palleira.com.br` já está no ar; falta fazer o `www`
+   redirecionar para o apex e conferir o acesso ao Registro.br (§13 do
+   PROMPT — o item que importa é o e-mail da conta, não a senha).
 10. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New
     Metal / Palleira; o Discord tem Bronze/Prata/Ouro/Diamante/Colossal,
     todos com 0 membros. Conferir qual é a verdade antes de publicar
