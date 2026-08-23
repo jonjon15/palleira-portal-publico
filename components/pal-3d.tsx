@@ -141,9 +141,26 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         suporte.add(pal);
         cena.add(suporte);
 
-        camera.position.set(0, 0.64, 1.5);
+        // A distância da câmera não pode ser um número fixo: um Pal largo
+        // (a lança do Gildra vira a "maior" dimensão) sobra moldura vazia,
+        // um Pal alto (altura = maior dimensão) toca a borda. Em vez disso,
+        // calcula pela esfera que envolve o modelo já normalizado — essa
+        // esfera cobre qualquer ângulo de rotação, então nada corta quina
+        // ao girar.
+        const raio = (tamanho.length() / 2) * escala;
+        const alturaNormalizada = tamanho.y * escala;
+        const alvoAltura = alturaNormalizada / 2;
+
+        const fovVertical = (camera.fov * Math.PI) / 180;
+        const fovHorizontal = 2 * Math.atan(Math.tan(fovVertical / 2) * camera.aspect);
+        const fovMenor = Math.min(fovVertical, fovHorizontal);
+        // 18% de colchão: mais apertado que uma moldura "seguríssima", mas
+        // sem tocar a borda quando o Pal gira.
+        const distancia = raio / Math.sin(fovMenor / 2) / 0.82;
+
+        camera.position.set(0, alvoAltura + alturaNormalizada * 0.14, distancia);
         const controles = new OrbitControls(camera, renderer.domElement);
-        controles.target.set(0, 0.5, 0);
+        controles.target.set(0, alvoAltura, 0);
         controles.enablePan = false;
         controles.enableZoom = false; // a roda do mouse é da página, não daqui
         controles.enableDamping = true;
