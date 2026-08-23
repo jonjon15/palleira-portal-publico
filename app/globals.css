@@ -104,40 +104,33 @@ body {
   border-radius: var(--radius-control);
 }
 
-/* Grade de losangos deslizando — o fundo do card de passiva, do jeito que
-   o jogo mostra: nunca parado, sempre um brilho fraco correndo por baixo. */
-@keyframes palleira-desliza-losango {
+/* Grade de triângulos correndo — o fundo do card de passiva, do jeito que
+   o jogo mostra: nunca parado, sempre um brilho fraco correndo por baixo.
+   `textura-passiva.png` é `T_UItexture_EffTriangle` de verdade, extraída do
+   jogo via FModel em 23/08/2026 (Pal/Content/Pal/Texture/UI/Effect) — um
+   gradiente CSS de losango tentava imitar isso antes de o dono confirmar
+   que a textura real é feita de triângulos, não losangos lisos. */
+@keyframes palleira-desliza-triangulos {
   from {
-    background-position:
-      0 0,
-      9px 9px;
+    background-position: 0 0;
   }
   to {
-    background-position:
-      36px 36px,
-      45px 45px;
+    background-position: 56px 56px;
   }
 }
 
 .fundo-losango {
-  background-image:
-    linear-gradient(
-      45deg,
-      rgb(255 255 255 / 6%) 25%,
-      transparent 25%,
-      transparent 75%,
-      rgb(255 255 255 / 6%) 75%
-    ),
-    linear-gradient(
-      45deg,
-      rgb(255 255 255 / 6%) 25%,
-      transparent 25%,
-      transparent 75%,
-      rgb(255 255 255 / 6%) 75%
-    );
-  background-size: 18px 18px;
-  background-position:
-    0 0,
-    9px 9px;
-  animation: palleira-desliza-losango 3s linear infinite;
+  position: relative;
+}
+
+.fundo-losango::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/icons/textura-passiva.png");
+  background-size: 56px 56px;
+  background-repeat: repeat;
+  opacity: 0.12;
+  animation: palleira-desliza-triangulos 6s linear infinite;
+  pointer-events: none;
 }
