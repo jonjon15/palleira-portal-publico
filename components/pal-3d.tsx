@@ -82,22 +82,19 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         // Exposição explícita: sem isso, o padrão (1.0) deixa o ACES
         // comprimir demais o meio-tom — era o que fazia o Pal renderizar
         // escuro demais, sobre qualquer fundo (correção de 23/08/2026).
-        // Subiu de novo (23/08/2026, 3ª correção): Pals de material escuro
-        // (preto, roxo escuro) continuavam sumindo no fundo mesmo depois de
-        // duas rodadas — refletância baixa precisa de mais luz, não só de
-        // exposição um pouco maior.
-        renderer.toneMappingExposure = 1.8;
+        renderer.toneMappingExposure = 2.0;
         alvo.appendChild(renderer.domElement);
 
-        // ⚠️ A luz aqui embaixo foi recalibrada de propósito (23/08/2026,
-        // 3ª correção): o desenho anterior já resolvia os Pals de cor clara,
-        // mas um Pal de material escuro (ex.: Gildra) ainda absorvia a maior
-        // parte da luz de mesa. Ambiente e hemisfério subiram mais um tanto
-        // — o teto de brilho pra quem já é claro sobe pouco (o material
-        // clama já refletia quase tudo, e o ACES segura o estouro), mas o
-        // piso de quem é escuro sobe bastante.
-        cena.add(new THREE.AmbientLight(0xffffff, 1.1));
-        cena.add(new THREE.HemisphereLight(0xfff6e6, 0xe4dcc9, 2.3));
+        // ⚠️ 4ª correção (23/08/2026): três rodadas de ajuste incremental
+        // ainda deixavam Pal de material escuro (Gildra, Kitsun Noct)
+        // sumindo em algum ângulo — luz direcional cria sombra, e sombra é
+        // exatamente o problema quando o objetivo é "sempre visível". A
+        // saída é parar de tentar equilibrar direcional com ambiente e
+        // deixar a ambiente carregar o essencial: ela ilumina toda
+        // superfície igual, não importa a normal nem o ângulo de câmera.
+        // O ACES com exposição 2.0 segura o estouro de quem já é claro.
+        cena.add(new THREE.AmbientLight(0xffffff, 2.6));
+        cena.add(new THREE.HemisphereLight(0xfff6e6, 0xe4dcc9, 3.2));
 
         const chave = new THREE.DirectionalLight(0xfff2d6, 3.2);
         chave.position.set(-3, 4, 3);

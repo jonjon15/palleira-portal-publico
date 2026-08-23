@@ -9,6 +9,7 @@ import { nomeDoPal } from "@/lib/pals";
 import { Comprar, NomeDoItem } from "./formularios";
 import { ItemIcon } from "@/components/item-icon";
 import { PalCard } from "@/components/pal-card";
+import { Pal3DSobDemanda } from "@/components/pal-3d-sob-demanda";
 
 export const metadata: Metadata = {
   title: "Mercado",
@@ -170,22 +171,8 @@ function CardAnuncio({
   return (
     <li className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
       {anuncio.kind === "pal" ? (
-        <div className="p-5">
-          <PalCard
-            pal={{
-              palId: anuncio.palId ?? "",
-              level: Number(anuncio.palTemplate?.Level ?? 1),
-              gender: anuncio.palTemplate?.Gender as string | undefined,
-              shiny: anuncio.palTemplate?.Shiny as boolean | undefined,
-              condensedPals: anuncio.palTemplate?.CondensedPals as
-                | number
-                | undefined,
-              ivs: anuncio.palTemplate?.IVs as Record<string, number> | undefined,
-              passives: anuncio.palTemplate?.Passives as string[] | undefined,
-            }}
-            detalhado
-          />
-          <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
+        <div className="border-b border-line bg-surface-2">
+          <Pal3DSobDemanda palId={anuncio.palId ?? ""} className="aspect-square" />
         </div>
       ) : (
         <div className="flex items-center justify-center border-b border-line bg-surface-2 py-7">
@@ -194,7 +181,26 @@ function CardAnuncio({
       )}
 
       <div className="flex flex-1 flex-col p-5 pt-0">
-        {anuncio.kind === "item" && (
+        {anuncio.kind === "pal" ? (
+          <div className="pt-5">
+            <PalCard
+              pal={{
+                palId: anuncio.palId ?? "",
+                level: Number(anuncio.palTemplate?.Level ?? 1),
+                gender: anuncio.palTemplate?.Gender as string | undefined,
+                shiny: anuncio.palTemplate?.Shiny as boolean | undefined,
+                condensedPals: anuncio.palTemplate?.CondensedPals as
+                  | number
+                  | undefined,
+                ivs: anuncio.palTemplate?.IVs as Record<string, number> | undefined,
+                passives: anuncio.palTemplate?.Passives as string[] | undefined,
+              }}
+              detalhado
+              semIcone
+            />
+            <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
+          </div>
+        ) : (
           <>
             <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
               {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId ?? "")]}

@@ -19,9 +19,11 @@ import {
  * (§7.4 do PROMPT.md). É o que faltava para o cofre parecer o começo de um
  * mercado, e não uma lista de texto.
  *
- * Só ícone 2D aqui, nunca o modelo 3D: uma lista com 200 Pals da palbox
- * renderizando 200 contextos WebGL derrubaria a aba. O 3D fica reservado
- * para a ficha de um Pal só (`components/ficha-pal.tsx`).
+ * Ícone 2D por padrão — uma lista com 200 Pals da palbox renderizando 200
+ * contextos WebGL derrubaria a aba. Quem quer 3D na lista (o mercado, para
+ * o comprador ver o bicho antes de pagar) usa `semIcone` e desenha o 3D por
+ * fora, com `components/pal-3d-sob-demanda.tsx` — que só monta o WebGL de
+ * quem está em tela.
  */
 
 export interface DadosDoCard {
@@ -39,6 +41,7 @@ export function PalCard({
   pal,
   className = "",
   detalhado = false,
+  semIcone = false,
 }: {
   pal: DadosDoCard;
   className?: string;
@@ -49,6 +52,8 @@ export function PalCard({
    * palbox de 200 linhas fica pesada de rolar.
    */
   detalhado?: boolean;
+  /** Omite o ícone 2D — para quando o 3D já aparece acima (mercado). */
+  semIcone?: boolean;
 }) {
   const icone = urlDoIcone(pal.palId);
   const alpha = ehAlpha(pal.palId);
@@ -58,21 +63,23 @@ export function PalCard({
 
   return (
     <div className={`flex gap-3 ${className}`}>
-      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface-2">
-        {icone ? (
-          // Lista com muitas linhas: <Image> tem overhead por instância que
-          // não vale a pena aqui, e o webp já é pequeno (~8 KB) e local.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={icone}
-            alt=""
-            loading="lazy"
-            className="size-full object-contain"
-          />
-        ) : (
-          <span className="text-[0.6rem] text-muted">sem ícone</span>
-        )}
-      </div>
+      {!semIcone && (
+        <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface-2">
+          {icone ? (
+            // Lista com muitas linhas: <Image> tem overhead por instância
+            // que não vale a pena aqui, e o webp já é pequeno (~8 KB) e local.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={icone}
+              alt=""
+              loading="lazy"
+              className="size-full object-contain"
+            />
+          ) : (
+            <span className="text-[0.6rem] text-muted">sem ícone</span>
+          )}
+        </div>
+      )}
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">
