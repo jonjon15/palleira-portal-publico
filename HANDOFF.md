@@ -197,6 +197,15 @@ todos. Sacar a pilha inteira passa por zero antes de a linha ser apagada, e
 o banco derrubava a operação. Ninguém conseguiria resgatar o último item nem
 anunciar o lote fechado. Corrigido na migração `003`.
 
+⚠️ **Publicar anúncio ficava com o card sumido até sair e entrar de novo.**
+Publicar acontece em `/mercado/vender`, e navegar dali para `/mercado` por
+um `<Link>` comum às vezes mostrava a versão que o cache de rotas do Next
+tinha guardado antes do anúncio existir — só uma navegação de verdade (F5,
+o reload do login) forçava buscar de novo. `acaoAnunciar` agora chama
+`redirect("/mercado")` quando dá certo, o que força uma renderização nova.
+Comprar e cancelar não tinham esse problema — acontecem na mesma página
+onde o botão está.
+
 ### Os Pals em 3D, e o cofre de Pal — 23/08
 
 O Jonjon trouxe um projeto de código aberto,
@@ -225,6 +234,28 @@ de mundo. Isso é o que virou o cartão em `components/pal-card.tsx` — ícone,
 nível, barrinha de IV e passivas, usado no cofre inteiro. `paldeck.cc/npcs`
 tem ícone dos NPCs que faltam, mas sem licença de reuso declarada — fica em
 aberto, mesma cesta do catálogo completo (§7.4 do PROMPT).
+
+**E o catálogo de item, que já estava pendente há dois dias, também estava
+ali** — `data/json/items.json`: **2.372 itens, 2.320 com nome em português
+e 2.365 com ícone**, mais **421 passivas de Pal traduzidas**
+(`data/json/l10n/pt-BR/passive_skills.json`). A ficha de Pal mostrava
+`TrainerDEF_UP_1`; agora mostra "Estrategista Inabalável". `lib/itens.ts`
+foi reescrito para usar isso — categoria vem do próprio jogo (`type_a`),
+não mais de prefixo de `ItemID` chutado. Ícone entrou em toda tela que lista
+item: mercado, cofre, anúncios. Regra de sempre sem mudar: item fora do
+dataset mostra a chave, nunca um nome inventado.
+
+**Três ajustes finos no visualizador 3D, pedidos olhando a tela de
+verdade:**
+
+1. **Fundo claro**, não mais a superfície escura do site — `#f2efe9`
+   (o mesmo creme do texto claro do tema, não branco puro). Foto de
+   produto, não card do site.
+2. **A rotação automática volta sozinha** depois de 2,5s sem a pessoa
+   mexer — antes, uma vez que você arrastava, ela parava para sempre
+   naquela sessão do componente.
+3. Nenhum bug: o giro de fato para quando alguém arrasta a câmera, de
+   propósito, para não competir com a mão de quem está olhando o Pal.
 
 Isso puxou a construção do **cofre de Pal**, que abriu uma parede que o
 PROMPT.md não tinha previsto: `givepal_j` e `POST /give/paltemplate` **não

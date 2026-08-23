@@ -1,4 +1,5 @@
 import { nomeDoPal, ehAlpha, urlDoIcone, IVS, IV_MAXIMO } from "@/lib/pals";
+import { nomeDaPassiva } from "@/lib/passivas";
 
 /**
  * O cartão de um Pal numa lista — ícone, nível, IVs e passivas num relance
@@ -84,7 +85,7 @@ export function PalCard({
 
         {passivas.length > 0 && (
           <p className="mt-1 truncate text-[0.7rem] text-muted">
-            {passivas.slice(0, 2).join(", ")}
+            {passivas.slice(0, 2).map(nomeDaPassiva).join(", ")}
             {extras > 0 && ` +${extras}`}
           </p>
         )}

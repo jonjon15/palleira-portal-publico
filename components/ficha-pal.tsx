@@ -1,5 +1,6 @@
 import { Pal3D } from "@/components/pal-3d";
 import { nomeDoPal, ehAlpha, IVS, ALMAS, IV_MAXIMO, ALMA_MAXIMA } from "@/lib/pals";
+import { nomeDaPassiva } from "@/lib/passivas";
 
 /**
  * A ficha completa de um Pal: o modelo 3D girando, e os números que provam
@@ -83,9 +84,10 @@ export function FichaDoPal({ template }: { template: Template }) {
               {template.Passives.map((p) => (
                 <li
                   key={p}
+                  title={p}
                   className="rounded-full border border-line bg-surface px-3 py-1 text-sm"
                 >
-                  {p}
+                  {nomeDaPassiva(p)}
                 </li>
               ))}
             </ul>

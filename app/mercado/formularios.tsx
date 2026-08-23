@@ -6,6 +6,7 @@ import { acaoComprar, acaoAnunciar, acaoCancelar, type Estado } from "./actions"
 import { nomeDoItem, semTraducao } from "@/lib/itens";
 import { taxaDaVenda, PRECO_MINIMO, PRECO_MAXIMO } from "@/lib/mercado-regras";
 import type { ItemNoCofre } from "@/lib/cofre";
+import { ItemIcon } from "@/components/item-icon";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
 
@@ -103,6 +104,7 @@ export function Anunciar({ itens }: { itens: ItemNoCofre[] }) {
                 required
                 className="size-4 shrink-0 accent-[var(--gold)]"
               />
+              <ItemIcon itemId={i.itemId} />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">
                   <NomeDoItem itemId={i.itemId} />

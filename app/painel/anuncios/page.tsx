@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Pick } from "@/components/pick";
 import { meusAnuncios, minhasCompras, type MeuAnuncio } from "@/lib/mercado";
 import { Cancelar, NomeDoItem } from "@/app/mercado/formularios";
+import { ItemIcon } from "@/components/item-icon";
 
 export const metadata: Metadata = {
   title: "Meus anúncios",
@@ -106,6 +107,7 @@ export default async function MeusAnuncios() {
             <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
               {compras.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center gap-4 px-5 py-4">
+                  <ItemIcon itemId={c.itemId} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">
                       <NomeDoItem itemId={c.itemId} /> ×{c.qty}
@@ -127,16 +129,19 @@ export default async function MeusAnuncios() {
 
 function Descricao({ anuncio }: { anuncio: MeuAnuncio }) {
   return (
-    <div className="min-w-0 flex-1">
-      <p className="truncate font-medium">
-        <NomeDoItem itemId={anuncio.itemId} /> ×{anuncio.qty}
-      </p>
-      <p className="truncate text-sm text-muted">
-        {anuncio.status === "vendido" && anuncio.comprador
-          ? `Comprado por ${anuncio.comprador} · você recebeu ${anuncio.preco - anuncio.taxa}`
-          : `Taxa ${anuncio.taxa} · você recebe ${anuncio.preco - anuncio.taxa}`}
-      </p>
-    </div>
+    <>
+      <ItemIcon itemId={anuncio.itemId} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">
+          <NomeDoItem itemId={anuncio.itemId} /> ×{anuncio.qty}
+        </p>
+        <p className="truncate text-sm text-muted">
+          {anuncio.status === "vendido" && anuncio.comprador
+            ? `Comprado por ${anuncio.comprador} · você recebeu ${anuncio.preco - anuncio.taxa}`
+            : `Taxa ${anuncio.taxa} · você recebe ${anuncio.preco - anuncio.taxa}`}
+        </p>
+      </div>
+    </>
   );
 }
 

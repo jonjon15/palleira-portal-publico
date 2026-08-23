@@ -6,6 +6,7 @@ import { Pick } from "@/components/pick";
 import { vitrine, type Anuncio } from "@/lib/mercado";
 import { nomeDoItem, categoriaDoItem, CATEGORIA_LABEL } from "@/lib/itens";
 import { Comprar, NomeDoItem } from "./formularios";
+import { ItemIcon } from "@/components/item-icon";
 
 export const metadata: Metadata = {
   title: "Mercado",
@@ -126,17 +127,20 @@ function CardAnuncio({
 
   return (
     <li className="flex flex-col rounded-[var(--radius-card)] border border-line bg-surface p-5">
-      <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
-        {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId)]}
-      </p>
-
-      <h2 className="mt-1.5 leading-snug font-semibold">
-        <NomeDoItem itemId={anuncio.itemId} />
-      </h2>
-
-      <p className="tabular mt-0.5 text-sm text-muted">
-        {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} · {anuncio.vendedor}
-      </p>
+      <div className="flex items-start gap-3">
+        <ItemIcon itemId={anuncio.itemId} className="size-12" />
+        <div className="min-w-0">
+          <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
+            {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId)]}
+          </p>
+          <h2 className="leading-snug font-semibold">
+            <NomeDoItem itemId={anuncio.itemId} />
+          </h2>
+          <p className="tabular text-sm text-muted">
+            {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} · {anuncio.vendedor}
+          </p>
+        </div>
+      </div>
 
       <div className="mt-4 flex items-center gap-1.5">
         <Pick className="size-5" withLetter={false} />

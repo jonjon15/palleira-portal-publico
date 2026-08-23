@@ -1,15 +1,29 @@
+import NOMES from "@/lib/itens-nomes.json";
+import ICONES from "@/lib/itens-icones.json";
+import TIPOS from "@/lib/itens-tipos.json";
+
 /**
- * Rótulo e regra de negociação dos itens do jogo (§7.4 e §7.5 do PROMPT.md).
+ * Rótulo, ícone e regra de negociação dos itens do jogo (§7.4 e §7.5 do
+ * PROMPT.md).
  *
  * O jogo fala por `ItemID` cru — `PalSphere_Ancient_1`, `HandgunBullet`. É
  * essa chave que o `giveitems` entende, então é ela que o banco guarda. Aqui
- * mora só a tradução para a tela.
+ * mora só a tradução, o ícone e a categoria para a tela.
  *
- * 🔴 **Chave sem tradução mostra a chave, nunca lixo.** São ~2.400 itens no
- * jogo e este dicionário cobre uma fração: o resto aparece com o nome
- * interno, que o jogador reconhece, em vez de um rótulo inventado que estaria
- * errado. O catálogo completo entra depois, semeado de dataset com licença
- * (§7.4) — a estrutura aqui já está pronta para recebê-lo.
+ * 📌 **O catálogo pendente da §7.4 chegou em 23/08/2026** — 2.372 itens do
+ * mesmo projeto que deu os modelos e ícones de Pal
+ * ([Palworld Save Pal](https://github.com/PalworldSavePal/palworld-save-pal),
+ * GPL-3.0 no código; os dados de jogo são da Pocketpair, mesma tolerância de
+ * projeto de fã do resto do site). 2.320 com nome em português, 2.365 com
+ * ícone de verdade. Gerado uma vez a partir de `data/json/items.json` e
+ * `data/json/l10n/pt-BR/items.json` daquele repositório — os três JSON
+ * (`itens-nomes`, `itens-icones`, `itens-tipos`) ficam versionados aqui, sem
+ * dependência externa em tempo de execução.
+ *
+ * 🔴 **Chave sem tradução ainda mostra a chave, nunca lixo.** Uns 37 itens do
+ * dataset original vinham com o placeholder literal `"pt-BR Text"` — filtrado
+ * na geração, não entrou no catálogo. Item novo do jogo, fora do dataset,
+ * cai no mesmo lugar: nome interno, sem inventar rótulo.
  */
 
 export type Categoria =
@@ -19,6 +33,7 @@ export type Categoria =
   | "equipamento"
   | "esquema"
   | "comida"
+  | "consumo"
   | "moeda"
   | "outro";
 
@@ -29,75 +44,69 @@ export const CATEGORIA_LABEL: Record<Categoria, string> = {
   equipamento: "Equipamento",
   esquema: "Esquemas",
   comida: "Comida",
+  consumo: "Consumíveis",
   moeda: "Moedas e fichas",
   outro: "Outros",
 };
 
-interface Ficha {
-  nome: string;
-  categoria: Categoria;
-}
+const NOME_DE = NOMES as Record<string, string>;
+const ICONE_DE = ICONES as Record<string, { arquivo: string; bytes: number }>;
+const TIPO_DE = TIPOS as Record<string, string>;
+
+/** Onde os ícones de item são servidos — hash não é preciso: o nome já é único. */
+const BASE_ICONE = "/icons/itens";
 
 /**
- * O que já foi visto de verdade no inventário dos servidores, traduzido.
- *
- * Nada aqui é chute: cada linha saiu de uma leitura real do
- * `GET /v1/pdapi/items/{uid}`. Item que ainda não apareceu não ganha
- * tradução adivinhada — ganha o nome interno.
+ * `type_a` do catálogo → nossa categoria. `SpecialWeapon` parece estranho
+ * para esfera, mas é exatamente o que o jogo usa: conferido em 23/08, 100%
+ * dos itens com esse tipo são `PalSphere*` — nenhuma arma de verdade cai
+ * aqui.
  */
-const CATALOGO: Record<string, Ficha> = {
-  Money: { nome: "Ouro", categoria: "moeda" },
-  DogCoin: { nome: "Moeda cachorro", categoria: "moeda" },
-  BountyProof_1: { nome: "Prova de recompensa", categoria: "moeda" },
-
-  PalSphere: { nome: "Esfera Pal", categoria: "esfera" },
-  PalSphere_Mega: { nome: "Mega esfera", categoria: "esfera" },
-  PalSphere_Giga: { nome: "Giga esfera", categoria: "esfera" },
-  PalSphere_Hyper: { nome: "Hiper esfera", categoria: "esfera" },
-  PalSphere_Ultra: { nome: "Ultra esfera", categoria: "esfera" },
-  PalSphere_Master: { nome: "Esfera mestra", categoria: "esfera" },
-  PalSphere_Legend: { nome: "Esfera lendária", categoria: "esfera" },
-  PalSphere_Exotic: { nome: "Esfera exótica", categoria: "esfera" },
-  PalSphere_Tera: { nome: "Tera esfera", categoria: "esfera" },
-
-  HandgunBullet: { nome: "Munição de pistola", categoria: "municao" },
-  RifleBullet: { nome: "Munição de rifle", categoria: "municao" },
-
-  PalFluid: { nome: "Fluido Pal", categoria: "recurso" },
-  MeteorDrop: { nome: "Fragmento de meteorito", categoria: "recurso" },
-
-  MeatCutterKnife: { nome: "Faca de açougueiro", categoria: "equipamento" },
-  Homeward: { nome: "Pergaminho de retorno", categoria: "outro" },
+const CATEGORIA_DO_TIPO: Record<string, Categoria> = {
+  Material: "recurso",
+  Accessory: "equipamento",
+  Essential: "outro",
+  Consume: "consumo",
+  Armor: "equipamento",
+  Ammo: "municao",
+  Weapon: "equipamento",
+  Food: "comida",
+  Blueprint: "esquema",
+  Glider: "equipamento",
+  MonsterEquipWeapon: "equipamento",
+  SpecialWeapon: "esfera",
+  SphereModule: "esfera",
 };
 
 /**
- * Prefixos que dão categoria a quem não está no catálogo.
- *
- * Serve só para agrupar a vitrine — nunca para inventar nome.
+ * Moedas e fichas — o catálogo do jogo classifica como `Material` junto de
+ * recurso comum, então a categoria certa só sai reconhecendo pelo `ItemID`.
  */
-const POR_PREFIXO: [RegExp, Categoria][] = [
-  [/^PalSphere/, "esfera"],
-  [/Bullet$|^Arrow/, "municao"],
-  [/^Blueprint_/, "esquema"],
-  [/^SkillUnlock_/, "outro"],
-  [/^FishingRod|^Pickaxe|^Axe_|^Handgun|^AssaultRifle|_weight_/, "equipamento"],
-  [/^Food_|^Bread|^Salad|Bait/, "comida"],
-];
+const MOEDAS = new Set([
+  "Money",
+  "DogCoin",
+  "BountyProof_1",
+  "BountyProof_2",
+  "BountyProof_3",
+]);
 
 export function nomeDoItem(itemId: string): string {
-  return CATALOGO[itemId]?.nome ?? itemId;
+  return NOME_DE[itemId] ?? itemId;
 }
 
 /** `true` quando o nome na tela é o ID interno — a UI avisa discretamente. */
-export const semTraducao = (itemId: string) => !CATALOGO[itemId];
+export const semTraducao = (itemId: string) => !NOME_DE[itemId];
 
 export function categoriaDoItem(itemId: string): Categoria {
-  const ficha = CATALOGO[itemId];
-  if (ficha) return ficha.categoria;
-  for (const [padrao, categoria] of POR_PREFIXO) {
-    if (padrao.test(itemId)) return categoria;
-  }
-  return "outro";
+  if (MOEDAS.has(itemId)) return "moeda";
+  const tipo = TIPO_DE[itemId];
+  return (tipo && CATEGORIA_DO_TIPO[tipo]) || "outro";
+}
+
+/** A URL do ícone (~4 KB, webp), ou `null` quando o item não tem um. */
+export function urlDoIconeItem(itemId: string): string | null {
+  const icone = ICONE_DE[itemId];
+  return icone ? `${BASE_ICONE}/${icone.arquivo}` : null;
 }
 
 /* ------------------------------------------------------- o que não se vende */

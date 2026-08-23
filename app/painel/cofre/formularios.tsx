@@ -10,6 +10,7 @@ import {
 } from "./actions";
 import { nomeDoItem, semTraducao } from "@/lib/itens";
 import type { ItemNoCofre, ItemNoJogo, PersonagemOnline } from "@/lib/cofre";
+import { ItemIcon } from "@/components/item-icon";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
 
@@ -105,6 +106,7 @@ export function GuardarNoCofre({
       <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
         {itens.map((i) => (
           <li key={i.itemId} className="flex items-center gap-3 px-4 py-3">
+            <ItemIcon itemId={i.itemId} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
                 <NomeDoItem itemId={i.itemId} />
@@ -158,6 +160,7 @@ export function ItensDoCofre({
       <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
         {itens.map((i) => (
           <li key={i.itemId} className="flex flex-wrap items-center gap-3 px-4 py-3">
+            <ItemIcon itemId={i.itemId} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
                 <NomeDoItem itemId={i.itemId} />

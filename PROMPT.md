@@ -1568,6 +1568,34 @@ o catálogo completo da §7.4: não copiar sem licença clara.
 item · categoria · quantidade · raridade · durabilidade (quando aplicável) · imagem
 ```
 
+#### ✅ O catálogo pendente da §7.4 — resolvido em 23/08/2026
+
+O mesmo [Palworld Save Pal](https://github.com/PalworldSavePal/palworld-save-pal)
+que deu os modelos e ícones de Pal tinha o resto: **2.372 itens**, com
+categoria oficial do jogo, **2.320 nomes em português** e **2.365 ícones**
+2D. E, achado no mesmo lote, **421 passivas de Pal traduzidas** — a ficha
+mostrava `TrainerDEF_UP_1`, agora mostra "Estrategista Inabalável".
+
+Fonte: `data/json/items.json` + `data/json/l10n/pt-BR/items.json` +
+`data/json/l10n/pt-BR/passive_skills.json` daquele repositório. Gerado uma
+vez, sem dependência externa em tempo de execução: `lib/itens-nomes.json`,
+`lib/itens-icones.json`, `lib/itens-tipos.json`, `lib/passivas-nomes.json`,
+mais os `.webp` em `public/icons/itens/` (9,4 MB).
+
+- **Categoria vem do próprio jogo** (`type_a` do catálogo — `Material`,
+  `Weapon`, `Ammo`…), não mais de prefixo de `ItemID` adivinhado. Uma
+  exceção medida e confirmada: `SpecialWeapon` parece esquisito para
+  esfera, mas 100% dos itens com esse tipo são `PalSphere*` — nenhuma arma
+  de verdade cai lá.
+- **37 nomes vieram como placeholder** (`"pt-BR Text"` literal, do próprio
+  dataset não traduzido) — filtrados na geração, contam como sem tradução.
+- Regra de sempre, sem mudança: **chave sem tradução mostra a chave**,
+  nunca um palpite. Item novo do jogo, fora do dataset, cai no mesmo lugar.
+
+📌 [paldeck.cc/items](https://paldeck.cc/items) tem o mesmo tipo de dado,
+mas não foi preciso: o Palworld Save Pal já resolvia, com o código sob
+GPL-3.0 (dado de jogo, mesma tolerância de projeto de fã do resto do site).
+
 ### 7.6 Fluxo de venda (com custódia)
 
 Tudo automático, via RCON. O jogador **não combina nada com ninguém**.

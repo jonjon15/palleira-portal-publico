@@ -72,13 +72,14 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
           1000,
         );
 
-        const renderer = new THREE.WebGLRenderer({
-          antialias: true,
-          alpha: true, // o fundo é o card do site, não uma cor nossa
-        });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.setSize(alvo.clientWidth, alvo.clientHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        // Fundo claro de propósito — foto de produto, não a superfície
+        // escura do site. O mesmo creme do texto claro do tema (#f2efe9),
+        // não branco puro: fica no tom da Palleira em vez de destoar.
+        renderer.setClearColor(0xf2efe9, 1);
         alvo.appendChild(renderer.domElement);
 
         // Luz de estúdio, não de jogo: uma chave quente vinda de cima à
@@ -142,15 +143,20 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         controles.update();
 
         const paradinho = matchMedia("(prefers-reduced-motion: reduce)");
-        let interagiu = false;
         // Quem pega o Pal na mão manda na câmera: a rotação automática para
-        // e não volta a disputar o controle.
-        controles.addEventListener("start", () => (interagiu = true));
+        // enquanto a pessoa mexe (e enquanto o damping ainda está freando
+        // depois de soltar — 'change' continua disparando nesse intervalo).
+        // Passado o tempo ocioso sem nenhum evento, a rotação volta sozinha.
+        const OCIOSO_MS = 2500;
+        let ultimaInteracao = -Infinity;
+        controles.addEventListener("start", () => (ultimaInteracao = performance.now()));
+        controles.addEventListener("change", () => (ultimaInteracao = performance.now()));
 
         let quadro = 0;
         const desenhar = () => {
           quadro = requestAnimationFrame(desenhar);
-          if (!interagiu && !paradinho.matches) suporte.rotation.y += 0.004;
+          const parado = performance.now() - ultimaInteracao > OCIOSO_MS;
+          if (parado && !paradinho.matches) suporte.rotation.y += 0.004;
           controles.update();
           renderer.render(cena, camera);
         };
@@ -203,17 +209,19 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-2 ${className}`}
+      className={`relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-[#f2efe9] ${className}`}
     >
       <div ref={caixa} className="absolute inset-0" />
 
+      {/* Fundo claro: nem o skeleton escuro do resto do site nem o texto
+          --muted (pensado para superfície escura) servem aqui de graça. */}
       {estado === "carregando" && (
-        <div className="skeleton absolute inset-0" aria-hidden />
+        <div className="absolute inset-0 animate-pulse bg-[#e4ddcd]" aria-hidden />
       )}
 
       {(estado === "sem-modelo" || estado === "erro") && (
         <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-          <p className="text-sm text-muted">
+          <p className="text-sm text-[#6b6153]">
             {estado === "sem-modelo"
               ? `Ainda não temos o modelo de ${nomeDoPal(palId)}.`
               : "Não consegui carregar o modelo 3D aqui."}
@@ -222,7 +230,7 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
       )}
 
       {estado === "pronto" && (
-        <p className="pointer-events-none absolute right-3 bottom-2 text-[0.7rem] text-muted opacity-70">
+        <p className="pointer-events-none absolute right-3 bottom-2 text-[0.7rem] text-[#6b6153]">
           arraste para girar
         </p>
       )}
