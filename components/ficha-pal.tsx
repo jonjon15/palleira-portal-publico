@@ -1,6 +1,18 @@
 import { Pal3D } from "@/components/pal-3d";
-import { nomeDoPal, ehAlpha, IVS, ALMAS, IV_MAXIMO, ALMA_MAXIMA } from "@/lib/pals";
-import { nomeDaPassiva } from "@/lib/passivas";
+import {
+  nomeDoPal,
+  descricaoDoPal,
+  elementosDoPal,
+  urlDoIconeElemento,
+  paldexDoPal,
+  ehAlpha,
+  IVS,
+  ALMAS,
+  IV_MAXIMO,
+  ALMA_MAXIMA,
+} from "@/lib/pals";
+import { nomeDaPassiva, descricaoDaPassiva } from "@/lib/passivas";
+import { nomeDaHabilidade, descricaoDaHabilidade } from "@/lib/habilidades";
 
 /**
  * A ficha completa de um Pal: o modelo 3D girando, e os números que provam
@@ -17,11 +29,15 @@ interface Template {
   IVs?: Record<string, number>;
   PalSouls?: Record<string, number>;
   Passives?: string[];
+  ActiveSkills?: string[];
 }
 
 export function FichaDoPal({ template }: { template: Template }) {
   const palId = template.PalID ?? "";
   const alpha = ehAlpha(palId);
+  const paldex = paldexDoPal(palId);
+  const elementos = elementosDoPal(palId);
+  const descricao = descricaoDoPal(palId);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
@@ -47,11 +63,33 @@ export function FichaDoPal({ template }: { template: Template }) {
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {template.Nickname || nomeDoPal(palId)}
-        </h2>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">
+            {template.Nickname || nomeDoPal(palId)}
+          </h2>
+          {paldex !== null && (
+            <span className="tabular text-sm text-muted">#{paldex}</span>
+          )}
+          {elementos.map((e) => (
+            <span
+              key={e.chave}
+              title={e.nome}
+              className="flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-xs"
+            >
+              {e.icone && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={urlDoIconeElemento(e.icone)} alt="" className="size-3.5" />
+              )}
+              {e.nome}
+            </span>
+          ))}
+        </div>
         {template.Nickname && (
           <p className="text-sm text-muted">{nomeDoPal(palId)}</p>
+        )}
+
+        {descricao && (
+          <p className="mt-2 max-w-prose text-sm text-muted italic">{descricao}</p>
         )}
 
         <dl className="tabular mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
@@ -77,6 +115,23 @@ export function FichaDoPal({ template }: { template: Template }) {
           />
         </div>
 
+        {template.ActiveSkills && template.ActiveSkills.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-muted">Habilidades</h3>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {template.ActiveSkills.map((h) => (
+                <li
+                  key={h}
+                  title={descricaoDaHabilidade(h) || h}
+                  className="rounded-full border border-line bg-surface px-3 py-1 text-sm"
+                >
+                  {nomeDaHabilidade(h)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {template.Passives && template.Passives.length > 0 && (
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-muted">Passivas</h3>
@@ -84,7 +139,7 @@ export function FichaDoPal({ template }: { template: Template }) {
               {template.Passives.map((p) => (
                 <li
                   key={p}
-                  title={p}
+                  title={descricaoDaPassiva(p) || p}
                   className="rounded-full border border-line bg-surface px-3 py-1 text-sm"
                 >
                   {nomeDaPassiva(p)}

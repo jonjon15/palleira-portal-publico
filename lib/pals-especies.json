@@ -1,0 +1,7881 @@
+{
+ "alpaca": {
+  "nome": "Melpaca",
+  "descricao": "Não se deixe enganar por sua aparência fofinha. Se for vítima dos chutes ultravelozes de suas longas patas, você sairá voando até o outro lado do planeta.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 20,
+  "raridade": 3,
+  "stats": {
+   "hp": 90,
+   "attack": 75,
+   "defense": 90
+  }
+ },
+ "amaterasuwolf": {
+  "nome": "Kitsun",
+  "descricao": "De temperamento bastante delicado, basta acontecer algo desagradável para ela logo se confinar em uma caverna. As pessoas de antigamente consideravam mau presságio quando Kitsun se escondia.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 111,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 115,
+   "defense": 100
+  }
+ },
+ "amaterasuwolf_dark": {
+  "nome": "Kitsun Noct",
+  "descricao": "De temperamento bastante delicado, basta acontecer algo desagradável para ela logo se confinar em uma caverna. Por passar tempo demais confinada, acabou se anuviando.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 111,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "amaterasuwolf_dark_quest_enemy": {
+  "nome": "Kitsun Noct",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "amaterasuwolf_dark_quest_friend": {
+  "nome": "Kitsun Noct",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "anubis": {
+  "nome": "Anubis",
+  "descricao": "Devido ao seu aspecto, já foi considerado símbolo da nobreza. Para os mais distantes da fortuna e do poder, já serviu como ideal de aparência. Em algum momento, contudo, Anubis passou a ser símbolo da morte.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 139,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "badcatgirl": {
+  "nome": "Nyafia",
+  "descricao": "Odeia profundamente que fitem ambos os seus olhos. Caso alguém insista em encará-la, começa logo a chorar e não perdoa a afronta por cerca de duas semanas.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 143,
+  "raridade": 4,
+  "stats": {
+   "hp": 110,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "baphomet": {
+  "nome": "Incineram",
+  "descricao": "Ele apanha suas presas à noite e as leva para seu território. Não é difícil imaginar o destino dos Pals capturados depois disso.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 91,
+  "raridade": 4,
+  "stats": {
+   "hp": 95,
+   "attack": 100,
+   "defense": 85
+  }
+ },
+ "baphomet_dark": {
+  "nome": "Incineram Noct",
+  "descricao": "Persegue filhotes de Pals para trazê-los ao seu território. É impossível imaginar a dor e desespero dos Pals cuja prole foi raptada!",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 91,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 85
+  }
+ },
+ "baphomet_dark_oilrig": {
+  "nome": "Incineram Noct",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 91,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 85
+  }
+ },
+ "bastet": {
+  "nome": "Mau",
+  "descricao": "O tecido enrijecido de sua cauda não se deteriora mesmo depois de cortado. A crença de que esse tecido atrai riquezas já custou a vida de muitos espécimes de Mau.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 27,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 60,
+   "defense": 70
+  }
+ },
+ "bastet_ice": {
+  "nome": "Mau Cryst",
+  "descricao": "O cristal de sua cauda é muito belo, mas se rompe no momento da morte. Devido à superstição de que criar muitos espécimes de Mau Cryst atrai riquezas, elas eram criadas com muito carinho.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 27,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 65,
+   "defense": 70
+  }
+ },
+ "berrygoat": {
+  "nome": "Caprity",
+  "descricao": "Contanto que se alimente bem, frutinhas crescem do arbusto em suas costas. Ele oferece as frutinhas para uma parceira com quem deseja acasalar e, caso conquiste seu estômago, conquista também o seu amor.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 34,
+  "raridade": 3,
+  "stats": {
+   "hp": 100,
+   "attack": 70,
+   "defense": 90
+  }
+ },
+ "berrygoat_dark": {
+  "nome": "Caprity Noct",
+  "descricao": "As frutinhas em suas costas mudam de sabor conforme seu estado de espírito. Quanto mais perverso o ambiente, mais doces se tornam. Assim, muitos dos Caprity Noct criados em cativeiro nunca vêm a conhecer nenhum afeto.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 34,
+  "raridade": 3,
+  "stats": {
+   "hp": 100,
+   "attack": 75,
+   "defense": 90
+  }
+ },
+ "birddragon": {
+  "nome": "Vanwyrm",
+  "descricao": "Dizem que flautas feitas com o exoesqueleto de um Vanwyrm podem ser ouvidas mais longe que mil montanhas. Nas guerras de tempos remotos, elas eram usadas para lançar investidas.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 64,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "birddragon_ice": {
+  "nome": "Vanwyrm Cryst",
+  "descricao": "Dizem que flautas feitas com o exoesqueleto de um Vanwyrm Cryst podem ser ouvidas mais longe que mil montanhas. Nas guerras de tempos remotos, elas eram usadas para celebrar a vitória.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 64,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 120,
+   "defense": 95
+  }
+ },
+ "blackcentaur": {
+  "nome": "Necromus",
+  "descricao": "Antigamente ele e o Paladius eram uma única espécie. Dizem ser a manifestação de sentimentos negativos, mas o fundo de seus olhos abriga traços de compaixão.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 199,
+  "raridade": 20,
+  "stats": {
+   "hp": 130,
+   "attack": 145,
+   "defense": 120
+  }
+ },
+ "blackfurdragon": {
+  "nome": "Dragostrophe",
+  "descricao": "Um ser de plena quietude advindo das profundezas. Não deveis jamais montar tal besta. Não deveis jamais levantar-lhe a voz.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 130,
+   "attack": 130,
+   "defense": 110
+  }
+ },
+ "blackgriffon": {
+  "nome": "Shadowbeak",
+  "descricao": "Existência proibida nascida da loucura. Como perdeu a relação genética com os demais Pals, talvez já não possa ser considerado como um deles.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 189,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 140
+  }
+ },
+ "blackmetaldragon": {
+  "nome": "Astegon",
+  "descricao": "Um ser de plena selvageria advindo das profundezas. Não deveis jamais colocar-vos à frente de tal besta. Não deveis jamais ouvir-lhe a voz.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 158,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 125,
+   "defense": 125
+  }
+ },
+ "blackpuppy": {
+  "nome": "Smokie",
+  "descricao": "A chama negra emite um calor tão sutil que é possível tocá-la. No entanto, tudo que mantém contato prolongado começa a derreter por dentro. Basta colocar um pedaço de queijo sobre a chama por um momento para que fique delicioso.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 149,
+  "raridade": 2,
+  "stats": {
+   "hp": 85,
+   "attack": 90,
+   "defense": 85
+  }
+ },
+ "blackpuppy_ice": {
+  "nome": "Smokie Cryst",
+  "descricao": "Sua chama pálida é um tanto fria ao toque, mas congela tudo que mantiver contato prolongado. Basta deixar uma garrafa de leite sobre a chama para ter leite congelado!",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 149,
+  "raridade": 3,
+  "stats": {
+   "hp": 85,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "bluedragon": {
+  "nome": "Azurobe",
+  "descricao": "Suas faixas brancas tornam-se negras quando em contato com águas impuras. Devido à sua utilidade na detecção de venenos, foram caçados impiedosamente no passado. Ainda hoje não gostam muito dos humanos.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 41,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "bluedragon_ice": {
+  "nome": "Azurobe Cryst",
+  "descricao": "Suas faixas brancas absorvem calor dos arredores de forma constante. O surpreendente é que a temperatura das faixas nunca muda. Devido a essa característica anômala, foram caçados impiedosamente no passado. Ainda hoje não gostam muito dos humanos.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 41,
+  "raridade": 8,
+  "stats": {
+   "hp": 115,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "blueplatypus": {
+  "nome": "Fuack",
+  "descricao": "É capaz de criar ondas em qualquer lugar com a água que ele mesmo expele. Quando tem pressa, desloca-se surfando com o próprio corpo. Devido ao ímpeto excessivo, no entanto, há muitos espécimes que morrem ao se chocarem contra alguma parede.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 5,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 80,
+   "defense": 60
+  }
+ },
+ "blueplatypus_fire": {
+  "nome": "Fuack Ignis",
+  "descricao": "Possuem um abdômen com força de fricção elevada e por isso se inflamam quando usam o corpo para surfar. É comum se empolgarem demais e virarem uma bola de fogo.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 5,
+  "raridade": 2,
+  "stats": {
+   "hp": 60,
+   "attack": 85,
+   "defense": 60
+  }
+ },
+ "blueskydragon": {
+  "nome": "Shaolong",
+  "descricao": "Quando encontram um par com quem desejam passar o resto da vida, removem o anel que trazem flutuando no meio do corpo e o oferecem um ao outro.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 192,
+  "raridade": 9,
+  "stats": {
+   "hp": 140,
+   "attack": 135,
+   "defense": 120
+  }
+ },
+ "bluethunderhorse": {
+  "nome": "Azurmane",
+  "descricao": "Antes pensava-se que eles estavam ligados ao deus do trovão do mesmo modo que os Univolt. Já com o declínio da fé nos Univolt, foram os Azurmane que passaram a ser considerados os próprios deuses do trovão. No entanto, a passagem do tempo fez com que eles também viessem a ser tratados como animais de carga.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 161,
+  "raridade": 7,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "blueberryfairy": {
+  "nome": "Prunelia",
+  "descricao": "Como são bastante inteligentes e de comportamento requintado, já foram utilizadas como criadas de confiança da nobreza da ilha. No entanto, logo perderam popularidade devido às suas feições, que causavam arrepios em quem se deparava com alguma durante a noite.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 147,
+  "raridade": 5,
+  "stats": {
+   "hp": 105,
+   "attack": 95,
+   "defense": 100
+  }
+ },
+ "boar": {
+  "nome": "Rushoar",
+  "descricao": "Muito beligerante, começa brigas antes mesmo de avaliar se poderá vencê-las. Embora seja um Pal de porte pequeno, a potência de sua investida é impressionante, sendo capaz de mandar até grandes rochas voando para longe.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 28,
+  "raridade": 1,
+  "stats": {
+   "hp": 80,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "brownrabbit": {
+  "nome": "Lapiron",
+  "descricao": "Escuta a voz da terra para evitar áreas instáveis enquanto corre. Mas costuma ser enganado por terrenos com os quais não se dá muito bem, então acaba tropeçando bastante em alguns lugares.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 165,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 80
+  }
+ },
+ "cactusdoll": {
+  "nome": "Needoll",
+  "descricao": "Seus espinhos podem crescer ou encolher quando sente uma forte emoção. É comum que as pessoas queiram dar um abraço apertado num Needoll criado com carinho, mas, na grande maioria das vezes, isso só termina num triste acidente.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 100,
+  "raridade": 2,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 70
+  }
+ },
+ "cactusdoll_dark": {
+  "nome": "Needoll Noct",
+  "descricao": "Seus espinhos podem crescer ou encolher quando sente uma forte emoção. Um Needoll Noct criado com muito afeto geralmente tenta dar um abraço apertado em seu dono, mas, se for aceitar essa demonstração de amor, é bom se preparar também para encarar a dor.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 100,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 90,
+   "defense": 70
+  }
+ },
+ "candleghost": {
+  "nome": "Sootseer",
+  "descricao": "Antigamente acreditava-se que sua chama se enfraquecia quanto mais se aproximava o fim do mundo. Os escatologistas causaram alarde repetidas vezes devido à atenuação dessa chama, mas, no fim das contas, a intensidade dela não passa de capricho do Sootseer. Ao menos por enquanto…",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 135,
+  "raridade": 7,
+  "stats": {
+   "hp": 105,
+   "attack": 125,
+   "defense": 90
+  }
+ },
+ "captainpenguin": {
+  "nome": "Penking",
+  "descricao": "Uma espécie que na verdade não tem relação nenhuma com um Pengullet. No entanto, como lhe dão muita atenção pela semelhança, ele tenta relaxar e não fazer caso.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 18,
+  "raridade": 6,
+  "stats": {
+   "hp": 95,
+   "attack": 95,
+   "defense": 95
+  }
+ },
+ "captainpenguin_black": {
+  "nome": "Penking Lux",
+  "descricao": "Adquiriram habilidades elétricas para poder caçar as presas na água e acabaram mudando de coloração. Devido a isso, perderam a simpatia do Pengullet, mas por algum motivo passaram a ser respeitados pelo Pengullet Lux.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 18,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "carbunclo": {
+  "nome": "Lifmunk",
+  "descricao": "Tem o intelecto equivalente ao de uma criança entre 5 e 7 anos. Embora sirvam como bons companheiros, existe um bom número de registros de espécimes que mataram seu dono depois de terem aprendido a usar armas.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 4,
+  "raridade": 1,
+  "stats": {
+   "hp": 75,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "catbat": {
+  "nome": "Tombat",
+  "descricao": "Aparece de repente na frente de outros Pals e se exibe abrindo as asas que são seu orgulho. Embora se imagine que seja uma forma de intimidação, é possível notar um pouco de êxtase na sua fisionomia.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 52,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 95,
+   "defense": 80
+  }
+ },
+ "catmage": {
+  "nome": "Katress",
+  "descricao": "Emprega artes peculiares controlando suas forças sombrias. Prefere consumir todas as comidas cruas. Não se dá bem com espécimes de Wixen.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 79,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 90
+  }
+ },
+ "catmage_fire": {
+  "nome": "Katress Ignis",
+  "descricao": "Graças à educação recebida dos pais, deixou de ater-se a detalhes e já não se preocupa se sua comida está crua ou não. Prefere consumir tudo que tenha sabor picante. Não se dá bem com nenhum Wixen Noct.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 79,
+  "raridade": 6,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 90
+  }
+ },
+ "catvampire": {
+  "nome": "Felbat",
+  "descricao": "Ele se lança contra suas presas de dentro da escuridão, prendendo-as com suas asas em forma de capa. É melhor nem saber o que acontece lá dentro ou o porquê de o interior das asas ser vermelho.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 65,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "chickenpal": {
+  "nome": "Chikipi",
+  "descricao": "É fraca e deliciosa demais. Junto com SheepBall, é um dos Pals mais frágeis. Por mais que sejam caçadas, não param de crescer em número.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 3,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 60,
+   "defense": 60
+  }
+ },
+ "clionetwins": {
+  "nome": "Amione",
+  "descricao": "Quando um dos dois desaparece, logo surge um substituto sabe-se lá de onde. E assim o novo par começa a se entrosar como se nada tivesse acontecido. Para os Amione, o mais importante é manter uma boa relação.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 47,
+  "raridade": 2,
+  "stats": {
+   "hp": 65,
+   "attack": 70,
+   "defense": 65
+  }
+ },
+ "cloverfairy": {
+  "nome": "Clovee",
+  "descricao": "Antigamente, havia espécimes com três ou mais folhas na testa, mas eram considerados um símbolo de sorte e acabaram sendo caçados de forma indiscriminada. Isso fez com que a espécie evoluísse para ter menos folhas.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 14,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 65,
+   "defense": 65
+  }
+ },
+ "clownrabbit": {
+  "nome": "Dupin",
+  "descricao": "Às vezes é derrotado pelo clone que ele mesmo criou e acaba sendo substituído. Nem mesmo um Dupin sabe ao certo se continua sendo o mesmo Dupin do dia anterior.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 176,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 110,
+   "defense": 100
+  }
+ },
+ "colorfulbird": {
+  "nome": "Tocotoco",
+  "descricao": "Pal aterrador que põe ovos explosivos. Embora costume disparar ovos pela cloaca como se fossem armas, faz explodir também seu próprio corpo quando não há mais escapatória.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 53,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "cowpal": {
+  "nome": "Mozzarina",
+  "descricao": "Mesmo sem ninguém para cuidar delas, produzem leite como uma torneira produz água. Até os machos dão leite! É um verdadeiro milagre da natureza.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 40,
+  "raridade": 2,
+  "stats": {
+   "hp": 90,
+   "attack": 50,
+   "defense": 80
+  }
+ },
+ "cubeturtle": {
+  "nome": "Tetroise",
+  "descricao": "As pedras empilhadas em suas costas parecem ter consciência própria. Se alguém as remover e colocar num local afastado, elas se movem sozinhas e retornam ao seu lugar de origem.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 142,
+  "raridade": 8,
+  "stats": {
+   "hp": 95,
+   "attack": 100,
+   "defense": 135
+  }
+ },
+ "cubeturtle_neutral": {
+  "nome": "Tetroise Primo",
+  "descricao": "Mesmo que levem as pedras de suas costas para outro lugar, Tetroise Primo sempre sabe onde elas estão. É capaz de encontrá-las até nas terras mais distantes.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 142,
+  "raridade": 8,
+  "stats": {
+   "hp": 95,
+   "attack": 100,
+   "defense": 140
+  }
+ },
+ "cutebutterfly": {
+  "nome": "Cinnamoth",
+  "descricao": "Quem inala suas escamas pode experimentar um prazer paradisíaco. Apesar de existirem ações para restringir seu uso, elas não obtêm êxito devido à oposição de associações de proteção dos Pals.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 61,
+  "raridade": 4,
+  "stats": {
+   "hp": 70,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "cutefox": {
+  "nome": "Vixy",
+  "descricao": "Ídolo de Palpagos. Mexa com uma Vixy e terá o mundo inteiro como inimigo.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 6,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "cutemole": {
+  "nome": "Fuddler",
+  "descricao": "Embora suas grandes garras sejam tão duras quanto diamante, usá-las para escavar consome boa parte de sua energia, às vezes o deixando exausto pelo resto do dia.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 31,
+  "raridade": 1,
+  "stats": {
+   "hp": 65,
+   "attack": 80,
+   "defense": 50
+  }
+ },
+ "dandeliongirl": {
+  "nome": "Souffline",
+  "descricao": "É capaz de armazenar memórias ruins dentro de seu corpo plumoso. Por isso, basta deixar que sua pluma voe para longe com o vento para dar adeus ao mau humor.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 164,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 60
+  }
+ },
+ "darkalien": {
+  "nome": "Xenovader",
+  "descricao": "É capaz de criar energia enviando e logo esquecendo informações. Parece enviar informações para alguém específico de tempos em tempos. |Responda. Alvo identificado. Inicie a destruição imediatamente.|",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 145,
+  "raridade": 7,
+  "stats": {
+   "hp": 90,
+   "attack": 125,
+   "defense": 85
+  }
+ },
+ "darkalien_oilrig": {
+  "nome": "Xenovader",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 145,
+  "raridade": 7,
+  "stats": {
+   "hp": 90,
+   "attack": 125,
+   "defense": 85
+  }
+ },
+ "darkcrow": {
+  "nome": "Cawgnito",
+  "descricao": "Eles costumavam voar livremente pelas alturas, mas, perdendo na disputa territorial contra as Galeclaws, abandonaram os céus para viverem furtivos pela noite.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 57,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 95,
+   "defense": 80
+  }
+ },
+ "darkflamefox": {
+  "nome": "Majex",
+  "descricao": "Com as mãos na cintura, parece estar sempre posando para um retrato. Mas a verdade é que seus pelos da cauda e da cabeça são tão pesados que ela está apenas se segurando para não cair.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 115,
+  "raridade": 5,
+  "stats": {
+   "hp": 110,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "darkmechadragon": {
+  "nome": "Xenolord",
+  "descricao": "- Chegada ao ponto de destino. Indivíduo: priorizar busca pelo Dragão do Meteoro. - Observação: prazo para completar subjugação expirado há [://Error_Code:126DC] ano(s). - Notas adicionais: sem traços de subjugação; naturalização confirmada; iniciar eliminação. - Nota administrativa: não se deve esquecer ou ingerir informações importantes!",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 196,
+  "raridade": 8,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 120
+  }
+ },
+ "darkscorpion": {
+  "nome": "Menasting",
+  "descricao": "Seu corpo é feito de pura energia, sem conteúdo nenhum. Ele empurra suas presas ainda vivas para dentro da carapaça, absorvendo-as. Lamentos infernais estão sempre ecoando ao seu redor.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 99,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 130
+  }
+ },
+ "darkscorpion_ground": {
+  "nome": "Menasting Terra",
+  "descricao": "Seu corpo é feito de pura energia, sem conteúdo nenhum. Ele enfia terra e minérios dentro da carapaça para dar forma a uma massa esmagadora. Quem é atingido por um golpe seu não pode conter um grito infernal.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 99,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 130
+  }
+ },
+ "deer": {
+  "nome": "Eikthyrdeer",
+  "descricao": "O espécime de chifres mais esplêndidos é quem se torna líder da manada. E, quando se partem seus chifres, parte-se também seu coração. Ele então abandona seu grupo para aguardar sozinho o fim da vida.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 32,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "deer_ground": {
+  "nome": "Eikthyrdeer Terra",
+  "descricao": "O espécime com os chifres mais resistentes é que se torna líder da manada. Caso perca os chifres, no entanto, perde também seu status, despedindo-se então dos demais para retornar em paz à terra.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 32,
+  "raridade": 6,
+  "stats": {
+   "hp": 95,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "domearmordragon": {
+  "nome": "Aegidron",
+  "descricao": "Em tempos remotos, quando eram escassos os meios de comunicação, às vezes as pessoas faziam piscar a luz debaixo das asas do Aegidron para enviar mensagens simples.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 184,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 125,
+   "defense": 140
+  }
+ },
+ "dreamdemon": {
+  "nome": "Daedream",
+  "descricao": "Quando se interessa por alguém, ele faz seu alvo cair em sono profundo e continuar a ter sonhos felizes, sem jamais acordar até o momento da morte.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 22,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 60
+  }
+ },
+ "drillgame": {
+  "nome": "Digtoise",
+  "descricao": "Existe uma história sobre |O exercício da Digtoise|. É uma fábula sobre uma Digtoise que, possuindo o casco e as brocas mais resistentes, pondera sobre contradições.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 107,
+  "raridade": 5,
+  "stats": {
+   "hp": 80,
+   "attack": 95,
+   "defense": 120
+  }
+ },
+ "eagle": {
+  "nome": "Galeclaw",
+  "descricao": "É capaz de alçar voo com facilidade mesmo enquanto segura uma pessoa. No entanto, como acaba afrouxando as garras quando se cansa, são frequentes os acidentes letais por queda de lugares altos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 49,
+  "raridade": 2,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 60
+  }
+ },
+ "eleccat": {
+  "nome": "Sparkit",
+  "descricao": "Torna-se nervoso na estação seca, andando sempre elétrico. Se não sintoniza com outro da mesma espécie, acaba criando uma briga de soltar faíscas.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 42,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "eleclion": {
+  "nome": "Boltmane",
+  "descricao": "pr-BR_Text",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 0,
+  "stats": {
+   "hp": 100,
+   "attack": 110,
+   "defense": 70
+  }
+ },
+ "eleclizard": {
+  "nome": "Slowatt",
+  "descricao": "Faz aquilo que lhe dá na telha, dorme quando bem entende e come tudo o que quer. Para manter esse estilo de vida, sem dúvida os Slowatt devem se esforçar muito quando ninguém está olhando. Pelo menos é assim que os antigos habitantes da ilha preferiam pensar…",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 167,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "elecpanda": {
+  "nome": "Grizzbolt",
+  "descricao": "De sorriso cativante e porte robusto, este Pal torna-se obediente a quem reconhece como amigo. Por algum motivo, muda de aspecto apenas quando lhe dão uma metralhadora.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 185,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "elecpomeranian": {
+  "nome": "Puffolt",
+  "descricao": "Sua pelagem macia absorve uma grande quantidade de água ao se molhar. Devido à descarga elétrica violenta que ocorre quando ele se sacode para secar o corpo, tomar banho junto com ele significa colocar a própria vida em risco.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 62,
+  "raridade": 2,
+  "stats": {
+   "hp": 75,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "elecsnail": {
+  "nome": "Snock",
+  "descricao": "Jogar um Snock na banheira para aproveitar um banho eletrizante é uma prática terapêutica bastante tradicional. Também não deixa de ser uma atividade que envolve um risco fenomenal.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 163,
+  "raridade": 2,
+  "stats": {
+   "hp": 65,
+   "attack": 70,
+   "defense": 75
+  }
+ },
+ "elecsnail_ground": {
+  "nome": "Snock Lux",
+  "descricao": "Jogar um Snock Lux aquecido na água para tomar um banho escaldante já era uma prática esquecida, mas essa moda voltou a pegar fogo nos últimos tempos.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 163,
+  "raridade": 3,
+  "stats": {
+   "hp": 65,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "fairydragon": {
+  "nome": "Elphidran",
+  "descricao": "Como sugere sua aparência, possui uma personalidade ingênua. Talvez por isso não consiga distinguir bem o certo do errado, tendo uma tendência a ser usado por pessoas de más intenções.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 63,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 80,
+   "defense": 90
+  }
+ },
+ "fairydragon_water": {
+  "nome": "Elphidran Aqua",
+  "descricao": "Como sugere sua aparência, possui uma personalidade ingênua. Talvez por isso, como nunca faz nada com más intenções, não sente remorso mesmo quando acaba matando alguém.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 63,
+  "raridade": 8,
+  "stats": {
+   "hp": 115,
+   "attack": 80,
+   "defense": 95
+  }
+ },
+ "featherostrich": {
+  "nome": "Dazemu",
+  "descricao": "Este Pal dá um passo adiante e esquece de seus receios; dá dois passos e esquece de suas tristezas; dá três passos e então esquece de seus medos, sendo capaz de enfrentar qualquer inimigo que seja.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 123,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 90,
+   "defense": 80
+  }
+ },
+ "fengyundeeper": {
+  "nome": "Fenglope",
+  "descricao": "Graças à sua bela forma, em tempos remotos era um tema muito comum nas pinturas. Com o passar das eras, o que se tornou comum foi usar sua bela pelagem e chifres como objetos artísticos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 83,
+  "raridade": 3,
+  "stats": {
+   "hp": 110,
+   "attack": 110,
+   "defense": 90
+  }
+ },
+ "fengyundeeper_electric": {
+  "nome": "Fenglope Lux",
+  "descricao": "No passado distante, acreditava-se que quem desenhasse um Fenglope Lux acabaria fulminado por um raio. Com o passar das eras, no entanto, objetos de artesanato feitos à imagem do Fenglope Lux tornaram-se habituais como amuletos contra relâmpagos.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 83,
+  "raridade": 3,
+  "stats": {
+   "hp": 110,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "firekirin": {
+  "nome": "Pyrin",
+  "descricao": "Seu corpo inteiro é um órgão gerador de calor altamente eficiente, exibindo uma durabilidade aterradora. Quando é montada por alguém, ela toma cuidado para garantir que não se queimem.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 93,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 95,
+   "defense": 90
+  }
+ },
+ "firekirin_dark": {
+  "nome": "Pyrin Noct",
+  "descricao": "Produz energia queimando matéria escura, de origem desconhecida, e emana do corpo inteiro as partículas de escuridão remanescentes. Quando montado por alguém, toma cuidado para não deixar que caiam dentro das trevas.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 93,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 95,
+   "defense": 90
+  }
+ },
+ "flamebambi": {
+  "nome": "Rooby",
+  "descricao": "Um Rooby selvagem é surpreendentemente saudável. O segredo de sua vitalidade está em comer um galho carbonizado todos os dias.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 26,
+  "raridade": 2,
+  "stats": {
+   "hp": 75,
+   "attack": 70,
+   "defense": 75
+  }
+ },
+ "flamebuffalo": {
+  "nome": "Arsox",
+  "descricao": "Em tempos remotos, eram constantemente atacado por Pals carnívoros. A ira dos Arsoxs bramando alucinados converteu-se em chamas escaldantes, que então foram transmitidas a seus descendentes.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 58,
+  "raridade": 4,
+  "stats": {
+   "hp": 85,
+   "attack": 95,
+   "defense": 95
+  }
+ },
+ "flowerdinosaur": {
+  "nome": "Dinossom",
+  "descricao": "Não há como acalmá-lo quando irritado, pois ele se descontrola com furor incendiário. A expressão |pisar na cauda de um Dinossom| significa |deixar alguém encolerizado|.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 84,
+  "raridade": 6,
+  "stats": {
+   "hp": 110,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "flowerdinosaur_electric": {
+  "nome": "Dinossom Lux",
+  "descricao": "Apesar de ter sido atingido por um raio, conseguiu sair com vida. A expressão |cair um raio em um Dinossom Lux| significa escapar da morte certa.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 84,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "flowerdoll": {
+  "nome": "Petallia",
+  "descricao": "Quando chega ao fim da vida, transforma-se em uma grande planta. Ela gera uma flor de grande beleza uma vez a cada dez anos, de onde então nasce uma nova Petallia.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 89,
+  "raridade": 8,
+  "stats": {
+   "hp": 100,
+   "attack": 95,
+   "defense": 100
+  }
+ },
+ "flowerdoll_fire": {
+  "nome": "Petallia Ignis",
+  "descricao": "Ao atingir o fim da vida, queima por completo e vira cinzas. A terra ao redor se torna tão fértil que, cerca de dez anos mais tarde, fica repleta de vegetação.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 89,
+  "raridade": 9,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "flowerprince": {
+  "nome": "Dandilord",
+  "descricao": "Desde tempos remotos, protege algo enquanto se mantém parado sobre a Árvore Mundial. O próprio Dandilord não entende o que protege, ou por que motivo. Afinal é a árvore quem sabe disso. A neblina que ele controla é a única que mostra a verdade.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 194,
+  "raridade": 8,
+  "stats": {
+   "hp": 125,
+   "attack": 135,
+   "defense": 110
+  }
+ },
+ "flowerrabbit": {
+  "nome": "Flopie",
+  "descricao": "Embora prefira locais com muita vegetação, parece que ultimamente cada vez mais Flopies têm começado a sofrer de alergia ao pólen.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 77,
+  "raridade": 1,
+  "stats": {
+   "hp": 75,
+   "attack": 65,
+   "defense": 70
+  }
+ },
+ "fluffybird": {
+  "nome": "Muffly",
+  "descricao": "A plumagem almofadada ao redor do seu rosto é capaz de absorver ataques. Embora não sofra dano mesmo sendo arremessado até um certo ponto, vive em constante aflição pela dificuldade para alisar suas penas e para se coçar.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 59,
+  "raridade": 2,
+  "stats": {
+   "hp": 60,
+   "attack": 80,
+   "defense": 55
+  }
+ },
+ "flyingmanta": {
+  "nome": "Celaray",
+  "descricao": "Elas pairam junto com os ventos para viajarem aonde quiserem. É quando encontram um parceiro em um de seus destinos que sua jornada então chega ao fim.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 7,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "flyingmanta_thunder": {
+  "nome": "Celaray Lux",
+  "descricao": "Seus padrões exuberantes são úteis na busca por um parceiro. Há registros de acidentes elétricos com Celaray Lux desde tempos antigos, tanto que, nos dias atuais, listras negras e amarelas são interpretadas como um sinal de perigo na ilha.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 7,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 80
+  }
+ },
+ "foxexorcist": {
+  "nome": "Flaracle",
+  "descricao": "Concentra sua mente para poder ver o futuro dentro das chamas. Quando vê um futuro que lhe desagrada, tenta de novo e de novo até ver algo melhor. E é por isso que todo Flaracle tem sempre um futuro brilhante!",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 174,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 125,
+   "defense": 105
+  }
+ },
+ "foxmage": {
+  "nome": "Wixen",
+  "descricao": "Emprega artes peculiares controlando forças luminosas. Prefere consumir todas as comidas muito bem passadas. Não se dá bem com espécimes de Katress.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 78,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 110,
+   "defense": 80
+  }
+ },
+ "foxmage_dark": {
+  "nome": "Wixen Noct",
+  "descricao": "Graças à educação recebida dos pais, deixou de ater-se a detalhes e já não se preocupa se sua comida está assada ou não. Prefere consumir que tenha sabor doce. Não se dá bem com nenhum Katress Ignis.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 78,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 110,
+   "defense": 85
+  }
+ },
+ "gym_blackgriffon": {
+  "nome": "Victor & Shadowbeak",
+  "descricao": "Existência proibida nascida da loucura. Como perdeu a relação genética com os demais Pals, talvez já não possa ser considerado como um deles.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 140
+  }
+ },
+ "gym_blackgriffon_2": {
+  "nome": "Victor & Shadowbeak",
+  "descricao": "Existência proibida nascida da loucura. Como perdeu a relação genética com os demais Pals, talvez já não possa ser considerado como um deles.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 140
+  }
+ },
+ "gym_blackgriffon_2_avatar": {
+  "nome": "Victor & Shadowbeak",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 140
+  }
+ },
+ "gym_blueskydragon": {
+  "nome": "Auri & Shaolong",
+  "descricao": "Quando encontram um par com quem desejam passar o resto da vida, removem o anel que trazem flutuando no meio do corpo e o oferecem um ao outro.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 168,
+   "attack": 135,
+   "defense": 120
+  }
+ },
+ "gym_blueskydragon_2": {
+  "nome": "Auri & Shaolong",
+  "descricao": "Quando encontram um par com quem desejam passar o resto da vida, removem o anel que trazem flutuando no meio do corpo e o oferecem um ao outro.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "gym_elecpanda": {
+  "nome": "Zoe & Grizzbolt",
+  "descricao": "De sorriso cativante e porte robusto, este Pal torna-se obediente a quem reconhece como amigo. Por algum motivo, muda de aspecto apenas quando lhe dão uma metralhadora.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "gym_elecpanda_2": {
+  "nome": "Zoe & Grizzbolt",
+  "descricao": "De sorriso cativante e porte robusto, este Pal torna-se obediente a quem reconhece como amigo. Por algum motivo, muda de aspecto apenas quando lhe dão uma metralhadora.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "gym_elecpanda_otomo": {
+  "nome": "Zoe & Grizzbolt",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 8,
+  "stats": {
+   "hp": 125,
+   "attack": 110,
+   "defense": 105
+  }
+ },
+ "gym_horus": {
+  "nome": "Marcus & Faleris",
+  "descricao": "Ao encontrar um bando de alguma presa, ele incendeia toda a região com um redemoinho escaldante. O habitat de um Faleris sempre exala um delicioso aroma.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "gym_horus_2": {
+  "nome": "Marcus & Faleris",
+  "descricao": "Ao encontrar um bando de alguma presa, ele incendeia toda a região com um redemoinho escaldante. O habitat de um Faleris sempre exala um delicioso aroma.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "gym_lilyqueen": {
+  "nome": "Lily & Lyleen",
+  "descricao": "Uma Pal dócil e repleta de afeto. Costuma cuidar de Pals filhotes que perderam os pais. A educação, ela dá com um SolarBeam de força total.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 110,
+   "defense": 105
+  }
+ },
+ "gym_lilyqueen_2": {
+  "nome": "Lily & Lyleen",
+  "descricao": "Uma Pal dócil e repleta de afeto. Costuma cuidar de Pals filhotes que perderam os pais. A educação, ela dá com um SolarBeam de força total.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 110,
+   "defense": 105
+  }
+ },
+ "gym_moonqueen": {
+  "nome": "Saya & Selyne",
+  "descricao": "Dizem que o objeto em forma de lua que flutua às suas costas vai se assemelhando a um círculo pouco a pouco a cada geração. Ninguém sabe o que acontecerá quando enfim assumir a forma da lua cheia.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "gym_moonqueen_2": {
+  "nome": "Saya & Selyne",
+  "descricao": "Dizem que o objeto em forma de lua que flutua às suas costas vai se assemelhando a um círculo pouco a pouco a cada geração. Ninguém sabe o que acontecerá quando enfim assumir a forma da lua cheia.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "gym_moonqueen_2_servant": {
+  "nome": "Selyne",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "gym_snowtigerbeastman": {
+  "nome": "Björn & Bastigor",
+  "descricao": "Quando enxerga algo redondo, sente uma vontade intensa de dar um soco. À parte da vida em si, para um SnowTigerBeastMan a coisa mais difícil é construir um boneco de neve até o fim.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 10,
+  "stats": {
+   "hp": 140,
+   "attack": 130,
+   "defense": 120
+  }
+ },
+ "gym_snowtigerbeastman_2": {
+  "nome": "Björn & Bastigor",
+  "descricao": "Quando enxerga algo redondo, sente uma vontade intensa de dar um soco. À parte da vida em si, para um SnowTigerBeastMan a coisa mais difícil é construir um boneco de neve até o fim.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 10,
+  "stats": {
+   "hp": 140,
+   "attack": 130,
+   "defense": 120
+  }
+ },
+ "gym_thunderdragonman": {
+  "nome": "Axel & Orserk",
+  "descricao": "Ele faz correr eletricidade por ferimentos, queimando o corpo do adversário. Uma briga entre Orserks é sempre resolvida em questão de segundos.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 110
+  }
+ },
+ "gym_thunderdragonman_2": {
+  "nome": "Axel & Orserk",
+  "descricao": "Ele faz correr eletricidade por ferimentos, queimando o corpo do adversário. Uma briga entre Orserks é sempre resolvida em questão de segundos.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -2,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 110
+  }
+ },
+ "gym_worldtreedragon": {
+  "nome": "Zenara & Astralym",
+  "descricao": "A forma à qual foi reduzida a Pal misteriosa que, em um passado remoto, chegou voando até Palpagos. Depois de trazer a destruição como a |Calamidade|, passou um longo tempo aprisionada. No entanto, finalmente foi derrotada por uma alma valente domadora de Pals.",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 240,
+   "attack": 200,
+   "defense": 200
+  }
+ },
+ "gym_worldtreedragon_2": {
+  "nome": "Zenara & Astralym",
+  "descricao": "A forma à qual foi reduzida a Pal misteriosa que, em um passado remoto, chegou voando até Palpagos. Depois de trazer a destruição como a |Calamidade|, passou um longo tempo aprisionada. No entanto, finalmente foi derrotada por uma alma valente domadora de Pals.",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 288,
+   "attack": 200,
+   "defense": 200
+  }
+ },
+ "ganesha": {
+  "nome": "Teafant",
+  "descricao": "Embora seja expelida uma grande quantidade de água do órgão que parece ser seu nariz, há quem diga que isso não passa de coriza nasal. Atualmente ocorrem debates ardentes entre os pesquisadores.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 11,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 60,
+   "defense": 70
+  }
+ },
+ "garm": {
+  "nome": "Direhowl",
+  "descricao": "Já faz muito tempo que perderam seus laços com as pessoas, mas o sistema de caça dos Direhowls tem sua origem no modo como eles costumavam caçar ao lado de seres humanos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 33,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 90,
+   "defense": 75
+  }
+ },
+ "ghostanglerfish": {
+  "nome": "Ghangler",
+  "descricao": "Este Pal ilumina a escuridão com sua isca luminosa. Quando Pals perdidos, atraídos por essa isca, são descobertos pelo GhostAnglerFish, já não há mais escapatória. Eles são gentilmente conduzidos por todo o caminho até conseguirem voltar para casa em segurança.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 97,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 125,
+   "defense": 105
+  }
+ },
+ "ghostanglerfish_fire": {
+  "nome": "Ghangler Ignis",
+  "descricao": "Utilizam a isca flamejante para assar suas presas. Quando Pals atraídos pelo cheiro delicioso são descobertos pelo Ghangler Ignis, já não há mais escapatória. São tratados com um belo banquete até ficarem de barriga cheia.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 97,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 130,
+   "defense": 105
+  }
+ },
+ "ghostbeast": {
+  "nome": "Maraith",
+  "descricao": "Elas adoram o odor peculiar exalado por seres vivos à beira da morte. Se uma Maraith se afeiçoar a você, já sabe o que isso significa.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 117,
+  "raridade": 6,
+  "stats": {
+   "hp": 75,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "ghostblackcat": {
+  "nome": "Wispaw",
+  "descricao": "As mãos em suas costas concentram os pensamentos de todos os humanos que já criaram membros de sua espécie. Nos últimos tempos, mimar os Wispaw já parece ter se tornado um consenso.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 50,
+  "raridade": 5,
+  "stats": {
+   "hp": 85,
+   "attack": 95,
+   "defense": 70
+  }
+ },
+ "ghostdragon": {
+  "nome": "Eidrolon",
+  "descricao": "Um novo Pal que passou a ser avistado nos últimos tempos. Manso e sossegado, ele apenas leva sua vida em liberdade. Já não há mais nada que o prenda.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 171,
+  "raridade": 7,
+  "stats": {
+   "hp": 115,
+   "attack": 125,
+   "defense": 120
+  }
+ },
+ "ghostdragon_fire": {
+  "nome": "Eidrolon Ignis",
+  "descricao": "Um novo Pal que passou a ser avistado nos últimos tempos. De temperamento selvagem, está sempre descontando sua raiva em alguma coisa. Já não há mais nada em que ele acredite.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 171,
+  "raridade": 8,
+  "stats": {
+   "hp": 115,
+   "attack": 130,
+   "defense": 120
+  }
+ },
+ "ghostrabbit": {
+  "nome": "Nitemary",
+  "descricao": "A alma que ele carrega é a sua própria. Quando se apaixona por alguém, sente o desejo de arrancar também a alma do alvo de sua adoração para misturar ambas e fazer delas uma só.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 148,
+  "raridade": 6,
+  "stats": {
+   "hp": 105,
+   "attack": 95,
+   "defense": 105
+  }
+ },
+ "ghostrabbit_grass": {
+  "nome": "Nitemary Botan",
+  "descricao": "A alma que carrega é a sua própria. Quando se apaixona por alguém, lança-a contra o alvo de sua adoração para misturar as almas de ambos e fazer delas uma só.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 148,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 95,
+   "defense": 105
+  }
+ },
+ "goldenhorse": {
+  "nome": "Gildane",
+  "descricao": "Quando a alquimia ainda prosperava na ilha, os pelos que brilhavam sempre dourados eram populares como catalisadores para a criação do ouro. Foi após algum tempo que se atingiu uma sabedoria incrível: bastava processar crinas para se obter o mesmo resultado, contanto que fossem douradas.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 154,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 110,
+   "defense": 110
+  }
+ },
+ "gorilla": {
+  "nome": "Gorirat",
+  "descricao": "É capaz de se comunicar à distância batendo de forma ritmada no chão. O sentido de cada ritmo difere para cada bando, de modo que ainda hoje não foi possível categorizá-los adequadamente.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 74,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 95,
+   "defense": 90
+  }
+ },
+ "gorilla_ground": {
+  "nome": "Gorirat Terra",
+  "descricao": "Comunica-se com seus companheiros de acordo com o ritmo de suas batidas no chão. Mais forte que um Gorirat, a ilha de Palpagos afundaria em um só segundo se todos os Gorirat Terra golpeassem o solo ao mesmo tempo.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 74,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 90
+  }
+ },
+ "grassgolem": {
+  "nome": "Dualith",
+  "descricao": "Uma forma de vida com duas consciências. Às vezes elas brigam entre si por discordarem sobre o modo de agir. Até fazerem as pazes, não se sabe por onde a armadura vai seguir!",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 138,
+  "raridade": 8,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 125
+  }
+ },
+ "grassgolem_dark": {
+  "nome": "Dualith Noct",
+  "descricao": "Uma forma de vida com duas consciências. Em geral pensam de maneira diferente e estão sempre brigando, mas, quando surge um inimigo em comum, logo se unem de corpo e alma!",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 138,
+  "raridade": 8,
+  "stats": {
+   "hp": 110,
+   "attack": 110,
+   "defense": 125
+  }
+ },
+ "grassmammoth": {
+  "nome": "Mammorest",
+  "descricao": "A planta crescendo no dorso pode diferir para cada indivíduo. Historicamente eram apreciados como forma de decoração, tanto que havia inclusive podadores especializados em Mammorest.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 87,
+  "raridade": 8,
+  "stats": {
+   "hp": 150,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "grassmammoth_ice": {
+  "nome": "Mammorest Cryst",
+  "descricao": "A vegetação nas costas varia dependendo do indivíduo. Houve um caso em que uma espécie de planta que se pensava estar extinta foi encontrada nas costas de um Mammorest Cryst, ainda congelada.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 87,
+  "raridade": 9,
+  "stats": {
+   "hp": 150,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "grassminotaur": {
+  "nome": "Elgrove",
+  "descricao": "É impossível arrancar a folha presa ao seu chifre, por mais que se puxe. É quando essa folha enfim cai por conta própria que o Elgrove entende que chegou a hora da sua morte.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 81,
+  "raridade": 6,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "grassminotaur_ice": {
+  "nome": "Elgrove Cryst",
+  "descricao": "Seus chifres de gelo jamais derretem durante toda a sua vida. É quando enfim escorre deles a primeira gota de água que o Elgrove Cryst sente pela primeira vez seu corpo começar a esfriar.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 81,
+  "raridade": 7,
+  "stats": {
+   "hp": 120,
+   "attack": 100,
+   "defense": 105
+  }
+ },
+ "grasspanda": {
+  "nome": "Mossanda",
+  "descricao": "Pal possuidor de uma força inacreditável. Em certo experimento, um espécime foi capaz de rasgar um maço de 3 mil folhas de papel. Só podemos agradecer pelo fato de eles não serem carnívoros.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 102,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "grasspanda_electric": {
+  "nome": "Mossanda Lux",
+  "descricao": "Pal possuidor de uma força inacreditável. Foi capaz de superar seus limites físicos ao converter eletricidade em sinais neurais. É sempre mencionado quando falam sobre os mais fortes dos seres vivos.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 102,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "grasspanda_electric_tower": {
+  "nome": "Mossanda Lux",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 102,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "grassrabbitman": {
+  "nome": "Verdash",
+  "descricao": "Depois que um Verdash corre por algum lugar, o solo se torna muito fértil, facilitando o crescimento de vegetação. Mas basta aplicar um herbicida para eles deixarem de passar pela área.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 152,
+  "raridade": 8,
+  "stats": {
+   "hp": 90,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "grimgirl": {
+  "nome": "Splatterina",
+  "descricao": "Ela não consegue conter o impulso instintivo de esquartejar suas presas. Observa-se preferências diferentes na ordem de retalhamento de acordo com cada indivíduo. Quem é apanhado por uma Splatterina não pode fazer nada senão rezar para que ela corte primeiro sua cabeça.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 153,
+  "raridade": 4,
+  "stats": {
+   "hp": 95,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "guardiandog": {
+  "nome": "Yakumo",
+  "descricao": "Com disposição para se oporem ao mal, os Yakumo estavam destinados a estabelecer uma relação benévola e duradoura com os habitantes da ilha na condição de companheiros inseparáveis. Porém eles hoje erguem uma parede de malevolência entre si e as pessoas.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 127,
+  "raridade": 4,
+  "stats": {
+   "hp": 85,
+   "attack": 85,
+   "defense": 85
+  }
+ },
+ "hadesbird": {
+  "nome": "Helzephyr",
+  "descricao": "Ave capaz de atrair raios vindos do inferno. Quem morre fulminado pelo raio da Helzephyr tem sua alma enviada para as trevas.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 80,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 125,
+   "defense": 100
+  }
+ },
+ "hadesbird_electric": {
+  "nome": "Helzephyr Lux",
+  "descricao": "É capaz de invocar raios do inferno. Alguns acreditam ser uma subespécie de Helzephyr, mas há teorias que defendem ser um Helzephyr Lux atingido por um raio do inferno que acabou se tornando um Helzephyr.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 80,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 125,
+   "defense": 100
+  }
+ },
+ "hadesbird_oilrig": {
+  "nome": "Helzephyr",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 80,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 125,
+   "defense": 100
+  }
+ },
+ "hawkbird": {
+  "nome": "Nitewing",
+  "descricao": "Ave que rapta Pals recém-nascidos de seus ninhos e os cria como se fossem seus filhotes. Quando atingem a idade certa, ela então os devora.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 51,
+  "raridade": 3,
+  "stats": {
+   "hp": 100,
+   "attack": 95,
+   "defense": 80
+  }
+ },
+ "hedgehog": {
+  "nome": "Jolthog",
+  "descricao": "Ele descarrega a eletricidade que trazia acumulada quando sofre algum choque. Sua potência chega a passar dos 10 milhões de volts. Se lançado contra o inimigo, é muito mais perigoso que alguns armamentos pesados.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 15,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "hedgehog_ice": {
+  "nome": "Jolthog Cryst",
+  "descricao": "Ele expele o ar gélido que traz acumulado quando sofre algum choque. A rajada disparada em todas as direções congela a atmosfera ao redor, atravessando o corpo do inimigo que tenta atacá-lo.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 15,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 80
+  }
+ },
+ "herculesbeetle": {
+  "nome": "Warsect",
+  "descricao": "A carapaça super-resistente que envolve seu corpo inteiro possui rigidez e durabilidade impressionantes. Sequer bombas de napalm têm qualquer efeito sobre ele.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 113,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 100,
+   "defense": 120
+  }
+ },
+ "herculesbeetle_ground": {
+  "nome": "Warsect Terra",
+  "descricao": "A carapaça super-resistente que envolve seu corpo inteiro possui rigidez e durabilidade impressionantes. Permanece tranquilo mesmo se pisoteado por um Mammorest.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 113,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 105,
+   "defense": 120
+  }
+ },
+ "hoodghost": {
+  "nome": "Hoodle",
+  "descricao": "Murcha quando dorme. Murcha e desaparece. Como um Hoodle adormecido não existe, não existe Hoodle que adormeça.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 166,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 85,
+   "defense": 80
+  }
+ },
+ "horus": {
+  "nome": "Faleris",
+  "descricao": "Ao encontrar um bando de alguma presa, ele incendeia toda a região com um redemoinho escaldante. O habitat de um Faleris sempre exala um delicioso aroma.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 188,
+  "raridade": 9,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 115
+  }
+ },
+ "horus_oilrig": {
+  "nome": "Faleris",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 188,
+  "raridade": 9,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 115
+  }
+ },
+ "horus_water": {
+  "nome": "Faleris Aqua",
+  "descricao": "Quando encontra um bando de presas, inunda os arredores inteiros com uma corrente de água violenta. Na maioria dos casos as vítimas acabam arrastadas para não se sabe onde, de modo que é extremamente dúbio classificar esse comportamento como um método de caça.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 188,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 110,
+   "defense": 115
+  }
+ },
+ "icecrocodile": {
+  "nome": "Munchill",
+  "descricao": "O interior de sua boca é tão frio que, quando ela está fechada, é praticamente uma geladeira. Sua saliva também contém propriedades que ajudam a preservar alimentos. Não seria nenhum absurdo usá-lo para armazenar comida destinada aos humanos, mas, por questões sanitárias, é melhor manter sua boca fechada.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 86,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 80,
+   "defense": 85
+  }
+ },
+ "icedeer": {
+  "nome": "Reindrix",
+  "descricao": "Seus chifres azuis e translúcidos emitem o brilho do zero absoluto. Quem ousa tocá-los com as mãos nuas tem seu corpo inteiro imediatamente congelado e estilhaçado.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 101,
+  "raridade": 4,
+  "stats": {
+   "hp": 100,
+   "attack": 85,
+   "defense": 110
+  }
+ },
+ "icefox": {
+  "nome": "Foxcicle",
+  "descricao": "Nas noites em que se pode ver a aurora polar, este Pal olha para o céu e começa a cantar com seu belo chamado. Infelizmente isso também atrai predadores.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 95,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 95,
+   "defense": 105
+  }
+ },
+ "icehorse": {
+  "nome": "Frostallion",
+  "descricao": "Deus guardião de Palpagos que acreditam chamar o inverno. Quando uma calamidade assolou a terra no passado, alçou voo e provocou um inverno sem fim para conter seu esplendor destrutivo.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 200,
+  "raridade": 20,
+  "stats": {
+   "hp": 140,
+   "attack": 140,
+   "defense": 120
+  }
+ },
+ "icehorse_dark": {
+  "nome": "Frostallion Noct",
+  "descricao": "Deus guardião de Palpagos que acreditam chamar a noite. Quando uma calamidade assolou a terra no passado, alçou voo e provocou uma noite sem fim para conter seu esplendor destrutivo.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 200,
+  "raridade": 20,
+  "stats": {
+   "hp": 140,
+   "attack": 140,
+   "defense": 135
+  }
+ },
+ "icenarwhal": {
+  "nome": "Whalaska",
+  "descricao": "Quando está dormindo, este Pal costuma ser confundido com um bloco de gelo à deriva por outros Pals, que vêm descansar em cima dele. Devido à sua natureza dócil, mesmo quando acordado, ele não tenta derrubar seus visitantes. Porém, por dentro, fica estressado quando seu espaço pessoal é invadido.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 151,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "icenarwhal_fire": {
+  "nome": "Whalaska Ignis",
+  "descricao": "Tornaram-se vermelhos para nunca mais serem confundidos com um bloco de gelo à deriva. Mas isso foi inútil, pois existem Pals que não enxergam a cor vermelha, e assim eles continuam estressados por terem seu espaço pessoal invadido.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 151,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "iceseal": {
+  "nome": "Polapup",
+  "descricao": "O líder do bando é aquele capaz de deslizar mais rápido sobre a neve. Às vezes acontece de um indivíduo mais empolgado saltar e cair de repente dos ares, principalmente quando há alguma competição pela liderança. A previsão é de tempo bom com pancadas de Polapup.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 72,
+  "raridade": 5,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "iceseal_ground": {
+  "nome": "Polapup Terra",
+  "descricao": "O líder do bando é aquele capaz de deslizar mais rápido sobre a neve. Às vezes acontece de um indivíduo mais empolgado saltar e se enterrar na neve, principalmente quando há alguma competição pela liderança. Cuidado com congestionamentos de Polapup Terra.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 72,
+  "raridade": 6,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "icewitch": {
+  "nome": "Icelyn",
+  "descricao": "Seu corpo começa a derreter quando está quente, mas ela não resiste à vontade de tomar um banho de sol. Seu corpo também derrete na água quente, mas ela simplesmente adora um bom banho termal. Se for para morrer, então que seja derretendo num lindo dia nas águas termais.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 119,
+  "raridade": 4,
+  "stats": {
+   "hp": 95,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "jellyfishfairy": {
+  "nome": "Jelliette",
+  "descricao": "Pal com aparência bastante semelhante ao Jellroy. Ela tem muitos amigos e, quando acaba marcando mais de um encontro ao mesmo tempo, pede para que um Jellroy vá em um deles no seu lugar. A recompensa por isso é um encontro com ela.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 45,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 90,
+   "defense": 70
+  }
+ },
+ "jellyfishghost": {
+  "nome": "Jellroy",
+  "descricao": "Pal com aparência bastante semelhante à Jelliette. Às vezes aparece no lugar de uma Jelliette quando ela não consegue chegar a tempo para um compromisso. É tão bom ator que ninguém percebe.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 46,
+  "raridade": 3,
+  "stats": {
+   "hp": 90,
+   "attack": 75,
+   "defense": 75
+  }
+ },
+ "jetdragon": {
+  "nome": "Jetragon",
+  "descricao": "Olha pela Ilha de Palpagos desde os confins do firmamento. Quando a calamidade despertar novamente, fendendo a terra e incendiando os céus, ele haverá de destruí-la com um fulgor de plena obliteração.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 202,
+  "raridade": 20,
+  "stats": {
+   "hp": 115,
+   "attack": 140,
+   "defense": 120
+  }
+ },
+ "kabukiman": {
+  "nome": "Renjishi",
+  "descricao": "Quando confronta um inimigo, à primeira vista parece baixar muito a guarda com os movimentos que faz. Mas o curioso é que o oponente acaba se fascinando por isso e assiste compenetrado.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 183,
+  "raridade": 7,
+  "stats": {
+   "hp": 105,
+   "attack": 120,
+   "defense": 100
+  }
+ },
+ "kelpie": {
+  "nome": "Kelpsea",
+  "descricao": "Sua personalidade varia de acordo com a qualidade das águas onde nasceram. As Kelpsea nascidas em águas poluídas tem todas mau caráter, logo se tornando delinquentes.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 43,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "kelpie_fire": {
+  "nome": "Kelpsea Ignis",
+  "descricao": "Sua personalidade varia de acordo com a temperatura das águas onde nasceram. As Kelpsea nascidas em águas mais quentes têm todas uma personalidade ardente e são cheias de entusiasmo.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 43,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "kendofrog": {
+  "nome": "Croajiro",
+  "descricao": "Aqueles do bando que cometem alguma falta reprovável são pressionados a cometerem suicídio. Espetando o saco vocal totalmente inflado num ramo de árvore, eles saem voando até os confins da atmosfera e partem para o outro mundo.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 9,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 100,
+   "defense": 85
+  }
+ },
+ "kendofrog_dark": {
+  "nome": "Croajiro Noct",
+  "descricao": "Croajiro que abandonaram sua honra se reuniram e formaram um novo clã. Eliminam sua presa utilizando qualquer método necessário, por mais vil que seja. Caso se encontrem com um bando de Croajiro Noct de madrugada, quem parte para o outro mundo são eles mesmos.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 9,
+  "raridade": 5,
+  "stats": {
+   "hp": 85,
+   "attack": 110,
+   "defense": 90
+  }
+ },
+ "kingalpaca": {
+  "nome": "Kingpaca",
+  "descricao": "Mantém as Melpacas como suas súditas e coloca suas vidas em jogo em duelos contra outro Kingpaca. O lado que acaba sozinho é considerado o perdedor.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 21,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "kingalpaca_ice": {
+  "nome": "Kingpaca Cryst",
+  "descricao": "De personalidade fria, não são bons em expressar suas emoções. Aqueles que se encontram solitários foram insensíveis demais com outras Melpaca. Como é triste ser deixado de lado!",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 21,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "kingbahamut": {
+  "nome": "Blazamut",
+  "descricao": "De acordo com certas lendas, estes seres nascem de erupções vulcânicas. Também havia grupos suspeitos que afirmavam que o mundo existe sobre as costas de um Blazamut.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 137,
+  "raridade": 9,
+  "stats": {
+   "hp": 100,
+   "attack": 125,
+   "defense": 120
+  }
+ },
+ "kingbahamut_dragon": {
+  "nome": "Blazamut Ryu",
+  "descricao": "Surgiu das profundezas do solo em um passado distante. Sem qualquer piedade, suas incontroláveis labaredas explosivas não se apagaram até carbonizar a ilha inteira. Em outras palavras, foram elas a |Chama Eterna|.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 137,
+  "raridade": 10,
+  "stats": {
+   "hp": 105,
+   "attack": 130,
+   "defense": 125
+  }
+ },
+ "kingsunfish": {
+  "nome": "Solmora",
+  "descricao": "É capaz de se propulsionar girando sua cauda em formato de parafuso. De acordo com pesquisas passadas, teoricamente é capaz de nadar a velocidades superiores a 88 mph, embora precise sacrificar o próprio corpo para isso.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 169,
+  "raridade": 4,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 85
+  }
+ },
+ "kingsunfish_thunder": {
+  "nome": "Solmora Lux",
+  "descricao": "É capaz de gerar eletricidade girando sua cauda em formato de parafuso. Teoricamente poderia gerar uma potência de até 1,21 gigawatts, mas isso tem pouco valor prático, já que seu corpo se destruiria no mesmo instante.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 169,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 95,
+   "defense": 85
+  }
+ },
+ "kingwhale": {
+  "nome": "Panthalus",
+  "descricao": "Último sobrevivente de sua espécie, este Pal aguardava o dia de completar sua missão. No entanto, mesmo que tente chamar pela mãe depois de cumprir seu dever, a única resposta que o espera agora é o eco de sua própria voz.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 203,
+  "raridade": 10,
+  "stats": {
+   "hp": 180,
+   "attack": 120,
+   "defense": 200
+  }
+ },
+ "boss_kingwhale_otomo": {
+  "nome": "Panthalus",
+  "descricao": "Último sobrevivente de sua espécie, este Pal aguardava o dia de completar sua missão. No entanto, mesmo que tente chamar pela mãe depois de cumprir seu dever, a única resposta que o espera agora é o eco de sua própria voz.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 203,
+  "raridade": 10,
+  "stats": {
+   "hp": 180,
+   "attack": 120,
+   "defense": 200
+  }
+ },
+ "kirin": {
+  "nome": "Univolt",
+  "descricao": "Antigamente jamais eram caçados, pois as pessoas os consideravam mensageiros do deus do trovão. Quando avistaram um espécime ser morto por um raio, no entanto, a crença perdeu força e estes Pals passaram a ser tratados como animais de carga.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 54,
+  "raridade": 5,
+  "stats": {
+   "hp": 80,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "kirin_ice": {
+  "nome": "Univolt Cryst",
+  "descricao": "Antigamente jamais eram caçados, pois as pessoas os consideravam mensageiros do deus do inverno. Quando avistaram um espécime escorregar no gelo, no entanto, a crença perdeu força e estes Pals passaram a ser tratados como animais de carga.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 54,
+  "raridade": 6,
+  "stats": {
+   "hp": 80,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "kitsunebi": {
+  "nome": "Foxparks",
+  "descricao": "Incapazes de controlar as chamas quando recém-nascidas, acabam cuspindo fogo e se engasgando por qualquer coisa. O espirro de uma Foxparks pode causar incêndios florestais.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 29,
+  "raridade": 1,
+  "stats": {
+   "hp": 65,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "kitsunebi_ice": {
+  "nome": "Foxparks Cryst",
+  "descricao": "Incapazes de controlar o frio quando recém-nascidas, acabam cuspindo ar gélido e se engasgando por qualquer coisa. Ficam aflitas se apanham um resfriado, pois a coriza se congela no focinho e torna difícil respirar.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 29,
+  "raridade": 1,
+  "stats": {
+   "hp": 65,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "lanternbutler": {
+  "nome": "Loomen",
+  "descricao": "O brilho fantástico do seu lampião ilumina as verdades do mundo. Se alguém achar essa luz ofuscante demais, certamente é porque tem algo pesando na consciência.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 180,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 95
+  }
+ },
+ "lavagirl": {
+  "nome": "Flambelle",
+  "descricao": "Quando chora, derrama magma em vez de lágrimas. O magma vertido volta a ser absorvido pelo corpo e se esquenta cada vez mais, aumentando sua força a cada lamúria.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 25,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "lazycatfish": {
+  "nome": "Dumud",
+  "descricao": "Quando está totalmente relaxado, todas suas reações ficam lentas. Mesmo que sofra 28 facadas, só percebe no dia seguinte — quando acaba morrendo.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 109,
+  "raridade": 4,
+  "stats": {
+   "hp": 100,
+   "attack": 70,
+   "defense": 95
+  }
+ },
+ "lazycatfish_gold": {
+  "nome": "Dumud Gild",
+  "descricao": "Possuem a superfície do corpo extremamente refletiva. E a velocidade dos seus reflexos é ainda menor que a do Dumud!",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 109,
+  "raridade": 5,
+  "stats": {
+   "hp": 105,
+   "attack": 75,
+   "defense": 100
+  }
+ },
+ "lazydragon": {
+  "nome": "Relaxaurus",
+  "descricao": "A despeito de sua aparência avoada, é bastate feroz. Ele considera como presa tudo aquilo que vê, tentando devorar qualquer coisa que possa.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 94,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "lazydragon_electric": {
+  "nome": "Relaxaurus Lux",
+  "descricao": "Um Relaxaurus pensou por acaso: já não seria hora de mudar seu jeito de ser? Nesse instante ele sentiu um choque percorrer todo seu corpo!",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 94,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "lazydragon_electric_tower": {
+  "nome": "Relaxaurus Lux",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 94,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "leafmomonga": {
+  "nome": "Herbil",
+  "descricao": "Acha que pode consertar qualquer coisa na base do soco. Como a força de um Herbil é perfeita para uma massagem cardíaca, é verdade que às vezes consegue ressuscitar pessoas com um murro no peito.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 10,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 75
+  }
+ },
+ "leafprincess": {
+  "nome": "Lullu",
+  "descricao": "No início da primavera, deixa-se levar pelo vento para espalhar pólen por toda a ilha. A alergia que o Flopie tem ao pólen é justamente culpa da Lullu.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 125,
+  "raridade": 4,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 80
+  }
+ },
+ "legenddeer": {
+  "nome": "Hartalis",
+  "descricao": "|Chega a ser sinistro de tão silencioso, mas é incrivelmente calmo aqui. Já não há mais ninguém. Todos foram salvos muito tempo atrás. Ó Rei da Salvação, levai-me também à quietude infinita!| O texto antigo para aqui.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 197,
+  "raridade": 10,
+  "stats": {
+   "hp": 135,
+   "attack": 130,
+   "defense": 110
+  }
+ },
+ "lilyqueen": {
+  "nome": "Lyleen",
+  "descricao": "Uma Pal dócil e repleta de afeto. Costuma cuidar de Pals filhotes que perderam os pais. A educação, ela dá com um SolarBeam de força total.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 186,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "lilyqueen_dark": {
+  "nome": "Lyleen Noct",
+  "descricao": "Uma Pal elegante e muito refinada. Ela trata os insolentes com uma bofetada superdolorosa. Existem Pals, contudo, que até gostam dos seus tapas.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 186,
+  "raridade": 10,
+  "stats": {
+   "hp": 115,
+   "attack": 120,
+   "defense": 115
+  }
+ },
+ "littlebriarrose": {
+  "nome": "Bristla",
+  "descricao": "É perigoso ser espetado por seus espinhos, pois eles contêm um potente veneno. Relaciona-se bem com espécimes de Cinnamoth. Seu rosto se mostra animado apenas quando deixa sorverem seu mel.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 60,
+  "raridade": 1,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "lizardman": {
+  "nome": "Leezpunk",
+  "descricao": "Demonstra uma preocupação anormal com seu aspecto quando parado. Está sempre procurando a pose mais descolada e, se dão um espelho, passa dias a fio experimentando novas posturas.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 73,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 50
+  }
+ },
+ "lizardman_fire": {
+  "nome": "Leezpunk Ignis",
+  "descricao": "Demonstra uma preocupação anormal com seu aspecto quando parado. Está sempre procurando a pose mais fervorosa. Pobre de seu dono, que precisa encarar essa atitude fogosa sem trégua.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 73,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 50
+  }
+ },
+ "lizardman_oilrig": {
+  "nome": "Leezpunk",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 73,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 50
+  }
+ },
+ "longcat": {
+  "nome": "Valentail",
+  "descricao": "Pareciam ter um porte menor em pinturas antigas. Acredita-se que, por algum motivo, várias partes de seu corpo vêm se alongando em tempos recentes. Dentro de 100 anos, prevê-se que devem atingir 10 vezes seu tamanho atual.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 162,
+  "raridade": 2,
+  "stats": {
+   "hp": 75,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "lotusdragon": {
+  "nome": "Ophydia",
+  "descricao": "Nas águas onde Ophydia habitam, crescem muitas flores de aparência semelhante. Já foram realizados diversos estudos para tentar reproduzir essas flores, mas elas logo murcham quando cultivadas por humanos.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 175,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 115,
+   "defense": 120
+  }
+ },
+ "manticore": {
+  "nome": "Blazehowl",
+  "descricao": "Embora prefira carne crua, sempre acaba comendo carne assada. Acontece que ainda não percebeu como as garras incandescentes que lhe servem de arma costumam queimar a sua presa.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 112,
+  "raridade": 7,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 80
+  }
+ },
+ "manticore_dark": {
+  "nome": "Blazehowl Noct",
+  "descricao": "Embora prefira carne normal, sempre acaba comendo carne adulterada. Acontece que ainda não percebeu como as garras de escuridão que lhe servem de arma costumam amaldiçoar a sua presa.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 112,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 115,
+   "defense": 80
+  }
+ },
+ "mimicdog": {
+  "nome": "Mimog",
+  "descricao": "Em um reino que antigamente existia na ilha, havia o costume de conceder-se um prêmio a quem tivesse a morte mais estúpida a cada ano. A primeira pessoa celebrada em tal premiação foi |morta a dentadas ao abrir uma caixa sem se dar conta do Mimog|.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 144,
+  "raridade": 7,
+  "stats": {
+   "hp": 60,
+   "attack": 60,
+   "defense": 130
+  }
+ },
+ "monkey": {
+  "nome": "Tanzee",
+  "descricao": "Dizem que antigamente eles usavam galhos e objetos similares como armas. Conforme foram se relacionando com os humanos, abandonaram esse costume. Afinal, descobriram que as armas de fogo são muito mais eficientes.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 23,
+  "raridade": 1,
+  "stats": {
+   "hp": 80,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "monkey_fire": {
+  "nome": "Tanzee Ignis",
+  "descricao": "Suas palmas evoluíram para que ele pudesse segurar objetos ardentes sem se queimar. Talvez seja capaz até de agarrar uma arma superaquecida e usá-la para golpear o inimigo se sua munição acabar.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 23,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "monochromequeen": {
+  "nome": "Solenne",
+  "descricao": "Depois de uma boa experiência, não sossega enquanto não tiver também uma experiência proporcionalmente ruim. Para criar bem uma Solenne, é preciso ter bastante disposição.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 182,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 115,
+   "defense": 115
+  }
+ },
+ "moonchild": {
+  "nome": "Wistella",
+  "descricao": "Quando atingem o fim da vida, em algum lugar do céu surge uma nova estrela cintilante. E, quanto mais recordações possuírem, maior será seu brilho.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 181,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 90,
+   "defense": 60
+  }
+ },
+ "moonqueen": {
+  "nome": "Selyne",
+  "descricao": "Dizem que o objeto em forma de lua que flutua às suas costas vai se assemelhando a um círculo pouco a pouco a cada geração. Ninguém sabe o que acontecerá quando enfim assumir a forma da lua cheia.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 190,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 115,
+   "defense": 110
+  }
+ },
+ "mopbaby": {
+  "nome": "Swee",
+  "descricao": "Rasteja pelo chão alimentando-se de matéria orgânica microscópica. Aquilo que não tiver valor nutricional é excretado após algum tempo. Se usá-los como escovão para a faxina, todos saem ganhando.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 35,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 60,
+   "defense": 60
+  }
+ },
+ "mopking": {
+  "nome": "Sweepa",
+  "descricao": "Durante a hibernação, seu corpo felpudo e volumoso se mantém repleto de Swees escondidos. O maior número registrado até agora foi de 101.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 36,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "mothman": {
+  "nome": "Silvance",
+  "descricao": "Desde tempos remotos, protege algo enquanto se mantém parado sobre a Árvore Mundial. O próprio Silvance não sabe o que protege, nem por qual motivo. Afinal é a árvore quem lhe ensina tudo. Os esporos que ele controla conhecem bem o inimigo.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 193,
+  "raridade": 8,
+  "stats": {
+   "hp": 140,
+   "attack": 120,
+   "defense": 110
+  }
+ },
+ "mummypal": {
+  "nome": "Gildra",
+  "descricao": "Seu órgão dourado em forma de faixa é capaz de se esticar e encolher. Como ele pode se romper quando a umidade está extremamente baixa, é essencial cuidar da hidratação da pele todos os dias.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 120,
+  "raridade": 5,
+  "stats": {
+   "hp": 105,
+   "attack": 120,
+   "defense": 105
+  }
+ },
+ "mushroomdragon": {
+  "nome": "Shroomer",
+  "descricao": "Entra numa espécie de transe ao absorver uma grande quantidade de esporos. Se um Shroomer às vezes parece estar inerte, não é por estar imitando um fungo, mas por estar drogado com os próprios esporos.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 118,
+  "raridade": 4,
+  "stats": {
+   "hp": 110,
+   "attack": 80,
+   "defense": 90
+  }
+ },
+ "mushroomdragon_dark": {
+  "nome": "Shroomer Noct",
+  "descricao": "Sua grande quantidade de esporos é capaz de bloquear a luz solar com facilidade. Se um Shroomer Noct às vezes parece estar inerte, não é por estar imitando um fungo, mas por não conseguir enxergar nada devido aos próprios esporos.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 118,
+  "raridade": 5,
+  "stats": {
+   "hp": 110,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "mushroomlady": {
+  "nome": "Mycora",
+  "descricao": "Vê os humanos apenas como bons hospedeiros. A Mycora evoluiu para essa forma justamente para fazer com que os humanos baixassem a guarda, facilitando a introdução de seus esporos.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 179,
+  "raridade": 6,
+  "stats": {
+   "hp": 105,
+   "attack": 95,
+   "defense": 90
+  }
+ },
+ "mutant": {
+  "nome": "Lunaris",
+  "descricao": "Quem fita seus olhos por descuido acaba sendo controlado. Muitos daqueles acompanhados por um Lunaris apenas têm a ilusão de serem seus donos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 82,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 90
+  }
+ },
+ "mysterymask": {
+  "nome": "Omascul",
+  "descricao": "Dizem que a parte do corpo semelhante a uma máscara na verdade não é o seu rosto. Dizem que quando parece estar logo em frente a você, na verdade não está. Dizem que está sempre olhando na sua direção. Dizem que está sempre ali quando você olha para trás.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 150,
+  "raridade": 4,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "naughtycat": {
+  "nome": "Grintale",
+  "descricao": "Se alguém invade o território de um Grintale, logo seus olhos observadores começam a brilhar. E não é figura de linguagem: eles brilham de verdade.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 70,
+  "raridade": 6,
+  "stats": {
+   "hp": 110,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "negativekoala": {
+  "nome": "Depresso",
+  "descricao": "Eles não têm muitos amigos devido a seu olhar rude, mas têm bom coração. Já foram avistados compartilhando sua comida com Vixys que se perderam do bando.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 16,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "negativeoctopus": {
+  "nome": "Killamari",
+  "descricao": "Eles se prendem ao pescoço dos inimigos e sugam seu conteúdo. Apesar de raras, quase todas as múmias de Pals encontradas foram vítimas de um Killamari.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 30,
+  "raridade": 1,
+  "stats": {
+   "hp": 60,
+   "attack": 60,
+   "defense": 70
+  }
+ },
+ "negativeoctopus_neutral": {
+  "nome": "Killamari Primo",
+  "descricao": "Eles se prendem ao pescoço dos inimigos para sugar seu sangue. Quando dois Killamari Primo se agarram um no outro, eles continuam se sugando sem parar, sem nunca se soltarem até que um acabe se esvaindo.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 30,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 60,
+   "defense": 70
+  }
+ },
+ "nightbluehorse": {
+  "nome": "Starryon",
+  "descricao": "A bela crina voluptuosa é seu maior orgulho. Quando encontra pontas duplas, sente tanta vergonha que não consegue se concentrar ao correr. Como os pelos se desgrenham com eletricidade estática, evita chegar perto de um Azurmane a todo custo.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 130,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "nightbluehorse_neutral": {
+  "nome": "Starryon Primo",
+  "descricao": "A bela crina cintilante é seu maior orgulho. Quando ela se suja um pouco que seja, sente tanta vergonha que não consegue se concentrar ao correr. Por mais que adore seu domador, não deixa que toque demais na crina para evitar a oleosidade dos seus dedos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 130,
+  "raridade": 8,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "nightfox": {
+  "nome": "Nox",
+  "descricao": "Se você encontrar o pelo de uma Nox à noite, é melhor dar meia-volta e fingir que não o viu. Ele não passa de uma passagem só de ida para o sono eterno.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 24,
+  "raridade": 6,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 70
+  }
+ },
+ "nightlady": {
+  "nome": "Bellanoir",
+  "descricao": "Ela não possuía existência física, mas apenas observava o mundo em silêncio. A partir de algum momento, passou a desejar ser ela a observada. Insaciável e ressentindo o mundo externo, foi rotulada de donzela desvairada.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 195,
+  "raridade": 20,
+  "stats": {
+   "hp": 120,
+   "attack": 150,
+   "defense": 100
+  }
+ },
+ "nightlady_dark": {
+  "nome": "Bellanoir Libero",
+  "descricao": "Uma vez libertado, seu desejo jamais se saciou. Ela passou a desejar ser observada até por si mesma. As irmãs observadoras que ressentiam o mundo externo acabaram rechaçadas para dentro de uma fenda e por fim cerraram os olhos.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 195,
+  "raridade": 20,
+  "stats": {
+   "hp": 120,
+   "attack": 150,
+   "defense": 100
+  }
+ },
+ "octopusgirl": {
+  "nome": "Gloopie",
+  "descricao": "Quando for dormir junto com ela, confira primeiro sua agenda para o dia seguinte. As marcas das ventosas se parecem muito com marcas de beijo, então tome cuidado para não acabar sendo chupado por acidente e causar um mal-entendido terrível.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 48,
+  "raridade": 5,
+  "stats": {
+   "hp": 70,
+   "attack": 85,
+   "defense": 70
+  }
+ },
+ "octopusgirl_neutral": {
+  "nome": "Gloopie Primo",
+  "descricao": "Quando for dormir junto com ela, confira primeiro sua agenda para o dia seguinte. As marcas das ventosas se parecem muito com dentadas, então tome cuidado para não acabar sendo enlaçado por acidente e causar preocupação desnecessária aos outros.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 48,
+  "raridade": 6,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 70
+  }
+ },
+ "onighostgirl": {
+  "nome": "Bakemi",
+  "descricao": "Espantar os outros é sua razão de viver — apesar de não ser nada assustadora. Ainda assim, encantadas por sua fofura, muitas pessoas se espantam de qualquer forma, o que a tornou uma verdadeira embaixadora de sorrisos.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 168,
+  "raridade": 4,
+  "stats": {
+   "hp": 70,
+   "attack": 85,
+   "defense": 80
+  }
+ },
+ "police_hawkbird": {
+  "nome": "Montador da Milícia Popular",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 100,
+   "attack": 95,
+   "defense": 80
+  }
+ },
+ "police_thunderdog": {
+  "nome": "Montador da Milícia Popular",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "predator_amaterasuwolf": {
+  "nome": "Kitsun",
+  "descricao": "De temperamento bastante delicado, basta acontecer algo desagradável para ela logo se confinar em uma caverna. As pessoas de antigamente consideravam mau presságio quando Kitsun se escondia.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 115,
+   "defense": 100
+  }
+ },
+ "predator_baphomet_dark": {
+  "nome": "Incineram Noct",
+  "descricao": "Persegue filhotes de Pals para trazê-los ao seu território. É impossível imaginar a dor e desespero dos Pals cuja prole foi raptada!",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 114,
+   "attack": 105,
+   "defense": 85
+  }
+ },
+ "predator_birddragon": {
+  "nome": "Vanwyrm",
+  "descricao": "Dizem que flautas feitas com o exoesqueleto de um Vanwyrm podem ser ouvidas mais longe que mil montanhas. Nas guerras de tempos remotos, elas eram usadas para lançar investidas.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 108,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "predator_candleghost": {
+  "nome": "Sootseer",
+  "descricao": "Antigamente acreditava-se que sua chama se enfraquecia quanto mais se aproximava o fim do mundo. Os escatologistas causaram alarde repetidas vezes devido à atenuação dessa chama, mas, no fim das contas, a intensidade dela não passa de capricho do Sootseer. Ao menos por enquanto…",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 126,
+   "attack": 125,
+   "defense": 90
+  }
+ },
+ "predator_darkscorpion": {
+  "nome": "Menasting",
+  "descricao": "Seu corpo é feito de pura energia, sem conteúdo nenhum. Ele empurra suas presas ainda vivas para dentro da carapaça, absorvendo-as. Lamentos infernais estão sempre ecoando ao seu redor.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 100,
+   "defense": 130
+  }
+ },
+ "predator_drillgame": {
+  "nome": "Digtoise",
+  "descricao": "Existe uma história sobre |O exercício da Digtoise|. É uma fábula sobre uma Digtoise que, possuindo o casco e as brocas mais resistentes, pondera sobre contradições.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 96,
+   "attack": 95,
+   "defense": 120
+  }
+ },
+ "predator_fairydragon": {
+  "nome": "Elphidran",
+  "descricao": "Como sugere sua aparência, possui uma personalidade ingênua. Talvez por isso não consiga distinguir bem o certo do errado, tendo uma tendência a ser usado por pessoas de más intenções.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 132,
+   "attack": 80,
+   "defense": 90
+  }
+ },
+ "predator_featherostrich": {
+  "nome": "Dazemu",
+  "descricao": "Este Pal dá um passo adiante e esquece de seus receios; dá dois passos e esquece de suas tristezas; dá três passos e então esquece de seus medos, sendo capaz de enfrentar qualquer inimigo que seja.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 114,
+   "attack": 90,
+   "defense": 80
+  }
+ },
+ "predator_flowerdinosaur": {
+  "nome": "Dinossom",
+  "descricao": "Não há como acalmá-lo quando irritado, pois ele se descontrola com furor incendiário. A expressão |pisar na cauda de um Dinossom| significa |deixar alguém encolerizado|.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 132,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "predator_flowerrabbit_quest": {
+  "nome": "Flopie",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 1,
+  "stats": {
+   "hp": 75,
+   "attack": 65,
+   "defense": 70
+  }
+ },
+ "predator_garm": {
+  "nome": "Direhowl",
+  "descricao": "Já faz muito tempo que perderam seus laços com as pessoas, mas o sistema de caça dos Direhowls tem sua origem no modo como eles costumavam caçar ao lado de seres humanos.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 96,
+   "attack": 90,
+   "defense": 75
+  }
+ },
+ "predator_garm_quest": {
+  "nome": "Direhowl",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 115,
+   "attack": 90,
+   "defense": 75
+  }
+ },
+ "predator_ghostbeast": {
+  "nome": "Maraith",
+  "descricao": "Elas adoram o odor peculiar exalado por seres vivos à beira da morte. Se uma Maraith se afeiçoar a você, já sabe o que isso significa.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "predator_goldenhorse": {
+  "nome": "Gildane",
+  "descricao": "Quando a alquimia ainda prosperava na ilha, os pelos que brilhavam sempre dourados eram populares como catalisadores para a criação do ouro. Foi após algum tempo que se atingiu uma sabedoria incrível: bastava processar crinas para se obter o mesmo resultado, contanto que fossem douradas.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 0,
+  "stats": {
+   "hp": 144,
+   "attack": 110,
+   "defense": 110
+  }
+ },
+ "predator_gorilla": {
+  "nome": "Gorirat",
+  "descricao": "É capaz de se comunicar à distância batendo de forma ritmada no chão. O sentido de cada ritmo difere para cada bando, de modo que ainda hoje não foi possível categorizá-los adequadamente.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 108,
+   "attack": 95,
+   "defense": 90
+  }
+ },
+ "predator_grassmammoth_ice": {
+  "nome": "Mammorest Cryst",
+  "descricao": "A vegetação nas costas varia dependendo do indivíduo. Houve um caso em que uma espécie de planta que se pensava estar extinta foi encontrada nas costas de um Mammorest Cryst, ainda congelada.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 180,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "predator_grassminotaur_ice": {
+  "nome": "Elgrove Cryst",
+  "descricao": "Seus chifres de gelo jamais derretem durante toda a sua vida. É quando enfim escorre deles a primeira gota de água que o Elgrove Cryst sente pela primeira vez seu corpo começar a esfriar.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 144,
+   "attack": 100,
+   "defense": 105
+  }
+ },
+ "predator_grasspanda": {
+  "nome": "Mossanda",
+  "descricao": "Pal possuidor de uma força inacreditável. Em certo experimento, um espécime foi capaz de rasgar um maço de 3 mil folhas de papel. Só podemos agradecer pelo fato de eles não serem carnívoros.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "predator_grimgirl": {
+  "nome": "Splatterina",
+  "descricao": "Ela não consegue conter o impulso instintivo de esquartejar suas presas. Observa-se preferências diferentes na ordem de retalhamento de acordo com cada indivíduo. Quem é apanhado por uma Splatterina não pode fazer nada senão rezar para que ela corte primeiro sua cabeça.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 1,
+  "stats": {
+   "hp": 114,
+   "attack": 115,
+   "defense": 105
+  }
+ },
+ "predator_hadesbird_electric": {
+  "nome": "Helzephyr Lux",
+  "descricao": "É capaz de invocar raios do inferno. Alguns acreditam ser uma subespécie de Helzephyr, mas há teorias que defendem ser um Helzephyr Lux atingido por um raio do inferno que acabou se tornando um Helzephyr.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 126,
+   "attack": 125,
+   "defense": 100
+  }
+ },
+ "predator_horus_water": {
+  "nome": "Faleris Aqua",
+  "descricao": "Quando encontra um bando de presas, inunda os arredores inteiros com uma corrente de água violenta. Na maioria dos casos as vítimas acabam arrastadas para não se sabe onde, de modo que é extremamente dúbio classificar esse comportamento como um método de caça.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 132,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "predator_lazydragon": {
+  "nome": "Relaxaurus",
+  "descricao": "A despeito de sua aparência avoada, é bastate feroz. Ele considera como presa tudo aquilo que vê, tentando devorar qualquer coisa que possa.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 144,
+   "attack": 100,
+   "defense": 70
+  }
+ },
+ "predator_manticore_dark": {
+  "nome": "Blazehowl Noct",
+  "descricao": "Embora prefira carne normal, sempre acaba comendo carne adulterada. Acontece que ainda não percebeu como as garras de escuridão que lhe servem de arma costumam amaldiçoar a sua presa.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 126,
+   "attack": 115,
+   "defense": 80
+  }
+ },
+ "predator_monochromequeen": {
+  "nome": "Solenne",
+  "descricao": "Depois de uma boa experiência, não sossega enquanto não tiver também uma experiência proporcionalmente ruim. Para criar bem uma Solenne, é preciso ter bastante disposição.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 132,
+   "attack": 115,
+   "defense": 115
+  }
+ },
+ "predator_mummypal": {
+  "nome": "Gildra",
+  "descricao": "Seu órgão dourado em forma de faixa é capaz de se esticar e encolher. Como ele pode se romper quando a umidade está extremamente baixa, é essencial cuidar da hidratação da pele todos os dias.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 126,
+   "attack": 120,
+   "defense": 105
+  }
+ },
+ "predator_mushroomdragon": {
+  "nome": "Shroomer",
+  "descricao": "Entra numa espécie de transe ao absorver uma grande quantidade de esporos. Se um Shroomer às vezes parece estar inerte, não é por estar imitando um fungo, mas por estar drogado com os próprios esporos.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 132,
+   "attack": 80,
+   "defense": 90
+  }
+ },
+ "predator_mysterymask": {
+  "nome": "Omascul",
+  "descricao": "Dizem que a parte do corpo semelhante a uma máscara na verdade não é o seu rosto. Dizem que quando parece estar logo em frente a você, na verdade não está. Dizem que está sempre olhando na sua direção. Dizem que está sempre ali quando você olha para trás.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 1,
+  "stats": {
+   "hp": 114,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "predator_nightbluehorse": {
+  "nome": "Starryon",
+  "descricao": "A bela crina voluptuosa é seu maior orgulho. Quando encontra pontas duplas, sente tanta vergonha que não consegue se concentrar ao correr. Como os pelos se desgrenham com eletricidade estática, evita chegar perto de um Azurmane a todo custo.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 1,
+  "stats": {
+   "hp": 132,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "predator_pandagirl": {
+  "nome": "Leafan",
+  "descricao": "Treina dia após dia para aperfeiçoar a arte marcial de seus antepassados! Perder tempo com amor é impensável — só o treino importa! Quando gosta de alguém, parte logo para o ataque — mas isso ninguém suporta! Nunca aprendeu técnicas de amor — por isso não se conforta!",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 115,
+   "defense": 95
+  }
+ },
+ "predator_pinklizard": {
+  "nome": "Lovander",
+  "descricao": "Estão sempre perseguindo alguém em busca de um parceiro para a noite. A princípio mostravam interesse apenas por outros Pals, mas ultimamente têm estendido suas garras também aos humanos.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 144,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "predator_pinklizard_quest": {
+  "nome": "Lovander",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 172,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "predator_purplespider": {
+  "nome": "Tarantriss",
+  "descricao": "Extremamente pegajosa, costuma andar sempre grudada. E quanto mais se descontrola, mais ainda se adere. Assim é sua |personalidade|.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 1,
+  "stats": {
+   "hp": 132,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "predator_redarmorbird": {
+  "nome": "Ragnahawk",
+  "descricao": "Apesar da semelhança, esta espécie não tem relação com a Beakon. Alimentando-se sobretudo de rochas, ao longo de muitas eras enrijeceu-se não apenas seu bico, mas seu corpo inteiro.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 114,
+   "attack": 105,
+   "defense": 120
+  }
+ },
+ "predator_redflowerbird": {
+  "nome": "Tropicaw",
+  "descricao": "Acredita-se que ele anda sempre agitando o corpo para se disfarçar de flores balançando ao vento e escapar dos inimigos, mas também há quem diga que o movimento rápido das flores vermelhas é tão horrendo que faz com que ninguém queira chegar perto dele.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 102,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "predator_ronin_dark": {
+  "nome": "Bushi Noct",
+  "descricao": "Seu corpo transforma-se em uma lâmina no momento da morte, sendo passado para a próxima geração.BushiQuando o que herda a espada tem um coração fraco, não consegue resistir às vozes dos mortos nela contida e acaba se tornando um Bushi Noct, vagando a esmo.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 96,
+   "attack": 125,
+   "defense": 80
+  }
+ },
+ "predator_scorpionman": {
+  "nome": "Prixter",
+  "descricao": "Carrega cerca de cinco mil variedades de toxinas. Algumas seriam capazes de causar até mesmo morte instantânea, mas todas existem em tão baixa quantidade que acabam não surtindo efeito nenhum.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 108,
+   "attack": 110,
+   "defense": 90
+  }
+ },
+ "predator_sifudog": {
+  "nome": "Dogen",
+  "descricao": "Pal que se dedica à meditação em busca do estado de perfeita autorrenúncia. Depois de contentar-se por confrontar seus desejos terrenos, ele come até encher a pança e então reflete: |Hoje também passei da conta|.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 108,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "predator_snakegirl": {
+  "nome": "Venusa",
+  "descricao": "Quando não entende alguma coisa, consulta com as serpentes que tem na cabeça. Porém, como todas são parte dela mesma, logo entende que não entende nada mesmo.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 96,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "predator_suzaku": {
+  "nome": "Suzaku",
+  "descricao": "Antigamente eram considerados entidades que traziam consigo a estação seca. Quando ocorria alguma longa estiagem, tornavam-se alvos de um extermínio implacável como forma de desejar boa colheita no ano seguinte.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 144,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "predator_thunderdog": {
+  "nome": "Rayhound",
+  "descricao": "Como seu nome sugere, lembra um relâmpago quando corre à toda velocidade. E, caso colida com outro Rayhound, faz-se ouvir um estrondo como o de um trovão.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 108,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "predator_umihebi_fire": {
+  "nome": "Jormuntide Ignis",
+  "descricao": "Há lendas que contam sobre um guerreiro lançado para dentro de um vulcão por um crime que não cometeu; ele então retornou como uma Jormuntide Ignis e incendiou uma nação inteira.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 156,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "predator_umihebi_fire_quest": {
+  "nome": "Jormuntide Ignis",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 187,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "predator_volcanicmonster_ice": {
+  "nome": "Reptyro Cryst",
+  "descricao": "Sangue de temperatura ultrabaixa percorre seu corpo inteiro. Caso seja aquecido repentinamente, o sangue se vaporiza e causa uma erupção freática impressionante.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 132,
+   "attack": 105,
+   "defense": 130
+  }
+ },
+ "predator_volcanodragon": {
+  "nome": "Moldron",
+  "descricao": "Espécimes saudáveis apresentam um fluxo de lava mais constante nas costas. Caso mantenham hábitos ruins, o fluxo vai piorando até que, nos piores casos, a lava pode estagnar e causar uma grande explosão de repente.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 132,
+   "attack": 125,
+   "defense": 115
+  }
+ },
+ "predator_werewolf_ice": {
+  "nome": "Loupmoon Cryst",
+  "descricao": "Os chifres em sua cabeça são de um gelo fantástico que jamais se derrete. Dizem que uma raspadinha feita com um de seus chifres quebrados é uma iguaria sem igual, mas que dá uma bela dor de cabeça tanto a quem come quanto ao Loupmoon Cryst.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 8,
+  "stats": {
+   "hp": 96,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "predator_whiteshielddragon_quest": {
+  "nome": "Silvegis",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 144,
+   "attack": 105,
+   "defense": 85
+  }
+ },
+ "predator_whitetiger_ground": {
+  "nome": "Cryolinx Terra",
+  "descricao": "Consegue carregar muitas coisas com facilidade usando suas grandes mãos. Devido a suas pernas curtas, no entanto, caminha tão devagar que às vezes o dia se acaba antes de ele chegar ao seu destino.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 100,
+   "defense": 110
+  }
+ },
+ "predator_yeti": {
+  "nome": "Wumpo",
+  "descricao": "Cientistas já rasparam um espécime todo para descobrir sua verdadeira forma, mas no final restou apenas o pelo tosquiado, como se nunca tivesse existido nada no interior.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 9,
+  "stats": {
+   "hp": 168,
+   "attack": 80,
+   "defense": 100
+  }
+ },
+ "pandagirl": {
+  "nome": "Leafan",
+  "descricao": "Treina dia após dia para aperfeiçoar a arte marcial de seus antepassados! Perder tempo com amor é impensável — só o treino importa! Quando gosta de alguém, parte logo para o ataque — mas isso ninguém suporta! Nunca aprendeu técnicas de amor — por isso não se conforta!",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 90,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 115,
+   "defense": 95
+  }
+ },
+ "penguin": {
+  "nome": "Pengullet",
+  "descricao": "Suas asas se atrofiaram por completo, tornando impossível voar. Mas a saudade dos céus permanece gravada nos seus genes, portanto eles tentam de tudo para conseguir decolar novamente.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 17,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 70
+  }
+ },
+ "penguin_electric": {
+  "nome": "Pengullet Lux",
+  "descricao": "Suas asas se atrofiaram por completo, tornando impossível voar. Mas sua obsessão pelos céus se transformou em inveja e, assim, eles desenvolveram um poder elétrico para poder derrubar qualquer coisa que voa!",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 17,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "pinkcat": {
+  "nome": "Cattiva",
+  "descricao": "À primeira vista ele pode parecer convencido, mas na verdade é muito acanhado. De certo modo, ser desdenhado por um Cattiva pode ser considerado como a maior das humilhações.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 2,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "pinklizard": {
+  "nome": "Lovander",
+  "descricao": "Estão sempre perseguindo alguém em busca de um parceiro para a noite. A princípio mostravam interesse apenas por outros Pals, mas ultimamente têm estendido suas garras também aos humanos.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 69,
+  "raridade": 5,
+  "stats": {
+   "hp": 120,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "pinkrabbit": {
+  "nome": "Ribbuny",
+  "descricao": "Pal que anda sempre sorridente. Às vezes um Cattiva prega uma peça e dá um nó apertado em seus tentáculos. Nessas ele acaba assumindo uma aparência demoníaca.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 44,
+  "raridade": 1,
+  "stats": {
+   "hp": 75,
+   "attack": 65,
+   "defense": 70
+  }
+ },
+ "pinkrabbit_grass": {
+  "nome": "Ribbuny Botan",
+  "descricao": "Pal que anda sempre sorridente. Às vezes tem seus tentáculos amarrados por algum Cattiva pregando uma peça. Quando isso acontece, acaba dando uma surra no atrevido — porém sem perder o sorriso.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 44,
+  "raridade": 1,
+  "stats": {
+   "hp": 80,
+   "attack": 65,
+   "defense": 70
+  }
+ },
+ "plantslime": {
+  "nome": "Gumoss",
+  "descricao": "Um Pal fantástico cujo corpo parece ser feito de seiva. Se perde a cobertura de sua cabeça, vai definhando cada vez mais e acaba apodrecendo.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 12,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "plantslime_flower": {
+  "nome": "Gumoss",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 12,
+  "raridade": 10,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "plesiosaur": {
+  "nome": "Braloha",
+  "descricao": "As partículas semelhantes ao pólen contidas no ar que eles expelem possuem uma substância milagrosa capaz de fertilizar qualquer vegetal. Para os Pals que possuem plantas no corpo, isso gera sentimentos um tanto complicados.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 110,
+  "raridade": 8,
+  "stats": {
+   "hp": 130,
+   "attack": 95,
+   "defense": 120
+  }
+ },
+ "poseidonorca": {
+  "nome": "Neptilius",
+  "descricao": "Pal encontrado por um bravo indivíduo do Povo Decaído depois que a calamidade foi selada. Desde então, aparece em frente a outras pessoas fortes nas proximidades da costa. Tais encontros são predestinados.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 201,
+  "raridade": 20,
+  "stats": {
+   "hp": 105,
+   "attack": 145,
+   "defense": 125
+  }
+ },
+ "purplespider": {
+  "nome": "Tarantriss",
+  "descricao": "Extremamente pegajosa, costuma andar sempre grudada. E quanto mais se descontrola, mais ainda se adere. Assim é sua |personalidade|.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 71,
+  "raridade": 3,
+  "stats": {
+   "hp": 110,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "queenbee": {
+  "nome": "Elizabee",
+  "descricao": "Rainha eleita para governar as Beegardes. Como é um deleite poder servir a uma soberana tão venerada, nunca deixam de surgir mais vassalas dispostas a trabalhar até a morte.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 68,
+  "raridade": 8,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "quest_farmer03_pinkcat": {
+  "nome": "Cattiva",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 2,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "quest_farmer03_sheepball": {
+  "nome": "Lamball",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 1,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "raid_darkmechadragon": {
+  "nome": "Xenolord",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 120
+  }
+ },
+ "raid_darkmechadragon_2": {
+  "nome": "Xenolord",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 120
+  }
+ },
+ "raid_kingbahamut_dragon": {
+  "nome": "Blazamut Ryu",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 105,
+   "attack": 130,
+   "defense": 125
+  }
+ },
+ "raid_kingbahamut_dragon_2": {
+  "nome": "Blazamut Ryu",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 105,
+   "attack": 130,
+   "defense": 125
+  }
+ },
+ "raid_legenddeer": {
+  "nome": "Hartalis",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 120
+  }
+ },
+ "raid_legenddeer_2": {
+  "nome": "Hartalis",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 120
+  }
+ },
+ "raid_nightlady": {
+  "nome": "Bellanoir",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 140,
+   "defense": 100
+  }
+ },
+ "raid_nightlady_dark": {
+  "nome": "Bellanoir Libero",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 150,
+   "defense": 100
+  }
+ },
+ "raid_nightlady_dark_2": {
+  "nome": "Bellanoir Libero",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 120,
+   "attack": 150,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss001_green": {
+  "nome": "Verdadeiro Olho de Cthulhu",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 135,
+   "attack": 130,
+   "defense": 115
+  }
+ },
+ "raid_yakushimaboss001_green_2": {
+  "nome": "Verdadeiro Olho de Cthulhu",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 135,
+   "attack": 145,
+   "defense": 115
+  }
+ },
+ "raid_yakushimaboss002": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_2": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_hand_left": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_hand_left_2": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_hand_right": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_hand_right_2": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_head": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raid_yakushimaboss002_head_2": {
+  "nome": "Senhor da Lua",
+  "descricao": "",
+  "elementos": [],
+  "paldex": -1,
+  "raridade": 10,
+  "stats": {
+   "hp": 100,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "raijindaughter": {
+  "nome": "Dazzi",
+  "descricao": "É baste atenciosa com Pals solitários. Alguns a interpretam mal e acabam obcecados, mas ela logo os coloca no lugar fazendo cair um raio em sinal de ameaça.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 92,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "raijindaughter_water": {
+  "nome": "Dazzi Noct",
+  "descricao": "Ela trata Pals solitários com carinho para poder pegá-los desprevenidos e eliminá-los com um raio. Ao menos é esse o seu plano — mas no fim nunca encontra o momento certo e acaba se tornando amiga dos alvos.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 92,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 80,
+   "defense": 75
+  }
+ },
+ "redarmorbird": {
+  "nome": "Ragnahawk",
+  "descricao": "Apesar da semelhança, esta espécie não tem relação com a Beakon. Alimentando-se sobretudo de rochas, ao longo de muitas eras enrijeceu-se não apenas seu bico, mas seu corpo inteiro.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 104,
+  "raridade": 7,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 120
+  }
+ },
+ "redflowerbird": {
+  "nome": "Tropicaw",
+  "descricao": "Acredita-se que ele anda sempre agitando o corpo para se disfarçar de flores balançando ao vento e escapar dos inimigos, mas também há quem diga que o movimento rápido das flores vermelhas é tão horrendo que faz com que ninguém queira chegar perto dele.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 173,
+  "raridade": 5,
+  "stats": {
+   "hp": 85,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "robinhood": {
+  "nome": "Robinquill",
+  "descricao": "Um Pal que vive nos bosques como caçador, de disposição bastante similar à das pessoas. Acredita-se que ele pertence a uma linha evolutiva que se separou em tempos remotos daquela dos humanos e pode ser a chave para desvendar o que são os Pals.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 76,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "robinhood_ground": {
+  "nome": "Robinquill Terra",
+  "descricao": "Um Pal de hábitos muito semelhantes aos humanos, que leva a vida como caçador em meio às rochas. Quando encontram ossos de um Robinquill Terra em alguma ruína, sempre encontram também ossos humanos nas redondezas.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 76,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "rockbeast": {
+  "nome": "Pierdon",
+  "descricao": "Choca-se contra rochas ainda mais duras para manter o corpo na forma desejada. Caso encontre um espécime com alguma depressão, é melhor deixá-lo sozinho. Quando isso acontece, ficam tão amuados quanto alguém que cortou demais a franja.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 131,
+  "raridade": 6,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 120
+  }
+ },
+ "rockbeast_ice": {
+  "nome": "Pierdon Cryst",
+  "descricao": "Toma banho de sol enquanto vai mudando de posição para derreter o gelo do corpo na forma desejada. Caso encontre um espécime um tanto disforme, é melhor deixá-lo sozinho. Quando isso acontece, ficam tão amuados quanto alguém que cortou demais as costeletas.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 131,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 110,
+   "defense": 120
+  }
+ },
+ "ronin": {
+  "nome": "Bushi",
+  "descricao": "Seu corpo transforma-se em uma lâmina no momento da morte, sendo passado para a próxima geração. Caso alguém que não seja um Bushi segure tal espada, não consegue resistir às vozes dos mortos nela contida e acaba enlouquecendo.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 85,
+  "raridade": 7,
+  "stats": {
+   "hp": 80,
+   "attack": 125,
+   "defense": 80
+  }
+ },
+ "ronin_dark": {
+  "nome": "Bushi Noct",
+  "descricao": "Seu corpo transforma-se em uma lâmina no momento da morte, sendo passado para a próxima geração.BushiQuando o que herda a espada tem um coração fraco, não consegue resistir às vozes dos mortos nela contida e acaba se tornando um Bushi Noct, vagando a esmo.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 85,
+  "raridade": 7,
+  "stats": {
+   "hp": 80,
+   "attack": 130,
+   "defense": 80
+  }
+ },
+ "summon_darkalien": {
+  "nome": "Xenovader",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 145,
+  "raridade": 7,
+  "stats": {
+   "hp": 90,
+   "attack": 125,
+   "defense": 85
+  }
+ },
+ "summon_darkalien_max": {
+  "nome": "Xenovader",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 145,
+  "raridade": 7,
+  "stats": {
+   "hp": 90,
+   "attack": 125,
+   "defense": 85
+  }
+ },
+ "summon_whitealiendragon": {
+  "nome": "Xenogard",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 146,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 120,
+   "defense": 130
+  }
+ },
+ "summon_whitealiendragon_max": {
+  "nome": "Xenogard",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 146,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 120,
+   "defense": 130
+  }
+ },
+ "saintcentaur": {
+  "nome": "Paladius",
+  "descricao": "Antigamente ele e o Necromus eram uma única espécie. Dizem ser uma existência que se livrou de todos os sentimentos negativos, mas o fundo de seus olhos abriga traços de rancor.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 198,
+  "raridade": 20,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 145
+  }
+ },
+ "sakurasaurus": {
+  "nome": "Broncherry",
+  "descricao": "Seu odor corporal muda bastante próximo à época de acasalamento. A fragrância exalada depois que encontram um parceiro é muito apreciada, sendo conhecida como |perfume do primeiro amor|.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 108,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 90,
+   "defense": 100
+  }
+ },
+ "sakurasaurus_water": {
+  "nome": "Broncherry Aqua",
+  "descricao": "Seu odor corporal muda bastante próximo à época de acasalamento. A fragrância exalada antes de encontrarem um parceiro é muito apreciada, sendo conhecida como |perfume da castidade|.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 108,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 95,
+   "defense": 100
+  }
+ },
+ "samuraidog": {
+  "nome": "Pupperai",
+  "descricao": "Depois de encarar um adversário, termina qualquer briga por território com um único golpe. A propósito, não é recomendado ensinar um Pupperai a |sentar| na hora do adestramento, ou ele pode pensar que é um comando para |sentar o pau|.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 13,
+  "raridade": 2,
+  "stats": {
+   "hp": 70,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "scorpionman": {
+  "nome": "Prixter",
+  "descricao": "Carrega cerca de cinco mil variedades de toxinas. Algumas seriam capazes de causar até mesmo morte instantânea, mas todas existem em tão baixa quantidade que acabam não surtindo efeito nenhum.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 141,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 110,
+   "defense": 90
+  }
+ },
+ "scorpionman_electric": {
+  "nome": "Prixter Lux",
+  "descricao": "Espeta a cauda no inimigo para passar energia elétrica pelo seu corpo. No entanto, como a corrente elétrica é bem fraca, poderia causar muito mais dano com um soco bem dado.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 141,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 115,
+   "defense": 90
+  }
+ },
+ "sekhmet": {
+  "nome": "Sekhmet",
+  "descricao": "Com um temperamento selvagem, costumava servir como símbolo da morte. Depois que Anubis assumiu esse papel, indivíduos de posses desejosos de alguém para substituí-lo embriagaram e persuadiram membros desta espécie. E assim, num dado momento, Sekhmet se tornou um símbolo da nobreza.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 140,
+  "raridade": 5,
+  "stats": {
+   "hp": 110,
+   "attack": 115,
+   "defense": 100
+  }
+ },
+ "serpent": {
+  "nome": "Surfent",
+  "descricao": "Sua forma em linha de corrente está adaptada para a locomoção sobre as águas. São capturadas com frequência por pescadores ilegais para serem usadas como pranchas de surfe.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 75,
+  "raridade": 4,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 80
+  }
+ },
+ "serpent_ground": {
+  "nome": "Surfent Terra",
+  "descricao": "Sua forma em linha de corrente está adaptada para a locomoção sobre as areias. São capturadas com frequência por pescadores ilegais para serem usadas como pranchas de surfe.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 75,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 100
+  }
+ },
+ "sharkkid": {
+  "nome": "Gobfin",
+  "descricao": "Em eras passadas costumavam ser Pals aquáticos colossais e poderosos, mas acabaram subindo à terra devido à falta de comida. Como passaram a precisar de muita energia para caminhar, foram ficando cada vez menores, até se tornarem Pals fracos e miúdos.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 55,
+  "raridade": 2,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 75
+  }
+ },
+ "sharkkid_fire": {
+  "nome": "Gobfin Ignis",
+  "descricao": "Em eras passadas costumavam ser Pals aquáticos colossais e poderosos, mas acabaram subindo à terra devido à falta de comida. Como passaram a queimar muito mais calorias para caminhar, com o tempo despertaram para o poder das chamas!",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 55,
+  "raridade": 3,
+  "stats": {
+   "hp": 90,
+   "attack": 90,
+   "defense": 75
+  }
+ },
+ "sheepball": {
+  "nome": "Lamball",
+  "descricao": "Quando encontram uma ladeira, acabam caindo naturalmente por ela. Como então ficam tontos e não conseguem se mover, podem ser apanhados facilmente, formando por isso a base da cadeia alimentar.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 1,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "sifudog": {
+  "nome": "Dogen",
+  "descricao": "Pal que se dedica à meditação em busca do estado de perfeita autorrenúncia. Depois de contentar-se por confrontar seus desejos terrenos, ele come até encher a pança e então reflete: |Hoje também passei da conta|.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 155,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "skydragon": {
+  "nome": "Quivern",
+  "descricao": "Dormir abraçado a um Quivern sem dúvida deve ser tão aconchegante quanto estar no paraíso, mas, se ele se mexer demais durante o sono, você pode acabar tendo o corpo esmagado e partir dessa para a melhor.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 124,
+  "raridade": 7,
+  "stats": {
+   "hp": 105,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "skydragon_grass": {
+  "nome": "Quivern Botan",
+  "descricao": "Se você abraçar um Quivern Botan e sentir um cheiro de raios de sol e de grama, é porque amanhã vai fazer dia claro. Se sentir um cheiro úmido, é porque vai cair um toró.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 124,
+  "raridade": 8,
+  "stats": {
+   "hp": 105,
+   "attack": 105,
+   "defense": 100
+  }
+ },
+ "sleeverabbit": {
+  "nome": "Lapure",
+  "descricao": "Usa os longos pelos das mãos para encantar os outros. Bastante sensível à sujeira, mantém-se sempre bem asseada e faz uma cara de desgosto terrível caso alguém levante poeira ao seu redor.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 170,
+  "raridade": 4,
+  "stats": {
+   "hp": 105,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "smallarmadillo": {
+  "nome": "Kikit",
+  "descricao": "Num passado distante, tornou-se muito popular jogar futebol com um Kikit. A prática foi logo abandonada devido à oposição fervorosa da Associação de Proteção aos Pals, mas ela também servia para remover a queratina velha do Kikit — motivo pelo qual dizem que os próprios Pals não eram contrários a ela.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 126,
+  "raridade": 4,
+  "stats": {
+   "hp": 75,
+   "attack": 70,
+   "defense": 90
+  }
+ },
+ "smallyeti": {
+  "nome": "Snugloo",
+  "descricao": "|Ver os olhos de um Snugloo| é uma expressão que significa procurar pela natureza oculta de alguma coisa. O curioso é que não existe nenhum cientista que tenha tentado investigar se os Snugloo realmente têm olhos.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 133,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 85
+  }
+ },
+ "snakegirl": {
+  "nome": "Venusa",
+  "descricao": "Quando não entende alguma coisa, consulta com as serpentes que tem na cabeça. Porém, como todas são parte dela mesma, logo entende que não entende nada mesmo.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 178,
+  "raridade": 5,
+  "stats": {
+   "hp": 80,
+   "attack": 85,
+   "defense": 90
+  }
+ },
+ "snowpeafowl": {
+  "nome": "Frostplume",
+  "descricao": "Bastante sensíveis à passagem do tempo, despertam à mesma hora todas as manhãs. Dizem que na ilha de Palpagos o dia é dividido em 24 partes porque, quando um Frostplume de asas abertas é visto de frente, parece haver esse mesmo número de espaços fechados.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 114,
+  "raridade": 4,
+  "stats": {
+   "hp": 110,
+   "attack": 100,
+   "defense": 100
+  }
+ },
+ "snowtigerbeastman": {
+  "nome": "Bastigor",
+  "descricao": "Quando enxerga algo redondo, sente uma vontade intensa de dar um soco. À parte da vida em si, para um SnowTigerBeastMan a coisa mais difícil é construir um boneco de neve até o fim.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 191,
+  "raridade": 8,
+  "stats": {
+   "hp": 140,
+   "attack": 130,
+   "defense": 120
+  }
+ },
+ "soldierbee": {
+  "nome": "Beegarde",
+  "descricao": "Vassalas que juram lealdade a uma Elizabee. Eliminam sem falta qualquer um que tentar ameaçar sua rainha, a qual protegem mesmo que precisem explodir a si mesmas.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 67,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 90,
+   "defense": 90
+  }
+ },
+ "stuffedshark": {
+  "nome": "Finsider",
+  "descricao": "Embora pareça ser um bicho de pelúcia com alguma coisa espiando do seu interior, você não vai encontrar nada se tentar enfiar a mão dentro dele. Aliás, pode até colocar o braço inteiro que não vai chegar a lugar nenhum. Quem sabe o próprio universo esteja contido nele.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 88,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 80
+  }
+ },
+ "stuffedshark_fire": {
+  "nome": "Finsider Ignis",
+  "descricao": "Se tentar colocar a mão em sua boca, não encontrará nada além de um espaço infinito. Um certo pesquisador imaginou que talvez se tratasse de uma dimensão alternativa e tentou entrar com o corpo inteiro para usar o Pal como saco de dormir, mas acabou sendo vomitado — o que indica que esse espaço funciona mesmo como o interior de um organismo.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 88,
+  "raridade": 4,
+  "stats": {
+   "hp": 75,
+   "attack": 90,
+   "defense": 80
+  }
+ },
+ "sumodog": {
+  "nome": "Bulldosu",
+  "descricao": "Antigamente, havia na ilha um passatempo conhecido como |sumô de Bulldosu|. Dizem que, se um Rushoar tentasse investir contra um lutador Bulldosu de primeira classe, era o Rushoar que acabava voando para longe.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 156,
+  "raridade": 4,
+  "stats": {
+   "hp": 115,
+   "attack": 95,
+   "defense": 100
+  }
+ },
+ "suzaku": {
+  "nome": "Suzaku",
+  "descricao": "Antigamente eram considerados entidades que traziam consigo a estação seca. Quando ocorria alguma longa estiagem, tornavam-se alvos de um extermínio implacável como forma de desejar boa colheita no ano seguinte.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 122,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "suzaku_water": {
+  "nome": "Suzaku Aqua",
+  "descricao": "Antigamente eram considerados entidades que traziam consigo a estação das chuvas. Quando ocorriam enchentes, tornavam-se alvos de um extermínio implacável como forma de desejar segurança no ano seguinte.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 122,
+  "raridade": 9,
+  "stats": {
+   "hp": 125,
+   "attack": 105,
+   "defense": 105
+  }
+ },
+ "sweetssheep": {
+  "nome": "Woolipop",
+  "descricao": "Cada parte de seu corpo é 18 mil vezes mais doce que o açúcar. Pals carnívoros que são atraídos por seu cheiro e tentam mordê-lo acabam desmaiando devido ao choque da doçura extrema.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 39,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 90
+  }
+ },
+ "sweetssheep_ground": {
+  "nome": "Woolipop Terra",
+  "descricao": "Apesar do aroma doce que emana de seu pelo, sua carne é terrivelmente amarga. Pals carnívoros que são atraídos por seu cheiro e tentam mordê-lo acabam desmaiando devido ao choque do amargor extremo.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 39,
+  "raridade": 4,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 95
+  }
+ },
+ "swordcutlassfish": {
+  "nome": "Skutlass",
+  "descricao": "Possui hábitos insanos, pois separa o próprio corpo temporariamente para fatiar os inimigos com sua espinha. Caso não se recomponha logo em seguida, acaba esgotando suas próprias forças também. Dizem que, entre os espécimes mais jovens, está na moda competir para ver quem aguenta ficar mais tempo com o corpo separado.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 128,
+  "raridade": 5,
+  "stats": {
+   "hp": 70,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "swordcutlassfish_fire": {
+  "nome": "Skutlass Ignis",
+  "descricao": "Separa o próprio corpo para fatiar os inimigos com sua espinha, mas, caso não se recomponha logo em seguida, acaba esgotando suas próprias forças também. Dizem que, entre os espécimes mais velhos, há quem separe o corpo por um longo tempo de propósito para atiçar os instintos de sobrevivência e prolongar a vida.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 128,
+  "raridade": 5,
+  "stats": {
+   "hp": 70,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "tentacleturtle": {
+  "nome": "Turtacle",
+  "descricao": "Este Pal desenvolveu uma dura carapaça como meio de proteger seu corpo frágil. Porém, com isso, acabou negligenciando demais as defesas de seu corpo em si. Devido a isso, até simples cócegas são o suficiente para fazê-lo desmaiar.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 37,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 75,
+   "defense": 115
+  }
+ },
+ "tentacleturtle_ground": {
+  "nome": "Turtacle Terra",
+  "descricao": "Desenvolveram um casco resistente a fim de proteger seu corpo frágil. A maioria de suas terminações nervosas se concentram nas patas dianteiras e no casco, portanto eles não percebem quando alguém encosta sorrateiramente no seu corpo.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 37,
+  "raridade": 4,
+  "stats": {
+   "hp": 85,
+   "attack": 85,
+   "defense": 125
+  }
+ },
+ "thiefbird": {
+  "nome": "Roujay",
+  "descricao": "Com uma leve tendência cleptomaníaca, costuma roubar dos outros sem que eles percebam. E, mesmo que percebam, não há problema: basta roubar também a visão das vítimas que já não poderão enxergar mais nada.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 177,
+  "raridade": 5,
+  "stats": {
+   "hp": 110,
+   "attack": 115,
+   "defense": 95
+  }
+ },
+ "thunderbird": {
+  "nome": "Beakon",
+  "descricao": "Apesar da semelhança, esta espécie não tem relação com a Ragnahawk. Dá rasantes repentinas para eliminar seus inimigos com o bico afiado. Sua imagem é tal como um raio caindo dos céus.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 96,
+  "raridade": 6,
+  "stats": {
+   "hp": 105,
+   "attack": 115,
+   "defense": 80
+  }
+ },
+ "thunderbird_ice": {
+  "nome": "Beakon Cryst",
+  "descricao": "Adaptado a zonas congelantes, resiste ao frio apesar de seu corpo franzino. Seu ataque rasante é tão devastador que se assemelha a uma grande estaca de gelo caindo dos céus.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 96,
+  "raridade": 7,
+  "stats": {
+   "hp": 105,
+   "attack": 115,
+   "defense": 85
+  }
+ },
+ "thunderdog": {
+  "nome": "Rayhound",
+  "descricao": "Como seu nome sugere, lembra um relâmpago quando corre à toda velocidade. E, caso colida com outro Rayhound, faz-se ouvir um estrondo como o de um trovão.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 98,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "thunderdog_ice": {
+  "nome": "Rayhound Cryst",
+  "descricao": "Levanta uma cortina de neve ao correr a toda velocidade pelos campos nevados. São comuns os acidentes de colisão entre Rayhound Cryst, pois não conseguem enxergar uns aos outros.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 98,
+  "raridade": 6,
+  "stats": {
+   "hp": 90,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "thunderdragonman": {
+  "nome": "Orserk",
+  "descricao": "Ele faz correr eletricidade por ferimentos, queimando o corpo do adversário. Uma briga entre Orserks é sempre resolvida em questão de segundos.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 187,
+  "raridade": 9,
+  "stats": {
+   "hp": 120,
+   "attack": 130,
+   "defense": 115
+  }
+ },
+ "thunderfluffybird": {
+  "nome": "Dynamoff",
+  "descricao": "Como vive nas alturas, onde há pouca comida disponível, às vezes devora até mesmo os miolos dos inimigos. Acredita-se que foi um bando que se aproximou do solo em busca de uma dieta mais consistente que acabou evoluindo para o Beakon.",
+  "elementos": [
+   {
+    "chave": "Electricity",
+    "nome": "Elétrico",
+    "icone": "electric"
+   }
+  ],
+  "paldex": 172,
+  "raridade": 6,
+  "stats": {
+   "hp": 75,
+   "attack": 85,
+   "defense": 80
+  }
+ },
+ "tropicalostrich": {
+  "nome": "Palumba",
+  "descricao": "Quebram o ritmo de seus adversários com uma dança peculiar. Em brigas por território, perde quem entra no ritmo do oponente primeiro. Utilizam a dança para tudo, seja no acasalamento ou só para passar o tempo. Mas qual será o significado das danças que mostram para os humanos?",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 106,
+  "raridade": 6,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 115
+  }
+ },
+ "umihebi": {
+  "nome": "Jormuntide",
+  "descricao": "Há lendas que contam sobre um sábio lançado em um redemoinho no mar por um crime que não cometeu; ele então retornou como uma Jormuntide e destruiu uma nação inteira.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": 121,
+  "raridade": 8,
+  "stats": {
+   "hp": 130,
+   "attack": 120,
+   "defense": 100
+  }
+ },
+ "umihebi_fire": {
+  "nome": "Jormuntide Ignis",
+  "descricao": "Há lendas que contam sobre um guerreiro lançado para dentro de um vulcão por um crime que não cometeu; ele então retornou como uma Jormuntide Ignis e incendiou uma nação inteira.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   },
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 121,
+  "raridade": 9,
+  "stats": {
+   "hp": 130,
+   "attack": 130,
+   "defense": 100
+  }
+ },
+ "venusflytrap": {
+  "nome": "Carnibora",
+  "descricao": "Como devora até as coisas mais esquisitas sem pensar duas vezes, frequentemente a boca no alto de sua cabeça fica cheia de aftas. Quando isso acontece, ela passa a comer com a boca que tem no rosto. Mas, como mantém seus maus hábitos alimentares, acaba com aftas nela também.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 136,
+  "raridade": 6,
+  "stats": {
+   "hp": 85,
+   "attack": 90,
+   "defense": 85
+  }
+ },
+ "violetfairy": {
+  "nome": "Vaelet",
+  "descricao": "|Era um vez um castelo com muitas flores que o rei adorava. Mas um dia aconteceu uma grande guerra e o castelo foi ameaçado pelo fogo. Foi então que apareceu o espírito de uma das flores.| Excerto do conto de fadas |A flor do rei|.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 66,
+  "raridade": 8,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 120
+  }
+ },
+ "volcanicmonster": {
+  "nome": "Reptyro",
+  "descricao": "Sangue semelhante ao magma percorre seu corpo inteiro. Caso seja jogada grande quantidade de água sobre ele, ela é aquecida repentinamente e gera uma erupção freática impressionante.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 129,
+  "raridade": 6,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 120
+  }
+ },
+ "volcanicmonster_ice": {
+  "nome": "Reptyro Cryst",
+  "descricao": "Sangue de temperatura ultrabaixa percorre seu corpo inteiro. Caso seja aquecido repentinamente, o sangue se vaporiza e causa uma erupção freática impressionante.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 129,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 130
+  }
+ },
+ "volcanodragon": {
+  "nome": "Moldron",
+  "descricao": "Espécimes saudáveis apresentam um fluxo de lava mais constante nas costas. Caso mantenham hábitos ruins, o fluxo vai piorando até que, nos piores casos, a lava pode estagnar e causar uma grande explosão de repente.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 105,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 125,
+   "defense": 115
+  }
+ },
+ "volcanodragon_ice": {
+  "nome": "Moldron Cryst",
+  "descricao": "A substância que flui do dorso de espécimes saudáveis mantém uma temperatura estável. Quando ficam nervosos, no entanto, nos piores casos ela pode acabar se vaporizando ou solidificando, causando uma morte súbita.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 105,
+  "raridade": 8,
+  "stats": {
+   "hp": 110,
+   "attack": 125,
+   "defense": 120
+  }
+ },
+ "weaseldragon": {
+  "nome": "Chillet",
+  "descricao": "É capaz de enrolar o corpo e de se mover girando a velocidades incríveis. Pessoas de antigamente costumavam prender um saco com leite a um Chillet domesticado e criá-lo solto, pois os giros de sua locomoção bastavam para produzir manteiga.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 103,
+  "raridade": 4,
+  "stats": {
+   "hp": 90,
+   "attack": 80,
+   "defense": 80
+  }
+ },
+ "weaseldragon_fire": {
+  "nome": "Chillet Ignis",
+  "descricao": "É capaz de enrolar o corpo e de se mover girando enquanto emite faíscas. Também solta faíscas quando excitado. Se você acariciá-lo demais, vai acabar criando um incêndio.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   },
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 103,
+  "raridade": 5,
+  "stats": {
+   "hp": 90,
+   "attack": 85,
+   "defense": 80
+  }
+ },
+ "werewolf": {
+  "nome": "Loupmoon",
+  "descricao": "O chifre em sua cabeça cresce ao receber a luz da lua. Embora não desgoste do sol, sente o chifre formigar quando exposto a ele.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 56,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 100,
+   "defense": 80
+  }
+ },
+ "werewolf_ice": {
+  "nome": "Loupmoon Cryst",
+  "descricao": "Os chifres em sua cabeça são de um gelo fantástico que jamais se derrete. Dizem que uma raspadinha feita com um de seus chifres quebrados é uma iguaria sem igual, mas que dá uma bela dor de cabeça tanto a quem come quanto ao Loupmoon Cryst.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 56,
+  "raridade": 3,
+  "stats": {
+   "hp": 80,
+   "attack": 105,
+   "defense": 80
+  }
+ },
+ "whitealiendragon": {
+  "nome": "Xenogard",
+  "descricao": "É capaz de criar energia ingerindo informações. Parece enviar informações para alguém específico de tempos em tempos. |Alô? Acabei comendo a mensagem anterior antes de conferir. O que você queria?|",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 146,
+  "raridade": 9,
+  "stats": {
+   "hp": 110,
+   "attack": 120,
+   "defense": 130
+  }
+ },
+ "whitedeer": {
+  "nome": "Celesdir",
+  "descricao": "Na literatura antiga é mencionado como a |besta da salvação|. Isso porque a luz emitida por um Celesdir purifica todas as coisas — literalmente fazendo com que desapareçam deste mundo sem deixar vestígios.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 157,
+  "raridade": 6,
+  "stats": {
+   "hp": 120,
+   "attack": 110,
+   "defense": 100
+  }
+ },
+ "whitedeer_dark": {
+  "nome": "Celesdir Noct",
+  "descricao": "A luz ofuscante cria também uma sombra. Ela espalha uma escuridão que tudo envolve e reinstaura o caos que há de existir. Afinal, o mundo precisa de equilíbrio.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 157,
+  "raridade": 7,
+  "stats": {
+   "hp": 120,
+   "attack": 115,
+   "defense": 100
+  }
+ },
+ "whitemoth": {
+  "nome": "Sibelyx",
+  "descricao": "Adoram a chuva, muitas vezes mantendo-se estáticas por longos períodos quando continua a chover. Foxparkss com frequência vêm abrigar-se junto a elas.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 116,
+  "raridade": 7,
+  "stats": {
+   "hp": 110,
+   "attack": 90,
+   "defense": 100
+  }
+ },
+ "whitemoth_neutral": {
+  "nome": "Sibelyx Primo",
+  "descricao": "Adoram olhar para o vazio, muitas vezes mantendo-se estáticas por longos períodos. Com frequência acabam servindo de local de encontro para Pals menores.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 116,
+  "raridade": 8,
+  "stats": {
+   "hp": 115,
+   "attack": 90,
+   "defense": 100
+  }
+ },
+ "whiteshielddragon": {
+  "nome": "Silvegis",
+  "descricao": "A parte metálica que cobre seu colar possui propriedades magnéticas. Quando a aproxima das partes nas patas, acaba se atraindo a si mesmo. Apesar de tentar limpar aborrecido a sucata que se acumula no pescoço, no fim dá chilique quando encontra dificuldade para removê-la.",
+  "elementos": [
+   {
+    "chave": "Dragon",
+    "nome": "Dracônico",
+    "icone": "dragon"
+   }
+  ],
+  "paldex": 160,
+  "raridade": 8,
+  "stats": {
+   "hp": 120,
+   "attack": 110,
+   "defense": 115
+  }
+ },
+ "whitetiger": {
+  "nome": "Cryolinx",
+  "descricao": "Com suas garras duras, é capaz de escalar facilmente as montanhas mais íngremes. Devido a suas pernas curtas, no entanto, tem dificuldades para descer e às vezes não sabe o que fazer quando chega ao topo.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 132,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 100,
+   "defense": 110
+  }
+ },
+ "whitetiger_ground": {
+  "nome": "Cryolinx Terra",
+  "descricao": "Consegue carregar muitas coisas com facilidade usando suas grandes mãos. Devido a suas pernas curtas, no entanto, caminha tão devagar que às vezes o dia se acaba antes de ele chegar ao seu destino.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 132,
+  "raridade": 7,
+  "stats": {
+   "hp": 100,
+   "attack": 105,
+   "defense": 110
+  }
+ },
+ "windchimes": {
+  "nome": "Hangyu",
+  "descricao": "Seus braços enormes conseguem rasgar até mesmo ferro. No passado, havia um modo de execução bárbaro em que criminosos hediondos eram acorrentados em praça pública e então tinham suas carnes despedaçadas por um Windchimes.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 38,
+  "raridade": 1,
+  "stats": {
+   "hp": 80,
+   "attack": 70,
+   "defense": 70
+  }
+ },
+ "windchimes_ice": {
+  "nome": "Hangyu Cryst",
+  "descricao": "Seus braços enormes conseguem despedaçar até mesmo blocos de gelo. No passado, havia um modo de tortura bárbaro em que criminosos hediondos eram acorrentados em praça pública e então tinham seus cabelos arrancados por um Windchimes_Ice.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 38,
+  "raridade": 2,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 70
+  }
+ },
+ "winggolem": {
+  "nome": "Knocklem",
+  "descricao": "Um Pal misterioso capaz de desfazer-se em 215 pedaços e voltar a andar normalmente depois de reconstruído. Caso suas partes se misturem com as de outro indivíduo, perde sua identidade e entra em depressão.",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 159,
+  "raridade": 9,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 135
+  }
+ },
+ "winggolem_fire": {
+  "nome": "Knocklem Ignis",
+  "descricao": "Um Pal misterioso que, mesmo se desfazendo, volta a andar normalmente depois de reconstruído. Caso suas partes se misturem com as de outro indivíduo, ocorre um erro crítico de raciocínio e ele acaba sobreaquecendo.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": 159,
+  "raridade": 10,
+  "stats": {
+   "hp": 105,
+   "attack": 115,
+   "defense": 135
+  }
+ },
+ "winggolem_oilrig": {
+  "nome": "Knocklem",
+  "descricao": "",
+  "elementos": [
+   {
+    "chave": "Earth",
+    "nome": "Terra",
+    "icone": "ground"
+   }
+  ],
+  "paldex": 159,
+  "raridade": 9,
+  "stats": {
+   "hp": 126,
+   "attack": 110,
+   "defense": 135
+  }
+ },
+ "wizardowl": {
+  "nome": "Hoocrates",
+  "descricao": "Costumam perder-se em pensamentos e não conseguir dormir por cismarem demais. |Cogito ergo sum|.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": 19,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "woolfox": {
+  "nome": "Cremis",
+  "descricao": "Possui muito mais lã que uma SheepBall (além de ser muito mais fácil de criar que qualquer SheepBall). Ainda assim, historicamente foi sempre criada apenas como Pal de estimação. Parece que a fofura a salvou da pecuária.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": 8,
+  "raridade": 1,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 75
+  }
+ },
+ "worldtreedragon": {
+  "nome": "Astralym",
+  "descricao": "A forma à qual foi reduzida a Pal misteriosa que, em um passado remoto, chegou voando até Palpagos. Depois de trazer a destruição como a |Calamidade|, passou um longo tempo aprisionada. No entanto, finalmente foi derrotada por uma alma valente domadora de Pals.",
+  "elementos": [],
+  "paldex": 204,
+  "raridade": 10,
+  "stats": {
+   "hp": 200,
+   "attack": 200,
+   "defense": 200
+  }
+ },
+ "yakushimaboss001": {
+  "nome": "Olho de Cthulhu",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 6,
+  "stats": {
+   "hp": 110,
+   "attack": 105,
+   "defense": 95
+  }
+ },
+ "yakushimaboss001_small": {
+  "nome": "Olho Demoníaco",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 105,
+   "attack": 110,
+   "defense": 95
+  }
+ },
+ "yakushimamonster001": {
+  "nome": "Geleia verde",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 65,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "yakushimamonster001_blue": {
+  "nome": "Geleia Azul",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Water",
+    "nome": "Água",
+    "icone": "water"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "yakushimamonster001_pink": {
+  "nome": "Geleia Luminosa",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 75,
+   "defense": 85
+  }
+ },
+ "yakushimamonster001_purple": {
+  "nome": "Geleia roxa",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Dark",
+    "nome": "Escuridão",
+    "icone": "dark"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 75,
+   "attack": 70,
+   "defense": 80
+  }
+ },
+ "yakushimamonster001_rainbow": {
+  "nome": "Geleia do Arco-íris",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 4,
+  "stats": {
+   "hp": 105,
+   "attack": 95,
+   "defense": 105
+  }
+ },
+ "yakushimamonster001_red": {
+  "nome": "Geleia vermelha",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Fire",
+    "nome": "Fogo",
+    "icone": "fire"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 70,
+   "attack": 75,
+   "defense": 85
+  }
+ },
+ "yakushimamonster002": {
+  "nome": "Espada Encantada",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 95,
+   "attack": 105,
+   "defense": 90
+  }
+ },
+ "yakushimamonster003": {
+  "nome": "Morcego de Caverna",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 3,
+  "stats": {
+   "hp": 65,
+   "attack": 75,
+   "defense": 80
+  }
+ },
+ "yakushimamonster003_purple": {
+  "nome": "Morcego Luminoso",
+  "descricao": "[Colaboração com Terraria] Monstro vindo de outro universo. Parece que aqui ele pode ser domado.",
+  "elementos": [
+   {
+    "chave": "Normal",
+    "nome": "Não elemental",
+    "icone": "neutral"
+   }
+  ],
+  "paldex": -1,
+  "raridade": 4,
+  "stats": {
+   "hp": 80,
+   "attack": 80,
+   "defense": 95
+  }
+ },
+ "yeti": {
+  "nome": "Wumpo",
+  "descricao": "Cientistas já rasparam um espécime todo para descobrir sua verdadeira forma, mas no final restou apenas o pelo tosquiado, como se nunca tivesse existido nada no interior.",
+  "elementos": [
+   {
+    "chave": "Ice",
+    "nome": "Gelo",
+    "icone": "ice"
+   }
+  ],
+  "paldex": 134,
+  "raridade": 7,
+  "stats": {
+   "hp": 140,
+   "attack": 80,
+   "defense": 100
+  }
+ },
+ "yeti_grass": {
+  "nome": "Wumpo Botan",
+  "descricao": "Cientistas já apararam um espécime todo para descobrir sua verdadeira forma, mas no final restou apenas a grama cortada, como se nunca tivesse existido nada no interior.",
+  "elementos": [
+   {
+    "chave": "Leaf",
+    "nome": "Grama",
+    "icone": "grass"
+   }
+  ],
+  "paldex": 134,
+  "raridade": 8,
+  "stats": {
+   "hp": 140,
+   "attack": 80,
+   "defense": 110
+  }
+ }
+}

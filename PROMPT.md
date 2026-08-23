@@ -1596,6 +1596,29 @@ mais os `.webp` em `public/icons/itens/` (9,4 MB).
 mas não foi preciso: o Palworld Save Pal já resolvia, com o código sob
 GPL-3.0 (dado de jogo, mesma tolerância de projeto de fã do resto do site).
 
+#### ✅ Catálogo de espécie e de habilidade — resolvido em 23/08/2026
+
+Mesma fonte, achado na mesma varredura: `data/json/pals.json` (**409
+espécies** — nome de exibição, descrição de bestiário, tipo elemental,
+número da Paldex) e `l10n/pt-BR/active_skills.json` (**326 habilidades
+ativas** traduzidas). `nomeDoPal` deixou de devolver o `PalID` cru e passou
+a devolver o nome de exibição de verdade; a ficha ganhou elemento, Paldex e
+descrição de bestiário. `lib/pals-especies.json`, `lib/habilidades.ts`.
+
+⚠️ **As habilidades ativas guardam a chave com prefixo de enum**
+(`EPalWazaID::FlareTornado`) — os outros catálogos (item, passiva, espécie)
+não têm esse prefixo. Pego testando contra `ActiveSkills` reais de um Pal
+capturado da API antes de subir; sem o teste, cairia no fallback silencioso
+de "mostra a chave crua".
+
+📌 **Inventário fechado do resto de `data/json/` daquele projeto** —
+`breeding*.json` (calculadora de cruzamento), `buildings.json` e
+`*_meshes.json` (editor de base), `technologies.json`/`lab_research.json`
+(árvore tecnológica), `missions.json` (quests), `dungeons.json` /
+`towers.json` / `relics.json` / `fast_travel_points.json` (pontos de mapa).
+Olhado e descartado de propósito — nada disso serve ao marketplace e ao
+cofre, que é o que a Palleira constrói hoje.
+
 ### 7.6 Fluxo de venda (com custódia)
 
 Tudo automático, via RCON. O jogador **não combina nada com ninguém**.

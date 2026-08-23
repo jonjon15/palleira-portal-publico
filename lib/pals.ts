@@ -1,5 +1,6 @@
 import MODELOS from "@/lib/pals-modelos.json";
 import ICONES from "@/lib/pals-icones.json";
+import ESPECIES from "@/lib/pals-especies.json";
 
 /**
  * Os Pals na tela: qual modelo 3D usar e como chamá-los (§7.4 do PROMPT.md).
@@ -24,8 +25,18 @@ interface Asset {
   bytes: number;
 }
 
+interface Especie {
+  nome: string;
+  descricao: string;
+  elementos: { chave: string; nome: string; icone: string | null }[];
+  paldex: number | null;
+  raridade: number | null;
+  stats: { hp: number; attack: number; defense: number };
+}
+
 const MODELO_DE = MODELOS as Record<string, Asset>;
 const ICONE_DE = ICONES as Record<string, Asset>;
+const ESPECIE_DE = ESPECIES as Record<string, Especie>;
 
 /** Onde cada tipo de arquivo é servido. Hash no nome = cache eterno. */
 const BASE_MODELO = "/models/pals";
@@ -111,19 +122,43 @@ export function urlDoIcone(palId: string): string | null {
 /* ------------------------------------------------------------------- nomes */
 
 /**
+ * 📌 **O catálogo de espécie chegou em 23/08/2026** — 409 Pals, com nome de
+ * exibição, descrição de bestiário e tipo elemental, do mesmo dataset dos
+ * ícones e itens (`data/json/pals.json` + `l10n/pt-BR/pals.json` do
+ * Palworld Save Pal). Antes disso `nomeDoPal` devolvia o `PalID` cru
+ * (`HadesBird`) — agora devolve o nome de exibição de verdade (`Gloopie`
+ * para `OctopusGirl`), com o mesmo `resolverChave` de sempre para Alpha e
+ * skin caírem na espécie base quando não têm entrada própria.
+ */
+function especieDoPal(palId: string): Especie | null {
+  const chave = resolverChave(palId, (c) => c in ESPECIE_DE);
+  return chave ? ESPECIE_DE[chave] : null;
+}
+
+/**
  * O nome do Pal na tela.
  *
- * ⚠️ Hoje devolve o `PalID` cru, e isso é proposital: os nomes internos não
- * são os nomes de exibição (`HadesBird`, `GrassMammoth`), e chutar a tradução
- * poria nome errado na ficha de um bicho que vale Paletas. A mesma regra dos
- * itens vale aqui: **chave sem tradução mostra a chave**, nunca um palpite.
- *
- * O catálogo de verdade entra depois, semeado de dataset com licença (§7.4);
- * quando entrar, só esta função muda.
+ * 🔴 **Chave sem tradução mostra a chave, nunca um palpite** — mesma regra
+ * dos itens e das passivas. Ainda acontece: 409 espécies no catálogo contra
+ * as centenas que o jogo tem ao todo.
  */
 export function nomeDoPal(palId: string): string {
-  return (palId ?? "").replace(/^(BOSS|PREDATOR|SUMMON|RAID|GYM)_/i, "");
+  return (
+    especieDoPal(palId)?.nome ??
+    (palId ?? "").replace(/^(BOSS|PREDATOR|SUMMON|RAID|GYM)_/i, "")
+  );
 }
+
+/** O texto de bestiário — vazio quando a espécie não está no catálogo. */
+export const descricaoDoPal = (palId: string) => especieDoPal(palId)?.descricao ?? "";
+
+/** Tipo elemental, com ícone — um Pal pode ter até dois (ex.: Água + Escuridão). */
+export const elementosDoPal = (palId: string) => especieDoPal(palId)?.elementos ?? [];
+
+export const urlDoIconeElemento = (icone: string) => `/icons/elementos/${icone}.webp`;
+
+/** Número na Paldex — `null` quando a espécie não está no catálogo. */
+export const paldexDoPal = (palId: string) => especieDoPal(palId)?.paldex ?? null;
 
 /** O prefixo `BOSS_` é como o jogo marca Alpha — vale destaque na ficha. */
 export const ehAlpha = (palId: string) => /^BOSS_/i.test(palId ?? "");

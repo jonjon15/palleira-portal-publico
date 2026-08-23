@@ -245,6 +245,33 @@ não mais de prefixo de `ItemID` chutado. Ícone entrou em toda tela que lista
 item: mercado, cofre, anúncios. Regra de sempre sem mudar: item fora do
 dataset mostra a chave, nunca um nome inventado.
 
+**E o catálogo de espécie e de habilidade, achados na mesma varredura** —
+`data/json/pals.json` (**409 espécies**: nome de exibição, descrição de
+bestiário, tipo elemental com ícone, número da Paldex) e
+`data/json/l10n/pt-BR/active_skills.json` (**326 habilidades ativas**
+traduzidas, com o que cada uma faz). `nomeDoPal("OctopusGirl")` devolvia o
+`PalID` cru; agora devolve **"Gloopie"**, com elemento Água/Escuridão e a
+descrição de bestiário — a ficha ficou de pé para o lado do que os
+concorrentes mostram.
+
+⚠️ **Achado ao integrar: as habilidades ativas guardam a chave com um
+prefixo de enum** (`EPalWazaID::FlareTornado`), que os outros catálogos não
+têm. Testar contra dado real de novo (`FlareTornado`/`DarkWave`/`GhostFlame`,
+vistos no `HadesBird` da Bonato em 23/08) pegou isso antes de subir — sem o
+teste, toda habilidade ativa teria caído no fallback "mostra a chave crua"
+silenciosamente.
+
+📌 **Inventário fechado da pasta `data/json/` daquele projeto** — para não
+ter mais rodada de "achei mais uma coisa": tem também `breeding*.json`
+(~3,6 MB, calculadora de cruzamento), `buildings.json` +
+`*_meshes.json` (editor de base), `technologies.json` +
+`lab_research.json` (árvore tecnológica), `missions.json` (quests),
+`dungeons.json`/`towers.json`/`relics.json`/`fast_travel_points.json`
+(pontos de mapa) e `presets.json` (é da própria interface daquele app, não
+é dado de jogo). **Nenhum disso serve ao que a Palleira constrói hoje**
+(marketplace e cofre) — fica registrado que foi olhado e descartado de
+propósito, não esquecido.
+
 **Três ajustes finos no visualizador 3D, pedidos olhando a tela de
 verdade:**
 

@@ -1,423 +1,1686 @@
 {
- "AirDash_1": "Corrida no ar +1.",
- "AirDash_2": "Corrida no ar +2.",
- "AirDash_3": "Corrida no ar +3.",
- "AirDash_4": "Corrida no ar +4.",
- "Alien": "Célula Viva Desconhecida",
- "Attack_ACC_up1": "Aumento de Ataque Nv. 1",
- "Attack_ACC_up1_Armor": "Aumento de Ataque (Peq.) Nv. 1",
- "Attack_ACC_up1_Otomo_Only_Equip": "Aumento de Ataque de Pals Nv. 1",
- "Attack_ACC_up2": "Aumento de Ataque Nv. 2",
- "Attack_ACC_up2_Armor": "Aumento de Ataque (Peq.) Nv. 2",
- "Attack_ACC_up2_Otomo_Only_Equip": "Aumento de Ataque de Pals Nv. 2",
- "Attack_ACC_up3": "Aumento de Ataque Nv. 3",
- "Attack_ACC_up3_Armor": "Aumento de Ataque (Peq.) Nv. 3",
- "Attack_ACC_up3_Otomo_Only_Equip": "Aumento de Ataque de Pals Nv. 3",
- "Attack_ACC_up4": "Aumento de Ataque Nv. 4",
- "Attack_ACC_up4_Armor": "Aumento de Ataque (Peq.) Nv. 4",
- "Attack_ACC_up4_Otomo_Only_Equip": "Aumento de Ataque de Pals Nv. 4",
- "AutoHPRegeneRate_Passive": "Terapeuta",
- "AvoidDurationUp_EquipSkill_2": "Maior Tempo de Invencibilidade na Esquiva",
- "BossDefeatReward_AmaterasuWolf_Dark": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_Anubis": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_BadCatgirl": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_BerryGoat_Dark": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_BlackMetalDragon": "Aumento Médio de Dano Dracônico",
- "BossDefeatReward_BlackPuppy": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_BlueDragon": "Aumento Pequeno de Dano de Água",
- "BossDefeatReward_BlueThunderHorse": "Aumento Médio de Dano Elétrico",
- "BossDefeatReward_BlueberryFairy": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_CactusDoll": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_CaptainPenguin": "Aumento Pequeno de Dano de Água",
- "BossDefeatReward_CatMage": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_CatVampire": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_CubeTurtle": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_CubeTurtle_Neutral": "Aumento Médio de Dano Não Elemental",
- "BossDefeatReward_DarkScorpion": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_DarkScorpion_Ground": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_DomeArmorDragon": "Aumento Grande de Dano de Terra",
- "BossDefeatReward_ElecLizard": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_ElecPanda": "Aumento Médio de Dano Elétrico",
- "BossDefeatReward_ElecSnail": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_FairyDragon": "Aumento Pequeno de Dano Dracônico",
- "BossDefeatReward_FengyunDeeper": "Aumento Pequeno de Dano Não Elemental",
- "BossDefeatReward_FengyunDeeper_Electric": "Aumento Médio de Dano Elétrico",
- "BossDefeatReward_FireKirin": "Aumento Pequeno de Dano de Fogo",
- "BossDefeatReward_FlameBuffalo": "Aumento Pequeno de Dano de Fogo",
- "BossDefeatReward_FlowerDinosaur_Electric": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_FlowerDoll": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_FoxExorcist": "Aumento Médio de Dano de Fogo",
- "BossDefeatReward_FoxMage": "Aumento Pequeno de Dano de Fogo",
- "BossDefeatReward_GhostDragon": "Aumento Médio de Dano Dracônico",
- "BossDefeatReward_GhostRabbit": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_GoldenHorse": "Aumento Médio de Dano de Terra",
- "BossDefeatReward_GrassGolem": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_GrassGolem_Dark": "Aumento Médio de Dano de Escuridão",
- "BossDefeatReward_GrassMammoth": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_GrassPanda_Electric": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_GrassRabbitMan": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_GrimGirl": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_HawkBird": "Aumento Pequeno de Dano Não Elemental",
- "BossDefeatReward_HerculesBeetle": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_HerculesBeetle_Ground": "Aumento Médio de Dano de Terra",
- "BossDefeatReward_Horus_Water": "Aumento Médio de Dano de Água",
- "BossDefeatReward_IceFox": "Aumento Pequeno de Dano de Gelo",
- "BossDefeatReward_IceHorse": "Aumento Grande de Dano de Gelo",
- "BossDefeatReward_IceHorse_Dark": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_IceNarwhal": "Aumento Grande de Dano de Gelo",
- "BossDefeatReward_IceNarwhal_Fire": "Aumento Grande de Dano de Fogo",
- "BossDefeatReward_JetDragon": "Aumento Grande de Dano Dracônico",
- "BossDefeatReward_KabukiMan": "Aumento Médio de Dano de Fogo",
- "BossDefeatReward_KingAlpaca": "Aumento Pequeno de Dano Não Elemental",
- "BossDefeatReward_KingAlpaca_Ice": "Aumento Médio de Dano de Gelo",
- "BossDefeatReward_KingBahamut": "Aumento Grande de Dano de Fogo",
- "BossDefeatReward_Kirin": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_Kitsunebi_Ice": "Aumento Grande de Dano de Gelo",
- "BossDefeatReward_LazyCatfish": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_LazyDragon_Electric": "Aumento Pequeno de Dano Dracônico",
- "BossDefeatReward_LilyQueen": "Aumento Grande de Dano de Grama",
- "BossDefeatReward_LilyQueen_Dark": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_LotusDragon": "Aumento Médio de Dano de Água",
- "BossDefeatReward_Manticore": "Aumento Pequeno de Dano de Fogo",
- "BossDefeatReward_MoonChild": "Aumento Médio de Dano de Escuridão",
- "BossDefeatReward_MopKing": "Aumento Pequeno de Dano de Gelo",
- "BossDefeatReward_MushroomLady": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_Mutant": "Aumento Pequeno de Dano Não Elemental",
- "BossDefeatReward_MysteryMask": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_NaughtyCat": "Aumento Pequeno de Dano Não Elemental",
- "BossDefeatReward_NightBlueHorse": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_PinkRabbit_Grass": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_PlantSlime": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_PoseidonOrca": "Aumento Grande de Dano de Água",
- "BossDefeatReward_PurpleSpider": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_QueenBee": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_RaijinDaughter_Water": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_RockBeast": "Aumento Médio de Dano de Terra",
- "BossDefeatReward_RockBeast_Ice": "Aumento Médio de Dano de Gelo",
- "BossDefeatReward_Ronin": "Aumento Médio de Dano de Fogo",
- "BossDefeatReward_SaintCentaur_1": "Aumento Grande de Dano Não Elemental",
- "BossDefeatReward_SaintCentaur_2": "Aumento Pequeno de Dano de Escuridão",
- "BossDefeatReward_SakuraSaurus": "Aumento Pequeno de Dano de Grama",
- "BossDefeatReward_SakuraSaurus_Water": "Aumento Pequeno de Dano de Água",
- "BossDefeatReward_ScorpionMan_Electric": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_SkyDragon": "Aumento Pequeno de Dano Dracônico",
- "BossDefeatReward_Suzaku": "Aumento Grande de Dano de Fogo",
- "BossDefeatReward_ThunderBird": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_ThunderFluffyBird": "Aumento Pequeno de Dano Elétrico",
- "BossDefeatReward_Umihebi": "Aumento Médio de Dano de Água",
- "BossDefeatReward_VioletFairy": "Aumento Médio de Dano de Grama",
- "BossDefeatReward_VolcanicMonster": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_VolcanoDragon": "Aumento Pequeno de Dano de Fogo",
- "BossDefeatReward_VolcanoDragon_Ice": "Aumento Médio de Dano de Gelo",
- "BossDefeatReward_WeaselDragon": "Aumento Pequeno de Dano de Gelo",
- "BossDefeatReward_Werewolf_Ice": "Aumento Grande de Dano de Gelo",
- "BossDefeatReward_WhiteDeer": "Aumento Médio de Dano Não Elemental",
- "BossDefeatReward_WhiteDeer_Dark": "Aumento Médio de Dano de Escuridão",
- "BossDefeatReward_WhiteMoth": "Aumento Pequeno de Dano de Gelo",
- "BossDefeatReward_WhiteShieldDragon": "Aumento Médio de Dano Dracônico",
- "BossDefeatReward_WhiteTiger_Ground": "Aumento Médio de Dano de Terra",
- "BossDefeatReward_WingGolem": "Aumento Pequeno de Dano de Terra",
- "BossDefeatReward_Yeti_Grass": "Aumento Pequeno de Dano de Grama",
- "CaptureLevel_Up_1": "Poder de Captura +1",
- "CaptureLevel_Up_2": "Poder de Captura +2",
- "CaptureLevel_Up_3": "Poder de Captura +3",
- "CaptureLevel_Up_4": "Poder de Captura +4",
- "CaptureLevel_Up_5": "Poder de Captura +5",
- "CaptureLevel_Up_6": "Poder de Captura +6",
- "CollectItem_Berries": "Coleta de Frutinhas",
- "CollectItem_Egg": "Produção de Ovo",
- "CollectItem_Milk": "Produção de Leite",
- "CollectItem_Money": "Pérolas aos Porcos",
- "CollectItem_Sweets": "Produção de Doces",
- "CollectItem_Wool_Alpaca": "Produção de Lã",
- "CollectItem_Wool_SheepBall": "Produção de Lã",
- "CollectItem_Wool_WhiteMoth": "Tecedura de Seda",
- "CoolTimeReduction_Down_1": "Relaxado",
- "CoolTimeReduction_Up_1": "Sossegado",
- "CoolTimeReduction_Up_2": "Impaciente",
- "CoolTimeReduction_Up_3": "Tempestade e Ímpeto",
- "CraftSpeed_down1": "Desajeitado",
- "CraftSpeed_down2": "Tendência ao ócio",
- "CraftSpeed_up1": "Dedicado",
- "CraftSpeed_up2": "Espírito artesão",
- "CraftSpeed_up3": "Artesão Transcendental",
- "Defense_ACC_up1_Otomo_Only_Equip": "Aumento de Defesa de Pals Nv. 1",
- "Defense_ACC_up2_Otomo_Only_Equip": "Aumento de Defesa de Pals Nv. 2",
- "Defense_ACC_up3_Otomo_Only_Equip": "Aumento de Defesa de Pals Nv. 3",
- "Defense_ACC_up4_Otomo_Only_Equip": "Aumento de Defesa de Pals Nv. 4",
- "Deffence_down1": "Delicado",
- "Deffence_down2": "Quebradiço",
- "Deffence_up1": "Casca grossa",
- "Deffence_up2": "Corpo Fechado",
- "Deffence_up2_2": "Peso Pesado",
- "Deffence_up3": "Corpo de Diamante",
- "Defuser_ExplosiveSpore_EquipSkill": "Redução de Dano por Explosão",
- "ElementBoost_Aqua_1_PAL": "Brincando com Água",
- "ElementBoost_Aqua_2_PAL": "Realeza Marinha",
- "ElementBoost_Dark_1_BossDefeat": "Aumento Pequeno de Dano de Escuridão",
- "ElementBoost_Dark_1_Otomo_Only_Equip": "Aumento de Dano de Escuridão de Pals Nv. 1",
- "ElementBoost_Dark_1_PAL": "Véu de Escuridão",
- "ElementBoost_Dark_2_BossDefeat": "Aumento Médio de Dano de Escuridão",
- "ElementBoost_Dark_2_Otomo_Only_Equip": "Aumento de Dano de Escuridão de Pals Nv. 2",
- "ElementBoost_Dark_2_PAL": "Monarca do Breu",
- "ElementBoost_Dark_3_BossDefeat": "Aumento Grande de Dano de Escuridão",
- "ElementBoost_Dark_3_Otomo_Only_Equip": "Aumento de Dano de Escuridão de Pals Nv. 3",
- "ElementBoost_Dark_4_Otomo_Only_Equip": "Aumento de Dano de Escuridão de Pals Nv. 4",
- "ElementBoost_Dragon_1_BossDefeat": "Aumento Pequeno de Dano Dracônico",
- "ElementBoost_Dragon_1_Otomo_Only_Equip": "Aumento de Dano Dracônico de Pals Nv. 1",
- "ElementBoost_Dragon_1_PAL": "Casta Dracônica",
- "ElementBoost_Dragon_2_BossDefeat": "Aumento Médio de Dano Dracônico",
- "ElementBoost_Dragon_2_Otomo_Only_Equip": "Aumento de Dano Dracônico de Pals Nv. 2",
- "ElementBoost_Dragon_2_PAL": "Dragão Divino",
- "ElementBoost_Dragon_3_BossDefeat": "Aumento Grande de Dano Dracônico",
- "ElementBoost_Dragon_3_Otomo_Only_Equip": "Aumento de Dano Dracônico de Pals Nv. 3",
- "ElementBoost_Dragon_4_Otomo_Only_Equip": "Aumento de Dano Dracônico de Pals Nv. 4",
- "ElementBoost_Earth_1_BossDefeat": "Aumento Pequeno de Dano de Terra",
- "ElementBoost_Earth_1_Otomo_Only_Equip": "Aumento de Dano de Terra de Pals Nv. 1",
- "ElementBoost_Earth_1_PAL": "Força da Terra",
- "ElementBoost_Earth_2_BossDefeat": "Aumento Médio de Dano de Terra",
- "ElementBoost_Earth_2_Otomo_Only_Equip": "Aumento de Dano de Terra de Pals Nv. 2",
- "ElementBoost_Earth_2_PAL": "Regente de Terra",
- "ElementBoost_Earth_3_BossDefeat": "Aumento Grande de Dano de Terra",
- "ElementBoost_Earth_3_Otomo_Only_Equip": "Aumento de Dano de Terra de Pals Nv. 3",
- "ElementBoost_Earth_4_Otomo_Only_Equip": "Aumento de Dano de Terra de Pals Nv. 4",
- "ElementBoost_Electricity_1_BossDefeat": "Aumento Pequeno de Dano Elétrico",
- "ElementBoost_Electricity_1_Otomo_Only_Equip": "Aumento de Dano Elétrico de Pals Nv. 1",
- "ElementBoost_Electricity_2_BossDefeat": "Aumento Médio de Dano Elétrico",
- "ElementBoost_Electricity_2_Otomo_Only_Equip": "Aumento de Dano Elétrico de Pals Nv. 2",
- "ElementBoost_Electricity_3_BossDefeat": "Aumento Grande de Dano Elétrico",
- "ElementBoost_Electricity_3_Otomo_Only_Equip": "Aumento de Dano Elétrico de Pals Nv. 3",
- "ElementBoost_Electricity_4_Otomo_Only_Equip": "Aumento de Dano Elétrico de Pals Nv. 4",
- "ElementBoost_Fire_1_BossDefeat": "Aumento Pequeno de Dano de Fogo",
- "ElementBoost_Fire_1_Otomo_Only_Equip": "Aumento de Dano de Fogo de Pals Nv. 1",
- "ElementBoost_Fire_1_PAL": "Brincando com Fogo",
- "ElementBoost_Fire_2_BossDefeat": "Aumento Médio de Dano de Fogo",
- "ElementBoost_Fire_2_Otomo_Only_Equip": "Aumento de Dano de Fogo de Pals Nv. 2",
- "ElementBoost_Fire_2_PAL": "Regente de Fogo",
- "ElementBoost_Fire_3_BossDefeat": "Aumento Grande de Dano de Fogo",
- "ElementBoost_Fire_3_Otomo_Only_Equip": "Aumento de Dano de Fogo de Pals Nv. 3",
- "ElementBoost_Fire_4_Otomo_Only_Equip": "Aumento de Dano de Fogo de Pals Nv. 4",
- "ElementBoost_Ice_1_BossDefeat": "Aumento Pequeno de Dano de Gelo",
- "ElementBoost_Ice_1_Otomo_Only_Equip": "Aumento de Dano de Gelo de Pals Nv. 1",
- "ElementBoost_Ice_1_PAL": "Sangue Frio",
- "ElementBoost_Ice_2_BossDefeat": "Aumento Médio de Dano de Gelo",
- "ElementBoost_Ice_2_Otomo_Only_Equip": "Aumento de Dano de Gelo de Pals Nv. 2",
- "ElementBoost_Ice_2_PAL": "Regente de Gelo",
- "ElementBoost_Ice_3_BossDefeat": "Aumento Grande de Dano de Gelo",
- "ElementBoost_Ice_3_Otomo_Only_Equip": "Aumento de Dano de Gelo de Pals Nv. 3",
- "ElementBoost_Ice_4_Otomo_Only_Equip": "Aumento de Dano de Gelo de Pals Nv. 4",
- "ElementBoost_Leaf_1_BossDefeat": "Aumento Pequeno de Dano de Grama",
- "ElementBoost_Leaf_1_Otomo_Only_Equip": "Aumento de Dano de Grama de Pals Nv. 1",
- "ElementBoost_Leaf_1_PAL": "Aroma Verdejante",
- "ElementBoost_Leaf_2_BossDefeat": "Aumento Médio de Dano de Grama",
- "ElementBoost_Leaf_2_Otomo_Only_Equip": "Aumento de Dano de Grama de Pals Nv. 2",
- "ElementBoost_Leaf_2_PAL": "Monarca de Espíritos",
- "ElementBoost_Leaf_3_BossDefeat": "Aumento Grande de Dano de Grama",
- "ElementBoost_Leaf_3_Otomo_Only_Equip": "Aumento de Dano de Grama de Pals Nv. 3",
- "ElementBoost_Leaf_4_Otomo_Only_Equip": "Aumento de Dano de Grama de Pals Nv. 4",
- "ElementBoost_Normal_1_BossDefeat": "Aumento Pequeno de Dano Não Elemental",
- "ElementBoost_Normal_1_Otomo_Only_Equip": "Aumento de Dano Não Elemental de Pals Nv. 1",
- "ElementBoost_Normal_1_PAL": "Território do Nada",
- "ElementBoost_Normal_2_BossDefeat": "Aumento Médio de Dano Não Elemental",
- "ElementBoost_Normal_2_Otomo_Only_Equip": "Aumento de Dano Não Elemental de Pals Nv. 2",
- "ElementBoost_Normal_2_PAL": "Ascensão",
- "ElementBoost_Normal_3_BossDefeat": "Aumento Grande de Dano Não Elemental",
- "ElementBoost_Normal_3_Otomo_Only_Equip": "Aumento de Dano Não Elemental de Pals Nv. 3",
- "ElementBoost_Normal_4_Otomo_Only_Equip": "Aumento de Dano Não Elemental de Pals Nv. 4",
- "ElementBoost_Thunder_1_PAL": "Capacitor",
- "ElementBoost_Thunder_2_PAL": "Regente de Raio",
- "ElementBoost_Water_1_BossDefeat": "Aumento Pequeno de Dano de Água",
- "ElementBoost_Water_1_Otomo_Only_Equip": "Aumento de Dano de Água de Pals Nv. 1",
- "ElementBoost_Water_2_BossDefeat": "Aumento Médio de Dano de Água",
- "ElementBoost_Water_2_Otomo_Only_Equip": "Aumento de Dano de Água de Pals Nv. 2",
- "ElementBoost_Water_3_BossDefeat": "Aumento Grande de Dano de Água",
- "ElementBoost_Water_3_Otomo_Only_Equip": "Aumento de Dano de Água de Pals Nv. 3",
- "ElementBoost_Water_4_Otomo_Only_Equip": "Aumento de Dano de Água de Pals Nv. 4",
- "ElementResist_Aqua_1": "Redução de Dano de Água Nv. 1",
- "ElementResist_Aqua_1_PAL": "Impermeabilização",
- "ElementResist_Aqua_2": "Redução de Dano de Água Nv. 2",
- "ElementResist_Aqua_3": "Redução de Dano de Água Nv. 3",
- "ElementResist_Aqua_4": "Redução de Dano de Água Nv. 4",
- "ElementResist_Dark_1": "Redução de Dano de Escuridão Nv. 1",
- "ElementResist_Dark_1_PAL": "De Bem com a Vida",
- "ElementResist_Dark_2": "Redução de Dano de Escuridão Nv. 2",
- "ElementResist_Dark_3": "Redução de Dano de Escuridão Nv. 3",
- "ElementResist_Dark_4": "Redução de Dano de Escuridão Nv. 4",
- "ElementResist_Dragon_1": "Redução de Dano Dracônico Nv. 1",
- "ElementResist_Dragon_1_PAL": "Matador de Dragões",
- "ElementResist_Dragon_2": "Redução de Dano Dracônico Nv. 2",
- "ElementResist_Dragon_3": "Redução de Dano Dracônico Nv. 3",
- "ElementResist_Dragon_4": "Redução de Dano Dracônico Nv. 4",
- "ElementResist_Earth_1": "Redução de Dano de Terra Nv. 1",
- "ElementResist_Earth_1_PAL": "Reforço Antissísmico",
- "ElementResist_Earth_2": "Redução de Dano de Terra Nv. 2",
- "ElementResist_Earth_3": "Redução de Dano de Terra Nv. 3",
- "ElementResist_Earth_4": "Redução de Dano de Terra Nv. 4",
- "ElementResist_Fire_1": "Redução de Dano de Fogo Nv. 1",
- "ElementResist_Fire_1_PAL": "Um Bom Bronzeado",
- "ElementResist_Fire_2": "Redução de Dano de Fogo Nv. 2",
- "ElementResist_Fire_3": "Redução de Dano de Fogo Nv. 3",
- "ElementResist_Fire_4": "Redução de Dano de Fogo Nv. 4",
- "ElementResist_Ice_1": "Redução de Dano de Gelo Nv. 1",
- "ElementResist_Ice_1_PAL": "Corpo Quente",
- "ElementResist_Ice_2": "Redução de Dano de Gelo Nv. 2",
- "ElementResist_Ice_3": "Redução de Dano de Gelo Nv. 3",
- "ElementResist_Ice_4": "Redução de Dano de Gelo Nv. 4",
- "ElementResist_Leaf_1": "Redução de Dano de Grama Nv. 1",
- "ElementResist_Leaf_1_PAL": "Efeito Herbicida",
- "ElementResist_Leaf_2": "Redução de Dano de Grama Nv. 2",
- "ElementResist_Leaf_3": "Redução de Dano de Grama Nv. 3",
- "ElementResist_Leaf_4": "Redução de Dano de Grama Nv. 4",
- "ElementResist_Normal_1": "Redução de Dano Não Elemental Nv. 1",
- "ElementResist_Normal_1_PAL": "Anormal",
- "ElementResist_Normal_2": "Redução de Dano Não Elemental Nv. 2",
- "ElementResist_Normal_3": "Redução de Dano Não Elemental Nv. 3",
- "ElementResist_Normal_4": "Redução de Dano Não Elemental Nv. 4",
- "ElementResist_Thunder_1": "Redução de Dano Elétrico Nv. 1",
- "ElementResist_Thunder_1_PAL": "Isolamento Elétrico",
- "ElementResist_Thunder_2": "Redução de Dano Elétrico Nv. 2",
- "ElementResist_Thunder_3": "Redução de Dano Elétrico Nv. 3",
- "ElementResist_Thunder_4": "Redução de Dano Elétrico Nv. 4",
- "EternalFlame": "Chama Eterna",
- "FriendshipPoint_Increase_EquipSkill": "Maior Aumento de Confiança dos Pals no Grupo",
- "FullStomach_Down_1_BossDefeat": "FullStomach_Down_1_BossDefeat",
- "GYM_NAME_Desert": "Dirigente da Milícia Popular de Palpagos",
- "GYM_NAME_Forest": "Fundadora da Associação de Proteção aos Pals",
- "GYM_NAME_Meadow": "Dirigente dos Caçadores Clandestinos de Rayne",
- "GYM_NAME_Sakurajima": "Chefe do Bando das Flores e da Lua",
- "GYM_NAME_Snow": "Chefe da Unidade de Pesquisas Genéticas",
- "GYM_NAME_Viking": "Chefe do Povo Decaído",
- "GYM_NAME_Volcano": "Líder Espiritual dos Amigos da Chama Eterna",
- "HP_ACC_up1": "Aumento de PV Nv. 1",
- "HP_ACC_up2": "Aumento de PV Nv. 2",
- "HP_ACC_up3": "Aumento de PV Nv. 3",
- "HP_ACC_up4": "Aumento de PV Nv. 4",
- "Invader": "Invasor",
- "Invalid_ToxicGas_EquipSkill": "Dano por Gás Venenoso Anulado",
- "JumpCount_Increase1": "Número de pulos +1.",
- "JumpCount_Increase2": "Número de pulos +2.",
- "JumpCount_Increase3": "Número de pulos +3.",
- "JumpPower_Increase": "Fortalece o pulo.",
- "Legend": "Lendário",
- "MaxInventoryWeight_up": "Aumento de Peso Máximo Nv. 1",
- "MaxInventoryWeight_up2": "Aumento de Peso Máximo Nv. 2",
- "MaxInventoryWeight_up3": "Aumento de Peso Máximo Nv. 3",
- "MaxInventoryWeight_up_Equip_1": "Aumento de Peso Máximo Nv. 1",
- "MaxInventoryWeight_up_Equip_2": "Aumento de Peso Máximo Nv. 2",
- "MaxInventoryWeight_up_Equip_3": "Aumento de Peso Máximo Nv. 3",
- "MaxInventoryWeight_up_Equip_4": "Aumento de Peso Máximo Nv. 4",
- "MiniNushi": "Imponência",
- "MoveSpeed_up_1": "Ligeiro",
- "MoveSpeed_up_2": "Bom corredor",
- "MoveSpeed_up_3": "Vertiginoso",
- "MutationPal_Babysitter": "Babá",
- "MutationPal_ExplosionResist": "Blindagem Pesada",
- "MutationPal_Immortal": "Imortalidade",
- "MutationPal_Mutant": "Constituição Peculiar",
- "NightOwl": "Notivaguismo",
- "Nocturnal": "Insônia",
- "NonKilling": "Clemência",
- "Noukin": "Brutamontes",
- "Nushi": "Senhor das Águas",
- "OctaviaArmorVampire": "Combustível Sangrento",
- "PAL_ALLAttack_down1": "Medroso",
- "PAL_ALLAttack_down2": "Pusilânime",
- "PAL_ALLAttack_up1": "Ousado",
- "PAL_ALLAttack_up2": "Brutal",
- "PAL_ALLAttack_up3": "Deus Inclemente",
- "PAL_CorporateSlave": "Escravo do trabalho",
- "PAL_FullStomach_Down_1": "Comedido",
- "PAL_FullStomach_Down_2": "Mestre da Dieta",
- "PAL_FullStomach_Down_3": "Jejuador Supremo",
- "PAL_FullStomach_Up_1": "Comilão",
- "PAL_FullStomach_Up_2": "Saco sem fundo",
- "PAL_Sanity_Down_1": "Pensamento positivo",
- "PAL_Sanity_Down_2": "Viciado no trabalho",
- "PAL_Sanity_Down_3": "Espírito Inalterável",
- "PAL_Sanity_Up_1": "Mente instável",
- "PAL_Sanity_Up_2": "Tendência suicida",
- "PAL_SpiritualInst": "pt-BR_Text",
- "PAL_conceited": "Presunçoso",
- "PAL_masochist": "Masoquista",
- "PAL_oraora": "Confrontador",
- "PAL_rude": "Violento",
- "PAL_sadist": "Sádico",
- "PalExp_Increase_1_Otomo_Only_Equip": "Aumento de Experiência de Pals Nv. 1",
- "PalExp_Increase_2_Otomo_Only_Equip": "Aumento de Experiência de Pals Nv. 2",
- "PalExp_Increase_3_Otomo_Only_Equip": "Aumento de Experiência de Pals Nv. 3",
- "PlayerSP_DecreaseRate_Passive": "Prevenção de Exaustão",
- "Rare": "Da sorte",
- "ReloadSpeedUp_Passive": "Mestre da Recarga",
- "RideJumpCount_Increase1": "Leveza",
- "RideJumpCount_Increase2": "Cruza-Céus",
- "SalePrice_Down_1": "Deplorável",
- "SalePrice_Up_1": "Nobre",
- "SalePrice_Up_2": "Linhagem Distinta",
- "Salvation": "Salvação",
- "SelfDeathAddItemDrop_up_1": "Compartilhamento",
- "SelfDeathAddItemDrop_up_2": "Mentalidade Altruísta",
- "SelfDeathAddItemDrop_up_3": "Banquete Generoso",
- "SphereModule_Curve": "Curva de Esfera +1",
- "SphereModule_Curve2": "Deslize de Esfera",
- "SphereModule_Heavy": "Peso de Esfera +1",
- "SphereModule_Homing": "Rastreio de Esfera",
- "SphereModule_Sniper": "Alcance de Esfera +1",
- "SphereModule_Sniper2": "Alcance de Esfera +2",
- "Stamina_Down_1": "Enfurnado",
- "Stamina_Up_1": "Fôlego Interminável",
- "Stamina_Up_2": "Criança Serelepe",
- "Stamina_Up_3": "Movimento Perpétuo",
- "StonDrop_Boost_1": "Aumento de Minério Garimpado Nv. 1",
- "StonDrop_Boost_2": "Aumento de Minério Garimpado Nv. 2",
- "StonDrop_Boost_3": "Aumento de Minério Garimpado Nv. 3",
- "StonDrop_Boost_4": "Aumento de Minério Garimpado Nv. 4",
- "StonDrop_Boost_5": "Aumento de Minério Garimpado Nv. 5",
- "StonWoodDrop_Boost": "Aumento de Minério Garimpado e Madeira Cortada",
- "SwimSpeed_up_1": "Nado Gracioso",
- "SwimSpeed_up_2": "Bom Nadador",
- "SwimSpeed_up_3": "Rei dos Surfistas",
- "TemperatureResist_Cold1": "Resistência ao Frio Nv. 1",
- "TemperatureResist_Cold2": "Resistência ao Frio Nv. 2",
- "TemperatureResist_Cold3": "Resistência ao Frio Nv. 3",
- "TemperatureResist_Heat1": "Resistência ao Calor Nv. 1",
- "TemperatureResist_Heat1Cold1": "Resistência ao Calor Nv. 1 / Resistência ao Frio Nv. 1",
- "TemperatureResist_Heat2": "Resistência ao Calor Nv. 2",
- "TemperatureResist_Heat2Cold2": "Resistência ao Calor Nv. 2 / Resistência ao Frio Nv. 2",
- "TemperatureResist_Heat3": "Resistência ao Calor Nv. 3",
- "TemperatureResist_Heat3Cold3": "Resistência ao Calor Nv. 3 / Resistência ao Frio Nv. 3",
- "Test_PalEgg_HatchingSpeed_Up": "Filantropo",
- "TrainerATK_UP_1": "Comandante Intrépido",
- "TrainerDEF_UP_1": "Estrategista Inabalável",
- "TrainerLogging_up1": "Lenhador Líder",
- "TrainerMining_up1": "Mineiro-Chefe",
- "TrainerWorkSpeed_UP_1": "Motivador",
- "Vampire": "Vampiro",
- "Witch": "Bruxa",
- "WoodDrop_Boost_1": "Aumento de Madeira Cortada Nv. 1",
- "WoodDrop_Boost_2": "Aumento de Madeira Cortada Nv. 2",
- "WoodDrop_Boost_3": "Aumento de Madeira Cortada Nv. 3",
- "WoodDrop_Boost_4": "Aumento de Madeira Cortada Nv. 4",
- "WoodDrop_Boost_5": "Aumento de Madeira Cortada Nv. 5",
- "WorkSpeed_ACC_up1": "Velocidade de Trabalho Nv. 1",
- "WorkSpeed_ACC_up2": "Velocidade de Trabalho Nv. 2",
- "WorkSpeed_ACC_up3": "Velocidade de Trabalho Nv. 3",
- "WorkSpeed_ACC_up4": "Velocidade de Trabalho Nv. 4",
- "WorkSuitabilityAddRank_MonsterFarm_1": "Jovem Pecuarista",
- "WorkSuitabilityAddRank_MonsterFarm_2": "Mestre Pecuarista",
- "WorldTree_ATK": "Espada Sagrada de Dois Gumes",
- "WorldTree_ATK_DEF": "Deus da Destruição",
- "WorldTree_CraftSpeed": "Mão Demoníaca",
- "WorldTree_DEF": "Muralha de Músculos da Terra Santa",
- "WorldTree_FullStomach": "Viveiro da Árvore Divina",
- "WorldTree_MoveSpeed": "Salto Dimensional",
- "WorldTree_Sanity": "Sábio Ermitão",
- "YakushimaDagameBoost_Magic_Equip": "Força Sagrada: Magia",
- "YakushimaDagameBoost_Melee_Equip": "Força Sagrada: Curta Distância",
- "YakushimaDagameBoost_Ranged_Equip": "Força Sagrada: Longa Distância",
- "YakushimaDagameBoost_Summon_Equip": "Força Sagrada: Chamamento",
- "YakushimaProtection_Equip": "Proteção Sagrada",
- "defense_ACC_up1": "Aumento de Defesa Nv. 1",
- "defense_ACC_up2": "Aumento de Defesa Nv. 2",
- "defense_ACC_up3": "Aumento de Defesa Nv. 3",
- "defense_ACC_up4": "Aumento de Defesa Nv. 4"
+ "AirDash_1": {
+  "nome": "Corrida no ar +1.",
+  "descricao": "Corrida no ar +1"
+ },
+ "AirDash_2": {
+  "nome": "Corrida no ar +2.",
+  "descricao": "Corrida no ar +2"
+ },
+ "AirDash_3": {
+  "nome": "Corrida no ar +3.",
+  "descricao": "Corrida no ar +3"
+ },
+ "AirDash_4": {
+  "nome": "Corrida no ar +4.",
+  "descricao": "Corrida no ar +4"
+ },
+ "Alien": {
+  "nome": "Célula Viva Desconhecida",
+  "descricao": "Ataque +10.0% Reduz o dano por ataques de fogo em 15.0% Reduz o dano por ataques elétricos em 15.0%"
+ },
+ "Attack_ACC_up1": {
+  "nome": "Aumento de Ataque Nv. 1",
+  "descricao": "Ataque +5.0%"
+ },
+ "Attack_ACC_up1_Armor": {
+  "nome": "Aumento de Ataque (Peq.) Nv. 1",
+  "descricao": "Ataque +3.0%"
+ },
+ "Attack_ACC_up1_Otomo_Only_Equip": {
+  "nome": "Aumento de Ataque de Pals Nv. 1",
+  "descricao": "Ataque +4.0%"
+ },
+ "Attack_ACC_up2": {
+  "nome": "Aumento de Ataque Nv. 2",
+  "descricao": "Ataque +10.0%"
+ },
+ "Attack_ACC_up2_Armor": {
+  "nome": "Aumento de Ataque (Peq.) Nv. 2",
+  "descricao": "Ataque +6.0%"
+ },
+ "Attack_ACC_up2_Otomo_Only_Equip": {
+  "nome": "Aumento de Ataque de Pals Nv. 2",
+  "descricao": "Ataque +8.0%"
+ },
+ "Attack_ACC_up3": {
+  "nome": "Aumento de Ataque Nv. 3",
+  "descricao": "Ataque +15.0%"
+ },
+ "Attack_ACC_up3_Armor": {
+  "nome": "Aumento de Ataque (Peq.) Nv. 3",
+  "descricao": "Ataque +9.0%"
+ },
+ "Attack_ACC_up3_Otomo_Only_Equip": {
+  "nome": "Aumento de Ataque de Pals Nv. 3",
+  "descricao": "Ataque +12.0%"
+ },
+ "Attack_ACC_up4": {
+  "nome": "Aumento de Ataque Nv. 4",
+  "descricao": "Ataque +20.0%"
+ },
+ "Attack_ACC_up4_Armor": {
+  "nome": "Aumento de Ataque (Peq.) Nv. 4",
+  "descricao": "Ataque +12.0%"
+ },
+ "Attack_ACC_up4_Otomo_Only_Equip": {
+  "nome": "Aumento de Ataque de Pals Nv. 4",
+  "descricao": "Ataque +16.0%"
+ },
+ "AutoHPRegeneRate_Passive": {
+  "nome": "Terapeuta",
+  "descricao": "Cura Automática de PV do Jogador +5.0%"
+ },
+ "AvoidDurationUp_EquipSkill_2": {
+  "nome": "Maior Tempo de Invencibilidade na Esquiva",
+  "descricao": "AvoidDurationUp_EquipSkill +20.0%"
+ },
+ "BossDefeatReward_AmaterasuWolf_Dark": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_Anubis": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_BadCatgirl": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_BerryGoat_Dark": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_BlackMetalDragon": {
+  "nome": "Aumento Médio de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 2.0%."
+ },
+ "BossDefeatReward_BlackPuppy": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_BlueDragon": {
+  "nome": "Aumento Pequeno de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 1.0%."
+ },
+ "BossDefeatReward_BlueThunderHorse": {
+  "nome": "Aumento Médio de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 2.0%."
+ },
+ "BossDefeatReward_BlueberryFairy": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_CactusDoll": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_CaptainPenguin": {
+  "nome": "Aumento Pequeno de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 1.0%."
+ },
+ "BossDefeatReward_CatMage": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_CatVampire": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_CubeTurtle": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_CubeTurtle_Neutral": {
+  "nome": "Aumento Médio de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 2.0%."
+ },
+ "BossDefeatReward_DarkScorpion": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_DarkScorpion_Ground": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_DomeArmorDragon": {
+  "nome": "Aumento Grande de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques dracônicos em 3.0%."
+ },
+ "BossDefeatReward_ElecLizard": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_ElecPanda": {
+  "nome": "Aumento Médio de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 2.0%."
+ },
+ "BossDefeatReward_ElecSnail": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_FairyDragon": {
+  "nome": "Aumento Pequeno de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 1.0%."
+ },
+ "BossDefeatReward_FengyunDeeper": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "BossDefeatReward_FengyunDeeper_Electric": {
+  "nome": "Aumento Médio de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 2.0%."
+ },
+ "BossDefeatReward_FireKirin": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "BossDefeatReward_FlameBuffalo": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "BossDefeatReward_FlowerDinosaur_Electric": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_FlowerDoll": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_FoxExorcist": {
+  "nome": "Aumento Médio de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 2.0%."
+ },
+ "BossDefeatReward_FoxMage": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "BossDefeatReward_GhostDragon": {
+  "nome": "Aumento Médio de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 2.0%."
+ },
+ "BossDefeatReward_GhostRabbit": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_GoldenHorse": {
+  "nome": "Aumento Médio de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 2.0%."
+ },
+ "BossDefeatReward_GrassGolem": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_GrassGolem_Dark": {
+  "nome": "Aumento Médio de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 2.0%."
+ },
+ "BossDefeatReward_GrassMammoth": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_GrassPanda_Electric": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_GrassRabbitMan": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_GrimGirl": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_HawkBird": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "BossDefeatReward_HerculesBeetle": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_HerculesBeetle_Ground": {
+  "nome": "Aumento Médio de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 2.0%."
+ },
+ "BossDefeatReward_Horus_Water": {
+  "nome": "Aumento Médio de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 2.0%."
+ },
+ "BossDefeatReward_IceFox": {
+  "nome": "Aumento Pequeno de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 1.0%."
+ },
+ "BossDefeatReward_IceHorse": {
+  "nome": "Aumento Grande de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 3.0%."
+ },
+ "BossDefeatReward_IceHorse_Dark": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_IceNarwhal": {
+  "nome": "Aumento Grande de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 3.0%."
+ },
+ "BossDefeatReward_IceNarwhal_Fire": {
+  "nome": "Aumento Grande de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 3.0%."
+ },
+ "BossDefeatReward_JetDragon": {
+  "nome": "Aumento Grande de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 3.0%."
+ },
+ "BossDefeatReward_KabukiMan": {
+  "nome": "Aumento Médio de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 2.0%."
+ },
+ "BossDefeatReward_KingAlpaca": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "BossDefeatReward_KingAlpaca_Ice": {
+  "nome": "Aumento Médio de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 2.0%."
+ },
+ "BossDefeatReward_KingBahamut": {
+  "nome": "Aumento Grande de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 3.0%."
+ },
+ "BossDefeatReward_Kirin": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_Kitsunebi_Ice": {
+  "nome": "Aumento Grande de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 3.0%."
+ },
+ "BossDefeatReward_LazyCatfish": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_LazyDragon_Electric": {
+  "nome": "Aumento Pequeno de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 1.0%."
+ },
+ "BossDefeatReward_LilyQueen": {
+  "nome": "Aumento Grande de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 3.0%."
+ },
+ "BossDefeatReward_LilyQueen_Dark": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_LotusDragon": {
+  "nome": "Aumento Médio de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 2.0%."
+ },
+ "BossDefeatReward_Manticore": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "BossDefeatReward_MoonChild": {
+  "nome": "Aumento Médio de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 2.0%."
+ },
+ "BossDefeatReward_MopKing": {
+  "nome": "Aumento Pequeno de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 1.0%."
+ },
+ "BossDefeatReward_MushroomLady": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_Mutant": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "BossDefeatReward_MysteryMask": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_NaughtyCat": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "BossDefeatReward_NightBlueHorse": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_PinkRabbit_Grass": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_PlantSlime": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_PoseidonOrca": {
+  "nome": "Aumento Grande de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 3.0%."
+ },
+ "BossDefeatReward_PurpleSpider": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_QueenBee": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_RaijinDaughter_Water": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_RockBeast": {
+  "nome": "Aumento Médio de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 2.0%."
+ },
+ "BossDefeatReward_RockBeast_Ice": {
+  "nome": "Aumento Médio de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 2.0%."
+ },
+ "BossDefeatReward_Ronin": {
+  "nome": "Aumento Médio de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 2.0%."
+ },
+ "BossDefeatReward_SaintCentaur_1": {
+  "nome": "Aumento Grande de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 3.0%."
+ },
+ "BossDefeatReward_SaintCentaur_2": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "BossDefeatReward_SakuraSaurus": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "BossDefeatReward_SakuraSaurus_Water": {
+  "nome": "Aumento Pequeno de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 1.0%."
+ },
+ "BossDefeatReward_ScorpionMan_Electric": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_SkyDragon": {
+  "nome": "Aumento Pequeno de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 1.0%."
+ },
+ "BossDefeatReward_Suzaku": {
+  "nome": "Aumento Grande de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 3.0%."
+ },
+ "BossDefeatReward_ThunderBird": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_ThunderFluffyBird": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "BossDefeatReward_Umihebi": {
+  "nome": "Aumento Médio de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 2.0%."
+ },
+ "BossDefeatReward_VioletFairy": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "BossDefeatReward_VolcanicMonster": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_VolcanoDragon": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "BossDefeatReward_VolcanoDragon_Ice": {
+  "nome": "Aumento Médio de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 2.0%."
+ },
+ "BossDefeatReward_WeaselDragon": {
+  "nome": "Aumento Pequeno de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 1.0%."
+ },
+ "BossDefeatReward_Werewolf_Ice": {
+  "nome": "Aumento Grande de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 3.0%."
+ },
+ "BossDefeatReward_WhiteDeer": {
+  "nome": "Aumento Médio de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 2.0%."
+ },
+ "BossDefeatReward_WhiteDeer_Dark": {
+  "nome": "Aumento Médio de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 2.0%."
+ },
+ "BossDefeatReward_WhiteMoth": {
+  "nome": "Aumento Pequeno de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 1.0%."
+ },
+ "BossDefeatReward_WhiteShieldDragon": {
+  "nome": "Aumento Médio de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 2.0%."
+ },
+ "BossDefeatReward_WhiteTiger_Ground": {
+  "nome": "Aumento Médio de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 2.0%."
+ },
+ "BossDefeatReward_WingGolem": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "BossDefeatReward_Yeti_Grass": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "CaptureLevel_Up_1": {
+  "nome": "Poder de Captura +1",
+  "descricao": "Poder de captura +1.0"
+ },
+ "CaptureLevel_Up_2": {
+  "nome": "Poder de Captura +2",
+  "descricao": "Poder de captura +2.0"
+ },
+ "CaptureLevel_Up_3": {
+  "nome": "Poder de Captura +3",
+  "descricao": "Poder de captura +3.0"
+ },
+ "CaptureLevel_Up_4": {
+  "nome": "Poder de Captura +4",
+  "descricao": "Poder de captura +4.0"
+ },
+ "CaptureLevel_Up_5": {
+  "nome": "Poder de Captura +5",
+  "descricao": "Poder de captura +5.0"
+ },
+ "CaptureLevel_Up_6": {
+  "nome": "Poder de Captura +6",
+  "descricao": "Poder de captura +6.0"
+ },
+ "CollectItem_Berries": {
+  "nome": "Coleta de Frutinhas",
+  "descricao": ""
+ },
+ "CollectItem_Egg": {
+  "nome": "Produção de Ovo",
+  "descricao": ""
+ },
+ "CollectItem_Milk": {
+  "nome": "Produção de Leite",
+  "descricao": ""
+ },
+ "CollectItem_Money": {
+  "nome": "Pérolas aos Porcos",
+  "descricao": ""
+ },
+ "CollectItem_Sweets": {
+  "nome": "Produção de Doces",
+  "descricao": ""
+ },
+ "CollectItem_Wool_Alpaca": {
+  "nome": "Produção de Lã",
+  "descricao": ""
+ },
+ "CollectItem_Wool_SheepBall": {
+  "nome": "Produção de Lã",
+  "descricao": ""
+ },
+ "CollectItem_Wool_WhiteMoth": {
+  "nome": "Tecedura de Seda",
+  "descricao": ""
+ },
+ "CoolTimeReduction_Down_1": {
+  "nome": "Relaxado",
+  "descricao": "Tempo de recarga de habilidades ativas aumentado em -15.0%"
+ },
+ "CoolTimeReduction_Up_1": {
+  "nome": "Sossegado",
+  "descricao": "Tempo de recarga de habilidades ativas reduzido em 30.0% Ataque +10.0%"
+ },
+ "CoolTimeReduction_Up_2": {
+  "nome": "Impaciente",
+  "descricao": "Tempo de recarga de habilidades ativas reduzido em 15.0%"
+ },
+ "CoolTimeReduction_Up_3": {
+  "nome": "Tempestade e Ímpeto",
+  "descricao": "Tempo de recarga de habilidades ativas reduzido em 0.0% Ataque +0.0%"
+ },
+ "CraftSpeed_down1": {
+  "nome": "Desajeitado",
+  "descricao": "Velocidade de trabalho -10.0%"
+ },
+ "CraftSpeed_down2": {
+  "nome": "Tendência ao ócio",
+  "descricao": "Velocidade de trabalho -30.0%"
+ },
+ "CraftSpeed_up1": {
+  "nome": "Dedicado",
+  "descricao": "Velocidade de trabalho +20.0%"
+ },
+ "CraftSpeed_up2": {
+  "nome": "Espírito artesão",
+  "descricao": "Velocidade de trabalho +50.0%"
+ },
+ "CraftSpeed_up3": {
+  "nome": "Artesão Transcendental",
+  "descricao": "Velocidade de trabalho +75.0%"
+ },
+ "Defense_ACC_up1_Otomo_Only_Equip": {
+  "nome": "Aumento de Defesa de Pals Nv. 1",
+  "descricao": "Defesa +5.0%"
+ },
+ "Defense_ACC_up2_Otomo_Only_Equip": {
+  "nome": "Aumento de Defesa de Pals Nv. 2",
+  "descricao": "Defesa +10.0%"
+ },
+ "Defense_ACC_up3_Otomo_Only_Equip": {
+  "nome": "Aumento de Defesa de Pals Nv. 3",
+  "descricao": "Defesa +15.0%"
+ },
+ "Defense_ACC_up4_Otomo_Only_Equip": {
+  "nome": "Aumento de Defesa de Pals Nv. 4",
+  "descricao": "Defesa +20.0%"
+ },
+ "Deffence_down1": {
+  "nome": "Delicado",
+  "descricao": "Defesa -10.0%"
+ },
+ "Deffence_down2": {
+  "nome": "Quebradiço",
+  "descricao": "Defesa -20.0%"
+ },
+ "Deffence_up1": {
+  "nome": "Casca grossa",
+  "descricao": "Defesa +10.0%"
+ },
+ "Deffence_up2": {
+  "nome": "Corpo Fechado",
+  "descricao": "Defesa +20.0% Anula atordoamento"
+ },
+ "Deffence_up2_2": {
+  "nome": "Peso Pesado",
+  "descricao": "Defesa +20.0% Anula lançamento para longe"
+ },
+ "Deffence_up3": {
+  "nome": "Corpo de Diamante",
+  "descricao": "Defesa +30.0% Anula atordoamento Anula lançamento para longe"
+ },
+ "Defuser_ExplosiveSpore_EquipSkill": {
+  "nome": "Redução de Dano por Explosão",
+  "descricao": "Defuser_ExplosiveSpore +1.0 ExplosionResist +100.0%"
+ },
+ "ElementBoost_Aqua_1_PAL": {
+  "nome": "Brincando com Água",
+  "descricao": "Aumenta o dano de ataques de água em 10.0%."
+ },
+ "ElementBoost_Aqua_2_PAL": {
+  "nome": "Realeza Marinha",
+  "descricao": "Aumenta o dano de ataques de água em 30.0%."
+ },
+ "ElementBoost_Dark_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 1.0%."
+ },
+ "ElementBoost_Dark_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Escuridão de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de escuridão em 6.0%."
+ },
+ "ElementBoost_Dark_1_PAL": {
+  "nome": "Véu de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 10.0%."
+ },
+ "ElementBoost_Dark_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 2.0%."
+ },
+ "ElementBoost_Dark_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Escuridão de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de escuridão em 12.0%."
+ },
+ "ElementBoost_Dark_2_PAL": {
+  "nome": "Monarca do Breu",
+  "descricao": "Aumenta o dano de ataques de escuridão em 30.0%."
+ },
+ "ElementBoost_Dark_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Escuridão",
+  "descricao": "Aumenta o dano de ataques de escuridão em 3.0%."
+ },
+ "ElementBoost_Dark_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Escuridão de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de escuridão em 18.0%."
+ },
+ "ElementBoost_Dark_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Escuridão de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de escuridão em 20.0%."
+ },
+ "ElementBoost_Dragon_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 1.0%."
+ },
+ "ElementBoost_Dragon_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Dracônico de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques dracônicos em 6.0%."
+ },
+ "ElementBoost_Dragon_1_PAL": {
+  "nome": "Casta Dracônica",
+  "descricao": "Aumenta o dano de ataques dracônicos em 10.0%."
+ },
+ "ElementBoost_Dragon_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 2.0%."
+ },
+ "ElementBoost_Dragon_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Dracônico de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques dracônicos em 12.0%."
+ },
+ "ElementBoost_Dragon_2_PAL": {
+  "nome": "Dragão Divino",
+  "descricao": "Aumenta o dano de ataques dracônicos em 30.0%."
+ },
+ "ElementBoost_Dragon_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano Dracônico",
+  "descricao": "Aumenta o dano de ataques dracônicos em 3.0%."
+ },
+ "ElementBoost_Dragon_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Dracônico de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques dracônicos em 18.0%."
+ },
+ "ElementBoost_Dragon_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Dracônico de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques dracônicos em 20.0%."
+ },
+ "ElementBoost_Earth_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 1.0%."
+ },
+ "ElementBoost_Earth_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Terra de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de terra em 6.0%."
+ },
+ "ElementBoost_Earth_1_PAL": {
+  "nome": "Força da Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 10.0%."
+ },
+ "ElementBoost_Earth_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 2.0%."
+ },
+ "ElementBoost_Earth_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Terra de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de terra em 12.0%."
+ },
+ "ElementBoost_Earth_2_PAL": {
+  "nome": "Regente de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 30.0%."
+ },
+ "ElementBoost_Earth_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Terra",
+  "descricao": "Aumenta o dano de ataques de terra em 3.0%."
+ },
+ "ElementBoost_Earth_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Terra de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de terra em 18.0%."
+ },
+ "ElementBoost_Earth_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Terra de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de terra em 20.0%."
+ },
+ "ElementBoost_Electricity_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 1.0%."
+ },
+ "ElementBoost_Electricity_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Elétrico de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques elétricos em 6.0%."
+ },
+ "ElementBoost_Electricity_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 2.0%."
+ },
+ "ElementBoost_Electricity_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Elétrico de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques elétricos em 12.0%."
+ },
+ "ElementBoost_Electricity_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano Elétrico",
+  "descricao": "Aumenta o dano de ataques elétricos em 3.0%."
+ },
+ "ElementBoost_Electricity_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Elétrico de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques elétricos em 18.0%."
+ },
+ "ElementBoost_Electricity_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Elétrico de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques elétricos em 20.0%."
+ },
+ "ElementBoost_Fire_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 1.0%."
+ },
+ "ElementBoost_Fire_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Fogo de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de fogo em 6.0%."
+ },
+ "ElementBoost_Fire_1_PAL": {
+  "nome": "Brincando com Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 10.0%."
+ },
+ "ElementBoost_Fire_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 2.0%."
+ },
+ "ElementBoost_Fire_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Fogo de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de fogo em 12.0%."
+ },
+ "ElementBoost_Fire_2_PAL": {
+  "nome": "Regente de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 30.0%."
+ },
+ "ElementBoost_Fire_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Fogo",
+  "descricao": "Aumenta o dano de ataques de fogo em 3.0%."
+ },
+ "ElementBoost_Fire_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Fogo de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de fogo em 18.0%."
+ },
+ "ElementBoost_Fire_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Fogo de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de fogo em 20.0%."
+ },
+ "ElementBoost_Ice_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 1.0%."
+ },
+ "ElementBoost_Ice_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Gelo de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de gelo em 6.0%."
+ },
+ "ElementBoost_Ice_1_PAL": {
+  "nome": "Sangue Frio",
+  "descricao": "Aumenta o dano de ataques de gelo em 10.0%."
+ },
+ "ElementBoost_Ice_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 2.0%."
+ },
+ "ElementBoost_Ice_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Gelo de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de gelo em 12.0%."
+ },
+ "ElementBoost_Ice_2_PAL": {
+  "nome": "Regente de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 30.0%."
+ },
+ "ElementBoost_Ice_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Gelo",
+  "descricao": "Aumenta o dano de ataques de gelo em 3.0%."
+ },
+ "ElementBoost_Ice_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Gelo de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de gelo em 18.0%."
+ },
+ "ElementBoost_Ice_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Gelo de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de gelo em 20.0%."
+ },
+ "ElementBoost_Leaf_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 1.0%."
+ },
+ "ElementBoost_Leaf_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Grama de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de grama em 6.0%."
+ },
+ "ElementBoost_Leaf_1_PAL": {
+  "nome": "Aroma Verdejante",
+  "descricao": "Aumenta o dano de ataques de grama em 10.0%."
+ },
+ "ElementBoost_Leaf_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 2.0%."
+ },
+ "ElementBoost_Leaf_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Grama de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de grama em 12.0%."
+ },
+ "ElementBoost_Leaf_2_PAL": {
+  "nome": "Monarca de Espíritos",
+  "descricao": "Aumenta o dano de ataques de grama em 30.0%."
+ },
+ "ElementBoost_Leaf_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Grama",
+  "descricao": "Aumenta o dano de ataques de grama em 3.0%."
+ },
+ "ElementBoost_Leaf_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Grama de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de grama em 18.0%."
+ },
+ "ElementBoost_Leaf_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Grama de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de grama em 20.0%."
+ },
+ "ElementBoost_Normal_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 1.0%."
+ },
+ "ElementBoost_Normal_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Não Elemental de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques não elementais em 6.0%."
+ },
+ "ElementBoost_Normal_1_PAL": {
+  "nome": "Território do Nada",
+  "descricao": "Aumenta o dano de ataques não elementais em 10.0%."
+ },
+ "ElementBoost_Normal_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 2.0%."
+ },
+ "ElementBoost_Normal_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Não Elemental de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques não elementais em 12.0%."
+ },
+ "ElementBoost_Normal_2_PAL": {
+  "nome": "Ascensão",
+  "descricao": "Aumenta o dano de ataques não elementais em 30.0%."
+ },
+ "ElementBoost_Normal_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano Não Elemental",
+  "descricao": "Aumenta o dano de ataques não elementais em 3.0%."
+ },
+ "ElementBoost_Normal_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Não Elemental de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques não elementais em 18.0%."
+ },
+ "ElementBoost_Normal_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano Não Elemental de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques não elementais em 20.0%."
+ },
+ "ElementBoost_Thunder_1_PAL": {
+  "nome": "Capacitor",
+  "descricao": "Aumenta o dano de ataques elétricos em 10.0%."
+ },
+ "ElementBoost_Thunder_2_PAL": {
+  "nome": "Regente de Raio",
+  "descricao": "Aumenta o dano de ataques elétricos em 30.0%."
+ },
+ "ElementBoost_Water_1_BossDefeat": {
+  "nome": "Aumento Pequeno de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 1.0%."
+ },
+ "ElementBoost_Water_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Água de Pals Nv. 1",
+  "descricao": "Aumenta o dano de ataques de água em 6.0%."
+ },
+ "ElementBoost_Water_2_BossDefeat": {
+  "nome": "Aumento Médio de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 2.0%."
+ },
+ "ElementBoost_Water_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Água de Pals Nv. 2",
+  "descricao": "Aumenta o dano de ataques de água em 12.0%."
+ },
+ "ElementBoost_Water_3_BossDefeat": {
+  "nome": "Aumento Grande de Dano de Água",
+  "descricao": "Aumenta o dano de ataques de água em 3.0%."
+ },
+ "ElementBoost_Water_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Água de Pals Nv. 3",
+  "descricao": "Aumenta o dano de ataques de água em 18.0%."
+ },
+ "ElementBoost_Water_4_Otomo_Only_Equip": {
+  "nome": "Aumento de Dano de Água de Pals Nv. 4",
+  "descricao": "Aumenta o dano de ataques de água em 20.0%."
+ },
+ "ElementResist_Aqua_1": {
+  "nome": "Redução de Dano de Água Nv. 1",
+  "descricao": "Reduz o dano por ataques de água em 15.0%."
+ },
+ "ElementResist_Aqua_1_PAL": {
+  "nome": "Impermeabilização",
+  "descricao": "Reduz o dano por ataques de água em 10.0%."
+ },
+ "ElementResist_Aqua_2": {
+  "nome": "Redução de Dano de Água Nv. 2",
+  "descricao": "Reduz o dano por ataques de água em 25.0%."
+ },
+ "ElementResist_Aqua_3": {
+  "nome": "Redução de Dano de Água Nv. 3",
+  "descricao": "Reduz o dano por ataques de água em 30.0%."
+ },
+ "ElementResist_Aqua_4": {
+  "nome": "Redução de Dano de Água Nv. 4",
+  "descricao": "Reduz o dano por ataques de água em 35.0%."
+ },
+ "ElementResist_Dark_1": {
+  "nome": "Redução de Dano de Escuridão Nv. 1",
+  "descricao": "Reduz o dano por ataques de escuridão em 15.0%."
+ },
+ "ElementResist_Dark_1_PAL": {
+  "nome": "De Bem com a Vida",
+  "descricao": "Reduz o dano por ataques de escuridão em 10.0%."
+ },
+ "ElementResist_Dark_2": {
+  "nome": "Redução de Dano de Escuridão Nv. 2",
+  "descricao": "Reduz o dano por ataques de escuridão em 25.0%."
+ },
+ "ElementResist_Dark_3": {
+  "nome": "Redução de Dano de Escuridão Nv. 3",
+  "descricao": "Reduz o dano por ataques de escuridão em 30.0%."
+ },
+ "ElementResist_Dark_4": {
+  "nome": "Redução de Dano de Escuridão Nv. 4",
+  "descricao": "Reduz o dano por ataques de escuridão em 35.0%."
+ },
+ "ElementResist_Dragon_1": {
+  "nome": "Redução de Dano Dracônico Nv. 1",
+  "descricao": "Reduz o dano por ataques dracônicos em 15.0%."
+ },
+ "ElementResist_Dragon_1_PAL": {
+  "nome": "Matador de Dragões",
+  "descricao": "Reduz o dano por ataques dracônicos em 10.0%."
+ },
+ "ElementResist_Dragon_2": {
+  "nome": "Redução de Dano Dracônico Nv. 2",
+  "descricao": "Reduz o dano por ataques dracônicos em 25.0%."
+ },
+ "ElementResist_Dragon_3": {
+  "nome": "Redução de Dano Dracônico Nv. 3",
+  "descricao": "Reduz o dano por ataques dracônicos em 30.0%."
+ },
+ "ElementResist_Dragon_4": {
+  "nome": "Redução de Dano Dracônico Nv. 4",
+  "descricao": "Reduz o dano por ataques dracônicos em 35.0%."
+ },
+ "ElementResist_Earth_1": {
+  "nome": "Redução de Dano de Terra Nv. 1",
+  "descricao": "Reduz o dano por ataques de terra em 15.0%."
+ },
+ "ElementResist_Earth_1_PAL": {
+  "nome": "Reforço Antissísmico",
+  "descricao": "Reduz o dano por ataques de terra em 10.0%."
+ },
+ "ElementResist_Earth_2": {
+  "nome": "Redução de Dano de Terra Nv. 2",
+  "descricao": "Reduz o dano por ataques de terra em 25.0%."
+ },
+ "ElementResist_Earth_3": {
+  "nome": "Redução de Dano de Terra Nv. 3",
+  "descricao": "Reduz o dano por ataques de terra em 30.0%."
+ },
+ "ElementResist_Earth_4": {
+  "nome": "Redução de Dano de Terra Nv. 4",
+  "descricao": "Reduz o dano por ataques de terra em 35.0%."
+ },
+ "ElementResist_Fire_1": {
+  "nome": "Redução de Dano de Fogo Nv. 1",
+  "descricao": "Reduz o dano por ataques de fogo em 15.0%."
+ },
+ "ElementResist_Fire_1_PAL": {
+  "nome": "Um Bom Bronzeado",
+  "descricao": "Reduz o dano por ataques de fogo em 10.0%."
+ },
+ "ElementResist_Fire_2": {
+  "nome": "Redução de Dano de Fogo Nv. 2",
+  "descricao": "Reduz o dano por ataques de fogo em 25.0%."
+ },
+ "ElementResist_Fire_3": {
+  "nome": "Redução de Dano de Fogo Nv. 3",
+  "descricao": "Reduz o dano por ataques de fogo em 30.0%."
+ },
+ "ElementResist_Fire_4": {
+  "nome": "Redução de Dano de Fogo Nv. 4",
+  "descricao": "Reduz o dano por ataques de fogo em 35.0%."
+ },
+ "ElementResist_Ice_1": {
+  "nome": "Redução de Dano de Gelo Nv. 1",
+  "descricao": "Reduz o dano por ataques de gelo em 15.0%."
+ },
+ "ElementResist_Ice_1_PAL": {
+  "nome": "Corpo Quente",
+  "descricao": "Reduz o dano por ataques de gelo em 10.0%."
+ },
+ "ElementResist_Ice_2": {
+  "nome": "Redução de Dano de Gelo Nv. 2",
+  "descricao": "Reduz o dano por ataques de gelo em 25.0%."
+ },
+ "ElementResist_Ice_3": {
+  "nome": "Redução de Dano de Gelo Nv. 3",
+  "descricao": "Reduz o dano por ataques de gelo em 30.0%."
+ },
+ "ElementResist_Ice_4": {
+  "nome": "Redução de Dano de Gelo Nv. 4",
+  "descricao": "Reduz o dano por ataques de gelo em 35.0%."
+ },
+ "ElementResist_Leaf_1": {
+  "nome": "Redução de Dano de Grama Nv. 1",
+  "descricao": "Reduz o dano por ataques de grama em 15.0%."
+ },
+ "ElementResist_Leaf_1_PAL": {
+  "nome": "Efeito Herbicida",
+  "descricao": "Reduz o dano por ataques de grama em 10.0%."
+ },
+ "ElementResist_Leaf_2": {
+  "nome": "Redução de Dano de Grama Nv. 2",
+  "descricao": "Reduz o dano por ataques de grama em 25.0%."
+ },
+ "ElementResist_Leaf_3": {
+  "nome": "Redução de Dano de Grama Nv. 3",
+  "descricao": "Reduz o dano por ataques de grama em 30.0%."
+ },
+ "ElementResist_Leaf_4": {
+  "nome": "Redução de Dano de Grama Nv. 4",
+  "descricao": "Reduz o dano por ataques de grama em 35.0%."
+ },
+ "ElementResist_Normal_1": {
+  "nome": "Redução de Dano Não Elemental Nv. 1",
+  "descricao": "Reduz o dano por ataques não elementais em 15.0%."
+ },
+ "ElementResist_Normal_1_PAL": {
+  "nome": "Anormal",
+  "descricao": "Reduz o dano por ataques não elementais em 10.0%."
+ },
+ "ElementResist_Normal_2": {
+  "nome": "Redução de Dano Não Elemental Nv. 2",
+  "descricao": "Reduz o dano por ataques não elementais em 25.0%."
+ },
+ "ElementResist_Normal_3": {
+  "nome": "Redução de Dano Não Elemental Nv. 3",
+  "descricao": "Reduz o dano por ataques não elementais em 30.0%."
+ },
+ "ElementResist_Normal_4": {
+  "nome": "Redução de Dano Não Elemental Nv. 4",
+  "descricao": "Reduz o dano por ataques não elementais em 35.0%."
+ },
+ "ElementResist_Thunder_1": {
+  "nome": "Redução de Dano Elétrico Nv. 1",
+  "descricao": "Reduz o dano por ataques elétricos em 15.0%."
+ },
+ "ElementResist_Thunder_1_PAL": {
+  "nome": "Isolamento Elétrico",
+  "descricao": "Reduz o dano por ataques elétricos em 10.0%."
+ },
+ "ElementResist_Thunder_2": {
+  "nome": "Redução de Dano Elétrico Nv. 2",
+  "descricao": "Reduz o dano por ataques elétricos em 25.0%."
+ },
+ "ElementResist_Thunder_3": {
+  "nome": "Redução de Dano Elétrico Nv. 3",
+  "descricao": "Reduz o dano por ataques elétricos em 30.0%."
+ },
+ "ElementResist_Thunder_4": {
+  "nome": "Redução de Dano Elétrico Nv. 4",
+  "descricao": "Reduz o dano por ataques elétricos em 35.0%."
+ },
+ "EternalFlame": {
+  "nome": "Chama Eterna",
+  "descricao": "Aumenta o dano de ataques de fogo em 30.0%. Aumenta o dano de ataques elétricos em 30.0%."
+ },
+ "FriendshipPoint_Increase_EquipSkill": {
+  "nome": "Maior Aumento de Confiança dos Pals no Grupo",
+  "descricao": "Confiança +50.0%"
+ },
+ "FullStomach_Down_1_BossDefeat": {
+  "nome": "FullStomach_Down_1_BossDefeat",
+  "descricao": "Manutenção de Fartura <NumBlue_13>+10.0%</>"
+ },
+ "GYM_NAME_Desert": {
+  "nome": "Dirigente da Milícia Popular de Palpagos",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "GYM_NAME_Forest": {
+  "nome": "Fundadora da Associação de Proteção aos Pals",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "GYM_NAME_Meadow": {
+  "nome": "Dirigente dos Caçadores Clandestinos de Rayne",
+  "descricao": "Ataque +20.0% Velocidade de movimento +10.0%"
+ },
+ "GYM_NAME_Sakurajima": {
+  "nome": "Chefe do Bando das Flores e da Lua",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "GYM_NAME_Snow": {
+  "nome": "Chefe da Unidade de Pesquisas Genéticas",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "GYM_NAME_Viking": {
+  "nome": "Chefe do Povo Decaído",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "GYM_NAME_Volcano": {
+  "nome": "Líder Espiritual dos Amigos da Chama Eterna",
+  "descricao": "Ataque +20.0% MoveSpeed +10.0%"
+ },
+ "HP_ACC_up1": {
+  "nome": "Aumento de PV Nv. 1",
+  "descricao": "PV máximo +10.0%"
+ },
+ "HP_ACC_up2": {
+  "nome": "Aumento de PV Nv. 2",
+  "descricao": "PV máximo +15.0%"
+ },
+ "HP_ACC_up3": {
+  "nome": "Aumento de PV Nv. 3",
+  "descricao": "PV máximo +20.0%"
+ },
+ "HP_ACC_up4": {
+  "nome": "Aumento de PV Nv. 4",
+  "descricao": "PV máximo +25.0%"
+ },
+ "Invader": {
+  "nome": "Invasor",
+  "descricao": "Aumenta o dano de ataques de escuridão em 30.0%. Aumenta o dano de ataques dracônicos em 30.0%."
+ },
+ "Invalid_ToxicGas_EquipSkill": {
+  "nome": "Dano por Gás Venenoso Anulado",
+  "descricao": "InvalidToxicGas"
+ },
+ "JumpCount_Increase1": {
+  "nome": "Número de pulos +1.",
+  "descricao": "Número de pulos +1"
+ },
+ "JumpCount_Increase2": {
+  "nome": "Número de pulos +2.",
+  "descricao": "Número de pulos +2"
+ },
+ "JumpCount_Increase3": {
+  "nome": "Número de pulos +3.",
+  "descricao": "Número de pulos +3"
+ },
+ "JumpPower_Increase": {
+  "nome": "Fortalece o pulo.",
+  "descricao": "Pulo melhorado"
+ },
+ "Legend": {
+  "nome": "Lendário",
+  "descricao": "Ataque +20.0% Defesa +20.0% Velocidade de movimento +20.0%"
+ },
+ "MaxInventoryWeight_up": {
+  "nome": "Aumento de Peso Máximo Nv. 1",
+  "descricao": "Carga +50.0%"
+ },
+ "MaxInventoryWeight_up2": {
+  "nome": "Aumento de Peso Máximo Nv. 2",
+  "descricao": "Carga +150.0%"
+ },
+ "MaxInventoryWeight_up3": {
+  "nome": "Aumento de Peso Máximo Nv. 3",
+  "descricao": "Carga +200.0%"
+ },
+ "MaxInventoryWeight_up_Equip_1": {
+  "nome": "Aumento de Peso Máximo Nv. 1",
+  "descricao": "Carga +50.0%"
+ },
+ "MaxInventoryWeight_up_Equip_2": {
+  "nome": "Aumento de Peso Máximo Nv. 2",
+  "descricao": "Carga +100.0%"
+ },
+ "MaxInventoryWeight_up_Equip_3": {
+  "nome": "Aumento de Peso Máximo Nv. 3",
+  "descricao": "Carga +200.0%"
+ },
+ "MaxInventoryWeight_up_Equip_4": {
+  "nome": "Aumento de Peso Máximo Nv. 4",
+  "descricao": "Carga +300.0%"
+ },
+ "MiniNushi": {
+  "nome": "Imponência",
+  "descricao": "Aumenta o dano de ataques de água em 5.0%. Aumenta o dano de ataques de gelo em 5.0%. Aumenta a defesa em 5.0%."
+ },
+ "MoveSpeed_up_1": {
+  "nome": "Ligeiro",
+  "descricao": "Aumenta a velocidade de movimento em 10.0%."
+ },
+ "MoveSpeed_up_2": {
+  "nome": "Bom corredor",
+  "descricao": "Aumenta a velocidade de movimento em 20.0%."
+ },
+ "MoveSpeed_up_3": {
+  "nome": "Vertiginoso",
+  "descricao": "Aumenta a velocidade de movimento em 30.0%."
+ },
+ "MutationPal_Babysitter": {
+  "nome": "Babá",
+  "descricao": "Enquanto estiver na base, Pals na fazenda de acasalamento têm velocidade de produção de ovos aumentada em 30.0% e a velocidade de incubação é aumentada em 30.0%."
+ },
+ "MutationPal_ExplosionResist": {
+  "nome": "Blindagem Pesada",
+  "descricao": "Dano por explosão <Status_Up>anulado</>"
+ },
+ "MutationPal_Immortal": {
+  "nome": "Imortalidade",
+  "descricao": "Roubo de vida +5.0% Cura automática do PV de Pals +100.0% Ataque +15.0%"
+ },
+ "MutationPal_Mutant": {
+  "nome": "Constituição Peculiar",
+  "descricao": "Confere ao jogador e seus Pals: cura automática de PV +50.0% Defesa +25.0% Dano por condição negativa de veneno <Status_Up>anulado</> Dano por condição negativa de queimadura <Status_Up>anulado</>"
+ },
+ "NightOwl": {
+  "nome": "Notivaguismo",
+  "descricao": "Costuma dormir durante o dia, provavelmente por ficar de pé até tarde da noite."
+ },
+ "Nocturnal": {
+  "nome": "Insônia",
+  "descricao": "Não dorme ao cair da noite, continuando a trabalhar."
+ },
+ "NonKilling": {
+  "nome": "Clemência",
+  "descricao": "Pacifista. Não pode deixar os alvos de seus ataques com vida inferior a 1."
+ },
+ "Noukin": {
+  "nome": "Brutamontes",
+  "descricao": "Ataque +30.0% Velocidade de trabalho -50.0%"
+ },
+ "Nushi": {
+  "nome": "Senhor das Águas",
+  "descricao": "Aumenta o dano de ataques de água em 20.0%. Aumenta o dano de ataques de gelo em 20.0%. Aumenta a defesa em 20.0%."
+ },
+ "OctaviaArmorVampire": {
+  "nome": "Combustível Sangrento",
+  "descricao": "Absorve parte do dano causado e restaura seu PV. Não dorme ao cair da noite, continuando a trabalhar."
+ },
+ "PAL_ALLAttack_down1": {
+  "nome": "Medroso",
+  "descricao": "Ataque -10.0%"
+ },
+ "PAL_ALLAttack_down2": {
+  "nome": "Pusilânime",
+  "descricao": "Ataque -20.0%"
+ },
+ "PAL_ALLAttack_up1": {
+  "nome": "Ousado",
+  "descricao": "Ataque +10.0%"
+ },
+ "PAL_ALLAttack_up2": {
+  "nome": "Brutal",
+  "descricao": "Ataque +20.0%"
+ },
+ "PAL_ALLAttack_up3": {
+  "nome": "Deus Inclemente",
+  "descricao": "Ataque +30.0% Defesa +5.0%"
+ },
+ "PAL_CorporateSlave": {
+  "nome": "Escravo do trabalho",
+  "descricao": "Velocidade de trabalho +30.0% Ataque -30.0%"
+ },
+ "PAL_FullStomach_Down_1": {
+  "nome": "Comedido",
+  "descricao": "Manutenção de Fartura <NumBlue_13>+10.0%</>"
+ },
+ "PAL_FullStomach_Down_2": {
+  "nome": "Mestre da Dieta",
+  "descricao": "Manutenção de Fartura <NumBlue_13>+15.0%</>"
+ },
+ "PAL_FullStomach_Down_3": {
+  "nome": "Jejuador Supremo",
+  "descricao": "Manutenção de Fartura <NumBlue_13>+20.0%</>"
+ },
+ "PAL_FullStomach_Up_1": {
+  "nome": "Comilão",
+  "descricao": "Redução de Fartura <NumRed_13>+10.0%</>"
+ },
+ "PAL_FullStomach_Up_2": {
+  "nome": "Saco sem fundo",
+  "descricao": "Redução de Fartura <NumRed_13>+15.0%</>"
+ },
+ "PAL_Sanity_Down_1": {
+  "nome": "Pensamento positivo",
+  "descricao": "Manutenção de SAN <NumBlue_13>+10.0%</>"
+ },
+ "PAL_Sanity_Down_2": {
+  "nome": "Viciado no trabalho",
+  "descricao": "Manutenção de SAN <NumBlue_13>+15.0%</>"
+ },
+ "PAL_Sanity_Down_3": {
+  "nome": "Espírito Inalterável",
+  "descricao": "Manutenção de SAN <NumBlue_13>+20.0%</>"
+ },
+ "PAL_Sanity_Up_1": {
+  "nome": "Mente instável",
+  "descricao": "Redução de SAN <NumRed_13>+10.0%</>"
+ },
+ "PAL_Sanity_Up_2": {
+  "nome": "Tendência suicida",
+  "descricao": "Redução de SAN <NumRed_13>+15.0%</>"
+ },
+ "PAL_SpiritualInst": {
+  "nome": "pt-BR_Text",
+  "descricao": "Velocidade de trabalho -10.0% Defesa -10.0%"
+ },
+ "PAL_conceited": {
+  "nome": "Presunçoso",
+  "descricao": "Velocidade de trabalho +10.0% Defesa -10.0%"
+ },
+ "PAL_masochist": {
+  "nome": "Masoquista",
+  "descricao": "Defesa +15.0% Ataque -15.0%"
+ },
+ "PAL_oraora": {
+  "nome": "Confrontador",
+  "descricao": "Ataque +10.0% Defesa -10.0%"
+ },
+ "PAL_rude": {
+  "nome": "Violento",
+  "descricao": "Ataque +15.0% Velocidade de trabalho -10.0%"
+ },
+ "PAL_sadist": {
+  "nome": "Sádico",
+  "descricao": "Ataque +15.0% Defesa -15.0%"
+ },
+ "PalExp_Increase_1_Otomo_Only_Equip": {
+  "nome": "Aumento de Experiência de Pals Nv. 1",
+  "descricao": "PalExp_Increase +30.0%"
+ },
+ "PalExp_Increase_2_Otomo_Only_Equip": {
+  "nome": "Aumento de Experiência de Pals Nv. 2",
+  "descricao": "PalExp_Increase +40.0%"
+ },
+ "PalExp_Increase_3_Otomo_Only_Equip": {
+  "nome": "Aumento de Experiência de Pals Nv. 3",
+  "descricao": "PalExp_Increase +50.0%"
+ },
+ "PlayerSP_DecreaseRate_Passive": {
+  "nome": "Prevenção de Exaustão",
+  "descricao": "Redução do Consumo de Fôlego do Jogador +<NumBlue_13>5.0</>%"
+ },
+ "Rare": {
+  "nome": "Da sorte",
+  "descricao": "Ataque +15.0% Defesa +15.0% Velocidade de trabalho +20.0%"
+ },
+ "ReloadSpeedUp_Passive": {
+  "nome": "Mestre da Recarga",
+  "descricao": "Velocidade de Recarga do Jogador +4.0%"
+ },
+ "RideJumpCount_Increase1": {
+  "nome": "Leveza",
+  "descricao": "Número de pulos enquanto monta +1"
+ },
+ "RideJumpCount_Increase2": {
+  "nome": "Cruza-Céus",
+  "descricao": "Número de pulos enquanto monta +2"
+ },
+ "SalePrice_Down_1": {
+  "nome": "Deplorável",
+  "descricao": "Preço de venda piorado: --10.0%"
+ },
+ "SalePrice_Up_1": {
+  "nome": "Nobre",
+  "descricao": "Preço de venda melhorado: +5.0%"
+ },
+ "SalePrice_Up_2": {
+  "nome": "Linhagem Distinta",
+  "descricao": "Preço de venda melhorado: +3.0%"
+ },
+ "Salvation": {
+  "nome": "Salvação",
+  "descricao": "Aumenta o dano de ataques não elementais em 30.0%. Aumenta o dano de ataques de grama em 30.0%."
+ },
+ "SelfDeathAddItemDrop_up_1": {
+  "nome": "Compartilhamento",
+  "descricao": "Itens deixados ao morrer +15.0%"
+ },
+ "SelfDeathAddItemDrop_up_2": {
+  "nome": "Mentalidade Altruísta",
+  "descricao": "Itens deixados ao morrer +50.0%"
+ },
+ "SelfDeathAddItemDrop_up_3": {
+  "nome": "Banquete Generoso",
+  "descricao": "Itens deixados ao morrer +100.0%"
+ },
+ "SphereModule_Curve": {
+  "nome": "Curva de Esfera +1",
+  "descricao": ""
+ },
+ "SphereModule_Curve2": {
+  "nome": "Deslize de Esfera",
+  "descricao": ""
+ },
+ "SphereModule_Heavy": {
+  "nome": "Peso de Esfera +1",
+  "descricao": ""
+ },
+ "SphereModule_Homing": {
+  "nome": "Rastreio de Esfera",
+  "descricao": ""
+ },
+ "SphereModule_Sniper": {
+  "nome": "Alcance de Esfera +1",
+  "descricao": ""
+ },
+ "SphereModule_Sniper2": {
+  "nome": "Alcance de Esfera +2",
+  "descricao": ""
+ },
+ "Stamina_Down_1": {
+  "nome": "Enfurnado",
+  "descricao": "Fôlego máximo -25.0% *Só funciona com Pals que servem de montaria"
+ },
+ "Stamina_Up_1": {
+  "nome": "Fôlego Interminável",
+  "descricao": "Fôlego máximo +50.0% *Só funciona com Pals que servem de montaria"
+ },
+ "Stamina_Up_2": {
+  "nome": "Criança Serelepe",
+  "descricao": "Fôlego máximo +25.0% *Só funciona com Pals que servem de montaria"
+ },
+ "Stamina_Up_3": {
+  "nome": "Movimento Perpétuo",
+  "descricao": "Fôlego máximo +75.0% *Só funciona com Pals que servem de montaria"
+ },
+ "StonDrop_Boost_1": {
+  "nome": "Aumento de Minério Garimpado Nv. 1",
+  "descricao": "Aumenta ligeiramente a quantidade de pedras e minérios deixados."
+ },
+ "StonDrop_Boost_2": {
+  "nome": "Aumento de Minério Garimpado Nv. 2",
+  "descricao": "Aumenta a quantidade de pedras e minérios deixados."
+ },
+ "StonDrop_Boost_3": {
+  "nome": "Aumento de Minério Garimpado Nv. 3",
+  "descricao": "Aumenta bastante a quantidade de pedras e minérios deixados."
+ },
+ "StonDrop_Boost_4": {
+  "nome": "Aumento de Minério Garimpado Nv. 4",
+  "descricao": "Aumenta muito a quantidade de pedras e minérios deixados."
+ },
+ "StonDrop_Boost_5": {
+  "nome": "Aumento de Minério Garimpado Nv. 5",
+  "descricao": "Aumenta excepcionalmente a quantidade de pedras e minérios deixados."
+ },
+ "StonWoodDrop_Boost": {
+  "nome": "Aumento de Minério Garimpado e Madeira Cortada",
+  "descricao": "Aumenta muito a quantidade de madeira, pedras e minérios deixados."
+ },
+ "SwimSpeed_up_1": {
+  "nome": "Nado Gracioso",
+  "descricao": "Aumenta a velocidade de movimento sobre a água em 30.0%."
+ },
+ "SwimSpeed_up_2": {
+  "nome": "Bom Nadador",
+  "descricao": "Aumenta a velocidade de movimento sobre a água em 40.0%."
+ },
+ "SwimSpeed_up_3": {
+  "nome": "Rei dos Surfistas",
+  "descricao": "Aumenta a velocidade de movimento sobre a água em 50.0%."
+ },
+ "TemperatureResist_Cold1": {
+  "nome": "Resistência ao Frio Nv. 1",
+  "descricao": "TemperatureResist_Cold +1.0"
+ },
+ "TemperatureResist_Cold2": {
+  "nome": "Resistência ao Frio Nv. 2",
+  "descricao": "TemperatureResist_Cold +2.0"
+ },
+ "TemperatureResist_Cold3": {
+  "nome": "Resistência ao Frio Nv. 3",
+  "descricao": "TemperatureResist_Cold +3.0"
+ },
+ "TemperatureResist_Heat1": {
+  "nome": "Resistência ao Calor Nv. 1",
+  "descricao": "TemperatureResist_Heat +1.0"
+ },
+ "TemperatureResist_Heat1Cold1": {
+  "nome": "Resistência ao Calor Nv. 1 / Resistência ao Frio Nv. 1",
+  "descricao": "TemperatureResist_Cold +1.0 TemperatureResist_Heat +1.0"
+ },
+ "TemperatureResist_Heat2": {
+  "nome": "Resistência ao Calor Nv. 2",
+  "descricao": "TemperatureResist_Heat +2.0"
+ },
+ "TemperatureResist_Heat2Cold2": {
+  "nome": "Resistência ao Calor Nv. 2 / Resistência ao Frio Nv. 2",
+  "descricao": "TemperatureResist_Cold +2.0 TemperatureResist_Heat +2.0"
+ },
+ "TemperatureResist_Heat3": {
+  "nome": "Resistência ao Calor Nv. 3",
+  "descricao": "TemperatureResist_Heat +3.0"
+ },
+ "TemperatureResist_Heat3Cold3": {
+  "nome": "Resistência ao Calor Nv. 3 / Resistência ao Frio Nv. 3",
+  "descricao": "TemperatureResist_Cold +3.0 TemperatureResist_Heat +3.0"
+ },
+ "Test_PalEgg_HatchingSpeed_Up": {
+  "nome": "Filantropo",
+  "descricao": "Enquanto estiver em uma fazenda de acasalamento, a velocidade de produção de ovos é aumentada em 100.0%"
+ },
+ "TrainerATK_UP_1": {
+  "nome": "Comandante Intrépido",
+  "descricao": "Aumenta seu ataque em 10.0%."
+ },
+ "TrainerDEF_UP_1": {
+  "nome": "Estrategista Inabalável",
+  "descricao": "Aumenta sua defesa em 10.0%."
+ },
+ "TrainerLogging_up1": {
+  "nome": "Lenhador Líder",
+  "descricao": "Aumenta sua eficiência ao cortar árvores em 25.0%."
+ },
+ "TrainerMining_up1": {
+  "nome": "Mineiro-Chefe",
+  "descricao": "Aumenta sua eficiência de garimpo em 25.0%."
+ },
+ "TrainerWorkSpeed_UP_1": {
+  "nome": "Motivador",
+  "descricao": "Aumenta sua velocidade de trabalho em 25.0%."
+ },
+ "Vampire": {
+  "nome": "Vampiro",
+  "descricao": "Absorve parte do dano causado e restaura seu PV. Não dorme ao cair da noite, continuando a trabalhar."
+ },
+ "Witch": {
+  "nome": "Bruxa",
+  "descricao": "Aumenta o dano de ataques de escuridão em 30.0%. Aumenta o dano de ataques de gelo em 30.0%."
+ },
+ "WoodDrop_Boost_1": {
+  "nome": "Aumento de Madeira Cortada Nv. 1",
+  "descricao": "Aumenta ligeiramente a quantidade de madeira deixada."
+ },
+ "WoodDrop_Boost_2": {
+  "nome": "Aumento de Madeira Cortada Nv. 2",
+  "descricao": "Aumenta a quantidade de madeira deixada."
+ },
+ "WoodDrop_Boost_3": {
+  "nome": "Aumento de Madeira Cortada Nv. 3",
+  "descricao": "Aumenta bastante a quantidade de madeira deixada."
+ },
+ "WoodDrop_Boost_4": {
+  "nome": "Aumento de Madeira Cortada Nv. 4",
+  "descricao": "Aumenta muito a quantidade de madeira deixada."
+ },
+ "WoodDrop_Boost_5": {
+  "nome": "Aumento de Madeira Cortada Nv. 5",
+  "descricao": "Aumenta excepcionalmente a quantidade de madeira deixada."
+ },
+ "WorkSpeed_ACC_up1": {
+  "nome": "Velocidade de Trabalho Nv. 1",
+  "descricao": "Velocidade de trabalho +10.0%"
+ },
+ "WorkSpeed_ACC_up2": {
+  "nome": "Velocidade de Trabalho Nv. 2",
+  "descricao": "Velocidade de trabalho +15.0%"
+ },
+ "WorkSpeed_ACC_up3": {
+  "nome": "Velocidade de Trabalho Nv. 3",
+  "descricao": "Velocidade de trabalho +20.0%"
+ },
+ "WorkSpeed_ACC_up4": {
+  "nome": "Velocidade de Trabalho Nv. 4",
+  "descricao": "Velocidade de trabalho +25.0%"
+ },
+ "WorkSuitabilityAddRank_MonsterFarm_1": {
+  "nome": "Jovem Pecuarista",
+  "descricao": "Aptidão para trabalho de Fazenda +1"
+ },
+ "WorkSuitabilityAddRank_MonsterFarm_2": {
+  "nome": "Mestre Pecuarista",
+  "descricao": "Fazenda de Aptidão para trabalho +2"
+ },
+ "WorldTree_ATK": {
+  "nome": "Espada Sagrada de Dois Gumes",
+  "descricao": "Ataque <NumBlue_13>+</>50.0% Defesa -30.0% Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_ATK_DEF": {
+  "nome": "Deus da Destruição",
+  "descricao": "Ataque <NumBlue_13>+</>40.0% Defesa <NumBlue_13>+</>20.0% PV máximo -50.0% Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_CraftSpeed": {
+  "nome": "Mão Demoníaca",
+  "descricao": "Velocidade de trabalho <NumBlue_13>+</>90.0<NumBlue_13>%</> Redução de SAN +15% Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_DEF": {
+  "nome": "Muralha de Músculos da Terra Santa",
+  "descricao": "Defesa <NumBlue_13>+</>50.0% Ataque -30.0% Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_FullStomach": {
+  "nome": "Viveiro da Árvore Divina",
+  "descricao": "Manutenção de fartura +50% PV -20.0<NumRed_13>%</> Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_MoveSpeed": {
+  "nome": "Salto Dimensional",
+  "descricao": "Velocidade de movimento <NumBlue_13>+</>50.0<NumBlue_13>%</> Redução de fartura +15% Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "WorldTree_Sanity": {
+  "nome": "Sábio Ermitão",
+  "descricao": "Manutenção de SAN +50% Velocidade de trabalho -20.0<NumRed_13>%</> Evita que madeira ou rochas da Árvore Mundial desapareçam ao se aproximar"
+ },
+ "YakushimaDagameBoost_Magic_Equip": {
+  "nome": "Força Sagrada: Magia",
+  "descricao": "DamageUpIfEquipped_YakushimaMagicWeapon +20.0%"
+ },
+ "YakushimaDagameBoost_Melee_Equip": {
+  "nome": "Força Sagrada: Curta Distância",
+  "descricao": "DamageUpIfEquipped_YakushimaMeleeWeapon +20.0%"
+ },
+ "YakushimaDagameBoost_Ranged_Equip": {
+  "nome": "Força Sagrada: Longa Distância",
+  "descricao": "DamageUpIfEquipped_YakushimaRangedWeapon +20.0%"
+ },
+ "YakushimaDagameBoost_Summon_Equip": {
+  "nome": "Força Sagrada: Chamamento",
+  "descricao": "DamageUpIfEquipped_YakushimaSummonWeapon +20.0%"
+ },
+ "YakushimaProtection_Equip": {
+  "nome": "Proteção Sagrada",
+  "descricao": "ForYakushimaDefenceRate +30.0%"
+ },
+ "defense_ACC_up1": {
+  "nome": "Aumento de Defesa Nv. 1",
+  "descricao": "Defesa +10.0%"
+ },
+ "defense_ACC_up2": {
+  "nome": "Aumento de Defesa Nv. 2",
+  "descricao": "Defesa +15.0%"
+ },
+ "defense_ACC_up3": {
+  "nome": "Aumento de Defesa Nv. 3",
+  "descricao": "Defesa +20.0%"
+ },
+ "defense_ACC_up4": {
+  "nome": "Aumento de Defesa Nv. 4",
+  "descricao": "Defesa +25.0%"
+ }
 }
