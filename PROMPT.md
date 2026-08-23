@@ -1252,23 +1252,115 @@ Você tem **PVE FREE, PVE VIP e PVP FREE NEW** (§3.4), cada um com save própri
 
 > A carteira de Paletas é **do Discord**, não do servidor — então ela é global por natureza. O que precisa de decisão é só o anúncio.
 
-### 7.3 Como o Pal/item chega ao site — ✅ **resolvido pelo PalDefender**
+### 7.3 Como o Pal/item chega ao site — 🟡 item resolvido, Pal tem uma parede nova
 
-Com o PalDefender (§3.5 e §3.6), **o ciclo fecha inteiro** — não precisa parsear save, não precisa cadastro manual, não precisa combinar entrega. Tudo roda direto da Vercel.
+Com o PalDefender (§3.5 e §3.6), o ciclo do **item** fecha inteiro — não
+precisa parsear save, não precisa cadastro manual. Tudo roda direto da
+Vercel (§7.3 do código: cofre e mercado de itens no ar desde 23/08/2026).
+
+🔴 **Correção de 23/08/2026: a entrega de Pal exige escrever um arquivo no
+servidor, não é inline.** Este documento marcava `givepal_j` e
+`POST /give/paltemplate` como ✅ resolvidos — a doc oficial do PalDefender diz
+outra coisa:
+
+- `givepal_j <UserId> <PalTemplate>` — o `PalTemplate` é **nome de arquivo**,
+  não JSON. O comando lê de
+  `Pal/Binaries/Win64/PalDefender/Pals/Templates/<arquivo>.json`.
+- `POST /v1/pdapi/give/paltemplate/{uid}` — corpo
+  `{"PalTemplates": ["arquivo.json"]}`. Mesma pasta, mesma exigência: **o
+  arquivo já precisa existir no servidor** antes da chamada.
+
+Nenhum dos dois aceita o template dentro do corpo da requisição. Para
+entregar o Pal exato, o site precisa **escrever o arquivo primeiro** — e
+isso é SFTP, um canal que hoje só existe do lado do GitHub Actions
+(`tools/import_save.py`, §3.8), só para leitura, com credenciais que vivem
+no segredo `PALLEIRA_SERVERS` e nunca chegaram perto da Vercel.
+
+**O que continua resolvido, sem mudança:**
+
+| Etapa | Como |
+|---|---|
+| **Ler** o que o jogador tem | `GET /pals/{uid}` ✅ — testado em 23/08, bate com a ficha da §7.4 (4 IVs, almas separadas, passivas) |
+| **Retirar** (custódia) | `deletepals <uid> <filtro> Limit=1` ✅ — testado por RCON, procura o jogador antes de agir |
+| **Guardar** | o JSON de `/pals/{uid}` no banco — é o template completo, pronto para reescrever depois |
+
+**O que fica pendente — só a entrega:**
+
+```
+guardar   ✅  ler /pals/{uid} → deletepals → guardar o JSON no banco
+entregar  🔴  precisa: banco → arquivo no servidor (SFTP) → givepal_j/REST
+```
+
+**Decisão de 23/08/2026: caminho (B), o GitHub Actions escreve o arquivo.**
+Reaproveita o padrão que o §3.8 já tinha fixado ("o mundo é editado no
+Actions, não na Vercel"), reaproveita o **mesmo segredo** `PALLEIRA_SERVERS`
+que `import_save.py` já usa — nenhuma credencial nova em lugar nenhum — e não
+abre uma porta de escrita exposta à internet a partir de uma função
+serverless.
+
+```
+clicar "resgatar"
+  → grava a intenção (pal_transfers: aguardando_arquivo)
+  → dispara o GitHub Actions (workflow_dispatch, workflow deliver-pal-template.yml)
+      → escreve Pals/Templates/palleira_<id>.json por SFTP    (aguardando_arquivo → arquivo_pronto)
+  → a Vercel chama givepal_j por RCON, síncrono, quando vê 'arquivo_pronto'   (→ concluido)
+```
+
+Só a metade da **retirada** é instantânea (`deletepals`, síncrono); a
+**entrega** ganha uma parada no meio — o comprador vê "preparando a
+entrega…" por alguns segundos, não a entrega na hora. É a troca aceita: nada
+de credencial de escrita nova na Vercel.
 
 | Etapa | Item | Pal |
 |---|---|---|
-| **1. Ler o que o jogador tem** | `GET /items/{uid}` ✅ | `GET /pals/{uid}` ou `exportpals <uid>` ✅ |
+| **1. Ler o que o jogador tem** | `GET /items/{uid}` ✅ | `GET /pals/{uid}` ✅ |
 | **2. Retirar (custódia)** | `delitems <uid> <ItemId>:<qtd>` ✅ | **`deletepals <uid> <filtro> Limit=1`** ✅ |
-| **3. Guardar** | item + quantidade no banco | template JSON no banco/Blob |
-| **4. Entregar ao comprador** | `giveitems` / `POST /give/items/{uid}` ✅ | `givepal_j` / `POST /give/paltemplate/{uid}` ✅ — **o Pal exato**, não uma cópia genérica |
-| **5. Devolver se cancelar** | mesmo comando de entrega | mesmo comando de entrega |
-
-**Nenhum furo pendente:**
+| **3. Guardar** | item + quantidade no banco | o JSON de `/pals/{uid}` no banco ✅ |
+| **4. Entregar ao comprador** | `giveitems` / `POST /give/items/{uid}` ✅ | `givepal_j`, em duas fases ✅ — código no ar em 23/08 |
+| **5. Devolver se cancelar** | mesmo comando de entrega | mesmo — assíncrono do mesmo jeito |
 
 - ✅ **Clonagem resolvida.** O `deletepals` tira o Pal do vendedor de verdade. Sempre com **filtro específico + `Limit=1`**, e sempre **depois** de guardar o template — se o template não salvou, não deleta nada.
-- ✅ **Leitura de inventário resolvida.** `GET /items/{uid}` e `GET /pals/{uid}` mostram exatamente o que o jogador tem. O site monta a tela de "escolher o que vender" a partir do inventário real — o jogador **seleciona**, não digita.
-- ✅ **Fidelidade garantida.** A ficha do anúncio sai do template, então não tem como mentir em level, passiva ou IV.
+- ✅ **Leitura de inventário resolvida.** `GET /items/{uid}` e `GET /pals/{uid}` mostram exatamente o que o jogador tem. A tela de "escolher o que vender" nasce do inventário real — o jogador **seleciona**, não digita.
+- ✅ **Fidelidade garantida na leitura e na guarda.** O que fica no banco é o JSON exato do jogo — level, passiva, IV, alma. Mentir na ficha não é possível.
+- ✅ **A entrega fecha o ciclo**, em duas fases — ver o cofre de Pals abaixo.
+
+#### ✅ Cofre de Pal e a entrega em duas fases — no ar em 23/08/2026
+
+| Peça | Onde |
+|---|---|
+| Ler/retirar/guardar (síncrono) | `lib/pal-cofre.ts` — `importarPalParaCofre` |
+| Converter para o formato de arquivo | `lib/pal-template.ts` — `paraTemplate` |
+| Escrever no servidor (assíncrono) | `.github/workflows/deliver-pal-template.yml` + `tools/escrever_template_pal.py` |
+| Entregar por RCON (síncrono, depois do arquivo) | `lib/pal-cofre.ts` — `continuarResgate` |
+| Telas | `/painel/cofre/pals` e `/painel/cofre/pals/[id]` (com o Pal em 3D) |
+
+**O limite do filtro do `deletepals`, registrado sem rodeio:** a sintaxe
+filtra por `ID`, `Nick`, `Gender`, `Level`, `Rank` (condensação), `Lucky`
+(shiny) e `Passives` — **não existe filtro por IV, nem por identidade única
+do Pal**. Se o jogador tiver dois Pals idênticos em tudo isso e diferentes só
+no IV, `Limit=1` tira um dos dois, sem garantia de que seja o mesmo cujo
+template foi lido. **Isso não afeta o comprador** — ele recebe exatamente o
+template salvo, não uma nova leitura do vendedor — só fica ambíguo qual das
+duas cópias saiu da conta de quem vendeu. Documentado por inteiro em
+`lib/pal-template.ts`.
+
+**Escopo desta versão:** só Pals do **time** e da **palbox** entram no
+cofre — os que estão trabalhando numa base ficam de fora, porque tirar um
+Pal de lá é operação diferente (a base perde produção sem avisar).
+
+⚠️ **Não testado contra o jogo de verdade.** Cada metade foi testada por si
+(`deletepals`/`givepal_j` respondem no formato esperado, a conversão para
+`PalTemplate` bate campo a campo com um Pal real capturado da API, as travas
+de concorrência passaram contra o Neon), mas o caminho inteiro — incluindo
+o GitHub Actions escrevendo de verdade num servidor — ainda não rodou uma
+vez sequer. O workflow tem um modo `verificar` que testa a conexão SFTP e a
+pasta de destino sem escrever nada, para validar antes do primeiro `aplicar`.
+
+**O que fica para depois — a vitrine.** O `/mercado` de hoje só lista item
+(§ acima). `listings` já aceita `kind='pal'` com `pal_template` (o banco
+recusa a forma errada — testado), mas as telas de anunciar/comprar Pal ainda
+não existem. É o próximo passo natural, reaproveitando a `FichaDoPal` que já
+foi construída para o cofre.
 
 **Ordem obrigatória das operações (nunca inverter):**
 
@@ -1421,6 +1513,33 @@ São ~288 Pals e ~2.400 itens. Semear de **dataset open source**: [paldex](https
 - Prever chave sem tradução: em dataset de fã é comum aparecer item com o rótulo cru no lugar do nome. O site tem que cair para o `ItemId` em vez de mostrar lixo na tela.
 
 **Decisão:** `_____________________`
+
+#### ✅ Arte 3D — resolvida, para o modelo, em 23/08/2026
+
+A parte visual do "Pal exato" está resolvida, embora o nome/ícone 2D acima
+ainda não: o site ganhou **324 modelos 3D** (glTF 2.0, ~105 KB cada, ~33 MB
+no total), extraídos do próprio jogo pelo projeto de código aberto
+[Palworld Save Pal](https://github.com/PalworldSavePal/palworld-save-pal)
+(GPL-3.0 — a licença cobre o **código** dele, não a arte da Pocketpair; o
+site usa só os arquivos `.glb`, escreve o próprio visualizador, e serve tudo
+do próprio domínio, `public/models/pals/`).
+
+**Cobertura medida contra a comunidade de verdade (23/08/2026):** cruzando o
+manifesto com os `game-data` dos dois PVE, **1.504 dos 1.536 personagens
+vivos têm modelo** (97,9%) — os 32 que faltam são todos NPC humano
+(mercador), não Pal. Nenhuma espécie real ficou de fora, incluindo skins,
+que têm malha própria.
+
+| | |
+|---|---|
+| Resolução `PalID` → malha | `lib/pals.ts` — mesmo algoritmo de prefixo/sufixo do projeto de origem, testado contra Alpha (`BOSS_`) e skin |
+| Visualizador | `components/pal-3d.tsx` — `three.js`, gira sozinho, arrasta com o mouse, libera GPU ao desmontar |
+| Ficha completa | `components/ficha-pal.tsx` — o 3D + IVs, almas e passivas, tudo saído do template |
+
+⚠️ **Sem animação nem esqueleto** — os modelos ficam parados; quem dá vida é
+a câmera girando, não o bicho. E não há arte **2D** nenhuma no pacote: para
+lista e card pequeno, a §7.4 continua precisando do catálogo tradicional
+acima.
 
 ### 7.5 Ficha do Item
 

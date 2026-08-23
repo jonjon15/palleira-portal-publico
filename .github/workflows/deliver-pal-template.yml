@@ -1,0 +1,51 @@
+# Escreve o arquivo de um Pal no servidor do jogo, por SFTP (§7.3 do PROMPT.md).
+#
+# Roda aqui e não na Vercel: `givepal_j` só aceita nome de arquivo, e o
+# arquivo tem que existir antes, em `Pals/Templates/`. Escrever lá é SFTP.
+#
+# ⚠️ Mais leve que o `reset-player`: não compila Oodle, não para o servidor
+# — o servidor fica no ar o tempo todo. Escrever um arquivo de Pal não toca
+# no mundo, só numa pasta de configuração do PalDefender.
+#
+# Depois deste workflow terminar, é a Vercel quem chama `givepal_j` por
+# RCON — ver `lib/pal-cofre.ts`. Este workflow só confirma que o arquivo
+# está lá.
+name: deliver-pal-template
+
+on:
+  workflow_dispatch:
+    inputs:
+      transfer_id:
+        description: "id da linha em pal_transfers"
+        required: true
+        type: string
+      modo:
+        description: "verificar = só testa a conexão | aplicar = escreve o arquivo"
+        required: true
+        type: choice
+        options: [verificar, aplicar]
+        default: verificar
+
+jobs:
+  escrever:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: pip install --quiet paramiko "psycopg[binary]"
+
+      - name: Escrever o template
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/escrever_template_pal.py \
+            --transfer-id "${{ inputs.transfer_id }}" \
+            --${{ inputs.modo }}

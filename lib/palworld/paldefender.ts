@@ -256,6 +256,78 @@ export async function getItems(
   };
 }
 
+/* ------------------------------------------------------------------- pals */
+
+/**
+ * Um Pal exatamente como o jogo guarda — os mesmos campos que
+ * `lib/pal-template.ts` usa para montar o arquivo de entrega.
+ *
+ * Fica solto (sem interface fechada) de propósito: a lista de campos que o
+ * PalDefender devolve é maior que a que o `PalTemplate` aceita de volta
+ * (`ImportedCharacter`, `WorkerSick`, `team_slot_index`…), e travar um tipo
+ * aqui só duplicaria manutenção. Quem decide o que vira arquivo é
+ * `pal-template.ts`, com um allowlist explícito.
+ */
+export type PalCru = Record<string, unknown> & {
+  PalID: string;
+  Nickname: string;
+  Level: number;
+  Gender: string;
+  Shiny: boolean;
+  CondensedPals: number;
+};
+
+export interface PalNoCofre {
+  /** A chave do Pal dentro da resposta — não é o UID do dono */
+  instanceId: string;
+  pal: PalCru;
+}
+
+interface RawPals {
+  Pals: {
+    Team?: Record<string, PalCru>;
+    Palbox?: Record<string, PalCru>;
+    // BaseCamps existe na resposta, mas fica de fora do cofre nesta versão
+    // (§7.3): tirar um Pal que está trabalhando numa base é uma operação
+    // diferente, e a comunidade sente a base perder produção sem avisar.
+  };
+}
+
+/**
+ * Os Pals do time e da palbox — o que dá para levar para o cofre.
+ *
+ * 📌 Igual ao `getItems`, só o que está "na mochila" entra: `Team` e
+ * `Palbox`, nunca `BaseCamps`.
+ *
+ * ⚠️ Lança `ForaDoJogo` quando a pessoa não está conectada — mesma
+ * limitação do inventário, mesma origem para o cofre.
+ */
+export async function getPals(
+  server: PalleiraServer,
+  uid: string,
+): Promise<PalNoCofre[]> {
+  const raw = await call<RawPals>(server, `pals/${normalizarUid(uid)}`, false);
+
+  const grupos = [raw.Pals?.Team, raw.Pals?.Palbox];
+  const lista: PalNoCofre[] = [];
+  for (const grupo of grupos) {
+    for (const [instanceId, pal] of Object.entries(grupo ?? {})) {
+      if (pal?.PalID) lista.push({ instanceId, pal });
+    }
+  }
+  return lista;
+}
+
+/** Um Pal específico, pelo `instanceId` que `getPals` devolveu. */
+export async function getPal(
+  server: PalleiraServer,
+  uid: string,
+  instanceId: string,
+): Promise<PalCru | null> {
+  const lista = await getPals(server, uid);
+  return lista.find((p) => p.instanceId === instanceId)?.pal ?? null;
+}
+
 /* --------------------------------------------------------------- utilidades */
 
 /** Acima disso, a base está na Árvore Mundial e não em Palpagos. */

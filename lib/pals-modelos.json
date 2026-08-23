@@ -1,0 +1,1298 @@
+{
+ "alpaca": {
+  "arquivo": "alpaca_8e715b.glb",
+  "bytes": 119424
+ },
+ "amaterasuwolf": {
+  "arquivo": "amaterasuwolf_89bf39.glb",
+  "bytes": 103528
+ },
+ "amaterasuwolf_dark": {
+  "arquivo": "amaterasuwolf_dark_bc271f.glb",
+  "bytes": 95624
+ },
+ "anubis": {
+  "arquivo": "anubis_e1dc5e.glb",
+  "bytes": 91428
+ },
+ "anubis_skin001": {
+  "arquivo": "anubis_skin001_c45a43.glb",
+  "bytes": 158776
+ },
+ "badcatgirl": {
+  "arquivo": "badcatgirl_01f9ef.glb",
+  "bytes": 141812
+ },
+ "baphomet": {
+  "arquivo": "baphomet_11663b.glb",
+  "bytes": 114244
+ },
+ "baphomet_dark": {
+  "arquivo": "baphomet_dark_9193d3.glb",
+  "bytes": 127956
+ },
+ "bastet": {
+  "arquivo": "bastet_88c3ae.glb",
+  "bytes": 82456
+ },
+ "bastet_ice": {
+  "arquivo": "bastet_ice_e0bc08.glb",
+  "bytes": 116376
+ },
+ "berrygoat": {
+  "arquivo": "berrygoat_c698c1.glb",
+  "bytes": 173580
+ },
+ "berrygoat_dark": {
+  "arquivo": "berrygoat_dark_06d9b0.glb",
+  "bytes": 175032
+ },
+ "birddragon": {
+  "arquivo": "birddragon_035261.glb",
+  "bytes": 86744
+ },
+ "birddragon_ice": {
+  "arquivo": "birddragon_ice_193857.glb",
+  "bytes": 117216
+ },
+ "blackcentaur": {
+  "arquivo": "blackcentaur_31f23b.glb",
+  "bytes": 139152
+ },
+ "blackgriffon": {
+  "arquivo": "blackgriffon_03d432.glb",
+  "bytes": 105552
+ },
+ "blackgriffon_skin001": {
+  "arquivo": "blackgriffon_skin001_f6f9b9.glb",
+  "bytes": 171144
+ },
+ "blackmetaldragon": {
+  "arquivo": "blackmetaldragon_c79e17.glb",
+  "bytes": 155764
+ },
+ "blackpuppy": {
+  "arquivo": "blackpuppy_2c49dc.glb",
+  "bytes": 101148
+ },
+ "blackpuppy_ice": {
+  "arquivo": "blackpuppy_ice_24e6ba.glb",
+  "bytes": 107092
+ },
+ "blueberryfairy": {
+  "arquivo": "blueberryfairy_a80dca.glb",
+  "bytes": 102820
+ },
+ "bluedragon": {
+  "arquivo": "bluedragon_b1c71d.glb",
+  "bytes": 79940
+ },
+ "bluedragon_ice": {
+  "arquivo": "bluedragon_ice_875712.glb",
+  "bytes": 79492
+ },
+ "blueplatypus": {
+  "arquivo": "blueplatypus_c7cd0a.glb",
+  "bytes": 80700
+ },
+ "blueplatypus_fire": {
+  "arquivo": "blueplatypus_fire_33a5ac.glb",
+  "bytes": 79604
+ },
+ "blueskydragon": {
+  "arquivo": "blueskydragon_dbc5b3.glb",
+  "bytes": 132372
+ },
+ "bluethunderhorse": {
+  "arquivo": "bluethunderhorse_74e39f.glb",
+  "bytes": 118904
+ },
+ "boar": {
+  "arquivo": "boar_957f55.glb",
+  "bytes": 59848
+ },
+ "brownrabbit": {
+  "arquivo": "brownrabbit_5639ee.glb",
+  "bytes": 121288
+ },
+ "cactusdoll": {
+  "arquivo": "cactusdoll_bc9782.glb",
+  "bytes": 80080
+ },
+ "cactusdoll_dark": {
+  "arquivo": "cactusdoll_dark_62dd63.glb",
+  "bytes": 68228
+ },
+ "candleghost": {
+  "arquivo": "candleghost_cedccf.glb",
+  "bytes": 98340
+ },
+ "captainpenguin": {
+  "arquivo": "captainpenguin_15545e.glb",
+  "bytes": 154312
+ },
+ "captainpenguin_black": {
+  "arquivo": "captainpenguin_black_8f8d47.glb",
+  "bytes": 152456
+ },
+ "carbunclo": {
+  "arquivo": "carbunclo_58be9a.glb",
+  "bytes": 82356
+ },
+ "catbat": {
+  "arquivo": "catbat_3c49ee.glb",
+  "bytes": 114796
+ },
+ "catmage": {
+  "arquivo": "catmage_d9230f.glb",
+  "bytes": 103888
+ },
+ "catmage_fire": {
+  "arquivo": "catmage_fire_8d7b15.glb",
+  "bytes": 105348
+ },
+ "catmage_skin001": {
+  "arquivo": "catmage_skin001_7ce948.glb",
+  "bytes": 116328
+ },
+ "catvampire": {
+  "arquivo": "catvampire_0a8fe5.glb",
+  "bytes": 70192
+ },
+ "chickenpal": {
+  "arquivo": "chickenpal_ee188a.glb",
+  "bytes": 73828
+ },
+ "clionetwins": {
+  "arquivo": "clionetwins_7ba6bd.glb",
+  "bytes": 122716
+ },
+ "cloverfairy": {
+  "arquivo": "cloverfairy_65c516.glb",
+  "bytes": 101868
+ },
+ "clownrabbit": {
+  "arquivo": "clownrabbit_41b2a4.glb",
+  "bytes": 142264
+ },
+ "colorfulbird": {
+  "arquivo": "colorfulbird_f95021.glb",
+  "bytes": 75436
+ },
+ "cowpal": {
+  "arquivo": "cowpal_859148.glb",
+  "bytes": 64768
+ },
+ "cubeturtle": {
+  "arquivo": "cubeturtle_3bd163.glb",
+  "bytes": 137804
+ },
+ "cubeturtle_neutral": {
+  "arquivo": "cubeturtle_neutral_f01b46.glb",
+  "bytes": 136016
+ },
+ "cutebutterfly": {
+  "arquivo": "cutebutterfly_de21e1.glb",
+  "bytes": 86608
+ },
+ "cutefox": {
+  "arquivo": "cutefox_331042.glb",
+  "bytes": 70168
+ },
+ "cutemole": {
+  "arquivo": "cutemole_282e1a.glb",
+  "bytes": 70084
+ },
+ "dandeliongirl": {
+  "arquivo": "dandeliongirl_4a29f8.glb",
+  "bytes": 101020
+ },
+ "darkalien": {
+  "arquivo": "darkalien_3b6216.glb",
+  "bytes": 118108
+ },
+ "darkcrow": {
+  "arquivo": "darkcrow_9e80f4.glb",
+  "bytes": 69284
+ },
+ "darkflamefox": {
+  "arquivo": "darkflamefox_fab612.glb",
+  "bytes": 120544
+ },
+ "darkmechadragon": {
+  "arquivo": "darkmechadragon_346746.glb",
+  "bytes": 123432
+ },
+ "darkscorpion": {
+  "arquivo": "darkscorpion_f1f1fe.glb",
+  "bytes": 140064
+ },
+ "darkscorpion_ground": {
+  "arquivo": "darkscorpion_ground_9eda9f.glb",
+  "bytes": 131240
+ },
+ "deer": {
+  "arquivo": "deer_f6f4ab.glb",
+  "bytes": 122928
+ },
+ "deer_ground": {
+  "arquivo": "deer_ground_a43a8d.glb",
+  "bytes": 115044
+ },
+ "domearmordragon": {
+  "arquivo": "domearmordragon_541136.glb",
+  "bytes": 118172
+ },
+ "dreamdemon": {
+  "arquivo": "dreamdemon_9ab17b.glb",
+  "bytes": 98596
+ },
+ "drillgame": {
+  "arquivo": "drillgame_6875f5.glb",
+  "bytes": 113704
+ },
+ "eagle": {
+  "arquivo": "eagle_c29e4d.glb",
+  "bytes": 133316
+ },
+ "eleccat": {
+  "arquivo": "eleccat_aebe03.glb",
+  "bytes": 99144
+ },
+ "eleclizard": {
+  "arquivo": "eleclizard_14727e.glb",
+  "bytes": 71500
+ },
+ "elecpanda": {
+  "arquivo": "elecpanda_f53e97.glb",
+  "bytes": 84780
+ },
+ "elecpomeranian": {
+  "arquivo": "elecpomeranian_631680.glb",
+  "bytes": 90480
+ },
+ "elecsnail": {
+  "arquivo": "elecsnail_ff5408.glb",
+  "bytes": 110488
+ },
+ "elecsnail_ground": {
+  "arquivo": "elecsnail_ground_ad2f36.glb",
+  "bytes": 108712
+ },
+ "fairydragon": {
+  "arquivo": "fairydragon_2d89e9.glb",
+  "bytes": 83704
+ },
+ "fairydragon_water": {
+  "arquivo": "fairydragon_water_e6147c.glb",
+  "bytes": 88804
+ },
+ "featherostrich": {
+  "arquivo": "featherostrich_e92db4.glb",
+  "bytes": 113880
+ },
+ "fengyundeeper": {
+  "arquivo": "fengyundeeper_b87495.glb",
+  "bytes": 125132
+ },
+ "fengyundeeper_electric": {
+  "arquivo": "fengyundeeper_electric_1aa43b.glb",
+  "bytes": 123468
+ },
+ "firekirin": {
+  "arquivo": "firekirin_d0198a.glb",
+  "bytes": 101212
+ },
+ "firekirin_dark": {
+  "arquivo": "firekirin_dark_c5326d.glb",
+  "bytes": 94696
+ },
+ "flamebambi": {
+  "arquivo": "flamebambi_083eec.glb",
+  "bytes": 95592
+ },
+ "flamebuffalo": {
+  "arquivo": "flamebuffalo_7509c9.glb",
+  "bytes": 145716
+ },
+ "flowerdinosaur": {
+  "arquivo": "flowerdinosaur_050255.glb",
+  "bytes": 102888
+ },
+ "flowerdinosaur_electric": {
+  "arquivo": "flowerdinosaur_electric_691a47.glb",
+  "bytes": 103336
+ },
+ "flowerdoll": {
+  "arquivo": "flowerdoll_ec93d2.glb",
+  "bytes": 146564
+ },
+ "flowerdoll_fire": {
+  "arquivo": "flowerdoll_fire_8eda6b.glb",
+  "bytes": 142852
+ },
+ "flowerprince": {
+  "arquivo": "flowerprince_b7fdda.glb",
+  "bytes": 109664
+ },
+ "flowerrabbit": {
+  "arquivo": "flowerrabbit_cce092.glb",
+  "bytes": 102992
+ },
+ "fluffybird": {
+  "arquivo": "fluffybird_b5ed03.glb",
+  "bytes": 85216
+ },
+ "flyingmanta": {
+  "arquivo": "flyingmanta_b8cd73.glb",
+  "bytes": 59616
+ },
+ "flyingmanta_thunder": {
+  "arquivo": "flyingmanta_thunder_dbb3d9.glb",
+  "bytes": 66656
+ },
+ "foxexorcist": {
+  "arquivo": "foxexorcist_160188.glb",
+  "bytes": 113696
+ },
+ "foxmage_dark": {
+  "arquivo": "foxmage_dark_c0584f.glb",
+  "bytes": 122700
+ },
+ "foxmage": {
+  "arquivo": "foxmage_f105ca.glb",
+  "bytes": 124068
+ },
+ "ganesha": {
+  "arquivo": "ganesha_7d8782.glb",
+  "bytes": 58348
+ },
+ "garm": {
+  "arquivo": "garm_d03759.glb",
+  "bytes": 77748
+ },
+ "ghostanglerfish": {
+  "arquivo": "ghostanglerfish_6cb2e5.glb",
+  "bytes": 93872
+ },
+ "ghostanglerfish_fire": {
+  "arquivo": "ghostanglerfish_fire_58dd88.glb",
+  "bytes": 96356
+ },
+ "ghostbeast": {
+  "arquivo": "ghostbeast_a80d81.glb",
+  "bytes": 87124
+ },
+ "ghostblackcat": {
+  "arquivo": "ghostblackcat_b2bdcb.glb",
+  "bytes": 114720
+ },
+ "ghostdragon": {
+  "arquivo": "ghostdragon_fefbbc.glb",
+  "bytes": 125616
+ },
+ "ghostdragon_fire": {
+  "arquivo": "ghostdragon_fire_688828.glb",
+  "bytes": 101540
+ },
+ "ghostrabbit": {
+  "arquivo": "ghostrabbit_e5792b.glb",
+  "bytes": 123536
+ },
+ "ghostrabbit_grass": {
+  "arquivo": "ghostrabbit_grass_1859c2.glb",
+  "bytes": 124372
+ },
+ "goldenhorse": {
+  "arquivo": "goldenhorse_b5cce5.glb",
+  "bytes": 122608
+ },
+ "gorilla": {
+  "arquivo": "gorilla_a48853.glb",
+  "bytes": 124864
+ },
+ "gorilla_ground": {
+  "arquivo": "gorilla_ground_c97c25.glb",
+  "bytes": 117516
+ },
+ "grassgolem": {
+  "arquivo": "grassgolem_284221.glb",
+  "bytes": 221304
+ },
+ "grassgolem_dark": {
+  "arquivo": "grassgolem_dark_2aacb3.glb",
+  "bytes": 164680
+ },
+ "grassmammoth": {
+  "arquivo": "grassmammoth_b6b34b.glb",
+  "bytes": 139820
+ },
+ "grassmammoth_ice": {
+  "arquivo": "grassmammoth_ice_d756a5.glb",
+  "bytes": 162456
+ },
+ "grassminotaur": {
+  "arquivo": "grassminotaur_617dd9.glb",
+  "bytes": 140248
+ },
+ "grassminotaur_ice": {
+  "arquivo": "grassminotaur_ice_0b4500.glb",
+  "bytes": 154924
+ },
+ "grasspanda": {
+  "arquivo": "grasspanda_aea987.glb",
+  "bytes": 77108
+ },
+ "grasspanda_electric": {
+  "arquivo": "grasspanda_electric_5761e8.glb",
+  "bytes": 92016
+ },
+ "grassrabbitman": {
+  "arquivo": "grassrabbitman_d7008a.glb",
+  "bytes": 120576
+ },
+ "grimgirl": {
+  "arquivo": "grimgirl_60500e.glb",
+  "bytes": 86416
+ },
+ "guardiandog": {
+  "arquivo": "guardiandog_67779f.glb",
+  "bytes": 137112
+ },
+ "hadesbird": {
+  "arquivo": "hadesbird_269e55.glb",
+  "bytes": 124444
+ },
+ "hadesbird_electric": {
+  "arquivo": "hadesbird_electric_eb7b99.glb",
+  "bytes": 128368
+ },
+ "hawkbird": {
+  "arquivo": "hawkbird_a9cf73.glb",
+  "bytes": 106856
+ },
+ "hedgehog": {
+  "arquivo": "hedgehog_c5b221.glb",
+  "bytes": 85432
+ },
+ "hedgehog_ice": {
+  "arquivo": "hedgehog_ice_f096cc.glb",
+  "bytes": 117544
+ },
+ "herculesbeetle": {
+  "arquivo": "herculesbeetle_0df2b9.glb",
+  "bytes": 156024
+ },
+ "herculesbeetle_ground": {
+  "arquivo": "herculesbeetle_ground_109fa6.glb",
+  "bytes": 158980
+ },
+ "hoodghost": {
+  "arquivo": "hoodghost_a391de.glb",
+  "bytes": 85348
+ },
+ "horus": {
+  "arquivo": "horus_5b9d56.glb",
+  "bytes": 131956
+ },
+ "horus_unique": {
+  "arquivo": "horus_unique_9c6134.glb",
+  "bytes": 131956
+ },
+ "horus_water": {
+  "arquivo": "horus_water_5b19a8.glb",
+  "bytes": 133020
+ },
+ "icecrocodile": {
+  "arquivo": "icecrocodile_f63b2b.glb",
+  "bytes": 74832
+ },
+ "icedeer": {
+  "arquivo": "icedeer_f19198.glb",
+  "bytes": 177272
+ },
+ "icefox": {
+  "arquivo": "icefox_a7175c.glb",
+  "bytes": 86776
+ },
+ "icehorse": {
+  "arquivo": "icehorse_b50751.glb",
+  "bytes": 122968
+ },
+ "icehorse_dark": {
+  "arquivo": "icehorse_dark_67d231.glb",
+  "bytes": 112696
+ },
+ "icehorse_skin002": {
+  "arquivo": "icehorse_skin002_2f3639.glb",
+  "bytes": 214896
+ },
+ "icenarwhal": {
+  "arquivo": "icenarwhal_0b7255.glb",
+  "bytes": 79308
+ },
+ "icenarwhal_fire": {
+  "arquivo": "icenarwhal_fire_08b1ca.glb",
+  "bytes": 77332
+ },
+ "iceseal": {
+  "arquivo": "iceseal_3c03af.glb",
+  "bytes": 81960
+ },
+ "iceseal_ground": {
+  "arquivo": "iceseal_ground_1f9a10.glb",
+  "bytes": 78464
+ },
+ "icewitch": {
+  "arquivo": "icewitch_65eed6.glb",
+  "bytes": 202924
+ },
+ "jellyfishfairy": {
+  "arquivo": "jellyfishfairy_8071b5.glb",
+  "bytes": 118764
+ },
+ "jellyfishghost": {
+  "arquivo": "jellyfishghost_794d6f.glb",
+  "bytes": 87044
+ },
+ "jetdragon": {
+  "arquivo": "jetdragon_fb3c01.glb",
+  "bytes": 73460
+ },
+ "jetdragon_skin001": {
+  "arquivo": "jetdragon_skin001_ce44ae.glb",
+  "bytes": 127484
+ },
+ "kabukiman": {
+  "arquivo": "kabukiman_eaeb62.glb",
+  "bytes": 154088
+ },
+ "kelpie": {
+  "arquivo": "kelpie_8d972c.glb",
+  "bytes": 51300
+ },
+ "kelpie_fire": {
+  "arquivo": "kelpie_fire_6925d8.glb",
+  "bytes": 49516
+ },
+ "kendofrog": {
+  "arquivo": "kendofrog_99ec3d.glb",
+  "bytes": 91356
+ },
+ "kendofrog_dark": {
+  "arquivo": "kendofrog_dark_c5d27f.glb",
+  "bytes": 91312
+ },
+ "kendofrog_skin001": {
+  "arquivo": "kendofrog_skin001_90f87e.glb",
+  "bytes": 105704
+ },
+ "kingalpaca": {
+  "arquivo": "kingalpaca_bba5f2.glb",
+  "bytes": 149756
+ },
+ "kingalpaca_ice": {
+  "arquivo": "kingalpaca_ice_5d04c3.glb",
+  "bytes": 175904
+ },
+ "kingbahamut_dragon": {
+  "arquivo": "kingbahamut_dragon_f0d54b.glb",
+  "bytes": 160292
+ },
+ "kingbahamut": {
+  "arquivo": "kingbahamut_ea4266.glb",
+  "bytes": 165292
+ },
+ "kingsunfish": {
+  "arquivo": "kingsunfish_43211a.glb",
+  "bytes": 85872
+ },
+ "kingsunfish_thunder": {
+  "arquivo": "kingsunfish_thunder_b694d2.glb",
+  "bytes": 85812
+ },
+ "kingwhale": {
+  "arquivo": "kingwhale_a88185.glb",
+  "bytes": 113768
+ },
+ "kirin": {
+  "arquivo": "kirin_06043b.glb",
+  "bytes": 75424
+ },
+ "kirin_ice": {
+  "arquivo": "kirin_ice_df59fe.glb",
+  "bytes": 76908
+ },
+ "kitsunebi": {
+  "arquivo": "kitsunebi_afd50d.glb",
+  "bytes": 66860
+ },
+ "kitsunebi_ice": {
+  "arquivo": "kitsunebi_ice_25f614.glb",
+  "bytes": 79412
+ },
+ "lanternbutler": {
+  "arquivo": "lanternbutler_111ad1.glb",
+  "bytes": 140608
+ },
+ "lavagirl": {
+  "arquivo": "lavagirl_086a2f.glb",
+  "bytes": 101096
+ },
+ "lazycatfish": {
+  "arquivo": "lazycatfish_803f4b.glb",
+  "bytes": 59068
+ },
+ "lazycatfish_gold": {
+  "arquivo": "lazycatfish_gold_12e2f2.glb",
+  "bytes": 56896
+ },
+ "lazydragon": {
+  "arquivo": "lazydragon_5662d9.glb",
+  "bytes": 46376
+ },
+ "lazydragon_electric": {
+  "arquivo": "lazydragon_electric_fd5631.glb",
+  "bytes": 52784
+ },
+ "lazydragon_skin001": {
+  "arquivo": "lazydragon_skin001_8718b8.glb",
+  "bytes": 67056
+ },
+ "leafmomonga": {
+  "arquivo": "leafmomonga_1b7947.glb",
+  "bytes": 87616
+ },
+ "leafprincess": {
+  "arquivo": "leafprincess_5c5c20.glb",
+  "bytes": 114496
+ },
+ "legenddeer": {
+  "arquivo": "legenddeer_daa83a.glb",
+  "bytes": 118540
+ },
+ "lilyqueen": {
+  "arquivo": "lilyqueen_fa2d25.glb",
+  "bytes": 117612
+ },
+ "lilyqueen_ice": {
+  "arquivo": "lilyqueen_ice_83a152.glb",
+  "bytes": 151940
+ },
+ "lilyqueen_ice_skin002": {
+  "arquivo": "lilyqueen_ice_skin002_de9510.glb",
+  "bytes": 199356
+ },
+ "lilyqueen_skin002": {
+  "arquivo": "lilyqueen_skin002_f33421.glb",
+  "bytes": 193740
+ },
+ "littlebriarrose": {
+  "arquivo": "littlebriarrose_33a678.glb",
+  "bytes": 101224
+ },
+ "lizardman": {
+  "arquivo": "lizardman_ffe6ad.glb",
+  "bytes": 92776
+ },
+ "lizardman_fire": {
+  "arquivo": "lizardman_fire_7ab8ba.glb",
+  "bytes": 93788
+ },
+ "longcat": {
+  "arquivo": "longcat_4e2b41.glb",
+  "bytes": 111372
+ },
+ "lotusdragon": {
+  "arquivo": "lotusdragon_37c55f.glb",
+  "bytes": 113876
+ },
+ "manticore": {
+  "arquivo": "manticore_a191b3.glb",
+  "bytes": 137728
+ },
+ "manticore_dark": {
+  "arquivo": "manticore_dark_92fb89.glb",
+  "bytes": 141708
+ },
+ "mimicdog": {
+  "arquivo": "mimicdog_7679a4.glb",
+  "bytes": 94932
+ },
+ "monkey": {
+  "arquivo": "monkey_ab87d2.glb",
+  "bytes": 93772
+ },
+ "monkey_fire": {
+  "arquivo": "monkey_fire_ce7fa5.glb",
+  "bytes": 92028
+ },
+ "monochromequeen": {
+  "arquivo": "monochromequeen_a95ca6.glb",
+  "bytes": 107592
+ },
+ "moonchild": {
+  "arquivo": "moonchild_a31d04.glb",
+  "bytes": 102172
+ },
+ "moonqueen": {
+  "arquivo": "moonqueen_4f7efc.glb",
+  "bytes": 114236
+ },
+ "mopbaby": {
+  "arquivo": "mopbaby_459309.glb",
+  "bytes": 70516
+ },
+ "mopking": {
+  "arquivo": "mopking_c6a09d.glb",
+  "bytes": 70844
+ },
+ "mothman": {
+  "arquivo": "mothman_43ac04.glb",
+  "bytes": 115044
+ },
+ "mummypal": {
+  "arquivo": "mummypal_3a5d49.glb",
+  "bytes": 122048
+ },
+ "mushroomdragon_dark": {
+  "arquivo": "mushroomdragon_dark_95f8bf.glb",
+  "bytes": 63508
+ },
+ "mushroomdragon": {
+  "arquivo": "mushroomdragon_fc3e39.glb",
+  "bytes": 63320
+ },
+ "mushroomlady": {
+  "arquivo": "mushroomlady_4290b4.glb",
+  "bytes": 107328
+ },
+ "mutant": {
+  "arquivo": "mutant_040feb.glb",
+  "bytes": 78776
+ },
+ "mysterymask": {
+  "arquivo": "mysterymask_394200.glb",
+  "bytes": 102928
+ },
+ "naughtycat": {
+  "arquivo": "naughtycat_eba74a.glb",
+  "bytes": 102184
+ },
+ "negativekoala": {
+  "arquivo": "negativekoala_783513.glb",
+  "bytes": 59296
+ },
+ "negativekoala_skin001": {
+  "arquivo": "negativekoala_skin001_375da8.glb",
+  "bytes": 89700
+ },
+ "negativeoctopus": {
+  "arquivo": "negativeoctopus_0d4f9e.glb",
+  "bytes": 80528
+ },
+ "negativeoctopus_neutral": {
+  "arquivo": "negativeoctopus_neutral_57fb17.glb",
+  "bytes": 81280
+ },
+ "nightbluehorse": {
+  "arquivo": "nightbluehorse_307639.glb",
+  "bytes": 131256
+ },
+ "nightbluehorse_neutral": {
+  "arquivo": "nightbluehorse_neutral_24b81b.glb",
+  "bytes": 120220
+ },
+ "nightfox": {
+  "arquivo": "nightfox_d65457.glb",
+  "bytes": 137264
+ },
+ "nightlady": {
+  "arquivo": "nightlady_514cda.glb",
+  "bytes": 122316
+ },
+ "nightlady_pink": {
+  "arquivo": "nightlady_pink_146e6e.glb",
+  "bytes": 130984
+ },
+ "octopusgirl": {
+  "arquivo": "octopusgirl_021ab2.glb",
+  "bytes": 115840
+ },
+ "octopusgirl_neutral": {
+  "arquivo": "octopusgirl_neutral_f0d118.glb",
+  "bytes": 116392
+ },
+ "onighostgirl": {
+  "arquivo": "onighostgirl_d098b5.glb",
+  "bytes": 92240
+ },
+ "pandagirl": {
+  "arquivo": "pandagirl_6adb5c.glb",
+  "bytes": 109180
+ },
+ "penguin": {
+  "arquivo": "penguin_73335c.glb",
+  "bytes": 56400
+ },
+ "penguin_electric": {
+  "arquivo": "penguin_electric_c75a87.glb",
+  "bytes": 56776
+ },
+ "penguin_skin001": {
+  "arquivo": "penguin_skin001_4cc7e5.glb",
+  "bytes": 79104
+ },
+ "pinkcat": {
+  "arquivo": "pinkcat_f87873.glb",
+  "bytes": 79640
+ },
+ "pinkcat_skin001": {
+  "arquivo": "pinkcat_skin001_0c525e.glb",
+  "bytes": 85496
+ },
+ "pinkcat_skin003": {
+  "arquivo": "pinkcat_skin003_a844da.glb",
+  "bytes": 81476
+ },
+ "pinkcat_skin004": {
+  "arquivo": "pinkcat_skin004_d3f49c.glb",
+  "bytes": 146040
+ },
+ "pinklizard": {
+  "arquivo": "pinklizard_604c67.glb",
+  "bytes": 111060
+ },
+ "pinkrabbit": {
+  "arquivo": "pinkrabbit_1fb3ca.glb",
+  "bytes": 96356
+ },
+ "pinkrabbit_grass": {
+  "arquivo": "pinkrabbit_grass_0f6bd4.glb",
+  "bytes": 96696
+ },
+ "plantslime": {
+  "arquivo": "plantslime_031c2b.glb",
+  "bytes": 53264
+ },
+ "plantslime_skin001": {
+  "arquivo": "plantslime_skin001_892f53.glb",
+  "bytes": 82096
+ },
+ "plesiosaur": {
+  "arquivo": "plesiosaur_7ddbac.glb",
+  "bytes": 107852
+ },
+ "poseidonorca": {
+  "arquivo": "poseidonorca_ec7e31.glb",
+  "bytes": 124616
+ },
+ "purplespider": {
+  "arquivo": "purplespider_4bd2a8.glb",
+  "bytes": 122292
+ },
+ "queenbee": {
+  "arquivo": "queenbee_770fbb.glb",
+  "bytes": 95500
+ },
+ "raijindaughter": {
+  "arquivo": "raijindaughter_98cdff.glb",
+  "bytes": 92036
+ },
+ "raijindaughter_water": {
+  "arquivo": "raijindaughter_water_aa2cf2.glb",
+  "bytes": 91412
+ },
+ "redarmorbird": {
+  "arquivo": "redarmorbird_8fb5b0.glb",
+  "bytes": 173488
+ },
+ "redflowerbird": {
+  "arquivo": "redflowerbird_3d90be.glb",
+  "bytes": 119432
+ },
+ "robinhood": {
+  "arquivo": "robinhood_2d57cb.glb",
+  "bytes": 102312
+ },
+ "robinhood_ground": {
+  "arquivo": "robinhood_ground_92c7d9.glb",
+  "bytes": 105056
+ },
+ "rockbeast": {
+  "arquivo": "rockbeast_6e8dca.glb",
+  "bytes": 101536
+ },
+ "rockbeast_ice": {
+  "arquivo": "rockbeast_ice_1a9f20.glb",
+  "bytes": 108184
+ },
+ "ronin": {
+  "arquivo": "ronin_5d2db1.glb",
+  "bytes": 144168
+ },
+ "ronin_dark": {
+  "arquivo": "ronin_dark_fcd59a.glb",
+  "bytes": 142608
+ },
+ "saintcentaur": {
+  "arquivo": "saintcentaur_5d5c91.glb",
+  "bytes": 162208
+ },
+ "sakurasaurus": {
+  "arquivo": "sakurasaurus_991875.glb",
+  "bytes": 126644
+ },
+ "sakurasaurus_water": {
+  "arquivo": "sakurasaurus_water_6c2417.glb",
+  "bytes": 125740
+ },
+ "samuraidog": {
+  "arquivo": "samuraidog_4a9d6e.glb",
+  "bytes": 123672
+ },
+ "scorpionman": {
+  "arquivo": "scorpionman_c0f0f2.glb",
+  "bytes": 137488
+ },
+ "scorpionman_electric": {
+  "arquivo": "scorpionman_electric_c3a6ca.glb",
+  "bytes": 130692
+ },
+ "sekhmet": {
+  "arquivo": "sekhmet_1b4ffc.glb",
+  "bytes": 140596
+ },
+ "serpent": {
+  "arquivo": "serpent_60a316.glb",
+  "bytes": 81028
+ },
+ "serpent_ground": {
+  "arquivo": "serpent_ground_f38cef.glb",
+  "bytes": 76776
+ },
+ "sharkkid": {
+  "arquivo": "sharkkid_13c123.glb",
+  "bytes": 76768
+ },
+ "sharkkid_fire": {
+  "arquivo": "sharkkid_fire_6d80db.glb",
+  "bytes": 74140
+ },
+ "sheepball": {
+  "arquivo": "sheepball_041597.glb",
+  "bytes": 84836
+ },
+ "sifudog": {
+  "arquivo": "sifudog_90b0ad.glb",
+  "bytes": 128872
+ },
+ "skydragon": {
+  "arquivo": "skydragon_115635.glb",
+  "bytes": 90136
+ },
+ "skydragon_grass": {
+  "arquivo": "skydragon_grass_1d379f.glb",
+  "bytes": 92612
+ },
+ "skydragon_skin001": {
+  "arquivo": "skydragon_skin001_89f1fa.glb",
+  "bytes": 116148
+ },
+ "sleeverabbit": {
+  "arquivo": "sleeverabbit_aeb948.glb",
+  "bytes": 111608
+ },
+ "smallarmadillo": {
+  "arquivo": "smallarmadillo_3df6c0.glb",
+  "bytes": 70136
+ },
+ "smallyeti": {
+  "arquivo": "smallyeti_cbe052.glb",
+  "bytes": 109812
+ },
+ "snakegirl": {
+  "arquivo": "snakegirl_0e697e.glb",
+  "bytes": 121724
+ },
+ "snowpeafowl": {
+  "arquivo": "snowpeafowl_de5b04.glb",
+  "bytes": 134620
+ },
+ "snowtigerbeastman": {
+  "arquivo": "snowtigerbeastman_eccba1.glb",
+  "bytes": 149484
+ },
+ "soldierbee": {
+  "arquivo": "soldierbee_dbae03.glb",
+  "bytes": 95060
+ },
+ "stuffedshark": {
+  "arquivo": "stuffedshark_dc728a.glb",
+  "bytes": 62252
+ },
+ "stuffedshark_fire": {
+  "arquivo": "stuffedshark_fire_715dfc.glb",
+  "bytes": 61436
+ },
+ "sumodog": {
+  "arquivo": "sumodog_11c5da.glb",
+  "bytes": 105100
+ },
+ "suzaku": {
+  "arquivo": "suzaku_de42d3.glb",
+  "bytes": 67144
+ },
+ "suzaku_water": {
+  "arquivo": "suzaku_water_42582c.glb",
+  "bytes": 97856
+ },
+ "sweetssheep": {
+  "arquivo": "sweetssheep_754a91.glb",
+  "bytes": 72028
+ },
+ "sweetssheep_ground": {
+  "arquivo": "sweetssheep_ground_f27533.glb",
+  "bytes": 73496
+ },
+ "swordcutlassfish": {
+  "arquivo": "swordcutlassfish_47325b.glb",
+  "bytes": 84868
+ },
+ "swordcutlassfish_fire": {
+  "arquivo": "swordcutlassfish_fire_7f0efe.glb",
+  "bytes": 84096
+ },
+ "tentacleturtle": {
+  "arquivo": "tentacleturtle_ca2972.glb",
+  "bytes": 97600
+ },
+ "tentacleturtle_ground": {
+  "arquivo": "tentacleturtle_ground_9e075f.glb",
+  "bytes": 96492
+ },
+ "thiefbird": {
+  "arquivo": "thiefbird_c3a19f.glb",
+  "bytes": 122024
+ },
+ "thunderbird": {
+  "arquivo": "thunderbird_674bd6.glb",
+  "bytes": 125504
+ },
+ "thunderbird_ice": {
+  "arquivo": "thunderbird_ice_d64a8f.glb",
+  "bytes": 130692
+ },
+ "thunderdog": {
+  "arquivo": "thunderdog_6192b5.glb",
+  "bytes": 89036
+ },
+ "thunderdog_ice": {
+  "arquivo": "thunderdog_ice_4d730b.glb",
+  "bytes": 91624
+ },
+ "thunderdragonman": {
+  "arquivo": "thunderdragonman_fd6859.glb",
+  "bytes": 179168
+ },
+ "thunderfluffybird": {
+  "arquivo": "thunderfluffybird_73fe96.glb",
+  "bytes": 95052
+ },
+ "tropicalostrich": {
+  "arquivo": "tropicalostrich_2c04e8.glb",
+  "bytes": 140436
+ },
+ "umihebi": {
+  "arquivo": "umihebi_96e9d5.glb",
+  "bytes": 137664
+ },
+ "umihebi_fire": {
+  "arquivo": "umihebi_fire_6233c0.glb",
+  "bytes": 136724
+ },
+ "venusflytrap": {
+  "arquivo": "venusflytrap_b61539.glb",
+  "bytes": 118928
+ },
+ "violetfairy": {
+  "arquivo": "violetfairy_50543c.glb",
+  "bytes": 92640
+ },
+ "volcanicmonster": {
+  "arquivo": "volcanicmonster_6a9350.glb",
+  "bytes": 121088
+ },
+ "volcanicmonster_ice": {
+  "arquivo": "volcanicmonster_ice_5eafbf.glb",
+  "bytes": 132960
+ },
+ "volcanodragon": {
+  "arquivo": "volcanodragon_6c876e.glb",
+  "bytes": 149532
+ },
+ "volcanodragon_ice": {
+  "arquivo": "volcanodragon_ice_c545e8.glb",
+  "bytes": 149220
+ },
+ "weaseldragon": {
+  "arquivo": "weaseldragon_6ed23f.glb",
+  "bytes": 79236
+ },
+ "weaseldragon_fire": {
+  "arquivo": "weaseldragon_fire_feee0e.glb",
+  "bytes": 78316
+ },
+ "weaseldragon_fire_skin002": {
+  "arquivo": "weaseldragon_fire_skin002_17c060.glb",
+  "bytes": 163792
+ },
+ "weaseldragon_fire_skin003": {
+  "arquivo": "weaseldragon_fire_skin003_28448c.glb",
+  "bytes": 168588
+ },
+ "weaseldragon_skin001": {
+  "arquivo": "weaseldragon_skin001_ff5c02.glb",
+  "bytes": 114032
+ },
+ "weaseldragon_skin002": {
+  "arquivo": "weaseldragon_skin002_be36b7.glb",
+  "bytes": 165148
+ },
+ "weaseldragon_skin003": {
+  "arquivo": "weaseldragon_skin003_b297b6.glb",
+  "bytes": 171344
+ },
+ "weaseldragon_skin004": {
+  "arquivo": "weaseldragon_skin004_5bccdb.glb",
+  "bytes": 156512
+ },
+ "werewolf": {
+  "arquivo": "werewolf_a9c3a6.glb",
+  "bytes": 107168
+ },
+ "werewolf_ice": {
+  "arquivo": "werewolf_ice_f86eaa.glb",
+  "bytes": 110976
+ },
+ "whitealiendragon": {
+  "arquivo": "whitealiendragon_1ddaf7.glb",
+  "bytes": 133304
+ },
+ "whitedeer": {
+  "arquivo": "whitedeer_01614a.glb",
+  "bytes": 102812
+ },
+ "whitedeer_dark": {
+  "arquivo": "whitedeer_dark_d8d9b2.glb",
+  "bytes": 104796
+ },
+ "whitemoth": {
+  "arquivo": "whitemoth_3564c3.glb",
+  "bytes": 86128
+ },
+ "whitemoth_neutral": {
+  "arquivo": "whitemoth_neutral_851b4e.glb",
+  "bytes": 87252
+ },
+ "whiteshielddragon": {
+  "arquivo": "whiteshielddragon_ad0b24.glb",
+  "bytes": 117532
+ },
+ "whitetiger": {
+  "arquivo": "whitetiger_178342.glb",
+  "bytes": 85420
+ },
+ "whitetiger_ground": {
+  "arquivo": "whitetiger_ground_fab894.glb",
+  "bytes": 87152
+ },
+ "windchimes": {
+  "arquivo": "windchimes_016c48.glb",
+  "bytes": 50964
+ },
+ "windchimes_ice": {
+  "arquivo": "windchimes_ice_18a523.glb",
+  "bytes": 52576
+ },
+ "winggolem": {
+  "arquivo": "winggolem_b48266.glb",
+  "bytes": 140732
+ },
+ "winggolem_fire": {
+  "arquivo": "winggolem_fire_366df6.glb",
+  "bytes": 132012
+ },
+ "wizardowl": {
+  "arquivo": "wizardowl_131551.glb",
+  "bytes": 83248
+ },
+ "woolfox": {
+  "arquivo": "woolfox_a506df.glb",
+  "bytes": 119916
+ },
+ "worldtreedragon": {
+  "arquivo": "worldtreedragon_cd9608.glb",
+  "bytes": 174260
+ },
+ "worldtreedragon_form2": {
+  "arquivo": "worldtreedragon_form2_9baaf4.glb",
+  "bytes": 193472
+ },
+ "yakushimaboss001": {
+  "arquivo": "yakushimaboss001_5443f6.glb",
+  "bytes": 150612
+ },
+ "yakushimaboss001_green": {
+  "arquivo": "yakushimaboss001_green_df77c8.glb",
+  "bytes": 149400
+ },
+ "yakushimaboss002": {
+  "arquivo": "yakushimaboss002_a831ea.glb",
+  "bytes": 209372
+ },
+ "yakushimamonster001": {
+  "arquivo": "yakushimamonster001_4e3c1d.glb",
+  "bytes": 16104
+ },
+ "yakushimamonster001_blue": {
+  "arquivo": "yakushimamonster001_blue_c1794b.glb",
+  "bytes": 16080
+ },
+ "yakushimamonster001_pink": {
+  "arquivo": "yakushimamonster001_pink_fa7c9d.glb",
+  "bytes": 16080
+ },
+ "yakushimamonster001_purple": {
+  "arquivo": "yakushimamonster001_purple_cb1375.glb",
+  "bytes": 16084
+ },
+ "yakushimamonster001_rainbow": {
+  "arquivo": "yakushimamonster001_rainbow_6260e3.glb",
+  "bytes": 16088
+ },
+ "yakushimamonster001_red": {
+  "arquivo": "yakushimamonster001_red_1df4c8.glb",
+  "bytes": 16120
+ },
+ "yakushimamonster002": {
+  "arquivo": "yakushimamonster002_df294c.glb",
+  "bytes": 34744
+ },
+ "yakushimamonster003": {
+  "arquivo": "yakushimamonster003_058d6e.glb",
+  "bytes": 60384
+ },
+ "yakushimamonster003_purple": {
+  "arquivo": "yakushimamonster003_purple_66e3d7.glb",
+  "bytes": 59072
+ },
+ "yeti": {
+  "arquivo": "yeti_7ceb7c.glb",
+  "bytes": 86896
+ },
+ "yeti_grass": {
+  "arquivo": "yeti_grass_a256fd.glb",
+  "bytes": 114420
+ }
+}

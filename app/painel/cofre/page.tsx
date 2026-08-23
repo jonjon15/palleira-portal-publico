@@ -130,14 +130,22 @@ export default async function Cofre({
         <section className="mt-10">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-semibold">No cofre</h2>
-            {cofre.itens.length > 0 && (
+            <div className="flex items-center gap-4">
               <Link
-                href="/mercado/vender"
+                href="/painel/cofre/pals"
                 className="text-sm font-semibold text-gold hover:text-gold-hi"
               >
-                Anunciar no mercado →
+                Seus Pals →
               </Link>
-            )}
+              {cofre.itens.length > 0 && (
+                <Link
+                  href="/mercado/vender"
+                  className="text-sm font-semibold text-gold hover:text-gold-hi"
+                >
+                  Anunciar no mercado →
+                </Link>
+              )}
+            </div>
           </div>
 
           {cofre.itens.length === 0 ? (

@@ -196,3 +196,46 @@ export async function giveItems(
   );
   return interpretar(res);
 }
+
+/* --------------------------------------------------------- pals (o cofre) */
+
+/**
+ * Tira um Pal específico do jogador — a custódia do mercado de Pals (§7.3).
+ *
+ * ⚠️ **Limite do `deletepals`, e não é bug nosso:** o filtro não distingue
+ * Pals idênticos em espécie/nível/gênero/shiny/condensação/passivas — só o
+ * IV muda entre eles, e IV não é filtrável. Com dois Pals assim, `Limit=1`
+ * tira um dos dois, não necessariamente o que foi lido. O comprador recebe
+ * o template que **foi lido antes de deletar**, então o valor da venda não
+ * é afetado — só fica ambíguo qual cópia física saiu da conta do vendedor.
+ * Detalhe completo em `lib/pal-template.ts`.
+ */
+export async function delPal(
+  server: PalleiraServer,
+  playerUid: string,
+  filtro: string,
+): Promise<ResultadoComando> {
+  const res = await rcon(server, `deletepals ${uidParaComando(playerUid)} ${filtro}`);
+  return interpretar(res);
+}
+
+/**
+ * Entrega um Pal a partir de um arquivo já escrito no servidor.
+ *
+ * `givepal_j` só aceita **nome de arquivo**, não o JSON do Pal — o arquivo
+ * tem que existir em `Pal/Binaries/Win64/PalDefender/Pals/Templates/` antes
+ * desta chamada. Quem escreve esse arquivo é o workflow do GitHub Actions
+ * (`tools/escrever_template_pal.py`), porque escrever lá é SFTP, e a Vercel
+ * não fala SFTP. Este comando só roda depois que o arquivo foi confirmado.
+ */
+export async function givePalTemplate(
+  server: PalleiraServer,
+  playerUid: string,
+  nomeDoArquivo: string,
+): Promise<ResultadoComando> {
+  const res = await rcon(
+    server,
+    `givepal_j ${uidParaComando(playerUid)} ${nomeDoArquivo}`,
+  );
+  return interpretar(res);
+}

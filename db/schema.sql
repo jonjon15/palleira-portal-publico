@@ -233,8 +233,11 @@ create table if not exists listings (
   seller_id   text        not null,
   -- 'item' hoje; 'pal' entra na v2 com o template do `givepal_j`
   kind        text        not null default 'item',
-  item_id     text        not null,
-  qty         integer     not null check (qty > 0),
+  -- item_id/qty preenchidos quando kind='item'; pal_template quando
+  -- kind='pal' — nunca os dois, nunca nenhum (checado abaixo).
+  item_id      text,
+  qty          integer     check (qty > 0),
+  pal_template jsonb,
   -- O que o comprador paga
   price       integer     not null check (price > 0),
   -- O que é QUEIMADO na venda: o vendedor recebe `price - fee` (§7.7).
@@ -244,7 +247,13 @@ create table if not exists listings (
   status      text        not null default 'ativo',
   buyer_id    text,
   created_at  timestamptz not null default now(),
-  closed_at   timestamptz
+  closed_at   timestamptz,
+
+  constraint listings_kind_shape check (
+    (kind = 'item' and item_id is not null and qty is not null and pal_template is null)
+    or
+    (kind = 'pal'  and pal_template is not null and item_id is null and qty is null)
+  )
 );
 
 -- A vitrine só mostra anúncio ativo, e é a consulta mais chamada do site.
@@ -256,4 +265,47 @@ create index if not exists listings_vendedor_idx
 
 create index if not exists listings_comprador_idx
   on listings (buyer_id, closed_at desc);
+
+-- ------------------------------------------------------------ cofre de Pals
+-- Um Pal não é fungível como item: cada um carrega IVs, passivas e alma
+-- próprios. Uma linha por Pal, com o template inteiro — ver migração 004.
+create table if not exists vault_pals (
+  id           bigserial   primary key,
+  discord_id   text        not null,
+  pal_id       text        not null,
+  template     jsonb       not null,
+  imported_at  timestamptz not null default now()
+);
+
+create index if not exists vault_pals_dono_idx
+  on vault_pals (discord_id, imported_at desc);
+
+-- --------------------------------------------------- entrega em duas fases
+-- `givepal_j` e `give/paltemplate` só aceitam NOME DE ARQUIVO, já existente
+-- no servidor do jogo. O GitHub Actions escreve por SFTP (aguardando_arquivo
+-- → arquivo_pronto); a Vercel entrega por RCON, síncrono (→ concluido).
+create table if not exists pal_transfers (
+  id            bigserial   primary key,
+  discord_id    text        not null,
+  server_slug   text        not null,
+  palworld_uid  text        not null,
+  template      jsonb       not null,
+  -- importar | resgatar (migração 005 — a mesma tabela audita as duas)
+  direction     text        not null default 'resgatar',
+  -- Nome do arquivo em Pals/Templates/, sem `.json`. Só existe em
+  -- 'resgatar' — importar não passa por SFTP nenhum.
+  arquivo       text,
+  -- resgatar: aguardando_arquivo → arquivo_pronto → concluido / falhou
+  -- importar: andando → concluido / falhou (igual a vault_transfers)
+  status        text        not null default 'aguardando_arquivo',
+  detail        text        not null default '',
+  created_at    timestamptz not null default now(),
+  finished_at   timestamptz
+);
+
+create index if not exists pal_transfers_pendentes_idx
+  on pal_transfers (status, created_at desc);
+
+create index if not exists pal_transfers_pessoa_idx
+  on pal_transfers (discord_id, created_at desc);
 

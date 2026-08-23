@@ -197,6 +197,63 @@ todos. Sacar a pilha inteira passa por zero antes de a linha ser apagada, e
 o banco derrubava a operação. Ninguém conseguiria resgatar o último item nem
 anunciar o lote fechado. Corrigido na migração `003`.
 
+### Os Pals em 3D, e o cofre de Pal — 23/08
+
+O Jonjon trouxe um projeto de código aberto,
+[Palworld Save Pal](https://github.com/PalworldSavePal/palworld-save-pal),
+que já vem com **324 modelos 3D** dos Pals extraídos do jogo (glTF, ~33 MB
+no total). Copiados para `public/models/pals/` — a licença GPL do projeto
+cobre o código dele, não a arte da Pocketpair, e o site escreve o próprio
+visualizador (`components/pal-3d.tsx`, com `three.js`) e serve tudo do
+próprio domínio.
+
+**Cobertura medida contra os dois PVE:** 1.504 dos 1.536 personagens vivos
+têm modelo (97,9%) — as 32 exceções são NPC humano, não Pal.
+
+Isso puxou a construção do **cofre de Pal**, que abriu uma parede que o
+PROMPT.md não tinha previsto: `givepal_j` e `POST /give/paltemplate` **não
+aceitam o JSON do Pal no corpo** — só o nome de um arquivo que já precisa
+existir no servidor, em `Pals/Templates/`. Escrever esse arquivo é SFTP, que
+a Vercel não fala.
+
+**A solução, no mesmo padrão do editor de `Level.sav` (§3.8):** o GitHub
+Actions escreve o arquivo (workflow novo,
+`.github/workflows/deliver-pal-template.yml` +
+`tools/escrever_template_pal.py`), reaproveitando o **mesmo segredo**
+`PALLEIRA_SERVERS` que o `import_save.py` já usa — nenhuma credencial nova
+em lugar nenhum. Depois que o arquivo está confirmado, a Vercel entrega por
+RCON, do mesmo jeito que já entrega item.
+
+```
+clicar "resgatar"  →  GitHub Actions escreve o arquivo por SFTP
+                   →  a Vercel chama givepal_j por RCON, síncrono
+                   →  entregue
+```
+
+Só a metade da **retirada** é instantânea (igual ao item); a entrega ganha
+uma parada de alguns segundos — a tela mostra "preparando a entrega…" com
+polling, em vez de creditar na hora.
+
+⚠️ **Limite conhecido e documentado, não corrigível pelo nosso lado:** o
+filtro do `deletepals` não distingue dois Pals idênticos em tudo (espécie,
+nível, gênero, shiny, condensação, passivas) menos no IV — `Limit=1` tira um
+dos dois, sem garantia de qual. Não afeta o comprador (ele recebe o template
+exato que foi salvo, não uma nova leitura do vendedor); só fica ambíguo qual
+cópia física saiu da conta de quem vendeu. Registrado por inteiro em
+`lib/pal-template.ts`.
+
+🔴 **Nada disso passou pelo jogo de verdade ainda.** Cada metade foi testada
+por si — a conversão para o formato de arquivo bate campo a campo com um Pal
+real capturado da API, `deletepals`/`givepal_j` respondem no formato
+esperado, as travas de concorrência passaram contra o Neon — mas o caminho
+inteiro, com o GitHub Actions escrevendo de verdade num servidor, ainda não
+rodou uma vez. O workflow tem um modo `verificar` que testa a conexão sem
+escrever nada; comece por ele.
+
+**O que falta para fechar o mercado de Pal:** as telas de anunciar e comprar
+— hoje só o cofre existe (`/painel/cofre/pals`). `listings` já aceita
+`kind='pal'`, testado contra o banco; falta a vitrine.
+
 ---
 
 ## 6. A migração das Paletas do Palbot — o assunto quente
@@ -296,30 +353,37 @@ O `player_daily` é o único histórico, e é uma linha por jogador por dia.
    duplo, saque simultâneo), mas **nenhum item de verdade passou pelo
    caminho inteiro** — só o Jonjon pode fazer isso, porque exige entrar no
    jogo. O roteiro está na §9.1.
-2. **O mercado de Pals** (v2) — `deletepals` + `givepal_j` + o template
-   guardado no banco. A coluna `kind` de `listings` já espera por ele.
-3. **A fila de transferências travadas.** Quando o RCON não responde, a
+2. 🔴 **Testar a entrega de Pal, começando pelo modo `verificar`.** O
+   workflow `deliver-pal-template.yml` nunca escreveu num servidor de
+   verdade. Antes de resgatar um Pal real: `gh workflow run
+   deliver-pal-template.yml -f transfer_id=<qualquer> -f modo=verificar` e
+   conferir se ele acha a pasta `Pals/Templates/` nos três servidores.
+3. **A vitrine do mercado de Pals** — anunciar e comprar. O cofre e a
+   entrega já existem (`/painel/cofre/pals`); falta só a tela de vender, no
+   mesmo molde da de item (`app/mercado/vender/`). `listings` já aceita
+   `kind='pal'`, testado contra o banco.
+4. **A fila de transferências travadas.** Quando o RCON não responde, a
    linha fica em `andando` e ninguém olha. Precisa de uma tela em
    `/admin/economia` mostrando essas linhas com a resposta crua ao lado.
-4. **Expiração de anúncio.** Hoje anúncio fica no ar para sempre; a §7.7
+5. **Expiração de anúncio.** Hoje anúncio fica no ar para sempre; a §7.7
    prevê prazo. Sem isso a vitrine envelhece sozinha.
-5. **Números da economia no banco, não no código** (§7.12) — taxa, preço de
+6. **Números da economia no banco, não no código** (§7.12) — taxa, preço de
    slot, piso e teto de preço vivem em `lib/*-regras.ts` e mudar exige
    deploy. A tabela `economy_config` resolve.
-6. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o
+7. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o
    problema que o Jonjon lamentava ("não sabíamos onde hospedar"), sem VPS.
-7. **A migração das Paletas do Palbot** — travada nos três interruptores da
+8. **A migração das Paletas do Palbot** — travada nos três interruptores da
    §6, que só o Jonjon pode ligar.
-8. **RCON no PvP** — decisão dele. Destrava vínculo e cofre para quem só
+9. **RCON no PvP** — decisão dele. Destrava vínculo e cofre para quem só
    joga lá.
-9. **Domínio:** o `palleira.com.br` já está no ar; falta fazer o `www`
+10. **Domínio:** o `palleira.com.br` já está no ar; falta fazer o `www`
    redirecionar para o apex e conferir o acesso ao Registro.br (§13 do
    PROMPT — o item que importa é o e-mail da conta, não a senha).
-10. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New
+11. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New
     Metal / Palleira; o Discord tem Bronze/Prata/Ouro/Diamante/Colossal,
     todos com 0 membros. Conferir qual é a verdade antes de publicar
     benefício.
-11. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
+12. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
     real, hoje na mão. É a maior oportunidade de automação do projeto.
 
 ### 9.1 O roteiro do primeiro teste de verdade
@@ -340,6 +404,49 @@ munição) — nada de item raro na primeira vez.
 ⚠️ **O que olhar se algo falhar:** a tabela `vault_transfers` guarda a
 resposta crua do servidor em cada movimento. Nenhuma transferência some sem
 deixar rastro — é para isso que ela existe.
+
+### 9.2 O primeiro teste do cofre de Pal — comece por aqui, não pelo cofre
+
+**Antes de tocar num Pal de verdade**, valide o workflow no modo seguro:
+
+```
+gh workflow run deliver-pal-template.yml -f transfer_id=1 -f modo=verificar
+```
+
+`transfer_id=1` não precisa existir de verdade nesse primeiro teste — se a
+linha não existir no banco, o script avisa e para, sem tentar SFTP nenhum.
+Para testar a conexão de verdade (que é o que importa aqui), é mais rápido
+criar uma linha qualquer direto no banco e usar o id dela:
+
+```sql
+insert into pal_transfers (discord_id, server_slug, palworld_uid, template, direction, status, arquivo)
+values ('teste', 'pve-free', 'AAAA', '{"PalID":"Anubis"}', 'resgatar', 'aguardando_arquivo', 'teste_verificar')
+returning id;
+```
+
+Rode `verificar` com esse id, para cada `server_slug` (`pve-free`,
+`pve-vip`, `pvp-free`) que você quiser testar, trocando a linha para o
+servidor certo entre uma tentativa e outra. Se ele disser que a pasta não
+existe, é isso que precisa resolver antes de qualquer coisa —
+provavelmente o caminho `Pal/Binaries/Win64/PalDefender/Pals/Templates/`
+está diferente do que a documentação do PalDefender descreve. Apague a
+linha de teste do banco depois (`delete from pal_transfers where
+discord_id = 'teste'`).
+
+**Só depois disso**, o teste com um Pal de verdade:
+
+1. Entrar no jogo → `/painel/cofre/pals` → escolher um Pal comum (não o
+   melhor da coleção) → **Guardar**
+2. Conferir **no jogo** que ele sumiu do time/palbox
+3. Na ficha do Pal (clique nele no cofre) → **Resgatar** → acompanhar o
+   status na tela: "preparando…" (workflow rodando) → "entregando…" (RCON)
+   → "Entregue!"
+4. Conferir **no jogo** que ele voltou, com o mesmo level/IV/passiva
+5. Se travar em "preparando…" por mais de 2 minutos, o workflow falhou —
+   ver a aba Actions do GitHub. Se travar em "entregando…", o arquivo foi
+   escrito mas o `givepal_j` não respondeu — conferir se o arquivo está
+   mesmo em `Pals/Templates/` antes de tentar de novo (reenviar arriscaria
+   duplicar o Pal, e por isso a tela não tenta sozinha).
 
 ## 10. Como retomar num chat novo
 
