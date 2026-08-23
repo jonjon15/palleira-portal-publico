@@ -208,7 +208,23 @@ visualizador (`components/pal-3d.tsx`, com `three.js`) e serve tudo do
 próprio domínio.
 
 **Cobertura medida contra os dois PVE:** 1.504 dos 1.536 personagens vivos
-têm modelo (97,9%) — as 32 exceções são NPC humano, não Pal.
+têm modelo 3D (97,9%) — as 32 exceções são NPC humano do **mundo**
+(mercador parado na cidade), não Pal.
+
+📌 **NPC *capturado* por um jogador é outra história — decisão do dono em
+23/08:** se aparecer no time/palbox de alguém, vende como qualquer Pal.
+Nada no código bloqueia por `PalID`; só não vai ter ícone (o pacote de
+assets não cobre esses) e a tela mostra "sem ícone" sem travar nada.
+
+**Achado depois, no mesmo projeto: também tem ícone 2D** — 296 arquivos em
+`ui/src/lib/assets/img/t_<pal>_icon_normal.webp`, ~8 KB cada. Copiados para
+`public/icons/pals/`, filtrados para só entrar quem bate com uma chave real
+de Pal (a pasta original mistura ícone de interface — "attack", "capture" —
+junto). Cobertura: 1.483/1.517 personagens (97,8%), mesma exceção dos NPCs
+de mundo. Isso é o que virou o cartão em `components/pal-card.tsx` — ícone,
+nível, barrinha de IV e passivas, usado no cofre inteiro. `paldeck.cc/npcs`
+tem ícone dos NPCs que faltam, mas sem licença de reuso declarada — fica em
+aberto, mesma cesta do catálogo completo (§7.4 do PROMPT).
 
 Isso puxou a construção do **cofre de Pal**, que abriu uma parede que o
 PROMPT.md não tinha previsto: `givepal_j` e `POST /give/paltemplate` **não

@@ -9,8 +9,8 @@ import {
   palsNoJogo,
   ondeEstouOnline,
 } from "@/lib/pal-cofre";
-import { nomeDoPal, ehAlpha } from "@/lib/pals";
 import { isStaff, levelOf } from "@/lib/roles";
+import { PalCard } from "@/components/pal-card";
 import { GuardarPals, ResgatarPal, SemearPalDeTeste } from "./formularios";
 
 export const metadata: Metadata = {
@@ -83,25 +83,32 @@ export default async function CofreDePals({
             Nenhum Pal guardado ainda. Entre no jogo e guarde um lá embaixo.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {cofre.map((p) => (
-              <li key={p.id} className="flex items-center gap-4 px-5 py-3.5">
-                <Link
-                  href={`/painel/cofre/pals/${p.id}`}
-                  className="min-w-0 flex-1 hover:underline"
-                >
-                  <p className="truncate font-medium">
-                    {ehAlpha(p.palId) && <span className="text-gold">Alpha </span>}
-                    {(p.template.Nickname as string) || nomeDoPal(p.palId)}
-                  </p>
-                  <p className="tabular text-sm text-muted">
-                    Nível {(p.template.Level as number) ?? 1}
-                  </p>
+              <div
+                key={p.id}
+                className="rounded-[var(--radius-card)] border border-line bg-surface p-3"
+              >
+                <Link href={`/painel/cofre/pals/${p.id}`} className="block hover:opacity-90">
+                  <PalCard
+                    pal={{
+                      palId: p.palId,
+                      nickname: p.template.Nickname as string,
+                      level: (p.template.Level as number) ?? 1,
+                      gender: p.template.Gender as string,
+                      shiny: p.template.Shiny as boolean,
+                      condensedPals: p.template.CondensedPals as number,
+                      ivs: p.template.IVs as Record<string, number>,
+                      passives: p.template.Passives as string[],
+                    }}
+                  />
                 </Link>
-                <ResgatarPal pal={{ id: p.id, palId: p.palId }} onde={onde} />
-              </li>
+                <div className="mt-2 flex justify-end">
+                  <ResgatarPal pal={{ id: p.id, palId: p.palId }} onde={onde} />
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
 
         <section className="mt-10">

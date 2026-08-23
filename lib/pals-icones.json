@@ -1,0 +1,1186 @@
+{
+ "alpaca": {
+  "arquivo": "alpaca.webp",
+  "bytes": 2538
+ },
+ "amaterasuwolf": {
+  "arquivo": "amaterasuwolf.webp",
+  "bytes": 4260
+ },
+ "amaterasuwolf_dark": {
+  "arquivo": "amaterasuwolf_dark.webp",
+  "bytes": 4074
+ },
+ "anubis": {
+  "arquivo": "anubis.webp",
+  "bytes": 12394
+ },
+ "badcatgirl": {
+  "arquivo": "badcatgirl.webp",
+  "bytes": 3890
+ },
+ "baphomet": {
+  "arquivo": "baphomet.webp",
+  "bytes": 19564
+ },
+ "baphomet_dark": {
+  "arquivo": "baphomet_dark.webp",
+  "bytes": 22816
+ },
+ "bastet": {
+  "arquivo": "bastet.webp",
+  "bytes": 11638
+ },
+ "bastet_ice": {
+  "arquivo": "bastet_ice.webp",
+  "bytes": 14734
+ },
+ "berrygoat": {
+  "arquivo": "berrygoat.webp",
+  "bytes": 15198
+ },
+ "berrygoat_dark": {
+  "arquivo": "berrygoat_dark.webp",
+  "bytes": 14374
+ },
+ "birddragon": {
+  "arquivo": "birddragon.webp",
+  "bytes": 3062
+ },
+ "birddragon_ice": {
+  "arquivo": "birddragon_ice.webp",
+  "bytes": 3616
+ },
+ "blackcentaur": {
+  "arquivo": "blackcentaur.webp",
+  "bytes": 3616
+ },
+ "blackgriffon": {
+  "arquivo": "blackgriffon.webp",
+  "bytes": 2944
+ },
+ "blackmetaldragon": {
+  "arquivo": "blackmetaldragon.webp",
+  "bytes": 3458
+ },
+ "blackpuppy": {
+  "arquivo": "blackpuppy.webp",
+  "bytes": 2730
+ },
+ "blackpuppy_ice": {
+  "arquivo": "blackpuppy_ice.webp",
+  "bytes": 3180
+ },
+ "blueberryfairy": {
+  "arquivo": "blueberryfairy.webp",
+  "bytes": 19986
+ },
+ "bluedragon": {
+  "arquivo": "bluedragon.webp",
+  "bytes": 3126
+ },
+ "bluedragon_ice": {
+  "arquivo": "bluedragon_ice.webp",
+  "bytes": 3216
+ },
+ "blueplatypus": {
+  "arquivo": "blueplatypus.webp",
+  "bytes": 22910
+ },
+ "blueplatypus_fire": {
+  "arquivo": "blueplatypus_fire.webp",
+  "bytes": 15650
+ },
+ "blueskydragon": {
+  "arquivo": "blueskydragon.webp",
+  "bytes": 4704
+ },
+ "bluethunderhorse": {
+  "arquivo": "bluethunderhorse.webp",
+  "bytes": 4608
+ },
+ "boar": {
+  "arquivo": "boar.webp",
+  "bytes": 3610
+ },
+ "brownrabbit": {
+  "arquivo": "brownrabbit.webp",
+  "bytes": 3836
+ },
+ "cactusdoll": {
+  "arquivo": "cactusdoll.webp",
+  "bytes": 3074
+ },
+ "cactusdoll_dark": {
+  "arquivo": "cactusdoll_dark.webp",
+  "bytes": 2836
+ },
+ "candleghost": {
+  "arquivo": "candleghost.webp",
+  "bytes": 17546
+ },
+ "captainpenguin": {
+  "arquivo": "captainpenguin.webp",
+  "bytes": 17488
+ },
+ "captainpenguin_black": {
+  "arquivo": "captainpenguin_black.webp",
+  "bytes": 19316
+ },
+ "carbunclo": {
+  "arquivo": "carbunclo.webp",
+  "bytes": 3920
+ },
+ "catbat": {
+  "arquivo": "catbat.webp",
+  "bytes": 16756
+ },
+ "catmage": {
+  "arquivo": "catmage.webp",
+  "bytes": 15122
+ },
+ "catmage_fire": {
+  "arquivo": "catmage_fire.webp",
+  "bytes": 15140
+ },
+ "catvampire": {
+  "arquivo": "catvampire.webp",
+  "bytes": 11196
+ },
+ "chickenpal": {
+  "arquivo": "chickenpal.webp",
+  "bytes": 10706
+ },
+ "clionetwins": {
+  "arquivo": "clionetwins.webp",
+  "bytes": 4672
+ },
+ "cloverfairy": {
+  "arquivo": "cloverfairy.webp",
+  "bytes": 3468
+ },
+ "clownrabbit": {
+  "arquivo": "clownrabbit.webp",
+  "bytes": 3996
+ },
+ "colorfulbird": {
+  "arquivo": "colorfulbird.webp",
+  "bytes": 3058
+ },
+ "cowpal": {
+  "arquivo": "cowpal.webp",
+  "bytes": 12826
+ },
+ "cubeturtle": {
+  "arquivo": "cubeturtle.webp",
+  "bytes": 3794
+ },
+ "cubeturtle_neutral": {
+  "arquivo": "cubeturtle_neutral.webp",
+  "bytes": 4012
+ },
+ "cutebutterfly": {
+  "arquivo": "cutebutterfly.webp",
+  "bytes": 18092
+ },
+ "cutefox": {
+  "arquivo": "cutefox.webp",
+  "bytes": 17784
+ },
+ "cutemole": {
+  "arquivo": "cutemole.webp",
+  "bytes": 14838
+ },
+ "dandeliongirl": {
+  "arquivo": "dandeliongirl.webp",
+  "bytes": 3492
+ },
+ "darkalien": {
+  "arquivo": "darkalien.webp",
+  "bytes": 12226
+ },
+ "darkcrow": {
+  "arquivo": "darkcrow.webp",
+  "bytes": 9584
+ },
+ "darkflamefox": {
+  "arquivo": "darkflamefox.webp",
+  "bytes": 4318
+ },
+ "darkmechadragon": {
+  "arquivo": "darkmechadragon.webp",
+  "bytes": 2866
+ },
+ "darkscorpion": {
+  "arquivo": "darkscorpion.webp",
+  "bytes": 22414
+ },
+ "darkscorpion_ground": {
+  "arquivo": "darkscorpion_ground.webp",
+  "bytes": 22858
+ },
+ "deer": {
+  "arquivo": "deer.webp",
+  "bytes": 4546
+ },
+ "deer_ground": {
+  "arquivo": "deer_ground.webp",
+  "bytes": 4518
+ },
+ "domearmordragon": {
+  "arquivo": "domearmordragon.webp",
+  "bytes": 3494
+ },
+ "dreamdemon": {
+  "arquivo": "dreamdemon.webp",
+  "bytes": 16202
+ },
+ "drillgame": {
+  "arquivo": "drillgame.webp",
+  "bytes": 21446
+ },
+ "eagle": {
+  "arquivo": "eagle.webp",
+  "bytes": 14544
+ },
+ "eleccat": {
+  "arquivo": "eleccat.webp",
+  "bytes": 27262
+ },
+ "eleclizard": {
+  "arquivo": "eleclizard.webp",
+  "bytes": 3178
+ },
+ "elecpanda": {
+  "arquivo": "elecpanda.webp",
+  "bytes": 3554
+ },
+ "elecpomeranian": {
+  "arquivo": "elecpomeranian.webp",
+  "bytes": 3016
+ },
+ "elecsnail": {
+  "arquivo": "elecsnail.webp",
+  "bytes": 3460
+ },
+ "elecsnail_ground": {
+  "arquivo": "elecsnail_ground.webp",
+  "bytes": 3824
+ },
+ "fairydragon": {
+  "arquivo": "fairydragon.webp",
+  "bytes": 3064
+ },
+ "fairydragon_water": {
+  "arquivo": "fairydragon_water.webp",
+  "bytes": 2678
+ },
+ "featherostrich": {
+  "arquivo": "featherostrich.webp",
+  "bytes": 3346
+ },
+ "fengyundeeper": {
+  "arquivo": "fengyundeeper.webp",
+  "bytes": 3586
+ },
+ "fengyundeeper_electric": {
+  "arquivo": "fengyundeeper_electric.webp",
+  "bytes": 3506
+ },
+ "firekirin": {
+  "arquivo": "firekirin.webp",
+  "bytes": 4898
+ },
+ "firekirin_dark": {
+  "arquivo": "firekirin_dark.webp",
+  "bytes": 4844
+ },
+ "flamebambi": {
+  "arquivo": "flamebambi.webp",
+  "bytes": 18494
+ },
+ "flamebuffalo": {
+  "arquivo": "flamebuffalo.webp",
+  "bytes": 3880
+ },
+ "flowerdinosaur": {
+  "arquivo": "flowerdinosaur.webp",
+  "bytes": 4440
+ },
+ "flowerdinosaur_electric": {
+  "arquivo": "flowerdinosaur_electric.webp",
+  "bytes": 4454
+ },
+ "flowerdoll": {
+  "arquivo": "flowerdoll.webp",
+  "bytes": 21614
+ },
+ "flowerdoll_fire": {
+  "arquivo": "flowerdoll_fire.webp",
+  "bytes": 4238
+ },
+ "flowerprince": {
+  "arquivo": "flowerprince.webp",
+  "bytes": 4720
+ },
+ "flowerrabbit": {
+  "arquivo": "flowerrabbit.webp",
+  "bytes": 18970
+ },
+ "fluffybird": {
+  "arquivo": "fluffybird.webp",
+  "bytes": 2868
+ },
+ "flyingmanta": {
+  "arquivo": "flyingmanta.webp",
+  "bytes": 13792
+ },
+ "flyingmanta_thunder": {
+  "arquivo": "flyingmanta_thunder.webp",
+  "bytes": 15490
+ },
+ "foxexorcist": {
+  "arquivo": "foxexorcist.webp",
+  "bytes": 3088
+ },
+ "foxmage": {
+  "arquivo": "foxmage.webp",
+  "bytes": 16200
+ },
+ "foxmage_dark": {
+  "arquivo": "foxmage_dark.webp",
+  "bytes": 14270
+ },
+ "ganesha": {
+  "arquivo": "ganesha.webp",
+  "bytes": 12546
+ },
+ "garm": {
+  "arquivo": "garm.webp",
+  "bytes": 3164
+ },
+ "ghostanglerfish": {
+  "arquivo": "ghostanglerfish.webp",
+  "bytes": 3588
+ },
+ "ghostanglerfish_fire": {
+  "arquivo": "ghostanglerfish_fire.webp",
+  "bytes": 3878
+ },
+ "ghostbeast": {
+  "arquivo": "ghostbeast.webp",
+  "bytes": 2856
+ },
+ "ghostblackcat": {
+  "arquivo": "ghostblackcat.webp",
+  "bytes": 5468
+ },
+ "ghostdragon": {
+  "arquivo": "ghostdragon.webp",
+  "bytes": 4280
+ },
+ "ghostdragon_fire": {
+  "arquivo": "ghostdragon_fire.webp",
+  "bytes": 4102
+ },
+ "ghostrabbit": {
+  "arquivo": "ghostrabbit.webp",
+  "bytes": 17036
+ },
+ "ghostrabbit_grass": {
+  "arquivo": "ghostrabbit_grass.webp",
+  "bytes": 3944
+ },
+ "goldenhorse": {
+  "arquivo": "goldenhorse.webp",
+  "bytes": 3284
+ },
+ "gorilla": {
+  "arquivo": "gorilla.webp",
+  "bytes": 14524
+ },
+ "gorilla_ground": {
+  "arquivo": "gorilla_ground.webp",
+  "bytes": 14526
+ },
+ "grassgolem": {
+  "arquivo": "grassgolem.webp",
+  "bytes": 3900
+ },
+ "grassgolem_dark": {
+  "arquivo": "grassgolem_dark.webp",
+  "bytes": 2706
+ },
+ "grassmammoth": {
+  "arquivo": "grassmammoth.webp",
+  "bytes": 3042
+ },
+ "grassmammoth_ice": {
+  "arquivo": "grassmammoth_ice.webp",
+  "bytes": 3434
+ },
+ "grassminotaur": {
+  "arquivo": "grassminotaur.webp",
+  "bytes": 3908
+ },
+ "grassminotaur_ice": {
+  "arquivo": "grassminotaur_ice.webp",
+  "bytes": 3856
+ },
+ "grasspanda": {
+  "arquivo": "grasspanda.webp",
+  "bytes": 3534
+ },
+ "grasspanda_electric": {
+  "arquivo": "grasspanda_electric.webp",
+  "bytes": 4086
+ },
+ "grassrabbitman": {
+  "arquivo": "grassrabbitman.webp",
+  "bytes": 16906
+ },
+ "grimgirl": {
+  "arquivo": "grimgirl.webp",
+  "bytes": 11476
+ },
+ "guardiandog": {
+  "arquivo": "guardiandog.webp",
+  "bytes": 3262
+ },
+ "hadesbird": {
+  "arquivo": "hadesbird.webp",
+  "bytes": 3400
+ },
+ "hadesbird_electric": {
+  "arquivo": "hadesbird_electric.webp",
+  "bytes": 3594
+ },
+ "hawkbird": {
+  "arquivo": "hawkbird.webp",
+  "bytes": 4178
+ },
+ "hedgehog": {
+  "arquivo": "hedgehog.webp",
+  "bytes": 21160
+ },
+ "hedgehog_ice": {
+  "arquivo": "hedgehog_ice.webp",
+  "bytes": 17940
+ },
+ "herculesbeetle": {
+  "arquivo": "herculesbeetle.webp",
+  "bytes": 13618
+ },
+ "herculesbeetle_ground": {
+  "arquivo": "herculesbeetle_ground.webp",
+  "bytes": 20466
+ },
+ "hoodghost": {
+  "arquivo": "hoodghost.webp",
+  "bytes": 3118
+ },
+ "horus": {
+  "arquivo": "horus.webp",
+  "bytes": 3510
+ },
+ "horus_water": {
+  "arquivo": "horus_water.webp",
+  "bytes": 3400
+ },
+ "icecrocodile": {
+  "arquivo": "icecrocodile.webp",
+  "bytes": 11010
+ },
+ "icedeer": {
+  "arquivo": "icedeer.webp",
+  "bytes": 5282
+ },
+ "icefox": {
+  "arquivo": "icefox.webp",
+  "bytes": 14390
+ },
+ "icehorse": {
+  "arquivo": "icehorse.webp",
+  "bytes": 3606
+ },
+ "icehorse_dark": {
+  "arquivo": "icehorse_dark.webp",
+  "bytes": 3488
+ },
+ "icenarwhal": {
+  "arquivo": "icenarwhal.webp",
+  "bytes": 2932
+ },
+ "icenarwhal_fire": {
+  "arquivo": "icenarwhal_fire.webp",
+  "bytes": 3032
+ },
+ "iceseal": {
+  "arquivo": "iceseal.webp",
+  "bytes": 2476
+ },
+ "iceseal_ground": {
+  "arquivo": "iceseal_ground.webp",
+  "bytes": 2050
+ },
+ "icewitch": {
+  "arquivo": "icewitch.webp",
+  "bytes": 14416
+ },
+ "jellyfishfairy": {
+  "arquivo": "jellyfishfairy.webp",
+  "bytes": 19828
+ },
+ "jellyfishghost": {
+  "arquivo": "jellyfishghost.webp",
+  "bytes": 16460
+ },
+ "jetdragon": {
+  "arquivo": "jetdragon.webp",
+  "bytes": 3228
+ },
+ "kabukiman": {
+  "arquivo": "kabukiman.webp",
+  "bytes": 3620
+ },
+ "kelpie": {
+  "arquivo": "kelpie.webp",
+  "bytes": 10822
+ },
+ "kelpie_fire": {
+  "arquivo": "kelpie_fire.webp",
+  "bytes": 10098
+ },
+ "kendofrog": {
+  "arquivo": "kendofrog.webp",
+  "bytes": 18730
+ },
+ "kendofrog_dark": {
+  "arquivo": "kendofrog_dark.webp",
+  "bytes": 18358
+ },
+ "kingalpaca": {
+  "arquivo": "kingalpaca.webp",
+  "bytes": 3152
+ },
+ "kingalpaca_ice": {
+  "arquivo": "kingalpaca_ice.webp",
+  "bytes": 2822
+ },
+ "kingbahamut": {
+  "arquivo": "kingbahamut.webp",
+  "bytes": 4006
+ },
+ "kingbahamut_dragon": {
+  "arquivo": "kingbahamut_dragon.webp",
+  "bytes": 3756
+ },
+ "kingsunfish": {
+  "arquivo": "kingsunfish.webp",
+  "bytes": 2928
+ },
+ "kingsunfish_thunder": {
+  "arquivo": "kingsunfish_thunder.webp",
+  "bytes": 3008
+ },
+ "kingwhale": {
+  "arquivo": "kingwhale.webp",
+  "bytes": 4732
+ },
+ "kirin": {
+  "arquivo": "kirin.webp",
+  "bytes": 4260
+ },
+ "kirin_ice": {
+  "arquivo": "kirin_ice.webp",
+  "bytes": 3850
+ },
+ "kitsunebi": {
+  "arquivo": "kitsunebi.webp",
+  "bytes": 4016
+ },
+ "kitsunebi_ice": {
+  "arquivo": "kitsunebi_ice.webp",
+  "bytes": 3746
+ },
+ "lanternbutler": {
+  "arquivo": "lanternbutler.webp",
+  "bytes": 2700
+ },
+ "lavagirl": {
+  "arquivo": "lavagirl.webp",
+  "bytes": 13928
+ },
+ "lazycatfish": {
+  "arquivo": "lazycatfish.webp",
+  "bytes": 10526
+ },
+ "lazycatfish_gold": {
+  "arquivo": "lazycatfish_gold.webp",
+  "bytes": 18274
+ },
+ "lazydragon": {
+  "arquivo": "lazydragon.webp",
+  "bytes": 2146
+ },
+ "lazydragon_electric": {
+  "arquivo": "lazydragon_electric.webp",
+  "bytes": 2650
+ },
+ "leafmomonga": {
+  "arquivo": "leafmomonga.webp",
+  "bytes": 15388
+ },
+ "leafprincess": {
+  "arquivo": "leafprincess.webp",
+  "bytes": 16006
+ },
+ "legenddeer": {
+  "arquivo": "legenddeer.webp",
+  "bytes": 4260
+ },
+ "lilyqueen": {
+  "arquivo": "lilyqueen.webp",
+  "bytes": 25340
+ },
+ "littlebriarrose": {
+  "arquivo": "littlebriarrose.webp",
+  "bytes": 18078
+ },
+ "lizardman": {
+  "arquivo": "lizardman.webp",
+  "bytes": 20656
+ },
+ "lizardman_fire": {
+  "arquivo": "lizardman_fire.webp",
+  "bytes": 23140
+ },
+ "longcat": {
+  "arquivo": "longcat.webp",
+  "bytes": 3244
+ },
+ "lotusdragon": {
+  "arquivo": "lotusdragon.webp",
+  "bytes": 3492
+ },
+ "manticore": {
+  "arquivo": "manticore.webp",
+  "bytes": 5070
+ },
+ "manticore_dark": {
+  "arquivo": "manticore_dark.webp",
+  "bytes": 4500
+ },
+ "mimicdog": {
+  "arquivo": "mimicdog.webp",
+  "bytes": 21916
+ },
+ "monkey": {
+  "arquivo": "monkey.webp",
+  "bytes": 4578
+ },
+ "monkey_fire": {
+  "arquivo": "monkey_fire.webp",
+  "bytes": 4544
+ },
+ "monochromequeen": {
+  "arquivo": "monochromequeen.webp",
+  "bytes": 3288
+ },
+ "moonchild": {
+  "arquivo": "moonchild.webp",
+  "bytes": 2608
+ },
+ "moonqueen": {
+  "arquivo": "moonqueen.webp",
+  "bytes": 4238
+ },
+ "mopbaby": {
+  "arquivo": "mopbaby.webp",
+  "bytes": 14290
+ },
+ "mopking": {
+  "arquivo": "mopking.webp",
+  "bytes": 2284
+ },
+ "mothman": {
+  "arquivo": "mothman.webp",
+  "bytes": 3906
+ },
+ "mummypal": {
+  "arquivo": "mummypal.webp",
+  "bytes": 5228
+ },
+ "mushroomdragon": {
+  "arquivo": "mushroomdragon.webp",
+  "bytes": 2166
+ },
+ "mushroomdragon_dark": {
+  "arquivo": "mushroomdragon_dark.webp",
+  "bytes": 2162
+ },
+ "mushroomlady": {
+  "arquivo": "mushroomlady.webp",
+  "bytes": 3278
+ },
+ "mutant": {
+  "arquivo": "mutant.webp",
+  "bytes": 14088
+ },
+ "mysterymask": {
+  "arquivo": "mysterymask.webp",
+  "bytes": 10926
+ },
+ "naughtycat": {
+  "arquivo": "naughtycat.webp",
+  "bytes": 3574
+ },
+ "negativekoala": {
+  "arquivo": "negativekoala.webp",
+  "bytes": 13994
+ },
+ "negativeoctopus": {
+  "arquivo": "negativeoctopus.webp",
+  "bytes": 11674
+ },
+ "negativeoctopus_neutral": {
+  "arquivo": "negativeoctopus_neutral.webp",
+  "bytes": 13576
+ },
+ "nightbluehorse": {
+  "arquivo": "nightbluehorse.webp",
+  "bytes": 3378
+ },
+ "nightbluehorse_neutral": {
+  "arquivo": "nightbluehorse_neutral.webp",
+  "bytes": 3178
+ },
+ "nightfox": {
+  "arquivo": "nightfox.webp",
+  "bytes": 17348
+ },
+ "nightlady": {
+  "arquivo": "nightlady.webp",
+  "bytes": 18042
+ },
+ "octopusgirl": {
+  "arquivo": "octopusgirl.webp",
+  "bytes": 12684
+ },
+ "octopusgirl_neutral": {
+  "arquivo": "octopusgirl_neutral.webp",
+  "bytes": 3472
+ },
+ "onighostgirl": {
+  "arquivo": "onighostgirl.webp",
+  "bytes": 3534
+ },
+ "pandagirl": {
+  "arquivo": "pandagirl.webp",
+  "bytes": 3700
+ },
+ "penguin": {
+  "arquivo": "penguin.webp",
+  "bytes": 3638
+ },
+ "penguin_electric": {
+  "arquivo": "penguin_electric.webp",
+  "bytes": 3168
+ },
+ "pinkcat": {
+  "arquivo": "pinkcat.webp",
+  "bytes": 19392
+ },
+ "pinklizard": {
+  "arquivo": "pinklizard.webp",
+  "bytes": 16874
+ },
+ "pinkrabbit": {
+  "arquivo": "pinkrabbit.webp",
+  "bytes": 14796
+ },
+ "pinkrabbit_grass": {
+  "arquivo": "pinkrabbit_grass.webp",
+  "bytes": 16024
+ },
+ "plantslime": {
+  "arquivo": "plantslime.webp",
+  "bytes": 12908
+ },
+ "plesiosaur": {
+  "arquivo": "plesiosaur.webp",
+  "bytes": 2504
+ },
+ "poseidonorca": {
+  "arquivo": "poseidonorca.webp",
+  "bytes": 5172
+ },
+ "purplespider": {
+  "arquivo": "purplespider.webp",
+  "bytes": 4756
+ },
+ "queenbee": {
+  "arquivo": "queenbee.webp",
+  "bytes": 15656
+ },
+ "raijindaughter": {
+  "arquivo": "raijindaughter.webp",
+  "bytes": 14362
+ },
+ "raijindaughter_water": {
+  "arquivo": "raijindaughter_water.webp",
+  "bytes": 9264
+ },
+ "redarmorbird": {
+  "arquivo": "redarmorbird.webp",
+  "bytes": 3878
+ },
+ "redflowerbird": {
+  "arquivo": "redflowerbird.webp",
+  "bytes": 3416
+ },
+ "robinhood": {
+  "arquivo": "robinhood.webp",
+  "bytes": 14948
+ },
+ "robinhood_ground": {
+  "arquivo": "robinhood_ground.webp",
+  "bytes": 14318
+ },
+ "rockbeast": {
+  "arquivo": "rockbeast.webp",
+  "bytes": 3468
+ },
+ "rockbeast_ice": {
+  "arquivo": "rockbeast_ice.webp",
+  "bytes": 4048
+ },
+ "ronin": {
+  "arquivo": "ronin.webp",
+  "bytes": 22468
+ },
+ "ronin_dark": {
+  "arquivo": "ronin_dark.webp",
+  "bytes": 21306
+ },
+ "saintcentaur": {
+  "arquivo": "saintcentaur.webp",
+  "bytes": 4640
+ },
+ "sakurasaurus": {
+  "arquivo": "sakurasaurus.webp",
+  "bytes": 3066
+ },
+ "sakurasaurus_water": {
+  "arquivo": "sakurasaurus_water.webp",
+  "bytes": 3178
+ },
+ "samuraidog": {
+  "arquivo": "samuraidog.webp",
+  "bytes": 3226
+ },
+ "scorpionman": {
+  "arquivo": "scorpionman.webp",
+  "bytes": 15230
+ },
+ "scorpionman_electric": {
+  "arquivo": "scorpionman_electric.webp",
+  "bytes": 4038
+ },
+ "sekhmet": {
+  "arquivo": "sekhmet.webp",
+  "bytes": 3618
+ },
+ "serpent": {
+  "arquivo": "serpent.webp",
+  "bytes": 2812
+ },
+ "serpent_ground": {
+  "arquivo": "serpent_ground.webp",
+  "bytes": 3268
+ },
+ "sharkkid": {
+  "arquivo": "sharkkid.webp",
+  "bytes": 15604
+ },
+ "sharkkid_fire": {
+  "arquivo": "sharkkid_fire.webp",
+  "bytes": 14712
+ },
+ "sheepball": {
+  "arquivo": "sheepball.webp",
+  "bytes": 23902
+ },
+ "sifudog": {
+  "arquivo": "sifudog.webp",
+  "bytes": 12620
+ },
+ "skydragon": {
+  "arquivo": "skydragon.webp",
+  "bytes": 3686
+ },
+ "skydragon_grass": {
+  "arquivo": "skydragon_grass.webp",
+  "bytes": 3650
+ },
+ "sleeverabbit": {
+  "arquivo": "sleeverabbit.webp",
+  "bytes": 4204
+ },
+ "smallarmadillo": {
+  "arquivo": "smallarmadillo.webp",
+  "bytes": 9584
+ },
+ "smallyeti": {
+  "arquivo": "smallyeti.webp",
+  "bytes": 3392
+ },
+ "snakegirl": {
+  "arquivo": "snakegirl.webp",
+  "bytes": 3988
+ },
+ "snowpeafowl": {
+  "arquivo": "snowpeafowl.webp",
+  "bytes": 11704
+ },
+ "snowtigerbeastman": {
+  "arquivo": "snowtigerbeastman.webp",
+  "bytes": 14782
+ },
+ "soldierbee": {
+  "arquivo": "soldierbee.webp",
+  "bytes": 16702
+ },
+ "stuffedshark": {
+  "arquivo": "stuffedshark.webp",
+  "bytes": 11902
+ },
+ "stuffedshark_fire": {
+  "arquivo": "stuffedshark_fire.webp",
+  "bytes": 10616
+ },
+ "sumodog": {
+  "arquivo": "sumodog.webp",
+  "bytes": 3778
+ },
+ "suzaku": {
+  "arquivo": "suzaku.webp",
+  "bytes": 3918
+ },
+ "suzaku_water": {
+  "arquivo": "suzaku_water.webp",
+  "bytes": 3688
+ },
+ "sweetssheep": {
+  "arquivo": "sweetssheep.webp",
+  "bytes": 15954
+ },
+ "sweetssheep_ground": {
+  "arquivo": "sweetssheep_ground.webp",
+  "bytes": 3742
+ },
+ "swordcutlassfish": {
+  "arquivo": "swordcutlassfish.webp",
+  "bytes": 3382
+ },
+ "swordcutlassfish_fire": {
+  "arquivo": "swordcutlassfish_fire.webp",
+  "bytes": 3360
+ },
+ "tentacleturtle": {
+  "arquivo": "tentacleturtle.webp",
+  "bytes": 18032
+ },
+ "tentacleturtle_ground": {
+  "arquivo": "tentacleturtle_ground.webp",
+  "bytes": 20366
+ },
+ "thiefbird": {
+  "arquivo": "thiefbird.webp",
+  "bytes": 2700
+ },
+ "thunderbird": {
+  "arquivo": "thunderbird.webp",
+  "bytes": 3288
+ },
+ "thunderbird_ice": {
+  "arquivo": "thunderbird_ice.webp",
+  "bytes": 3032
+ },
+ "thunderdog": {
+  "arquivo": "thunderdog.webp",
+  "bytes": 3442
+ },
+ "thunderdog_ice": {
+  "arquivo": "thunderdog_ice.webp",
+  "bytes": 3546
+ },
+ "thunderdragonman": {
+  "arquivo": "thunderdragonman.webp",
+  "bytes": 16374
+ },
+ "thunderfluffybird": {
+  "arquivo": "thunderfluffybird.webp",
+  "bytes": 2520
+ },
+ "tropicalostrich": {
+  "arquivo": "tropicalostrich.webp",
+  "bytes": 4178
+ },
+ "umihebi": {
+  "arquivo": "umihebi.webp",
+  "bytes": 5376
+ },
+ "umihebi_fire": {
+  "arquivo": "umihebi_fire.webp",
+  "bytes": 4772
+ },
+ "venusflytrap": {
+  "arquivo": "venusflytrap.webp",
+  "bytes": 2894
+ },
+ "violetfairy": {
+  "arquivo": "violetfairy.webp",
+  "bytes": 16690
+ },
+ "volcanicmonster": {
+  "arquivo": "volcanicmonster.webp",
+  "bytes": 3808
+ },
+ "volcanicmonster_ice": {
+  "arquivo": "volcanicmonster_ice.webp",
+  "bytes": 3928
+ },
+ "volcanodragon": {
+  "arquivo": "volcanodragon.webp",
+  "bytes": 5088
+ },
+ "volcanodragon_ice": {
+  "arquivo": "volcanodragon_ice.webp",
+  "bytes": 5324
+ },
+ "weaseldragon": {
+  "arquivo": "weaseldragon.webp",
+  "bytes": 3116
+ },
+ "weaseldragon_fire": {
+  "arquivo": "weaseldragon_fire.webp",
+  "bytes": 3218
+ },
+ "werewolf": {
+  "arquivo": "werewolf.webp",
+  "bytes": 13096
+ },
+ "werewolf_ice": {
+  "arquivo": "werewolf_ice.webp",
+  "bytes": 18296
+ },
+ "whitealiendragon": {
+  "arquivo": "whitealiendragon.webp",
+  "bytes": 3040
+ },
+ "whitedeer": {
+  "arquivo": "whitedeer.webp",
+  "bytes": 3520
+ },
+ "whitedeer_dark": {
+  "arquivo": "whitedeer_dark.webp",
+  "bytes": 3534
+ },
+ "whitemoth": {
+  "arquivo": "whitemoth.webp",
+  "bytes": 17546
+ },
+ "whitemoth_neutral": {
+  "arquivo": "whitemoth_neutral.webp",
+  "bytes": 3738
+ },
+ "whiteshielddragon": {
+  "arquivo": "whiteshielddragon.webp",
+  "bytes": 3306
+ },
+ "whitetiger": {
+  "arquivo": "whitetiger.webp",
+  "bytes": 16632
+ },
+ "whitetiger_ground": {
+  "arquivo": "whitetiger_ground.webp",
+  "bytes": 13968
+ },
+ "windchimes": {
+  "arquivo": "windchimes.webp",
+  "bytes": 10908
+ },
+ "windchimes_ice": {
+  "arquivo": "windchimes_ice.webp",
+  "bytes": 10312
+ },
+ "winggolem": {
+  "arquivo": "winggolem.webp",
+  "bytes": 17124
+ },
+ "winggolem_fire": {
+  "arquivo": "winggolem_fire.webp",
+  "bytes": 3988
+ },
+ "wizardowl": {
+  "arquivo": "wizardowl.webp",
+  "bytes": 14608
+ },
+ "woolfox": {
+  "arquivo": "woolfox.webp",
+  "bytes": 14504
+ },
+ "worldtreedragon": {
+  "arquivo": "worldtreedragon.webp",
+  "bytes": 4386
+ },
+ "yakushimaboss001": {
+  "arquivo": "yakushimaboss001.webp",
+  "bytes": 17776
+ },
+ "yakushimaboss001_green": {
+  "arquivo": "yakushimaboss001_green.webp",
+  "bytes": 16968
+ },
+ "yakushimamonster001": {
+  "arquivo": "yakushimamonster001.webp",
+  "bytes": 5958
+ },
+ "yakushimamonster001_blue": {
+  "arquivo": "yakushimamonster001_blue.webp",
+  "bytes": 6224
+ },
+ "yakushimamonster001_pink": {
+  "arquivo": "yakushimamonster001_pink.webp",
+  "bytes": 6408
+ },
+ "yakushimamonster001_purple": {
+  "arquivo": "yakushimamonster001_purple.webp",
+  "bytes": 6090
+ },
+ "yakushimamonster001_rainbow": {
+  "arquivo": "yakushimamonster001_rainbow.webp",
+  "bytes": 9142
+ },
+ "yakushimamonster001_red": {
+  "arquivo": "yakushimamonster001_red.webp",
+  "bytes": 6138
+ },
+ "yakushimamonster002": {
+  "arquivo": "yakushimamonster002.webp",
+  "bytes": 11976
+ },
+ "yakushimamonster003": {
+  "arquivo": "yakushimamonster003.webp",
+  "bytes": 11912
+ },
+ "yakushimamonster003_purple": {
+  "arquivo": "yakushimamonster003_purple.webp",
+  "bytes": 11976
+ },
+ "yeti": {
+  "arquivo": "yeti.webp",
+  "bytes": 2898
+ }
+}

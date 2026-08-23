@@ -10,7 +10,8 @@ import {
   type Estado,
   type EstadoResgate,
 } from "./actions";
-import { nomeDoPal, ehAlpha } from "@/lib/pals";
+import { nomeDoPal } from "@/lib/pals";
+import { PalCard } from "@/components/pal-card";
 import type { PalDisponivel } from "@/lib/pal-cofre";
 import type { PersonagemOnline } from "@/lib/cofre";
 
@@ -63,31 +64,34 @@ export function GuardarPals({
       <input type="hidden" name="servidor" value={servidor} />
       <input type="hidden" name="instanceId" value={selecionado ?? ""} />
 
-      <ul className="max-h-96 divide-y divide-[var(--line)] overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface">
+      <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2">
         {pals.map((p) => (
-          <li key={p.instanceId}>
-            <label className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 has-checked:bg-gold/[0.06]">
-              <input
-                type="radio"
-                name="_escolha"
-                checked={selecionado === p.instanceId}
-                onChange={() => setSelecionado(p.instanceId)}
-                className="size-4 shrink-0 accent-[var(--gold)]"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">
-                  {ehAlpha(p.palId) && <span className="text-gold">Alpha </span>}
-                  {p.nickname || nomeDoPal(p.palId)}
-                  {p.shiny && " ✨"}
-                </span>
-                <span className="tabular block text-xs text-muted">
-                  Nível {p.level} · {p.gender === "Female" ? "Fêmea" : "Macho"}
-                </span>
-              </span>
-            </label>
-          </li>
+          <label
+            key={p.instanceId}
+            className="cursor-pointer rounded-[var(--radius-control)] border border-line bg-bg p-2.5 transition-colors hover:border-line-strong has-checked:border-gold has-checked:bg-gold/[0.06]"
+          >
+            <input
+              type="radio"
+              name="_escolha"
+              checked={selecionado === p.instanceId}
+              onChange={() => setSelecionado(p.instanceId)}
+              className="sr-only"
+            />
+            <PalCard
+              pal={{
+                palId: p.palId,
+                nickname: p.nickname,
+                level: p.level,
+                gender: p.gender,
+                shiny: p.shiny,
+                condensedPals: p.condensedPals,
+                ivs: p.ivs,
+                passives: p.passives,
+              }}
+            />
+          </label>
         ))}
-      </ul>
+      </div>
 
       <div className="mt-4">
         <Enviar>Guardar Pal escolhido</Enviar>

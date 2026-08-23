@@ -96,6 +96,9 @@ export interface PalDisponivel {
   level: number;
   gender: string;
   shiny: boolean;
+  condensedPals: number;
+  ivs: Record<string, number>;
+  passives: string[];
 }
 
 /** Os Pals do time e da palbox, prontos para escolher qual guardar. */
@@ -119,6 +122,9 @@ export async function palsNoJogo(
         level: Number(pal.Level ?? 1),
         gender: String(pal.Gender ?? "Male"),
         shiny: pal.Shiny === true,
+        condensedPals: Number(pal.CondensedPals ?? 0),
+        ivs: (pal.IVs as Record<string, number>) ?? {},
+        passives: Array.isArray(pal.Passives) ? (pal.Passives as string[]) : [],
       })),
       erro: "",
     };

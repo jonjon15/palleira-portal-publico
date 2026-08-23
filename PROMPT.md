@@ -1514,32 +1514,53 @@ São ~288 Pals e ~2.400 itens. Semear de **dataset open source**: [paldex](https
 
 **Decisão:** `_____________________`
 
-#### ✅ Arte 3D — resolvida, para o modelo, em 23/08/2026
+#### ✅ Arte 3D e 2D — resolvida para o modelo, em 23/08/2026
 
-A parte visual do "Pal exato" está resolvida, embora o nome/ícone 2D acima
-ainda não: o site ganhou **324 modelos 3D** (glTF 2.0, ~105 KB cada, ~33 MB
-no total), extraídos do próprio jogo pelo projeto de código aberto
+A parte visual do "Pal exato" está resolvida: o site ganhou **324 modelos
+3D** (glTF 2.0, ~105 KB cada, ~33 MB no total) **e 296 ícones 2D** (webp,
+~8 KB cada, ~2,5 MB no total), extraídos do próprio jogo pelo projeto de
+código aberto
 [Palworld Save Pal](https://github.com/PalworldSavePal/palworld-save-pal)
 (GPL-3.0 — a licença cobre o **código** dele, não a arte da Pocketpair; o
-site usa só os arquivos `.glb`, escreve o próprio visualizador, e serve tudo
-do próprio domínio, `public/models/pals/`).
+site usa só os arquivos, escreve o próprio visualizador e o próprio
+resolvedor, e serve tudo do próprio domínio: `public/models/pals/` e
+`public/icons/pals/`).
 
-**Cobertura medida contra a comunidade de verdade (23/08/2026):** cruzando o
-manifesto com os `game-data` dos dois PVE, **1.504 dos 1.536 personagens
-vivos têm modelo** (97,9%) — os 32 que faltam são todos NPC humano
-(mercador), não Pal. Nenhuma espécie real ficou de fora, incluindo skins,
-que têm malha própria.
+> ⚠️ **Correção:** este documento chegou a registrar que "não há arte 2D
+> nenhuma no pacote" — a busca inicial só olhou a pasta `ui/static/`, e os
+> ícones moram em `ui/src/lib/assets/img/`. Achados no mesmo projeto,
+> horas depois, ao montar a lista do cofre.
+
+**Cobertura medida contra a comunidade de verdade (23/08/2026):** cruzando
+os dois manifestos com o `game-data` dos dois PVE, **1.504/1.536 (97,9%)
+têm modelo 3D** e **1.483/1.517 (97,8%) têm ícone 2D** — os que faltam são,
+nos dois casos, NPC humano do **mundo** (mercador parado na cidade,
+`NPC_SalesPerson`, `NPC_Male_Trader01`…), não Pal. Nenhuma espécie real
+ficou de fora, skin incluída.
+
+> 📌 **Um NPC humano *capturado* por um jogador é outra categoria.**
+> Decisão do dono em 23/08: se aparecer no time ou na palbox de alguém,
+> ele vende como qualquer Pal — nada no `lib/pal-cofre.ts` filtra por
+> `PalID`. Só não vai ter ícone/3D (o pacote de assets não cobre esses),
+> e a tela mostra "sem ícone" sem travar nada.
 
 | | |
 |---|---|
-| Resolução `PalID` → malha | `lib/pals.ts` — mesmo algoritmo de prefixo/sufixo do projeto de origem, testado contra Alpha (`BOSS_`) e skin |
-| Visualizador | `components/pal-3d.tsx` — `three.js`, gira sozinho, arrasta com o mouse, libera GPU ao desmontar |
+| Resolução `PalID` → asset | `lib/pals.ts` — um único algoritmo (`resolverChave`) genérico para modelo e ícone, testado contra Alpha (`BOSS_`) e skin |
+| Ícone na lista | `components/pal-card.tsx` — o cartão com ícone, nível, barra de IV e passivas, usado no cofre inteiro |
+| Visualizador 3D | `components/pal-3d.tsx` — `three.js`, gira sozinho, arrasta com o mouse, libera GPU ao desmontar |
 | Ficha completa | `components/ficha-pal.tsx` — o 3D + IVs, almas e passivas, tudo saído do template |
 
-⚠️ **Sem animação nem esqueleto** — os modelos ficam parados; quem dá vida é
-a câmera girando, não o bicho. E não há arte **2D** nenhuma no pacote: para
-lista e card pequeno, a §7.4 continua precisando do catálogo tradicional
-acima.
+⚠️ **Sem animação nem esqueleto** nos modelos 3D — quem dá vida é a câmera
+girando, não o bicho. Por isso o ícone 2D é o que aparece em lista (o 3D só
+entra na ficha de um Pal só — renderizar WebGL em 200 linhas de palbox
+derrubaria a aba).
+
+📌 **Achado também em 23/08:** [paldeck.cc/npcs](https://paldeck.cc/npcs)
+tem ícone para os NPCs humanos que faltam (mesmo padrão de nome,
+`T_<chave>_icon_normal.webp`), mas o site não declara licença de reuso —
+só "projeto de fã, sem vínculo com a Pocketpair". Fica em aberto junto com
+o catálogo completo da §7.4: não copiar sem licença clara.
 
 ### 7.5 Ficha do Item
 

@@ -1,4 +1,5 @@
 import MODELOS from "@/lib/pals-modelos.json";
+import ICONES from "@/lib/pals-icones.json";
 
 /**
  * Os Pals na tela: qual modelo 3D usar e como chamá-los (§7.4 do PROMPT.md).
@@ -18,15 +19,17 @@ import MODELOS from "@/lib/pals-modelos.json";
  * de fã (§14.4).
  */
 
-interface Modelo {
+interface Asset {
   arquivo: string;
   bytes: number;
 }
 
-const CATALOGO = MODELOS as Record<string, Modelo>;
+const MODELO_DE = MODELOS as Record<string, Asset>;
+const ICONE_DE = ICONES as Record<string, Asset>;
 
-/** Onde os `.glb` são servidos. O hash no nome dá cache eterno. */
-const BASE = "/models/pals";
+/** Onde cada tipo de arquivo é servido. Hash no nome = cache eterno. */
+const BASE_MODELO = "/models/pals";
+const BASE_ICONE = "/icons/pals";
 
 /**
  * Marcadores de **contexto de spawn**, não de espécie.
@@ -39,22 +42,24 @@ const BASE = "/models/pals";
 const CONTEXTOS = ["boss_", "predator_", "summon_", "raid_", "gym_"];
 
 /**
- * Do `PalID` que a API devolve até a malha que existe na pasta.
+ * Do `PalID` que a API devolve até a chave que existe no catálogo — genérico
+ * para servir tanto o modelo 3D quanto o ícone 2D, que usam a mesma
+ * nomenclatura de espécie.
  *
- * Os dois vocabulários não batem: a API fala `BOSS_KingWhale_Otomo`, e a
- * pasta guarda espécies. A busca vai do mais específico para o mais genérico
- * e **para no primeiro acerto** — assim `ghostdragon_fire`, que tem malha
- * própria, não é rebaixado para `ghostdragon`, mas uma recolorização sem
- * malha própria ainda encontra a do bicho base. É a mesma troca que o jogo
- * faz: a forma certa, na paleta base.
+ * Os dois vocabulários não batem: a API fala `BOSS_KingWhale_Otomo`, e o
+ * catálogo guarda espécies. A busca vai do mais específico para o mais
+ * genérico e **para no primeiro acerto** — assim `ghostdragon_fire`, que tem
+ * asset próprio, não é rebaixado para `ghostdragon`, mas uma recolorização
+ * sem asset próprio (uma skin, por exemplo) ainda encontra o do bicho base.
+ * É a mesma troca que o jogo faz: a forma certa, na paleta base.
  */
-export function modeloDoPal(palId: string): string | null {
+function resolverChave(palId: string, tem: (chave: string) => boolean): string | null {
   const chave = (palId ?? "").toLowerCase();
   if (!chave) return null;
 
   // Antes de tudo: uma espécie cujo nome começa com um desses prefixos tem
   // que ser achada como ela mesma, não confundida com variante de outra.
-  if (chave in CATALOGO) return chave;
+  if (tem(chave)) return chave;
 
   const contexto = CONTEXTOS.find(
     (c) => chave.startsWith(c) && chave.length > c.length,
@@ -63,9 +68,9 @@ export function modeloDoPal(palId: string): string | null {
 
   // Encurta pelo `_`, sufixo a sufixo. Só o resto é encurtado, nunca a forma
   // com prefixo: senão "boss" e "raid" virariam candidatos, e todo Pal sem
-  // malha colidiria neles.
+  // asset colidiria neles.
   while (candidato) {
-    if (candidato in CATALOGO) return candidato;
+    if (tem(candidato)) return candidato;
     const corte = candidato.lastIndexOf("_");
     if (corte < 0) return null;
     candidato = candidato.slice(0, corte);
@@ -73,16 +78,34 @@ export function modeloDoPal(palId: string): string | null {
   return null;
 }
 
+export const modeloDoPal = (palId: string) =>
+  resolverChave(palId, (c) => c in MODELO_DE);
+
 /** A URL do `.glb`, ou `null` quando não existe malha para aquele Pal. */
 export function urlDoModelo(palId: string): string | null {
   const chave = modeloDoPal(palId);
-  return chave ? `${BASE}/${CATALOGO[chave].arquivo}` : null;
+  return chave ? `${BASE_MODELO}/${MODELO_DE[chave].arquivo}` : null;
 }
 
 /** Quanto o navegador vai baixar — para avisar antes em conexão ruim. */
 export function pesoDoModelo(palId: string): number {
   const chave = modeloDoPal(palId);
-  return chave ? CATALOGO[chave].bytes : 0;
+  return chave ? MODELO_DE[chave].bytes : 0;
+}
+
+/**
+ * O ícone 2D — leve (~8 KB), para lista e card, onde renderizar um Pal
+ * inteiro em 3D por linha derrubaria a página (WebGL tem limite de
+ * contextos simultâneos no navegador; uma lista de 200 Pals estouraria
+ * fácil). O 3D fica para a ficha de um Pal só.
+ *
+ * 296 dos 324 têm ícone com a chave exata; o resto cai no mesmo algoritmo
+ * de fallback do modelo — uma skin sem ícone próprio mostra o ícone da
+ * espécie base.
+ */
+export function urlDoIcone(palId: string): string | null {
+  const chave = resolverChave(palId, (c) => c in ICONE_DE);
+  return chave ? `${BASE_ICONE}/${ICONE_DE[chave].arquivo}` : null;
 }
 
 /* ------------------------------------------------------------------- nomes */
