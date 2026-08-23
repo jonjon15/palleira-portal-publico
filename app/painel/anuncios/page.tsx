@@ -7,6 +7,7 @@ import { Pick } from "@/components/pick";
 import { meusAnuncios, minhasCompras, type MeuAnuncio } from "@/lib/mercado";
 import { Cancelar, NomeDoItem } from "@/app/mercado/formularios";
 import { ItemIcon } from "@/components/item-icon";
+import { nomeDoPal, urlDoIcone } from "@/lib/pals";
 
 export const metadata: Metadata = {
   title: "Meus anúncios",
@@ -107,14 +108,18 @@ export default async function MeusAnuncios() {
             <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
               {compras.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center gap-4 px-5 py-4">
-                  <ItemIcon itemId={c.itemId} />
+                  <AtivoIcone anuncio={c} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">
-                      <NomeDoItem itemId={c.itemId} /> ×{c.qty}
+                      {c.kind === "pal" ? (
+                        nomeDoPal(c.palId ?? "")
+                      ) : (
+                        <>
+                          <NomeDoItem itemId={c.itemId ?? ""} /> ×{c.qty}
+                        </>
+                      )}
                     </p>
-                    <p className="truncate text-sm text-muted">
-                      de {c.vendedor}
-                    </p>
+                    <p className="truncate text-sm text-muted">de {c.vendedor}</p>
                   </div>
                   <Preco anuncio={c} />
                 </li>
@@ -127,19 +132,41 @@ export default async function MeusAnuncios() {
   );
 }
 
+function AtivoIcone({ anuncio }: { anuncio: MeuAnuncio }) {
+  if (anuncio.kind === "item") return <ItemIcon itemId={anuncio.itemId ?? ""} />;
+  const icone = urlDoIcone(anuncio.palId ?? "");
+  return (
+    <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface-2">
+      {icone ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={icone} alt="" className="size-full object-contain" />
+      ) : (
+        <span className="text-[0.55rem] text-muted">?</span>
+      )}
+    </div>
+  );
+}
+
 function Descricao({ anuncio }: { anuncio: MeuAnuncio }) {
+  const legenda =
+    anuncio.status === "vendido" && anuncio.comprador
+      ? `Comprado por ${anuncio.comprador} · você recebeu ${anuncio.preco - anuncio.taxa}`
+      : `Taxa ${anuncio.taxa} · você recebe ${anuncio.preco - anuncio.taxa}`;
+
   return (
     <>
-      <ItemIcon itemId={anuncio.itemId} />
+      <AtivoIcone anuncio={anuncio} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">
-          <NomeDoItem itemId={anuncio.itemId} /> ×{anuncio.qty}
+          {anuncio.kind === "pal" ? (
+            nomeDoPal(anuncio.palId ?? "")
+          ) : (
+            <>
+              <NomeDoItem itemId={anuncio.itemId ?? ""} /> ×{anuncio.qty}
+            </>
+          )}
         </p>
-        <p className="truncate text-sm text-muted">
-          {anuncio.status === "vendido" && anuncio.comprador
-            ? `Comprado por ${anuncio.comprador} · você recebeu ${anuncio.preco - anuncio.taxa}`
-            : `Taxa ${anuncio.taxa} · você recebe ${anuncio.preco - anuncio.taxa}`}
-        </p>
+        <p className="truncate text-sm text-muted">{legenda}</p>
       </div>
     </>
   );

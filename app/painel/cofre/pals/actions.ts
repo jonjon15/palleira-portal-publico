@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   importarPalParaCofre,
   iniciarResgateDePal,
@@ -10,6 +11,7 @@ import {
   type Resultado,
   type StatusResgate,
 } from "@/lib/pal-cofre";
+import { anunciarPal } from "@/lib/mercado";
 import { auth } from "@/auth";
 
 /**
@@ -23,6 +25,28 @@ export type Estado = Resultado;
 function atualiza() {
   revalidatePath("/painel/cofre/pals");
   revalidatePath("/painel/carteira");
+  revalidatePath("/mercado");
+  revalidatePath("/painel/anuncios");
+}
+
+/**
+ * Anunciar fica no cofre de Pals, não numa página `/mercado/vender/pal`
+ * separada — o pedido era Jogador → Cofre → Itens/Pals, direto.
+ */
+export async function acaoAnunciarPal(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const r = await anunciarPal(
+    Number(form.get("vaultPalId") ?? 0),
+    Number(form.get("preco") ?? 0),
+  );
+  atualiza();
+
+  // Mesmo motivo do redirect em acaoAnunciar (item): sem isso, a pessoa não
+  // vê o próprio anúncio no ar sem uma navegação de verdade.
+  if (r.ok) redirect("/mercado?tipo=pal");
+  return r;
 }
 
 /** Staff apenas — checagem de verdade mora em `semearPalDeTeste` (§9.2). */

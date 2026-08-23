@@ -11,7 +11,7 @@ import {
 } from "@/lib/pal-cofre";
 import { isStaff, levelOf } from "@/lib/roles";
 import { PalCard } from "@/components/pal-card";
-import { GuardarPals, ResgatarPal, SemearPalDeTeste } from "./formularios";
+import { GuardarPals, ResgatarPal, AnunciarPal, SemearPalDeTeste } from "./formularios";
 
 export const metadata: Metadata = {
   title: "Seus Pals",
@@ -103,7 +103,8 @@ export default async function CofreDePals({
                     }}
                   />
                 </Link>
-                <div className="mt-2 flex justify-end">
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+                  <AnunciarPal pal={{ id: p.id, palId: p.palId }} />
                   <ResgatarPal pal={{ id: p.id, palId: p.palId }} onde={onde} />
                 </div>
               </div>

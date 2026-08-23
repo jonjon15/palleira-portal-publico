@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import {
   acaoGuardarPal,
   acaoResgatarPal,
+  acaoAnunciarPal,
   acaoSemearTeste,
   consultarResgate,
   type Estado,
@@ -12,6 +13,7 @@ import {
 } from "./actions";
 import { nomeDoPal } from "@/lib/pals";
 import { PalCard } from "@/components/pal-card";
+import { PRECO_MINIMO, PRECO_MAXIMO } from "@/lib/mercado-regras";
 import type { PalDisponivel } from "@/lib/pal-cofre";
 import type { PersonagemOnline } from "@/lib/cofre";
 
@@ -151,6 +153,33 @@ export function ResgatarPal({
       <input type="hidden" name="vaultPalId" value={pal.id} />
       <CampoServidor onde={onde} />
       <Enviar>Resgatar</Enviar>
+      <Aviso estado={estado} />
+    </form>
+  );
+}
+
+/* -------------------------------------------------------------- anunciar */
+
+export function AnunciarPal({ pal }: { pal: ItemDoCofre }) {
+  const [estado, acao] = useActionState(acaoAnunciarPal, INICIAL);
+
+  return (
+    <form action={acao} className="flex items-center gap-2">
+      <input type="hidden" name="vaultPalId" value={pal.id} />
+      <label className="sr-only" htmlFor={`preco-${pal.id}`}>
+        Preço em Paletas
+      </label>
+      <input
+        id={`preco-${pal.id}`}
+        name="preco"
+        type="number"
+        min={PRECO_MINIMO}
+        max={PRECO_MAXIMO}
+        defaultValue={30}
+        required
+        className="tabular w-20 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1.5 text-right text-sm"
+      />
+      <Enviar>Anunciar</Enviar>
       <Aviso estado={estado} />
     </form>
   );

@@ -3,72 +3,114 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { Pick } from "@/components/pick";
-import { vitrine, type Anuncio } from "@/lib/mercado";
+import { vitrine, type Anuncio, type TipoAnuncio } from "@/lib/mercado";
 import { nomeDoItem, categoriaDoItem, CATEGORIA_LABEL } from "@/lib/itens";
+import { nomeDoPal } from "@/lib/pals";
 import { Comprar, NomeDoItem } from "./formularios";
 import { ItemIcon } from "@/components/item-icon";
+import { PalCard } from "@/components/pal-card";
 
 export const metadata: Metadata = {
   title: "Mercado",
   description:
-    "Compre e venda itens entre jogadores da Palleira BR, pagos em Paletas.",
+    "Compre e venda itens e Pals entre jogadores da Palleira BR, pagos em Paletas.",
 };
 
 // Vitrine com preço e disponibilidade: cache aqui é anúncio fantasma na tela.
 export const dynamic = "force-dynamic";
 
+const FILTROS: { valor: TipoAnuncio | undefined; rotulo: string }[] = [
+  { valor: undefined, rotulo: "Todos" },
+  { valor: "item", rotulo: "Itens" },
+  { valor: "pal", rotulo: "Pals" },
+];
+
 export default async function Mercado({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; tipo?: string }>;
 }) {
-  const [{ q }, session, anuncios] = await Promise.all([
+  const [{ q, tipo: tipoCru }, session, anuncios] = await Promise.all([
     searchParams,
     auth(),
     vitrine(),
   ]);
 
+  const tipo = tipoCru === "item" || tipoCru === "pal" ? tipoCru : undefined;
   const busca = (q ?? "").trim().toLowerCase();
-  // Busca pelo nome traduzido E pela chave crua: quem só conhece o item pelo
-  // ID do jogo acha do mesmo jeito.
-  const lista = busca
-    ? anuncios.filter(
-        (a) =>
-          nomeDoItem(a.itemId).toLowerCase().includes(busca) ||
-          a.itemId.toLowerCase().includes(busca),
-      )
-    : anuncios;
+
+  const lista = anuncios.filter((a) => {
+    if (tipo && a.kind !== tipo) return false;
+    if (!busca) return true;
+    // Busca pelo nome traduzido E pela chave crua: quem só conhece o item ou
+    // o Pal pelo ID do jogo acha do mesmo jeito.
+    if (a.kind === "pal") {
+      const palId = a.palId ?? "";
+      return (
+        nomeDoPal(palId).toLowerCase().includes(busca) ||
+        palId.toLowerCase().includes(busca)
+      );
+    }
+    const itemId = a.itemId ?? "";
+    return (
+      nomeDoItem(itemId).toLowerCase().includes(busca) ||
+      itemId.toLowerCase().includes(busca)
+    );
+  });
 
   return (
     <>
       <PageHeader
         kicker="Mercado"
-        title="Mercado de itens"
-        description="Comprado aqui, o lote cai no seu cofre na hora — e você resgata no jogo quando entrar. Ninguém precisa estar online ao mesmo tempo."
+        title="Mercado"
+        description="Comprado aqui, o item ou Pal cai no seu cofre na hora — e você resgata no jogo quando entrar. Ninguém precisa estar online ao mesmo tempo."
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
         {/* ------------------------------------------------------- controles */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <form className="flex gap-2">
-            <label htmlFor="q" className="sr-only">
-              Buscar item
-            </label>
-            <input
-              id="q"
-              name="q"
-              type="search"
-              defaultValue={q ?? ""}
-              placeholder="Buscar item…"
-              className="w-56 rounded-[var(--radius-control)] border border-line-strong bg-bg px-3 py-2 text-sm outline-none focus:border-gold"
-            />
-            <button
-              type="submit"
-              className="rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
-            >
-              Buscar
-            </button>
-          </form>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex gap-1 rounded-[var(--radius-control)] border border-line-strong p-1">
+              {FILTROS.map((f) => (
+                <Link
+                  key={f.rotulo}
+                  href={
+                    f.valor
+                      ? `/mercado?tipo=${f.valor}${q ? `&q=${encodeURIComponent(q)}` : ""}`
+                      : `/mercado${q ? `?q=${encodeURIComponent(q)}` : ""}`
+                  }
+                  className={`rounded-[calc(var(--radius-control)-4px)] px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    tipo === f.valor
+                      ? "bg-gold text-[#14120f]"
+                      : "text-muted hover:text-text"
+                  }`}
+                >
+                  {f.rotulo}
+                </Link>
+              ))}
+            </div>
+
+            <form className="flex gap-2">
+              {tipo && <input type="hidden" name="tipo" value={tipo} />}
+              <label htmlFor="q" className="sr-only">
+                Buscar
+              </label>
+              <input
+                id="q"
+                name="q"
+                type="search"
+                defaultValue={q ?? ""}
+                placeholder="Buscar item ou Pal…"
+                className="w-56 rounded-[var(--radius-control)] border border-line-strong bg-bg px-3 py-2 text-sm outline-none focus:border-gold"
+              />
+              <button
+                type="submit"
+                className="rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
+              >
+                Buscar
+              </button>
+            </form>
+          </div>
 
           {session && (
             <div className="flex gap-2">
@@ -127,20 +169,44 @@ function CardAnuncio({
 
   return (
     <li className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
-      <div className="flex items-center justify-center border-b border-line bg-surface-2 py-7">
-        <ItemIcon itemId={anuncio.itemId} bare className="size-20" />
-      </div>
+      {anuncio.kind === "pal" ? (
+        <div className="p-5">
+          <PalCard
+            pal={{
+              palId: anuncio.palId ?? "",
+              level: Number(anuncio.palTemplate?.Level ?? 1),
+              gender: anuncio.palTemplate?.Gender as string | undefined,
+              shiny: anuncio.palTemplate?.Shiny as boolean | undefined,
+              condensedPals: anuncio.palTemplate?.CondensedPals as
+                | number
+                | undefined,
+              ivs: anuncio.palTemplate?.IVs as Record<string, number> | undefined,
+              passives: anuncio.palTemplate?.Passives as string[] | undefined,
+            }}
+          />
+          <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center border-b border-line bg-surface-2 py-7">
+          <ItemIcon itemId={anuncio.itemId ?? ""} bare className="size-20" />
+        </div>
+      )}
 
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
-          {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId)]}
-        </p>
-        <h2 className="leading-snug font-semibold">
-          <NomeDoItem itemId={anuncio.itemId} />
-        </h2>
-        <p className="tabular text-sm text-muted">
-          {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} · {anuncio.vendedor}
-        </p>
+      <div className="flex flex-1 flex-col p-5 pt-0">
+        {anuncio.kind === "item" && (
+          <>
+            <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
+              {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId ?? "")]}
+            </p>
+            <h2 className="leading-snug font-semibold">
+              <NomeDoItem itemId={anuncio.itemId ?? ""} />
+            </h2>
+            <p className="tabular text-sm text-muted">
+              {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} ·{" "}
+              {anuncio.vendedor}
+            </p>
+          </>
+        )}
 
         <div className="mt-4 flex items-center gap-1.5">
           <Pick className="size-5" withLetter={false} />
@@ -150,9 +216,9 @@ function CardAnuncio({
           </span>
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-auto pt-3">
           {meu ? (
-            <p className="mt-3 rounded-[var(--radius-control)] border border-dashed border-line-strong px-4 py-2 text-center text-sm text-muted">
+            <p className="rounded-[var(--radius-control)] border border-dashed border-line-strong px-4 py-2 text-center text-sm text-muted">
               Seu anúncio
             </p>
           ) : euSou ? (
@@ -160,7 +226,7 @@ function CardAnuncio({
           ) : (
             <Link
               href="/entrar"
-              className="mt-3 block rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
+              className="block rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
             >
               Entrar para comprar
             </Link>

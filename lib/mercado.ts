@@ -13,18 +13,19 @@ import {
 /**
  * O mercado entre jogadores (§7.6 e §7.7 do PROMPT.md).
  *
- * O que está aqui é a **v1, só de itens**. Pal entra depois, quando o
- * template do `givepal_j` estiver guardado — a estrutura já prevê isso na
- * coluna `kind` da tabela.
+ * Dois tipos de anúncio, discriminados por `kind`:
  *
- * Duas decisões que valem para tudo:
- *
- * 1. **O anúncio é um lote.** "500 balas por 10 Paletas", não 0,02 por bala.
+ * 1. **Item — um lote.** "500 balas por 10 Paletas", não 0,02 por bala.
  *    Paleta é sempre inteira (§7.1) e preço por unidade traria fração de
  *    volta pela porta dos fundos.
- * 2. **O ativo sai do cofre ao anunciar.** Fica em custódia do anúncio, não
- *    do dono. Assim é impossível vender o que já foi resgatado, e o
- *    cancelamento é só um caminho de volta.
+ * 2. **Pal — uma unidade só.** Não é fungível (IVs, passivas, alma próprios,
+ *    §7.4) — o anúncio guarda o `PalTemplate` inteiro em `pal_template`, não
+ *    `item_id`/`qty`. 23/08/2026: a coluna `kind` e o `check` de forma da
+ *    tabela `listings` já prontos desde a v1; só faltava esta metade.
+ *
+ * Regra que vale para os dois: **o ativo sai do cofre ao anunciar.** Fica em
+ * custódia do anúncio, não do dono. Assim é impossível vender o que já foi
+ * resgatado, e o cancelamento é só um caminho de volta.
  */
 
 export {
@@ -36,10 +37,17 @@ export {
 
 /* -------------------------------------------------------------------- tipos */
 
+export type TipoAnuncio = "item" | "pal";
+
 export interface Anuncio {
   id: number;
-  itemId: string;
-  qty: number;
+  kind: TipoAnuncio;
+  /** Só quando `kind==="item"`. */
+  itemId?: string;
+  qty?: number;
+  /** Só quando `kind==="pal"` — tirado de `pal_template.PalID`. */
+  palId?: string;
+  palTemplate?: Record<string, unknown>;
   preco: number;
   taxa: number;
   vendedorId: string;
@@ -63,8 +71,10 @@ export interface Resultado {
 
 interface LinhaAnuncio {
   id: number;
-  item_id: string;
-  qty: number;
+  kind: TipoAnuncio;
+  item_id: string | null;
+  qty: number | null;
+  pal_template: Record<string, unknown> | null;
   price: number;
   fee: number;
   seller_id: string;
@@ -74,8 +84,11 @@ interface LinhaAnuncio {
 
 const paraAnuncio = (r: LinhaAnuncio): Anuncio => ({
   id: r.id,
-  itemId: r.item_id,
-  qty: r.qty,
+  kind: r.kind,
+  itemId: r.item_id ?? undefined,
+  qty: r.qty ?? undefined,
+  palId: r.pal_template ? String(r.pal_template.PalID ?? "") : undefined,
+  palTemplate: r.pal_template ?? undefined,
   preco: r.price,
   taxa: r.fee,
   vendedorId: r.seller_id,
@@ -91,8 +104,8 @@ const paraAnuncio = (r: LinhaAnuncio): Anuncio => ({
  */
 export async function vitrine(limite = 60): Promise<Anuncio[]> {
   const rows = (await sql`
-    select l.id, l.item_id, l.qty, l.price, l.fee, l.seller_id,
-           a.player_name as vendedor, l.created_at
+    select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
+           l.seller_id, a.player_name as vendedor, l.created_at
     from listings l
     left join account_links a on a.discord_id = l.seller_id
     where l.status = 'ativo'
@@ -104,8 +117,8 @@ export async function vitrine(limite = 60): Promise<Anuncio[]> {
 
 export async function anuncio(id: number): Promise<Anuncio | null> {
   const rows = (await sql`
-    select l.id, l.item_id, l.qty, l.price, l.fee, l.seller_id,
-           a.player_name as vendedor, l.created_at
+    select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
+           l.seller_id, a.player_name as vendedor, l.created_at
     from listings l
     left join account_links a on a.discord_id = l.seller_id
     where l.id = ${id} and l.status = 'ativo'
@@ -115,8 +128,8 @@ export async function anuncio(id: number): Promise<Anuncio | null> {
 
 export async function meusAnuncios(discordId: string): Promise<MeuAnuncio[]> {
   const rows = (await sql`
-    select l.id, l.item_id, l.qty, l.price, l.fee, l.seller_id,
-           a.player_name as vendedor, l.created_at,
+    select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
+           l.seller_id, a.player_name as vendedor, l.created_at,
            l.status, l.closed_at,
            c.player_name as comprador
     from listings l
@@ -141,8 +154,8 @@ export async function meusAnuncios(discordId: string): Promise<MeuAnuncio[]> {
 
 export async function minhasCompras(discordId: string): Promise<MeuAnuncio[]> {
   const rows = (await sql`
-    select l.id, l.item_id, l.qty, l.price, l.fee, l.seller_id,
-           a.player_name as vendedor, l.created_at,
+    select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
+           l.seller_id, a.player_name as vendedor, l.created_at,
            l.status, l.closed_at, null as comprador
     from listings l
     left join account_links a on a.discord_id = l.seller_id
@@ -244,7 +257,80 @@ export async function anunciar(
   };
 }
 
-/** Tira o anúncio do ar e devolve o lote ao cofre do dono. */
+/**
+ * Põe um Pal do cofre à venda — mesmo espírito do `anunciar()` de item, mas
+ * o ativo é uma unidade só (`vault_pals`), não um lote (`cofre`).
+ *
+ * O Pal **sai do `vault_pals`** aqui, igual ao primeiro passo de
+ * `iniciarResgateDePal` em `lib/pal-cofre.ts` — mesma trava de posse: o
+ * `delete` só acerta se o Pal ainda for do vendedor, e se não achar linha
+ * nenhuma é porque já foi resgatado, vendido ou nunca existiu.
+ */
+export async function anunciarPal(
+  vaultPalId: number,
+  preco: number,
+): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) {
+    return { ok: false, mensagem: "Só quem está no Discord da Palleira vende." };
+  }
+  const discordId = session.user.discordId;
+
+  if (!Number.isInteger(preco)) {
+    return { ok: false, mensagem: "O preço é sempre em Paleta inteira." };
+  }
+  if (preco < PRECO_MINIMO || preco > PRECO_MAXIMO) {
+    return {
+      ok: false,
+      mensagem: `O preço vai de ${PRECO_MINIMO} a ${PRECO_MAXIMO} Paletas.`,
+    };
+  }
+  if ((await quantosAtivos(discordId)) >= MAX_ANUNCIOS_ATIVOS) {
+    return {
+      ok: false,
+      mensagem: `Você já tem ${MAX_ANUNCIOS_ATIVOS} anúncios no ar. Cancele um antes de criar outro.`,
+    };
+  }
+
+  const debitado = (await sql`
+    delete from vault_pals
+    where id = ${vaultPalId} and discord_id = ${discordId}
+    returning pal_id, template
+  `) as { pal_id: string; template: Record<string, unknown> }[];
+
+  if (!debitado.length) {
+    return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
+  }
+  const { pal_id: palId, template } = debitado[0];
+
+  const taxa = taxaDaVenda(preco);
+  try {
+    await sql`
+      insert into listings (seller_id, kind, pal_template, price, fee)
+      values (${discordId}, 'pal', ${JSON.stringify(template)}, ${preco}, ${taxa})
+    `;
+  } catch {
+    // Mesma disciplina do anúncio de item: o Pal já saiu do cofre, então
+    // devolver vem antes de qualquer outra coisa.
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template)
+      values (${discordId}, ${palId}, ${JSON.stringify(template)})
+    `;
+    return {
+      ok: false,
+      mensagem:
+        "Não consegui publicar o anúncio agora. Seu Pal continua no cofre — tente de novo em instantes.",
+    };
+  }
+
+  return {
+    ok: true,
+    mensagem: `Anúncio no ar por ${preco} Paletas. Você recebe ${preco - taxa} quando vender (${taxa} de taxa).`,
+  };
+}
+
+/** Tira o anúncio do ar e devolve o ativo ao cofre do dono — item ou Pal. */
 export async function cancelarAnuncio(id: number): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
@@ -256,14 +342,28 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
     update listings
        set status = 'cancelado', closed_at = now()
      where id = ${id} and seller_id = ${discordId} and status = 'ativo'
-    returning item_id, qty
-  `) as { item_id: string; qty: number }[];
+    returning kind, item_id, qty, pal_template
+  `) as {
+    kind: TipoAnuncio;
+    item_id: string | null;
+    qty: number | null;
+    pal_template: Record<string, unknown> | null;
+  }[];
 
   if (!rows.length) {
     return { ok: false, mensagem: "Esse anúncio não está mais ativo." };
   }
+  const cancelado = rows[0];
 
-  await devolverAoCofre(discordId, rows[0].item_id, rows[0].qty);
+  if (cancelado.kind === "pal" && cancelado.pal_template) {
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template)
+      values (${discordId}, ${String(cancelado.pal_template.PalID ?? "")}, ${JSON.stringify(cancelado.pal_template)})
+    `;
+    return { ok: true, mensagem: "Anúncio cancelado e Pal de volta no cofre." };
+  }
+
+  await devolverAoCofre(discordId, cancelado.item_id as string, cancelado.qty as number);
   return { ok: true, mensagem: "Anúncio cancelado e lote de volta no cofre." };
 }
 
@@ -301,7 +401,12 @@ export async function comprar(id: number): Promise<Resultado> {
   }
 
   // Aviso cedo e amigável: o lote precisa caber no cofre de quem compra.
-  if (!(await temPilha(discordId, alvo.itemId)) && (await cofreCheio(discordId))) {
+  // Pal não tem limite de slots — só o cofre de item tem.
+  if (
+    alvo.kind === "item" &&
+    !(await temPilha(discordId, alvo.itemId as string)) &&
+    (await cofreCheio(discordId))
+  ) {
     return {
       ok: false,
       mensagem:
@@ -314,10 +419,12 @@ export async function comprar(id: number): Promise<Resultado> {
     update listings
        set status = 'vendido', buyer_id = ${discordId}, closed_at = now()
      where id = ${id} and status = 'ativo' and seller_id <> ${discordId}
-    returning item_id, qty, price, fee, seller_id
+    returning kind, item_id, qty, pal_template, price, fee, seller_id
   `) as {
-    item_id: string;
-    qty: number;
+    kind: TipoAnuncio;
+    item_id: string | null;
+    qty: number | null;
+    pal_template: Record<string, unknown> | null;
     price: number;
     fee: number;
     seller_id: string;
@@ -364,7 +471,14 @@ export async function comprar(id: number): Promise<Resultado> {
   //
   //    O cofre do comprador pode passar do limite de slots aqui, e tudo bem:
   //    ele pagou. Erra a favor de quem comprou, nunca contra.
-  await devolverAoCofre(discordId, venda.item_id, venda.qty);
+  if (venda.kind === "pal" && venda.pal_template) {
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template)
+      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)})
+    `;
+  } else {
+    await devolverAoCofre(discordId, venda.item_id as string, venda.qty as number);
+  }
 
   // 4. Pagar o vendedor. A taxa não vai para lugar nenhum: some da economia,
   //    e é a diferença entre esta linha e a do comprador (§7.7).
@@ -379,7 +493,10 @@ export async function comprar(id: number): Promise<Resultado> {
 
   return {
     ok: true,
-    mensagem: `Comprado! O lote está no seu cofre — resgate no jogo quando quiser. Saldo: ${pagamento.saldo}.`,
+    mensagem:
+      venda.kind === "pal"
+        ? `Comprado! O Pal está no seu cofre — resgate no jogo quando quiser. Saldo: ${pagamento.saldo}.`
+        : `Comprado! O lote está no seu cofre — resgate no jogo quando quiser. Saldo: ${pagamento.saldo}.`,
   };
 }
 
