@@ -82,27 +82,32 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         // Exposição explícita: sem isso, o padrão (1.0) deixa o ACES
         // comprimir demais o meio-tom — era o que fazia o Pal renderizar
         // escuro demais, sobre qualquer fundo (correção de 23/08/2026).
-        renderer.toneMappingExposure = 1.3;
+        // Subiu de novo (23/08/2026, 2ª correção): Pals de material escuro
+        // (preto, roxo escuro) continuavam sumindo no fundo mesmo com a
+        // primeira calibragem — refletância baixa precisa de mais luz, não
+        // só de exposição um pouco maior.
+        renderer.toneMappingExposure = 1.55;
         alvo.appendChild(renderer.domElement);
 
-        // ⚠️ A luz aqui embaixo foi recalibrada de propósito (23/08/2026):
-        // o desenho original tinha chave/contraluz fortes demais na sombra
-        // e pouco preenchimento, então o Pal renderizava escuro — nada de
-        // errado no material, só faltava luz de piso. Agora é luz de mesa
-        // de produto: um ambiente que nunca deixa nada virar preto puro,
-        // mais a chave/preenchimento/contraluz de antes, só que mais claras.
-        cena.add(new THREE.AmbientLight(0xffffff, 0.6));
-        cena.add(new THREE.HemisphereLight(0xfff6e6, 0xe4dcc9, 1.4));
+        // ⚠️ A luz aqui embaixo foi recalibrada de propósito (23/08/2026,
+        // 2ª correção): o desenho anterior já resolvia os Pals de cor clara,
+        // mas um Pal de material escuro (ex.: Gildra) ainda absorvia a maior
+        // parte da luz de mesa. Ambiente e hemisfério subiram mais um tanto
+        // — o teto de brilho pra quem já é claro sobe pouco (o material
+        // clama já refletia quase tudo), mas o piso de quem é escuro sobe
+        // bastante.
+        cena.add(new THREE.AmbientLight(0xffffff, 0.85));
+        cena.add(new THREE.HemisphereLight(0xfff6e6, 0xe4dcc9, 1.9));
 
-        const chave = new THREE.DirectionalLight(0xfff2d6, 2.6);
+        const chave = new THREE.DirectionalLight(0xfff2d6, 2.9);
         chave.position.set(-3, 4, 3);
         cena.add(chave);
 
-        const preenchimento = new THREE.DirectionalLight(0xcfe0ff, 1.1);
+        const preenchimento = new THREE.DirectionalLight(0xcfe0ff, 1.4);
         preenchimento.position.set(3, 1, 2);
         cena.add(preenchimento);
 
-        const contraluz = new THREE.DirectionalLight(0xe8b923, 0.6);
+        const contraluz = new THREE.DirectionalLight(0xe8b923, 0.7);
         contraluz.position.set(0, 2, -4);
         cena.add(contraluz);
 
@@ -136,7 +141,7 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         suporte.add(pal);
         cena.add(suporte);
 
-        camera.position.set(0, 0.69, 2);
+        camera.position.set(0, 0.64, 1.5);
         const controles = new OrbitControls(camera, renderer.domElement);
         controles.target.set(0, 0.5, 0);
         controles.enablePan = false;
