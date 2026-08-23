@@ -182,7 +182,7 @@ export function FichaDoPal({ template }: { template: Template }) {
                   <li
                     key={p}
                     title={descricaoDaPassiva(p) || p}
-                    className="flex items-center justify-between gap-2 rounded-[var(--radius-control)] border bg-surface px-3 py-1.5 text-sm"
+                    className="fundo-losango flex items-center justify-between gap-2 overflow-hidden rounded-[var(--radius-control)] border bg-surface px-3 py-1.5 text-sm"
                     style={cor ? { borderColor: `${cor}88` } : undefined}
                   >
                     {nomeDaPassiva(p)}
