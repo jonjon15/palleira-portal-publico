@@ -450,6 +450,38 @@ mudar a flag de propósito.
 
 > 📌 **Coordenada de mapa vem pronta.** O `map_pos` das bases e o `MapLocation` dos jogadores dispensam a conversão que eu tinha deixado pendente na §3.4. Um problema a menos.
 
+#### 🔴 `Status: "Online"` mente — o sinal confiável é o `UserId`
+
+Medido em 23/08/2026, ao ligar o cofre. O PalDefender listava **dois
+jogadores "Online" no PVE VIP** — e eles não estavam lá:
+
+| | `Status` | `UserId` | `IP` | REST oficial | `/items` |
+|---|---|---|---|---|---|
+| PVE FREE (3 pessoas) | Online | `gdk_…` / `steam_…` | tem | confirma as 3 | responde 200 |
+| PVE VIP (2 fantasmas) | Online | **vazio** | **vazio** | **diz que não tem ninguém** | `Failed to find APalPlayerController` |
+| PVP FREE (1 pessoa) | Online | `gdk_…` | tem | — | — |
+
+Nos três servidores a correlação foi exata: **422 jogadores, e nenhum caso
+de "offline com UserId"**. Duas fontes independentes — a REST oficial do
+jogo e o próprio `/items` — concordam que os dois do VIP não estavam
+conectados.
+
+➡️ **A regra:** `online = Status === "Online" && UserId !== ""`. Está em
+[`lib/palworld/paldefender.ts`](lib/palworld/paldefender.ts), na borda, para
+o resto do site não precisar saber disso.
+
+⚠️ **Isso corrige o que estava escrito na §11.2.** Lá ficou registrado que
+*"`UserId` vem vazio na resposta do PalDefender"* — a observação era real,
+mas a conclusão ficou pela metade: ele vem vazio **para quem não está
+conectado de verdade**, e preenchido para quem está. É informação, não
+ausência dela.
+
+**O que isso quebrava, em silêncio:** o `/vincular` oferecia personagem
+fantasma, o `send msg` respondia *"Failed to find player"*, e o jogador
+levava a culpa por um erro que não era dele. O cofre bateria na mesma
+parede — e aí com item no meio.
+
+
 ⚠️ **Permissão faltando no token:** pus seis permissões e esqueci `REST.Version.Read` — o health check responde `MISSING_PERMISSION`. Acrescentar na próxima edição do arquivo de token.
 
 #### Estado anterior (verificado em 21/08/2026)
@@ -937,7 +969,7 @@ givepal {userid} Anubis 10
 - [x] **Status** — um card por servidor: online/offline, jogadores, uptime, FPS, versão, dias no mundo. ⚠️ Falta só o **gráfico das últimas 24h** — depende de guardar histórico no banco, que ainda não existe.
 - [x] **Como jogar / Conectar** — IP, porta, senha `[?]`, passo a passo com imagens, requisitos, mods `[?]`.
 - [ ] **Regras** — regras da comunidade e do servidor.
-- [ ] **Mercado (vitrine)** — qualquer um vê os anúncios de Pals e itens e os preços em Paletas; para comprar ou vender, precisa logar com o Discord.
+- [x] **Mercado (vitrine)** — qualquer um vê os anúncios e os preços em Paletas; para comprar ou vender, precisa logar com o Discord. ⚠️ Só **itens** por enquanto; Pal entra na v2.
 - [x] **Ranking** — top por horas jogadas / level / capturas `[?]`.
 - [ ] **Notícias e wipes** — posts em MDX ou CMS `[?]`.
 - [ ] **FAQ**.
@@ -946,9 +978,9 @@ givepal {userid} Anubis 10
 
 - [x] **Meu perfil** — avatar do Discord, conta Palworld vinculada, horas, level, guild in-game, últimas sessões.
 - [x] **Vincular conta** (§4.2).
-- [ ] **Meus Pals e itens** — inventário que o jogador sobe para o site (§7.3), base para anunciar.
-- [ ] **Anunciar** — wizard de venda em 3 passos.
-- [ ] **Meus anúncios** — ativos, vendidos, expirados, cancelar.
+- [x] **Meu cofre** — o jogador guarda item do jogo no site e resgata quando quiser (§7.3). ⚠️ Pals ainda não.
+- [x] **Anunciar** — escolher o lote do cofre e dar o preço, numa tela só. (O wizard de 3 passos faz sentido para Pal, que tem ficha grande — não para item.)
+- [x] **Meus anúncios** — ativos, vendidos, cancelados e as compras feitas. ⚠️ Expiração automática ainda não existe.
 - [x] **Carteira** — saldo de Paletas, extrato completo, compras e vendas.
 - [ ] **Tickets / suporte** — abre thread no Discord através do bot.
 
@@ -966,7 +998,7 @@ givepal {userid} Anubis 10
 - [ ] Editor de anúncios/notícias do site.
 - [ ] Cadastro e configuração dos servidores.
 - [x] **Economia**: ajustar saldo (com motivo obrigatório). ⚠️ Moderar anúncios e resolver disputas só existem depois do mercado.
-- [x] **Painel de economia** — entrou × saiu por origem, Paletas em circulação, maiores saldos. ⚠️ Volume do mercado depende do mercado existir.
+- [x] **Painel de economia** — entrou × saiu por origem, Paletas em circulação, maiores saldos. ⚠️ Falta ligar o volume do mercado, que agora já existe (`resumoDoMercado`), e a fila de transferências travadas em `andando`.
 - [ ] **Configuração da economia** — taxa, preço de slot, preço mínimo e limites editáveis **sem deploy**, com log de alteração.
 
 ### 5.4 Ideias em aberto `[?]`
@@ -1281,7 +1313,39 @@ JOGO  ──importar──▶  COFRE DO SITE  ──vender──▶  COMPRADOR
 
 Quatro flags por personagem resolvem o equilíbrio dos 3 servidores: dá para deixar o PVE FREE **exportar** mas não **importar**, e assim o drop 2x dele não abastece o PVP.
 
-⚠️ Continua valendo confirmar se `deletepals`/`giveitems` exigem o jogador online `[?]` — mas agora isso só afeta **importar e resgatar**, que são ações que o próprio jogador dispara estando no jogo. A compra e a venda ficam livres disso.
+✅ **Confirmado em 23/08/2026: `giveitems` e `delitems` exigem o jogador online.** Sondados por RCON, os dois procuram o jogador antes de agir e respondem `Failed to find player by UserId '…'` quando ele não está. Como previsto, isso só afeta **importar e resgatar** — a compra e a venda acontecem inteiras dentro do site.
+
+#### ✅ Cofre e mercado de itens — no ar em 23/08/2026
+
+O desenho acima virou código. **Só itens nesta v1**; Pal entra na v2, com o
+template do `givepal_j` guardado (a coluna `kind` da tabela já espera por ele).
+
+| Peça | Onde |
+|---|---|
+| Cofre — guardar, resgatar, slots | [`lib/cofre.ts`](lib/cofre.ts) · [`/painel/cofre`](app/painel/cofre/page.tsx) |
+| Mercado — anunciar, comprar, cancelar | [`lib/mercado.ts`](lib/mercado.ts) · [`/mercado`](app/mercado/page.tsx) |
+| Taxa e preço de slot (puros, testáveis) | [`lib/mercado-regras.ts`](lib/mercado-regras.ts) · [`lib/cofre-regras.ts`](lib/cofre-regras.ts) |
+| Tabelas | `db/migrations/002` e `003` |
+
+**Cinco decisões que o código fechou:**
+
+1. **Slot = tipo de item, não unidade.** 500 balas ocupam um slot; somar a uma pilha que já existe é de graça. Guardar item *novo* é o que pede espaço — e é o que faz o sink funcionar sem ser mesquinho.
+2. **Só a mochila (`Items`) entra no cofre.** A resposta traz seis compartimentos (`KeyItems`, `Weapons`, `Armor`, `Food`, `DropSlot`), mas equipamento em uso e item-chave não são coisa para vender por engano. A regra cabe numa frase: *põe na mochila o que quer guardar*.
+3. **O anúncio é um lote, com preço do lote.** Preço por unidade traria fração de Paleta de volta pela porta dos fundos.
+4. **O ativo sai do cofre ao anunciar** e fica em custódia do anúncio. Não dá para vender o que já foi resgatado, e cancelar é só o caminho de volta.
+5. **A intenção é gravada antes de o jogo ser tocado** (`vault_transfers`). Se a conexão cair sem resposta, a linha fica em `andando` — que é a verdade, e não uma adivinhação. No resgate, sem resposta o item **não** volta ao cofre: devolver criaria uma segunda cópia.
+
+**A ordem das operações, por direção:**
+
+```
+guardar   ler a mochila → abrir transferência → delitems  → creditar cofre
+resgatar  debitar cofre → abrir transferência → giveitems → (falhou? devolve)
+```
+
+⚠️ **`Money` (o Ouro do jogo) não entra no mercado.** Ele nasce de drop — no PVE FREE com taxa dobrada — e a Paleta tem preço em real (§7.14). Um câmbio entre as duas faria o farm de Ouro ditar o valor da Paleta em uma semana.
+
+⚠️ **Guitarras Elementais:** o `ItemID` real ainda não foi lido de nenhum inventário. O bloqueio em [`lib/itens.ts`](lib/itens.ts) é preventivo, por padrão de nome. Quando alguém que tenha uma abrir o cofre, o ID aparece na lista e vira uma entrada exata.
+
 
 ### 7.4 Ficha do Pal
 
@@ -1928,7 +1992,7 @@ o `PlayerUID`. Os comandos de RCON aceitam ele, e é o que o vínculo usa.
 | **2** | Status do Palworld em tempo real (REST + cache + cron) | a home mostra jogadores online de verdade — ✅ **API já validada, §3.4** |
 | **3** | **Vinculação do ID do jogo** + perfil do jogador | `/vincular` funciona ponta a ponta com o Palbot |
 | **4** | **Carteira de Paletas** — ledger, extrato, migração/sincronia conforme a decisão da §7.1 | saldo do site bate com o do Discord, sempre |
-| **5** | **Marketplace v1 — itens**: anunciar, comprar, custódia, taxa, **entrega por RCON (`giveitems`)** | duas pessoas fecham uma venda de item ponta a ponta, com entrega automática |
+| **5** ✅ | **Marketplace v1 — itens**: cofre, anunciar, comprar, custódia, taxa, **entrega por RCON (`giveitems`)** | 🟡 **código no ar em 23/08.** Falta o teste com duas pessoas de verdade fechando uma venda |
 | **6** | **Marketplace v2 — Pals**: `deletepals` + `givepal_j` + catálogo Paldeck | Pal entregue idêntico ao anunciado, e some da conta do vendedor ✅ |
 | **7** | Painel admin: kick/ban/anúncio/save, auditoria, disputas, ajuste de saldo | mod resolve uma disputa pelo site e o log aparece no Discord |
 | **8** | Ranking, notícias, FAQ, SEO, polimento visual | site completo |
@@ -1959,7 +2023,7 @@ o `PlayerUID`. Os comandos de RCON aceitam ele, e é o que o vínculo usa.
 3. 🔧 **Pedir ao ENX Host para liberar a porta da API do PalDefender** (17993 ou a alocação que eles derem).
 4. **O dashboard do Palbot tem seção de API / token / webhook?** Define a fonte da verdade das Paletas (§7.1). Se não tiver, vamos de opção C.
 5. **Credenciais de FTP** dos 2 PVE (§3.7) — direto no `vercel env`, não em chat.
-6. **O jogador precisa estar online** para `deletepals` e `giveitems` funcionarem? Muda o desenho da fila de entrega (§7.3).
+6. ~~O jogador precisa estar online para `deletepals` e `giveitems`?~~ ✅ **Precisa** — confirmado por sondagem em 23/08 (§7.3). O cofre resolve: só guardar e resgatar exigem o jogo aberto.
 7. **Mercado por servidor ou cross-server?** (§7.2) — recomendo Paletas globais + anúncio por servidor.
 
 ### 🟡 Para definir antes de codar

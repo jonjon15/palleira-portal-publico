@@ -131,3 +131,68 @@ export async function sendToPlayer(
   );
   return res.toLowerCase().includes("succeeded");
 }
+
+/* ------------------------------------------------------- itens (o cofre) */
+
+export interface ResultadoComando {
+  ok: boolean;
+  /** A resposta crua do jogo. Vai para o log da transferência. */
+  resposta: string;
+}
+
+/**
+ * Sucesso é "não falhou" — e a inversão é proposital.
+ *
+ * Sondado por RCON em 23/08/2026, o PalDefender recusa dizendo o motivo:
+ *
+ * ```
+ * delitems                          → Failed to execute command 'delitems', it requires at least 2 arguments.
+ * delitems 00000000-… Wood:1        → Failed to find player by UserId '00000000-…'.
+ * ```
+ *
+ * Exigir a palavra "succeeded" pareceria mais rigoroso, mas seria pior: se
+ * a confirmação do `giveitems` tiver outro texto, o site concluiria que a
+ * entrega falhou **depois de o item já ter chegado** — e devolveria a cópia
+ * ao cofre. Falso negativo em entrega vira duplicação de item; falso
+ * positivo vira um item perdido, que o extrato mostra e o admin conserta.
+ * Entre os dois, o segundo é o erro que se pode corrigir.
+ */
+function interpretar(resposta: string): ResultadoComando {
+  const limpo = resposta.trim();
+  const falhou = /^(Failed|Unknown command)/i.test(limpo);
+  return { ok: !falhou, resposta: limpo };
+}
+
+/**
+ * Tira itens do jogador — é a custódia de verdade (§7.3).
+ *
+ * ⚠️ Só funciona com o jogador **online**: o comando procura o jogador antes
+ * de agir. Por isso importar para o cofre é ação que a própria pessoa
+ * dispara enquanto joga.
+ */
+export async function delItems(
+  server: PalleiraServer,
+  playerUid: string,
+  itemId: string,
+  qty: number,
+): Promise<ResultadoComando> {
+  const res = await rcon(
+    server,
+    `delitems ${uidParaComando(playerUid)} ${itemId}:${qty}`,
+  );
+  return interpretar(res);
+}
+
+/** Entrega itens ao jogador — o resgate do cofre e a entrega da compra. */
+export async function giveItems(
+  server: PalleiraServer,
+  playerUid: string,
+  itemId: string,
+  qty: number,
+): Promise<ResultadoComando> {
+  const res = await rcon(
+    server,
+    `giveitems ${uidParaComando(playerUid)} ${itemId}:${qty}`,
+  );
+  return interpretar(res);
+}

@@ -15,6 +15,8 @@ import {
 } from "@/lib/roles";
 import { meuVinculo, meusPersonagens } from "@/lib/linking";
 import { saldo, jaPegouODaily, DAILY_PALETAS } from "@/lib/economia";
+import { meuCofre } from "@/lib/cofre";
+import { meusAnuncios } from "@/lib/mercado";
 
 export const metadata: Metadata = { title: "Meu painel" };
 
@@ -25,20 +27,24 @@ export default async function Painel() {
   const { user } = session;
   const level = levelOf(user.roles, user.isMember);
   const plano = planoOf(user.roles);
-  const [vinculo, personagens, paletas, pegouDaily] = await Promise.all([
-    meuVinculo(user.discordId),
-    // Um vínculo, vários personagens: o UID é o mesmo nos três servidores.
-    meusPersonagens(user.discordId),
-    saldo(user.discordId),
-    jaPegouODaily(user.discordId),
-  ]);
+  const [vinculo, personagens, paletas, pegouDaily, cofre, anuncios] =
+    await Promise.all([
+      meuVinculo(user.discordId),
+      // Um vínculo, vários personagens: o UID é o mesmo nos três servidores.
+      meusPersonagens(user.discordId),
+      saldo(user.discordId),
+      jaPegouODaily(user.discordId),
+      meuCofre(user.discordId),
+      meusAnuncios(user.discordId),
+    ]);
+  const anunciosAtivos = anuncios.filter((a) => a.status === "ativo").length;
 
   return (
     <>
       <PageHeader
         kicker="Painel"
         title={`Salve, ${user.nick || user.name || "roqueiro"}`}
-        description="Sua central na Palleira. Carteira e personagem já funcionam — o mercado vem a seguir."
+        description="Sua central na Palleira: carteira, personagem, cofre e mercado."
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -115,9 +121,22 @@ export default async function Painel() {
             done={Boolean(vinculo)}
           />
           <Card
+            title="Cofre"
+            body={
+              cofre.usados > 0
+                ? `${cofre.usados} de ${cofre.total} slots · pronto para anunciar`
+                : "Guarde item fora do jogo e venda quando quiser, mesmo offline."
+            }
+            href="/painel/cofre"
+          />
+          <Card
             title="Meus anúncios"
-            body="O que você colocou à venda no mercado."
-            soon
+            body={
+              anunciosAtivos > 0
+                ? `${anunciosAtivos} no ar no mercado`
+                : "O que você colocou à venda no mercado."
+            }
+            href="/painel/anuncios"
           />
           <Card
             title="Placar"

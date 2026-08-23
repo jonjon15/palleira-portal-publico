@@ -66,10 +66,13 @@ export interface PdGuild {
 
 /* ------------------------------------------------------------------ fetcher */
 
+/** O jogador não está com o jogo aberto — não é falha de servidor. */
+export class ForaDoJogo extends Error {}
+
 async function call<T>(
   server: PalleiraServer,
   path: string,
-  revalidate = 60,
+  revalidate: number | false = 60,
 ): Promise<T> {
   if (!server.palDefenderToken) {
     throw new Error(`Token do PalDefender ausente para ${server.slug}`);
@@ -80,11 +83,21 @@ async function call<T>(
     headers: { Authorization: `Bearer ${server.palDefenderToken}` },
     signal: AbortSignal.timeout(20_000),
     // O servidor coleta o game-data a cada 60s; pedir mais rápido não traz
-    // dado novo, só carga.
-    next: { revalidate },
+    // dado novo, só carga. `false` é para o inventário, que muda a cada
+    // clique do jogador e não pode chegar velho na tela.
+    ...(revalidate === false
+      ? { cache: "no-store" as const }
+      : { next: { revalidate } }),
   });
 
   if (!res.ok) {
+    // Inventário de quem está fora do jogo devolve 400 com esta mensagem —
+    // é resposta esperada, não defeito, e merece um erro próprio para a
+    // tela poder explicar em vez de dizer "deu erro".
+    const corpo = await res.text().catch(() => "");
+    if (corpo.includes("APalPlayerController")) {
+      throw new ForaDoJogo(`${server.shortName}: jogador não está no jogo`);
+    }
     throw new Error(`PalDefender ${path} → ${res.status} em ${server.slug}`);
   }
   return (await res.json()) as T;
@@ -96,6 +109,10 @@ interface RawPlayer {
   Name: string;
   IP: string; // ⚠️ descartado abaixo
   PlayerUID: string;
+  /**
+   * `steam_…` / `gdk_…` / `ps5_…` — e **vem vazio para quem não está
+   * conectado de verdade** (ver `online` mais abaixo).
+   */
   UserId: string;
   GuildName: string;
   GuildUUID: string;
@@ -115,7 +132,17 @@ export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
     userId: p.UserId ?? "",
     guildName: guildLabel(p.GuildName),
     guildId: p.GuildUUID ?? "",
-    online: p.Status === "Online",
+    // 🔴 `Status: "Online"` sozinho MENTE. Medido em 23/08/2026: o PVE VIP
+    // listava JAPA60HZ e Lincao como "Online" enquanto a REST oficial do
+    // jogo dizia que não havia ninguém — e `/items` respondia "Failed to
+    // find APalPlayerController" para os dois. Quem está mesmo no jogo tem
+    // `UserId` (e IP) preenchidos; nos três servidores a correlação foi
+    // exata, sem um único caso de "offline com UserId".
+    //
+    // Acreditar no Status faz o site oferecer vínculo e importação para
+    // fantasma: a pessoa clica, o RCON responde "Failed to find player" e
+    // ela leva a culpa por um erro que não é dela.
+    online: p.Status === "Online" && Boolean(p.UserId),
     mapX: Math.round(p.MapLocation?.x ?? 0),
     mapY: Math.round(p.MapLocation?.y ?? 0),
     worldX: p.WorldLocation?.x ?? 0,
@@ -161,6 +188,72 @@ export async function getGuilds(server: PalleiraServer): Promise<PdGuild[]> {
       worldZ: Math.round(c.world_pos?.z ?? 0),
     })),
   }));
+}
+
+/* ------------------------------------------------------------- inventário */
+
+export interface PdItem {
+  /** ItemID cru do jogo — a chave que o `giveitems` do RCON entende */
+  itemId: string;
+  qty: number;
+}
+
+export interface PdInventario {
+  itens: PdItem[];
+  usados: number;
+  total: number;
+}
+
+interface RawContainer {
+  Available: boolean;
+  UsedSlots: number;
+  MaxSlots: number;
+  Slots: Record<string, { ItemID: string; Count: number }>;
+}
+
+/**
+ * O que o jogador tem **na mochila**, agora.
+ *
+ * 📌 Só a mochila (`Items`), de propósito. A resposta traz seis
+ * compartimentos — `Items`, `KeyItems`, `Weapons`, `Armor`, `Food` e
+ * `DropSlot` —, mas equipamento em uso e item-chave não são coisa para
+ * vender por engano. A regra fica fácil de explicar para a comunidade:
+ * **põe na mochila o que você quer levar para o cofre**.
+ *
+ * ⚠️ Lança `ForaDoJogo` quando a pessoa não está conectada — o inventário só
+ * existe na memória do servidor enquanto ela joga. É essa limitação que dá
+ * origem ao cofre (§7.3).
+ */
+export async function getItems(
+  server: PalleiraServer,
+  uid: string,
+): Promise<PdInventario> {
+  // A rota aceita o UID nas duas grafias (testado em 23/08/2026 com e sem
+  // hífen), então segue o canônico do site sem conversão nenhuma.
+  const raw = await call<{ Inventory: Record<string, RawContainer> }>(
+    server,
+    `items/${normalizarUid(uid)}`,
+    false,
+  );
+
+  const mochila = raw.Inventory?.Items;
+  if (!mochila?.Available) return { itens: [], usados: 0, total: 0 };
+
+  // Pilhas do mesmo item em slots diferentes viram uma linha só: para
+  // vender, o que importa é quanto a pessoa tem, não onde está guardado.
+  const somado = new Map<string, number>();
+  for (const slot of Object.values(mochila.Slots ?? {})) {
+    if (!slot?.ItemID || !slot.Count) continue;
+    somado.set(slot.ItemID, (somado.get(slot.ItemID) ?? 0) + slot.Count);
+  }
+
+  return {
+    itens: [...somado]
+      .map(([itemId, qty]) => ({ itemId, qty }))
+      .sort((a, b) => a.itemId.localeCompare(b.itemId)),
+    usados: mochila.UsedSlots ?? 0,
+    total: mochila.MaxSlots ?? 0,
+  };
 }
 
 /* --------------------------------------------------------------- utilidades */

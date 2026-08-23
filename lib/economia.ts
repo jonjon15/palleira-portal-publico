@@ -22,6 +22,7 @@ export type Origem =
   | "venda"
   | "compra"
   | "taxa"
+  | "slot"
   | "ajuste"
   | "migracao"
   | "evento";
@@ -32,6 +33,7 @@ export const ORIGEM_LABEL: Record<Origem, string> = {
   venda: "Venda no mercado",
   compra: "Compra no mercado",
   taxa: "Taxa de venda",
+  slot: "Slot de cofre",
   ajuste: "Ajuste da administração",
   migracao: "Saldo trazido do Palbot",
   evento: "Evento",

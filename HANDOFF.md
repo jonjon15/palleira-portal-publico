@@ -11,7 +11,8 @@
 Portal da comunidade **Palleira BR** (Palworld, servidores brasileiros).
 Login só pelo Discord, carteira da moeda da comunidade (**Paletas**), placar
 com jogador offline, mapa ao vivo e — o objetivo final — um **mercado onde o
-jogador vende Pal e item por Paletas**.
+jogador vende Pal e item por Paletas**. O mercado de **itens** está de pé
+desde 23/08; o de **Pals** é o próximo passo.
 
 - **Produção:** https://palleira.vercel.app
 - **Domínio alvo:** palleira.com.br (DNS ainda não apontado)
@@ -84,6 +85,10 @@ Vieram do Jonjon e valem para tudo que for construído daqui para frente.
 - 🟡 **Paleta é sempre inteira.** Nunca decimal, nunca float.
 - 🟡 **Ler a fonte antes de chutar.** Já se perdeu meio dia inventando
   formato de dado em vez de abrir o arquivo que descrevia o formato.
+- 🟡 **`Status: "Online"` do PalDefender não prova nada.** Quem está mesmo
+  no jogo tem `UserId` preenchido; fantasma vem com `UserId` e `IP` vazios.
+  Medido em 23/08 nos três servidores, sem uma exceção. Já está tratado na
+  borda (`paldefender.ts`), mas vale saber ao ler qualquer coisa da API.
 
 ---
 
@@ -99,7 +104,10 @@ Vieram do Jonjon e valem para tudo que for construído daqui para frente.
 | `/vincular` | ✅ **Vínculo do personagem** |
 | `/painel/carteira` | ✅ **Carteira + extrato + daily** |
 | `/admin/economia` | ✅ **Migração do Palbot, ajuste e circulação** |
-| `/mercado` | ⛔ ainda é placeholder |
+| `/painel/cofre` | ✅ **Cofre**: guardar item do jogo, resgatar, comprar slot |
+| `/painel/anuncios` | ✅ **Meus anúncios** e minhas compras |
+| `/mercado` | ✅ **Mercado de itens** — vitrine, compra e venda |
+| `/mercado/vender` | ✅ Anunciar o que está no cofre |
 
 ### O vínculo de personagem — como funciona
 
@@ -143,6 +151,44 @@ conta → exatamente uma passou.
 - **Daily:** 2 Paletas, uma por dia, vira à meia-noite de Brasília.
 - **Daily exige personagem vinculado** — senão conta descartável de Discord
   vira torneira e a calibração inteira da moeda vai por água abaixo.
+
+### O cofre e o mercado — 23/08
+
+**O problema que o cofre resolve:** `/items/{uid}` do PalDefender só
+responde com o jogador **online**. Se o anúncio lesse o inventário na hora
+da venda, ninguém compraria de madrugada e toda transação exigiria as duas
+pessoas no jogo ao mesmo tempo.
+
+```
+JOGO ──guardar──▶ COFRE ──anunciar──▶ COMPRADOR ──resgatar──▶ JOGO
+       (online)                                     (online)
+```
+
+Só as pontas exigem o jogo aberto. **A compra e a venda acontecem inteiras
+dentro do site**, com os dois lados offline.
+
+- **Um slot = um tipo de item**, não uma unidade. 500 balas ocupam um slot;
+  somar a uma pilha existente é de graça. 3 slots grátis, e do 4º em diante
+  o preço dobra: 15 · 30 · 60 · 120. É o **sink principal** da economia.
+- **Taxa em degraus, queimada:** 1 até 20 Paletas, 2 até 50, 4 até 100, 5%
+  acima disso. Percentual puro não funciona nesta moeda — 5% de 10 Paletas
+  arredonda para zero e o sink some justo onde há mais volume.
+- **Só a mochila entra no cofre.** A API traz seis compartimentos, mas
+  equipamento em uso e item-chave não são coisa para vender sem querer.
+- **`Money` (Ouro) e item de uso individual não entram no mercado** — o
+  Ouro nasce de drop, e câmbio Ouro↔Paleta derrubaria a moeda em uma semana.
+
+**A trava que dá segurança:** toda transferência grava a intenção em
+`vault_transfers` **antes** de tocar no jogo, com a resposta crua do RCON ao
+lado. Se a conexão cair no meio, a linha fica em `andando` — a verdade — em
+vez de o site adivinhar. No resgate, resposta perdida **não** devolve o item
+ao cofre: devolver criaria uma segunda cópia.
+
+⚠️ **Um bug achado testando, que valeu a viagem:** a tabela nasceu com
+`check (qty > 0)`, o que parecia certo — e quebrava o caso mais comum de
+todos. Sacar a pilha inteira passa por zero antes de a linha ser apagada, e
+o banco derrubava a operação. Ninguém conseguiria resgatar o último item nem
+anunciar o lote fechado. Corrigido na migração `003`.
 
 ---
 
@@ -202,6 +248,13 @@ Schema em [`db/schema.sql`](db/schema.sql).
 | `link_codes` | Códigos de 6 dígitos pendentes |
 | `ledger` | **A carteira.** Saldo = `SUM(delta)` |
 | `admin_actions` | Log de ação de moderação |
+| `vault_items` | **O cofre.** Uma linha por (pessoa, item) = um slot |
+| `vault_transfers` | Movimento jogo↔cofre, com a resposta crua do RCON |
+| `listings` | **Os anúncios.** Vendido = anúncio fechado, sem tabela de ordem |
+
+Migrações em `db/migrations/`, aplicadas com
+`node tools/migrar.mjs db/migrations/00X-….sql`. **Migração primeiro,
+deploy depois** — código novo com banco velho falha em silêncio.
 
 **Disciplina de espaço** (Neon grátis = 0,5 GB): guardar **estado atual**, não
 histórico bruto. Snapshot completo a cada 5 min viraria milhões de linhas.
@@ -231,27 +284,53 @@ O `player_daily` é o único histórico, e é uma linha por jogador por dia.
 
 ## 9. Aberto, na ordem em que importa
 
-1. ⚠️ **Aplicar `db/migrations/001-uid-canonico-e-vinculo-global.sql` no Neon
-   ANTES do próximo deploy.** Ela põe os vínculos no formato canônico do UID e
-   torna o personagem único na comunidade inteira. Código novo com banco velho
-   deixa de reconhecer "personagem já tomado" — a ordem importa (§11.2 do
-   PROMPT).
-2. **O mercado** (`/mercado`) — a peça que falta para o site ter razão de
-   existir. Depende do **cofre** (§7.3): o Pal fica em custódia enquanto o
-   anúncio está no ar, porque `/pals` só responde com o jogador online.
-3. **Os sinks** (§7.7). Hoje a economia **só tem entrada**. Sem slot de cofre,
-   taxa queimada e cosmético, em três meses tudo custa milhão.
-4. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o problema
-   que o Jonjon lamentava ("não sabíamos onde hospedar"), sem VPS.
-5. **RCON no PvP** — decisão dele. Destrava o vínculo para quem só joga lá.
-6. **DNS do palleira.com.br** — e limpar o acesso do ex-dev no Registro.br.
-7. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New Metal /
-   Palleira; o Discord tem Bronze/Prata/Ouro/Diamante/Colossal, todos com 0
-   membros. Conferir qual é a verdade antes de publicar benefício.
-8. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
-   real, hoje na mão. É a maior oportunidade de automação do projeto.
+1. 🔴 **Testar o cofre e o mercado com gente de verdade.** O código está no
+   ar e as travas foram testadas contra o banco (venda concorrente, clique
+   duplo, saque simultâneo), mas **nenhum item de verdade passou pelo
+   caminho inteiro** — só o Jonjon pode fazer isso, porque exige entrar no
+   jogo. O roteiro está na §9.1.
+2. **O mercado de Pals** (v2) — `deletepals` + `givepal_j` + o template
+   guardado no banco. A coluna `kind` de `listings` já espera por ele.
+3. **A fila de transferências travadas.** Quando o RCON não responde, a
+   linha fica em `andando` e ninguém olha. Precisa de uma tela em
+   `/admin/economia` mostrando essas linhas com a resposta crua ao lado.
+4. **Expiração de anúncio.** Hoje anúncio fica no ar para sempre; a §7.7
+   prevê prazo. Sem isso a vitrine envelhece sozinha.
+5. **Números da economia no banco, não no código** (§7.12) — taxa, preço de
+   slot, piso e teto de preço vivem em `lib/*-regras.ts` e mudar exige
+   deploy. A tabela `economy_config` resolve.
+6. **O bot do Discord na Vercel**, por HTTP Interactions — resolve o
+   problema que o Jonjon lamentava ("não sabíamos onde hospedar"), sem VPS.
+7. **A migração das Paletas do Palbot** — travada nos três interruptores da
+   §6, que só o Jonjon pode ligar.
+8. **RCON no PvP** — decisão dele. Destrava vínculo e cofre para quem só
+   joga lá.
+9. **DNS do palleira.com.br** — e limpar o acesso do ex-dev no Registro.br.
+10. **Divergência dos planos VIP** — os cartazes falam Hard Metal / New
+    Metal / Palleira; o Discord tem Bronze/Prata/Ouro/Diamante/Colossal,
+    todos com 0 membros. Conferir qual é a verdade antes de publicar
+    benefício.
+11. **Doação automática** (§7.14) — as Paletas já são vendidas por dinheiro
+    real, hoje na mão. É a maior oportunidade de automação do projeto.
 
----
+### 9.1 O roteiro do primeiro teste de verdade
+
+Precisa de **duas contas de Discord** e um personagem no PVE Free ou VIP.
+No jogo, deixar na mochila algo barato e repetível (madeira, pedra, uma
+munição) — nada de item raro na primeira vez.
+
+1. Entrar no jogo → abrir `/painel/cofre` → a mochila aparece
+2. **Guardar** um lote pequeno → conferir **no jogo** que sumiu de lá
+3. **Resgatar** de volta → conferir que voltou. *Se estes dois passos
+   funcionam, o resto é banco de dados.*
+4. Guardar de novo → `/mercado/vender` → anunciar por 2 Paletas
+5. Na segunda conta: pegar o daily até dar, comprar o anúncio
+6. Conferir na carteira dos dois: comprador −2, vendedor +1, **1 queimada**
+7. Na segunda conta: `/painel/cofre` → resgatar no jogo
+
+⚠️ **O que olhar se algo falhar:** a tabela `vault_transfers` guarda a
+resposta crua do servidor em cada movimento. Nenhuma transferência some sem
+deixar rastro — é para isso que ela existe.
 
 ## 10. Como retomar num chat novo
 
