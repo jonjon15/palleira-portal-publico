@@ -23,7 +23,7 @@ import { auth } from "@/auth";
 export type Estado = Resultado;
 
 function atualiza() {
-  revalidatePath("/painel/cofre/pals");
+  revalidatePath("/painel/cofre");
   revalidatePath("/painel/carteira");
   revalidatePath("/mercado");
   revalidatePath("/painel/anuncios");

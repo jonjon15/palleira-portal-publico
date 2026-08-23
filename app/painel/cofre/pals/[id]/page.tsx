@@ -46,7 +46,7 @@ export default async function FichaNoCofre({
 
       <div className="mx-auto max-w-4xl px-4 py-12">
         <Link
-          href="/painel/cofre/pals"
+          href="/painel/cofre?tab=pals"
           className="text-sm text-muted hover:text-text"
         >
           ← Seus Pals
