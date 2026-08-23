@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   comprar,
   anunciar,
@@ -46,6 +47,13 @@ export async function acaoAnunciar(
     Number(form.get("preco") ?? 0),
   );
   atualiza();
+
+  // Manda direto para a vitrine quando dá certo: sem isso, a pessoa ficava
+  // na tela de "vender" e só via o próprio anúncio no ar depois de uma
+  // navegação de verdade (sair/entrar, F5) — o cache do roteador do Next
+  // segura a versão anterior de /mercado numa navegação por <Link> comum.
+  // `redirect()` força uma renderização nova, então isso resolve de vez.
+  if (r.ok) redirect("/mercado");
   return r;
 }
 
