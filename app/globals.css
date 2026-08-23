@@ -134,3 +134,31 @@ body {
   animation: palleira-desliza-triangulos 6s linear infinite;
   pointer-events: none;
 }
+
+/**
+ * O flare roxo pulsante — só nas passivas de rank 5 (a melhor variante de
+ * uma família, tipo "Deus da Destruição"). O jogo faz isso com um shader
+ * de verdade (uma textura de brilho distorcida por um ruído animado); aqui
+ * é um radial-gradient pulsando, aproximação deliberada — a textura de
+ * ruído real (`T_prt_gameover_uvscroll`) sozinha não recria o efeito, só
+ * modula outra coisa, e decifrar o shader completo não valia a pena para
+ * um detalhe que aparece só no rank máximo.
+ */
+@keyframes palleira-pulsa-flare {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.brilho-lendario::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 85% 50%, rgb(183 104 233 / 55%), transparent 70%);
+  animation: palleira-pulsa-flare 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
