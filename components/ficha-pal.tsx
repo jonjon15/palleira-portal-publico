@@ -22,7 +22,7 @@ import {
   nomeDaHabilidade,
   descricaoDaHabilidade,
   elementoDaHabilidade,
-  urlDoSeloElemento,
+  poderDaHabilidade,
 } from "@/lib/habilidades";
 
 /**
@@ -129,26 +129,29 @@ export function FichaDoPal({ template }: { template: Template }) {
         {template.ActiveSkills && template.ActiveSkills.length > 0 && (
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-muted">Habilidades</h3>
-            <ul className="mt-2 flex flex-wrap gap-2">
+            <ul className="mt-2 flex flex-col gap-1.5">
               {template.ActiveSkills.map((h) => {
                 const elemento = elementoDaHabilidade(h);
+                const poder = poderDaHabilidade(h);
                 return (
                   <li
                     key={h}
                     title={descricaoDaHabilidade(h) || h}
-                    className="flex items-center gap-2 overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface py-1 pr-3 pl-0 text-sm"
-                    style={elemento ? { borderColor: `${elemento.cor}66` } : undefined}
+                    className="flex items-stretch justify-between overflow-hidden rounded-[var(--radius-control)] border-l-4 border-line bg-surface text-sm"
+                    style={elemento ? { borderLeftColor: elemento.cor } : undefined}
                   >
+                    <span className="flex items-center px-3 py-1.5">
+                      {nomeDaHabilidade(h)}
+                    </span>
                     {elemento && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={urlDoSeloElemento(elemento.indice)}
-                        alt={elemento.nome}
+                      <span
                         title={elemento.nome}
-                        className="size-7 shrink-0"
-                      />
+                        className="tabular flex items-center px-3 font-bold text-white"
+                        style={{ backgroundColor: elemento.cor }}
+                      >
+                        {poder ? poder : "NA"}
+                      </span>
                     )}
-                    {nomeDaHabilidade(h)}
                   </li>
                 );
               })}
@@ -159,7 +162,7 @@ export function FichaDoPal({ template }: { template: Template }) {
         {template.Passives && template.Passives.length > 0 && (
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-muted">Passivas</h3>
-            <ul className="mt-2 flex flex-wrap gap-2">
+            <ul className="mt-2 flex flex-col gap-1.5">
               {template.Passives.map((p) => {
                 const rank = rankDaPassiva(p);
                 const cor = rank !== null ? corDoRank(rank) : undefined;
@@ -167,9 +170,10 @@ export function FichaDoPal({ template }: { template: Template }) {
                   <li
                     key={p}
                     title={descricaoDaPassiva(p) || p}
-                    className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pr-3 pl-1.5 text-sm"
-                    style={cor ? { borderColor: `${cor}66` } : undefined}
+                    className="flex items-center justify-between gap-2 rounded-[var(--radius-control)] border bg-surface px-3 py-1.5 text-sm"
+                    style={cor ? { borderColor: `${cor}88` } : undefined}
                   >
+                    {nomeDaPassiva(p)}
                     {rank !== null && (
                       <span
                         aria-hidden
@@ -187,7 +191,6 @@ export function FichaDoPal({ template }: { template: Template }) {
                         }}
                       />
                     )}
-                    {nomeDaPassiva(p)}
                   </li>
                 );
               })}
