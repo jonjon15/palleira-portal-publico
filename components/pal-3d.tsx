@@ -136,7 +136,7 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
         suporte.add(pal);
         cena.add(suporte);
 
-        camera.position.set(0, 0.75, 2.6);
+        camera.position.set(0, 0.69, 2);
         const controles = new OrbitControls(camera, renderer.domElement);
         controles.target.set(0, 0.5, 0);
         controles.enablePan = false;
