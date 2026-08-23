@@ -126,45 +126,46 @@ function CardAnuncio({
   const meu = euSou === anuncio.vendedorId;
 
   return (
-    <li className="flex flex-col rounded-[var(--radius-card)] border border-line bg-surface p-5">
-      <div className="flex items-start gap-3">
-        <ItemIcon itemId={anuncio.itemId} className="size-12" />
-        <div className="min-w-0">
-          <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
-            {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId)]}
-          </p>
-          <h2 className="leading-snug font-semibold">
-            <NomeDoItem itemId={anuncio.itemId} />
-          </h2>
-          <p className="tabular text-sm text-muted">
-            {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} · {anuncio.vendedor}
-          </p>
+    <li className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+      <div className="flex items-center justify-center border-b border-line bg-surface-2 py-7">
+        <ItemIcon itemId={anuncio.itemId} bare className="size-20" />
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
+          {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId)]}
+        </p>
+        <h2 className="leading-snug font-semibold">
+          <NomeDoItem itemId={anuncio.itemId} />
+        </h2>
+        <p className="tabular text-sm text-muted">
+          {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} · {anuncio.vendedor}
+        </p>
+
+        <div className="mt-4 flex items-center gap-1.5">
+          <Pick className="size-5" withLetter={false} />
+          <span className="tabular text-2xl font-bold">{anuncio.preco}</span>
+          <span className="text-sm text-muted">
+            Paleta{anuncio.preco === 1 ? "" : "s"}
+          </span>
         </div>
-      </div>
 
-      <div className="mt-4 flex items-center gap-1.5">
-        <Pick className="size-5" withLetter={false} />
-        <span className="tabular text-2xl font-bold">{anuncio.preco}</span>
-        <span className="text-sm text-muted">
-          Paleta{anuncio.preco === 1 ? "" : "s"}
-        </span>
-      </div>
-
-      <div className="mt-auto">
-        {meu ? (
-          <p className="mt-3 rounded-[var(--radius-control)] border border-dashed border-line-strong px-4 py-2 text-center text-sm text-muted">
-            Seu anúncio
-          </p>
-        ) : euSou ? (
-          <Comprar id={anuncio.id} preco={anuncio.preco} />
-        ) : (
-          <Link
-            href="/entrar"
-            className="mt-3 block rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
-          >
-            Entrar para comprar
-          </Link>
-        )}
+        <div className="mt-auto">
+          {meu ? (
+            <p className="mt-3 rounded-[var(--radius-control)] border border-dashed border-line-strong px-4 py-2 text-center text-sm text-muted">
+              Seu anúncio
+            </p>
+          ) : euSou ? (
+            <Comprar id={anuncio.id} preco={anuncio.preco} />
+          ) : (
+            <Link
+              href="/entrar"
+              className="mt-3 block rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
+            >
+              Entrar para comprar
+            </Link>
+          )}
+        </div>
       </div>
     </li>
   );

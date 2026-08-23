@@ -8,14 +8,18 @@ import { urlDoIconeItem } from "@/lib/itens";
 export function ItemIcon({
   itemId,
   className = "size-10",
+  bare = false,
 }: {
   itemId: string;
   className?: string;
+  /** Sem moldura própria — para quando quem chama já desenha o fundo (banner de card). */
+  bare?: boolean;
 }) {
   const icone = urlDoIconeItem(itemId);
+  const moldura = bare ? "" : "border border-line bg-surface-2";
   return (
     <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface-2 ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] ${moldura} ${className}`}
     >
       {icone ? (
         // Muitas linhas por tela (cofre, vitrine): <Image> tem overhead por
