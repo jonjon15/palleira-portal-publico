@@ -1,5 +1,5 @@
 import { nomeDoPal, ehAlpha, urlDoIcone, IVS, IV_MAXIMO } from "@/lib/pals";
-import { nomeDaPassiva } from "@/lib/passivas";
+import { nomeDaPassiva, rankDaPassiva, corDoRank } from "@/lib/passivas";
 
 /**
  * O cartão de um Pal numa lista — ícone, nível, IVs e passivas num relance
@@ -84,8 +84,23 @@ export function PalCard({
         )}
 
         {passivas.length > 0 && (
-          <p className="mt-1 truncate text-[0.7rem] text-muted">
-            {passivas.slice(0, 2).map(nomeDaPassiva).join(", ")}
+          <p className="mt-1 flex items-center gap-1 truncate text-[0.7rem] text-muted">
+            {passivas.slice(0, 2).map((p, i) => {
+              const rank = rankDaPassiva(p);
+              return (
+                <span key={p} className="inline-flex items-center gap-1">
+                  {i > 0 && ", "}
+                  {rank !== null && (
+                    <span
+                      aria-hidden
+                      className="inline-block size-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: corDoRank(rank) }}
+                    />
+                  )}
+                  {nomeDaPassiva(p)}
+                </span>
+              );
+            })}
             {extras > 0 && ` +${extras}`}
           </p>
         )}

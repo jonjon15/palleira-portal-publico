@@ -11,8 +11,19 @@ import {
   IV_MAXIMO,
   ALMA_MAXIMA,
 } from "@/lib/pals";
-import { nomeDaPassiva, descricaoDaPassiva } from "@/lib/passivas";
-import { nomeDaHabilidade, descricaoDaHabilidade } from "@/lib/habilidades";
+import {
+  nomeDaPassiva,
+  descricaoDaPassiva,
+  rankDaPassiva,
+  corDoRank,
+  urlDoIconeRank,
+} from "@/lib/passivas";
+import {
+  nomeDaHabilidade,
+  descricaoDaHabilidade,
+  elementoDaHabilidade,
+  urlDoSeloElemento,
+} from "@/lib/habilidades";
 
 /**
  * A ficha completa de um Pal: o modelo 3D girando, e os números que provam
@@ -119,15 +130,28 @@ export function FichaDoPal({ template }: { template: Template }) {
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-muted">Habilidades</h3>
             <ul className="mt-2 flex flex-wrap gap-2">
-              {template.ActiveSkills.map((h) => (
-                <li
-                  key={h}
-                  title={descricaoDaHabilidade(h) || h}
-                  className="rounded-full border border-line bg-surface px-3 py-1 text-sm"
-                >
-                  {nomeDaHabilidade(h)}
-                </li>
-              ))}
+              {template.ActiveSkills.map((h) => {
+                const elemento = elementoDaHabilidade(h);
+                return (
+                  <li
+                    key={h}
+                    title={descricaoDaHabilidade(h) || h}
+                    className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pr-3 pl-1 text-sm"
+                    style={elemento ? { borderColor: `${elemento.cor}66` } : undefined}
+                  >
+                    {elemento && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={urlDoSeloElemento(elemento.indice)}
+                        alt={elemento.nome}
+                        title={elemento.nome}
+                        className="size-6 shrink-0"
+                      />
+                    )}
+                    {nomeDaHabilidade(h)}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -136,15 +160,37 @@ export function FichaDoPal({ template }: { template: Template }) {
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-muted">Passivas</h3>
             <ul className="mt-2 flex flex-wrap gap-2">
-              {template.Passives.map((p) => (
-                <li
-                  key={p}
-                  title={descricaoDaPassiva(p) || p}
-                  className="rounded-full border border-line bg-surface px-3 py-1 text-sm"
-                >
-                  {nomeDaPassiva(p)}
-                </li>
-              ))}
+              {template.Passives.map((p) => {
+                const rank = rankDaPassiva(p);
+                const cor = rank !== null ? corDoRank(rank) : undefined;
+                return (
+                  <li
+                    key={p}
+                    title={descricaoDaPassiva(p) || p}
+                    className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pr-3 pl-1.5 text-sm"
+                    style={cor ? { borderColor: `${cor}66` } : undefined}
+                  >
+                    {rank !== null && (
+                      <span
+                        aria-hidden
+                        className="inline-block size-5 shrink-0"
+                        style={{
+                          backgroundColor: cor,
+                          WebkitMaskImage: `url(${urlDoIconeRank(rank)})`,
+                          maskImage: `url(${urlDoIconeRank(rank)})`,
+                          WebkitMaskSize: "contain",
+                          maskSize: "contain",
+                          WebkitMaskRepeat: "no-repeat",
+                          maskRepeat: "no-repeat",
+                          WebkitMaskPosition: "center",
+                          maskPosition: "center",
+                        }}
+                      />
+                    )}
+                    {nomeDaPassiva(p)}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

@@ -1,4 +1,5 @@
 import NOMES from "@/lib/passivas-nomes.json";
+import RANKS from "@/lib/passivas-rank.json";
 
 /**
  * Tradução das passivas de Pal (§7.4 do PROMPT.md).
@@ -22,6 +23,7 @@ interface Ficha {
 }
 
 const FICHA_DE = NOMES as Record<string, Ficha>;
+const RANK_DE = RANKS as Record<string, number>;
 
 export function nomeDaPassiva(chave: string): string {
   return FICHA_DE[chave]?.nome ?? chave;
@@ -33,3 +35,41 @@ export function descricaoDaPassiva(chave: string): string {
 }
 
 export const semTraducaoDePassiva = (chave: string) => !FICHA_DE[chave];
+
+/**
+ * A raridade da passiva — de -3 (prejudicial) a 5 (a melhor variante de uma
+ * família, tipo "Deus da Destruição"). Vem de `passive_skills.json` do
+ * Palworld Save Pal, mesmo lote de `lib/passivas-rank.json` (23/08/2026).
+ * `null` para chave fora do catálogo — mesma regra de sempre.
+ */
+export function rankDaPassiva(chave: string): number | null {
+  return RANK_DE[chave] ?? null;
+}
+
+/**
+ * A cor do rank, mesma escala visual que o Palworld Save Pal usa: rank 1 é
+ * neutro, 2–3 dourado, 4–5 ciano (as melhores), e rank ≤0 vermelho (passiva
+ * prejudicial). Usada para tingir o ícone de brasão via `mask-image` — ele
+ * chega em branco puro, sem cor própria (§ícone de rank).
+ */
+export function corDoRank(rank: number): string {
+  if (rank >= 4) return "#68ffd8";
+  if (rank >= 2) return "#fcdf19";
+  if (rank === 1) return "#9ca3af";
+  return "#ff3b3b";
+}
+
+/**
+ * O brasão de raridade — não é do Save Pal, é o chevron de verdade extraído
+ * do próprio jogo via FModel em 23/08/2026
+ * (`Pal/Content/Pal/Texture/UI/Main_Menu/T_icon_skillstatus_rank_arrow_00..05`),
+ * a pedido explícito: o card de passiva do Save Pal usava um selo genérico,
+ * e o jogo tem uma progressão visual própria — de 1 chevron aberto (rank 0)
+ * até um losango fechado de 6 camadas (rank 5). Png branco puro, tingir com
+ * `corDoRank` via `mask-image` (a mesma técnica, só a fonte da arte mudou).
+ *
+ * O dataset não usa rank 0 (vai de -3 a 5, pulando o zero) — todo rank ≤0
+ * cai no chevron mais vazio (`rank_0`), que é o que sobra para "prejudicial".
+ */
+export const urlDoIconeRank = (rank: number) =>
+  `/icons/passivas/rank_${Math.max(0, Math.min(5, rank))}.png`;
