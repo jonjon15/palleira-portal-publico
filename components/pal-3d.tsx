@@ -72,31 +72,37 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
           1000,
         );
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true, // o fundo é o card do site (escuro), não uma cor nossa
+        });
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.setSize(alvo.clientWidth, alvo.clientHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        // Fundo claro de propósito — foto de produto, não a superfície
-        // escura do site. O mesmo creme do texto claro do tema (#f2efe9),
-        // não branco puro: fica no tom da Palleira em vez de destoar.
-        renderer.setClearColor(0xf2efe9, 1);
+        // Exposição explícita: sem isso, o padrão (1.0) deixa o ACES
+        // comprimir demais o meio-tom — era o que fazia o Pal renderizar
+        // escuro demais, sobre qualquer fundo (correção de 23/08/2026).
+        renderer.toneMappingExposure = 1.3;
         alvo.appendChild(renderer.domElement);
 
-        // Luz de estúdio, não de jogo: uma chave quente vinda de cima à
-        // esquerda (a mesma direção do brilho da palheta, §6.2), um
-        // preenchimento frio do outro lado para o volume não morrer na
-        // sombra, e um contraluz que separa o bicho do fundo escuro.
-        cena.add(new THREE.HemisphereLight(0xfff1d0, 0x1a1712, 1.1));
+        // ⚠️ A luz aqui embaixo foi recalibrada de propósito (23/08/2026):
+        // o desenho original tinha chave/contraluz fortes demais na sombra
+        // e pouco preenchimento, então o Pal renderizava escuro — nada de
+        // errado no material, só faltava luz de piso. Agora é luz de mesa
+        // de produto: um ambiente que nunca deixa nada virar preto puro,
+        // mais a chave/preenchimento/contraluz de antes, só que mais claras.
+        cena.add(new THREE.AmbientLight(0xffffff, 0.6));
+        cena.add(new THREE.HemisphereLight(0xfff6e6, 0xe4dcc9, 1.4));
 
-        const chave = new THREE.DirectionalLight(0xffe8b0, 2.2);
+        const chave = new THREE.DirectionalLight(0xfff2d6, 2.6);
         chave.position.set(-3, 4, 3);
         cena.add(chave);
 
-        const preenchimento = new THREE.DirectionalLight(0x9fc0ff, 0.7);
+        const preenchimento = new THREE.DirectionalLight(0xcfe0ff, 1.1);
         preenchimento.position.set(3, 1, 2);
         cena.add(preenchimento);
 
-        const contraluz = new THREE.DirectionalLight(0xe8b923, 1.4);
+        const contraluz = new THREE.DirectionalLight(0xe8b923, 0.6);
         contraluz.position.set(0, 2, -4);
         cena.add(contraluz);
 
@@ -209,19 +215,17 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-[#f2efe9] ${className}`}
+      className={`relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-2 ${className}`}
     >
       <div ref={caixa} className="absolute inset-0" />
 
-      {/* Fundo claro: nem o skeleton escuro do resto do site nem o texto
-          --muted (pensado para superfície escura) servem aqui de graça. */}
       {estado === "carregando" && (
-        <div className="absolute inset-0 animate-pulse bg-[#e4ddcd]" aria-hidden />
+        <div className="skeleton absolute inset-0" aria-hidden />
       )}
 
       {(estado === "sem-modelo" || estado === "erro") && (
         <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-          <p className="text-sm text-[#6b6153]">
+          <p className="text-sm text-muted">
             {estado === "sem-modelo"
               ? `Ainda não temos o modelo de ${nomeDoPal(palId)}.`
               : "Não consegui carregar o modelo 3D aqui."}
@@ -230,7 +234,7 @@ export function Pal3D({ palId, className = "h-72" }: Props) {
       )}
 
       {estado === "pronto" && (
-        <p className="pointer-events-none absolute right-3 bottom-2 text-[0.7rem] text-[#6b6153]">
+        <p className="pointer-events-none absolute right-3 bottom-2 text-[0.7rem] text-muted opacity-70">
           arraste para girar
         </p>
       )}

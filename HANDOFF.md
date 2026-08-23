@@ -272,12 +272,18 @@ ter mais rodada de "achei mais uma coisa": tem também `breeding*.json`
 (marketplace e cofre) — fica registrado que foi olhado e descartado de
 propósito, não esquecido.
 
-**Três ajustes finos no visualizador 3D, pedidos olhando a tela de
-verdade:**
+**Ajustes no visualizador 3D, pedidos olhando a tela de verdade:**
 
-1. **Fundo claro**, não mais a superfície escura do site — `#f2efe9`
-   (o mesmo creme do texto claro do tema, não branco puro). Foto de
-   produto, não card do site.
+1. **A luz estava escura demais** — o Pal renderizava quase preto contra
+   qualquer fundo, comparado ao render claro e colorido do Palworld Save
+   Pal. Não era o material: era o desenho de "palco escuro" original
+   (contraluz forte, pouco preenchimento) sem exposição explícita — o
+   ACES do `three.js` comprime o meio-tom sem isso. Corrigido com
+   `toneMappingExposure = 1.3`, uma luz de ambiente que nunca deixa nada
+   virar preto puro, e a chave/preenchimento mais claras.
+   > ⚠️ Chegou a existir uma versão com fundo claro (creme, `#f2efe9`) —
+   > o Jonjon pediu para tentar, e depois preferiu o fundo escuro de
+   > sempre (`bg-surface-2`) com a luz corrigida. Revertido no mesmo dia.
 2. **A rotação automática volta sozinha** depois de 2,5s sem a pessoa
    mexer — antes, uma vez que você arrastava, ela parava para sempre
    naquela sessão do componente.
