@@ -136,7 +136,7 @@ export function FichaDoPal({ template }: { template: Template }) {
                   <li
                     key={h}
                     title={descricaoDaHabilidade(h) || h}
-                    className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pr-3 pl-1 text-sm"
+                    className="flex items-center gap-2 overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface py-1 pr-3 pl-0 text-sm"
                     style={elemento ? { borderColor: `${elemento.cor}66` } : undefined}
                   >
                     {elemento && (
@@ -145,7 +145,7 @@ export function FichaDoPal({ template }: { template: Template }) {
                         src={urlDoSeloElemento(elemento.indice)}
                         alt={elemento.nome}
                         title={elemento.nome}
-                        className="size-6 shrink-0"
+                        className="size-7 shrink-0"
                       />
                     )}
                     {nomeDaHabilidade(h)}
