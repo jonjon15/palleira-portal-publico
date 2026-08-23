@@ -56,7 +56,9 @@ export function FichaDoPal({ template }: { template: Template }) {
         <Pal3D palId={palId} className="h-80" />
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {alpha && (
-            <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-xs font-bold tracking-wide text-gold uppercase">
+            <span className="flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 py-0.5 pr-2.5 pl-1 text-xs font-bold tracking-wide text-gold uppercase">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/alpha.png" alt="" className="size-4" />
               Alpha
             </span>
           )}
@@ -108,9 +110,19 @@ export function FichaDoPal({ template }: { template: Template }) {
             <dt className="text-muted">Nível</dt>
             <dd className="font-semibold">{template.Level ?? 1}</dd>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1.5">
             <dt className="text-muted">Gênero</dt>
-            <dd className="font-semibold">
+            <dd className="flex items-center gap-1 font-semibold">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={
+                  template.Gender === "Female"
+                    ? "/icons/genero-femea.png"
+                    : "/icons/genero-macho.png"
+                }
+                alt=""
+                className="size-4"
+              />
               {template.Gender === "Female" ? "Fêmea" : "Macho"}
             </dd>
           </div>
