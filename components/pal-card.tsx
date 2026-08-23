@@ -13,6 +13,11 @@ import {
   corDoRank,
   urlDoIconeRank,
 } from "@/lib/passivas";
+import {
+  nomeDaHabilidade,
+  elementoDaHabilidade,
+  poderDaHabilidade,
+} from "@/lib/habilidades";
 
 /**
  * O cartão de um Pal numa lista — ícone, nível, IVs e passivas num relance
@@ -35,6 +40,7 @@ export interface DadosDoCard {
   condensedPals?: number;
   ivs?: Record<string, number>;
   passives?: string[];
+  activeSkills?: string[];
 }
 
 export function PalCard({
@@ -82,14 +88,34 @@ export function PalCard({
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">
-          {alpha && <span className="text-gold">Alpha </span>}
-          {pal.nickname || nomeDoPal(pal.palId)}
-          {pal.shiny && " ✨"}
+        <p className="flex items-center gap-1 truncate font-medium">
+          {alpha && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/icons/alpha.png" alt="Alpha" title="Alpha" className="size-4 shrink-0" />
+          )}
+          <span className="truncate">
+            {pal.nickname || nomeDoPal(pal.palId)}
+            {pal.shiny && " ✨"}
+          </span>
         </p>
-        <p className="tabular text-xs text-muted">
+        <p className="tabular flex items-center gap-1 text-xs text-muted">
           Nível {pal.level}
-          {pal.gender && ` · ${pal.gender === "Female" ? "Fêmea" : "Macho"}`}
+          {pal.gender && (
+            <>
+              {" · "}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={
+                  pal.gender === "Female"
+                    ? "/icons/genero-femea.png"
+                    : "/icons/genero-macho.png"
+                }
+                alt=""
+                className="size-3"
+              />
+              {pal.gender === "Female" ? "Fêmea" : "Macho"}
+            </>
+          )}
           {(pal.condensedPals ?? 0) > 0 &&
             ` · ${"★".repeat(Math.min(4, pal.condensedPals ?? 0))}`}
         </p>
@@ -124,6 +150,33 @@ export function PalCard({
                   className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2"
                 >
                   <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {detalhado && (pal.activeSkills ?? []).length > 0 && (
+          <div className="mt-1.5 flex flex-col gap-1">
+            {(pal.activeSkills ?? []).map((h) => {
+              const elemento = elementoDaHabilidade(h);
+              const poder = poderDaHabilidade(h);
+              return (
+                <div
+                  key={h}
+                  title={nomeDaHabilidade(h)}
+                  className="flex items-stretch justify-between overflow-hidden rounded-[var(--radius-control)] border-l-2 border-line bg-surface text-[0.65rem]"
+                  style={elemento ? { borderLeftColor: elemento.cor } : undefined}
+                >
+                  <span className="truncate px-1.5 py-1">{nomeDaHabilidade(h)}</span>
+                  {elemento && (
+                    <span
+                      className="tabular flex shrink-0 items-center px-1.5 font-bold text-white"
+                      style={{ backgroundColor: elemento.cor }}
+                    >
+                      {poder ? poder : "NA"}
+                    </span>
+                  )}
                 </div>
               );
             })}

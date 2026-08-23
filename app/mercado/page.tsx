@@ -194,6 +194,9 @@ function CardAnuncio({
                   | undefined,
                 ivs: anuncio.palTemplate?.IVs as Record<string, number> | undefined,
                 passives: anuncio.palTemplate?.Passives as string[] | undefined,
+                activeSkills: anuncio.palTemplate?.ActiveSkills as
+                  | string[]
+                  | undefined,
               }}
               detalhado
               semIcone
