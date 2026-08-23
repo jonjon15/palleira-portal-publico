@@ -1,5 +1,18 @@
-import { nomeDoPal, ehAlpha, urlDoIcone, IVS, IV_MAXIMO } from "@/lib/pals";
-import { nomeDaPassiva, rankDaPassiva, corDoRank } from "@/lib/passivas";
+import {
+  nomeDoPal,
+  ehAlpha,
+  urlDoIcone,
+  elementosDoPal,
+  urlDoIconeElemento,
+  IVS,
+  IV_MAXIMO,
+} from "@/lib/pals";
+import {
+  nomeDaPassiva,
+  rankDaPassiva,
+  corDoRank,
+  urlDoIconeRank,
+} from "@/lib/passivas";
 
 /**
  * O cartão de um Pal numa lista — ícone, nível, IVs e passivas num relance
@@ -25,14 +38,23 @@ export interface DadosDoCard {
 export function PalCard({
   pal,
   className = "",
+  detalhado = false,
 }: {
   pal: DadosDoCard;
   className?: string;
+  /**
+   * Elementos e o chevron de raridade de cada passiva, em vez do resumo
+   * compacto (bolinha + 2 nomes). Só no card do mercado (23/08/2026) — o
+   * cofre e a lista de "guardar Pal" continuam com o resumo, senão uma
+   * palbox de 200 linhas fica pesada de rolar.
+   */
+  detalhado?: boolean;
 }) {
   const icone = urlDoIcone(pal.palId);
   const alpha = ehAlpha(pal.palId);
   const passivas = pal.passives ?? [];
   const extras = Math.max(0, passivas.length - 2);
+  const elementos = detalhado ? elementosDoPal(pal.palId) : [];
 
   return (
     <div className={`flex gap-3 ${className}`}>
@@ -65,6 +87,24 @@ export function PalCard({
             ` · ${"★".repeat(Math.min(4, pal.condensedPals ?? 0))}`}
         </p>
 
+        {elementos.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {elementos.map((e) => (
+              <span
+                key={e.chave}
+                title={e.nome}
+                className="flex items-center gap-1 rounded-full border border-line bg-surface px-1.5 py-0.5 text-[0.65rem]"
+              >
+                {e.icone && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={urlDoIconeElemento(e.icone)} alt="" className="size-3" />
+                )}
+                {e.nome}
+              </span>
+            ))}
+          </div>
+        )}
+
         {pal.ivs && (
           <div className="mt-1.5 flex gap-1">
             {IVS.map((eixo) => {
@@ -83,27 +123,62 @@ export function PalCard({
           </div>
         )}
 
-        {passivas.length > 0 && (
-          <p className="mt-1 flex items-center gap-1 truncate text-[0.7rem] text-muted">
-            {passivas.slice(0, 2).map((p, i) => {
-              const rank = rankDaPassiva(p);
-              return (
-                <span key={p} className="inline-flex items-center gap-1">
-                  {i > 0 && ", "}
-                  {rank !== null && (
-                    <span
-                      aria-hidden
-                      className="inline-block size-1.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: corDoRank(rank) }}
-                    />
-                  )}
-                  {nomeDaPassiva(p)}
-                </span>
-              );
-            })}
-            {extras > 0 && ` +${extras}`}
-          </p>
-        )}
+        {passivas.length > 0 &&
+          (detalhado ? (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {passivas.map((p) => {
+                const rank = rankDaPassiva(p);
+                const cor = rank !== null ? corDoRank(rank) : undefined;
+                return (
+                  <span
+                    key={p}
+                    title={nomeDaPassiva(p)}
+                    className="flex items-center gap-1 rounded-full border bg-surface py-0.5 pr-2 pl-1 text-[0.65rem]"
+                    style={cor ? { borderColor: `${cor}88` } : undefined}
+                  >
+                    {rank !== null && (
+                      <span
+                        aria-hidden
+                        className="inline-block size-3 shrink-0"
+                        style={{
+                          backgroundColor: cor,
+                          WebkitMaskImage: `url(${urlDoIconeRank(rank)})`,
+                          maskImage: `url(${urlDoIconeRank(rank)})`,
+                          WebkitMaskSize: "contain",
+                          maskSize: "contain",
+                          WebkitMaskRepeat: "no-repeat",
+                          maskRepeat: "no-repeat",
+                          WebkitMaskPosition: "center",
+                          maskPosition: "center",
+                        }}
+                      />
+                    )}
+                    {nomeDaPassiva(p)}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-1 flex items-center gap-1 truncate text-[0.7rem] text-muted">
+              {passivas.slice(0, 2).map((p, i) => {
+                const rank = rankDaPassiva(p);
+                return (
+                  <span key={p} className="inline-flex items-center gap-1">
+                    {i > 0 && ", "}
+                    {rank !== null && (
+                      <span
+                        aria-hidden
+                        className="inline-block size-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: corDoRank(rank) }}
+                      />
+                    )}
+                    {nomeDaPassiva(p)}
+                  </span>
+                );
+              })}
+              {extras > 0 && ` +${extras}`}
+            </p>
+          ))}
       </div>
     </div>
   );

@@ -183,6 +183,7 @@ function CardAnuncio({
               ivs: anuncio.palTemplate?.IVs as Record<string, number> | undefined,
               passives: anuncio.palTemplate?.Passives as string[] | undefined,
             }}
+            detalhado
           />
           <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
         </div>
