@@ -244,7 +244,7 @@ function CardAnuncio({
             <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
           </div>
         ) : (
-          <>
+          <div className="pt-4">
             <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
               {CATEGORIA_LABEL[categoriaDoItem(anuncio.itemId ?? "")]}
             </p>
@@ -255,7 +255,7 @@ function CardAnuncio({
               {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} ·{" "}
               {anuncio.vendedor}
             </p>
-          </>
+          </div>
         )}
 
         <div className="mt-4 flex items-center gap-1.5">
