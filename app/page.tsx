@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Pick } from "@/components/pick";
 import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
@@ -41,8 +42,7 @@ export default async function Home() {
     <>
       {/* ---------------------------------------------------------- hero */}
       <section className="relative overflow-hidden border-b border-line">
-        {/* Identidade própria: brasa dourada sobre preto quente. Sem arte de
-            terceiro — §14.4. */}
+        {/* Brasa dourada sobre preto quente, atrás do logo. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -58,9 +58,14 @@ export default async function Home() {
             Comunidade brasileira de Palworld
           </p>
 
-          <h1 className="font-display mt-4 text-6xl tracking-tight sm:text-8xl">
-            PALLEIRA<span className="text-gold">.</span>
-          </h1>
+          <Image
+            src="/marca/palleira-logo.png"
+            alt="Palleira"
+            width={2172}
+            height={724}
+            priority
+            className="mt-4 h-24 w-auto sm:h-32"
+          />
 
           <p className="mt-4 max-w-xl text-lg text-muted">
             O servidor mais rock and roll de Palworld. Status ao vivo, mercado

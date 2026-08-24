@@ -21,14 +21,15 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-md">
       <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
-        <Link
-          href="/"
-          className="font-display flex shrink-0 items-center gap-2 tracking-tight"
-        >
-          <Pick className="size-6" />
-          <span>
-            PALLEIRA<span className="text-gold">.</span>
-          </span>
+        <Link href="/" className="flex shrink-0 items-center">
+          <Image
+            src="/marca/palleira-logo.png"
+            alt="Palleira"
+            width={2172}
+            height={724}
+            priority
+            className="h-8 w-auto"
+          />
         </Link>
 
         <ul className="hidden items-center gap-1 text-sm md:flex">
