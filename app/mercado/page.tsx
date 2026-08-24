@@ -12,7 +12,7 @@ import { PalCard } from "@/components/pal-card";
 import { Pal3DSobDemanda } from "@/components/pal-3d-sob-demanda";
 
 export const metadata: Metadata = {
-  title: "Mercado",
+  title: "Palleira Store",
   description:
     "Compre e venda itens e Pals entre jogadores da Palleira BR, pagos em Paletas.",
 };
@@ -65,8 +65,8 @@ export default async function Mercado({
   return (
     <>
       <PageHeader
-        kicker="Mercado"
-        title="Mercado"
+        kicker="Store"
+        title="Palleira Store"
         description="Comprado aqui, o item ou Pal cai no seu cofre na hora — e você resgata no jogo quando entrar. Ninguém precisa estar online ao mesmo tempo."
       />
 
