@@ -59,6 +59,9 @@ export default async function Mercado({
     );
   });
 
+  const pals = lista.filter((a) => a.kind === "pal");
+  const itens = lista.filter((a) => a.kind === "item");
+
   return (
     <>
       <PageHeader
@@ -132,18 +135,55 @@ export default async function Mercado({
         </div>
 
         {/* --------------------------------------------------------- vitrine */}
+        {/*
+          Pal e item nunca dividem o mesmo grid: o card de Pal (3D + IVs +
+          habilidades + passivas) é bem mais alto que o de item, e misturados
+          numa grade de 3 colunas a linha inteira herda a altura do card mais
+          alto — sobra espaço vazio esquisito do lado dos itens (23/08/2026,
+          reparo do dono). Duas seções, cada uma com cards de altura parecida.
+        */}
         {lista.length === 0 ? (
           <Vazio temBusca={Boolean(busca)} logado={Boolean(session)} />
         ) : (
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {lista.map((a) => (
-              <CardAnuncio
-                key={a.id}
-                anuncio={a}
-                euSou={session?.user.discordId}
-              />
-            ))}
-          </ul>
+          <>
+            {pals.length > 0 && (
+              <section className={itens.length > 0 ? "mt-8" : ""}>
+                {tipo === undefined && itens.length > 0 && (
+                  <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
+                    Pals
+                  </h2>
+                )}
+                <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {pals.map((a) => (
+                    <CardAnuncio
+                      key={a.id}
+                      anuncio={a}
+                      euSou={session?.user.discordId}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {itens.length > 0 && (
+              <section className={pals.length > 0 ? "mt-10" : "mt-8"}>
+                {tipo === undefined && pals.length > 0 && (
+                  <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
+                    Itens
+                  </h2>
+                )}
+                <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {itens.map((a) => (
+                    <CardAnuncio
+                      key={a.id}
+                      anuncio={a}
+                      euSou={session?.user.discordId}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
         )}
 
         {!session && lista.length > 0 && (
