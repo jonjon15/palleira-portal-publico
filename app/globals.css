@@ -47,9 +47,6 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* A fonte de título do próprio Palworld (Anton, Google Fonts) — só para
-     nome grande: logo e <h1> de página, nunca corpo de texto. */
-  --font-display: var(--font-anton);
 
   --radius-card: 12px;
   --radius-control: 8px;

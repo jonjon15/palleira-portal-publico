@@ -13,7 +13,7 @@ export function PageHeader({
         <p className="text-xs font-bold tracking-[0.18em] text-gold uppercase">
           {kicker}
         </p>
-        <h1 className="font-display mt-2 text-4xl tracking-tight sm:text-5xl">
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           {title}
         </h1>
         {description && (
