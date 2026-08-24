@@ -193,7 +193,7 @@ export function PalCard({
                   <span
                     key={p}
                     title={nomeDaPassiva(p)}
-                    className="flex items-center gap-1 rounded-full border bg-surface py-0.5 pr-2 pl-1 text-[0.65rem]"
+                    className={`fundo-losango flex items-center gap-1 overflow-hidden rounded-full border bg-surface py-0.5 pr-2 pl-1 text-[0.65rem] ${rank === 5 ? "brilho-lendario" : ""}`}
                     style={cor ? { borderColor: `${cor}88` } : undefined}
                   >
                     {rank !== null && (
