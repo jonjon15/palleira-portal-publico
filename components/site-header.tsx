@@ -23,7 +23,7 @@ export async function SiteHeader() {
       <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 font-bold tracking-tight"
+          className="font-display flex shrink-0 items-center gap-2 tracking-tight"
         >
           <Pick className="size-6" />
           <span>

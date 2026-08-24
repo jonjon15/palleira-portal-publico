@@ -58,7 +58,7 @@ export default async function Home() {
             Comunidade brasileira de Palworld
           </p>
 
-          <h1 className="mt-4 text-5xl font-extrabold tracking-tight sm:text-7xl">
+          <h1 className="font-display mt-4 text-6xl tracking-tight sm:text-8xl">
             PALLEIRA<span className="text-gold">.</span>
           </h1>
 
