@@ -216,7 +216,16 @@ export async function delPal(
   filtro: string,
 ): Promise<ResultadoComando> {
   const res = await rcon(server, `deletepals ${uidParaComando(playerUid)} ${filtro}`);
-  return interpretar(res);
+  const limpo = res.trim();
+
+  // "Deleted 0 pals…" não começa com "Failed", então `interpretar()` sozinho
+  // conta como sucesso — e o Pal lido nunca saiu do jogador, virando cópia
+  // no cofre em vez de mudança de dono. Sem este cheque extra, é isto que
+  // acontecia em toda tentativa de guardar Pal (§ incidente de 01/09/2026).
+  const zerado = /^Deleted 0 pals/i.test(limpo);
+  if (zerado) return { ok: false, resposta: limpo };
+
+  return interpretar(limpo);
 }
 
 /**
