@@ -15,13 +15,14 @@ import {
   SLOTS_GRATIS,
   type PersonagemOnline,
 } from "@/lib/cofre";
-import { meuCofreDePals, palsNoJogo } from "@/lib/pal-cofre";
+import { meuCofreDePals, meusResgatesPendentes, palsNoJogo } from "@/lib/pal-cofre";
 import { GuardarNoCofre, ItensDoCofre, BotaoSlot } from "./formularios";
 import {
   GuardarPals,
   ResgatarPal,
   AnunciarPal,
   SemearPalDeTeste,
+  EntregasPendentes,
 } from "./pals/formularios";
 
 export const metadata: Metadata = {
@@ -48,11 +49,12 @@ export default async function Cofre({
   const discordId = session.user.discordId;
   const aba: Aba = tabParam === "pals" ? "pals" : "itens";
 
-  const [vinculo, cofre, paletas, cofreDePals] = await Promise.all([
+  const [vinculo, cofre, paletas, cofreDePals, resgatesPendentes] = await Promise.all([
     meuVinculo(discordId),
     meuCofre(discordId),
     saldo(discordId),
     meuCofreDePals(discordId),
+    meusResgatesPendentes(discordId),
   ]);
 
   // Sem personagem provado não há de quem tirar nem para quem entregar.
@@ -130,6 +132,7 @@ export default async function Cofre({
             disponiveis={disponiveis}
             vinculoNome={vinculo.playerName}
             ehStaff={ehStaff}
+            pendentes={resgatesPendentes}
           />
         )}
       </div>
@@ -356,6 +359,7 @@ function SecaoPals({
   disponiveis,
   vinculoNome,
   ehStaff,
+  pendentes,
 }: {
   cofre: Awaited<ReturnType<typeof meuCofreDePals>>;
   onde: PersonagemOnline[];
@@ -363,9 +367,12 @@ function SecaoPals({
   disponiveis: Awaited<ReturnType<typeof palsNoJogo>>;
   vinculoNome: string;
   ehStaff: boolean;
+  pendentes: Awaited<ReturnType<typeof meusResgatesPendentes>>;
 }) {
   return (
     <>
+      <EntregasPendentes pendentes={pendentes} />
+
       {/* ----------------------------------------------------------- estado */}
       <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
         <p className="text-xs font-bold tracking-[0.18em] text-muted uppercase">

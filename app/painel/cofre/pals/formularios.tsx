@@ -14,7 +14,7 @@ import {
 import { nomeDoPal } from "@/lib/pals";
 import { PalCard } from "@/components/pal-card";
 import { PRECO_MINIMO, PRECO_MAXIMO } from "@/lib/mercado-regras";
-import type { PalDisponivel } from "@/lib/pal-cofre";
+import type { PalDisponivel, ResgatePendente } from "@/lib/pal-cofre";
 import type { PersonagemOnline } from "@/lib/cofre";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
@@ -200,7 +200,7 @@ const ESTADO_LABEL: Record<string, string> = {
  * segundos para o workflow sequer começar), depois a Vercel chama o
  * `givepal_j`. Sem isso na tela, a pessoa acha que travou.
  */
-function Acompanhar({ transferId, palId }: { transferId: number; palId: string }) {
+export function Acompanhar({ transferId, palId }: { transferId: number; palId: string }) {
   const [status, setStatus] = useState<string>("aguardando_arquivo");
   const [detalhe, setDetalhe] = useState("");
   const parado = useRef(false);
@@ -250,6 +250,36 @@ function Acompanhar({ transferId, palId }: { transferId: number; palId: string }
         <p className="text-xs text-muted">{nomeDoPal(palId)}</p>
       )}
     </div>
+  );
+}
+
+/**
+ * Resgates que ficaram pelo meio: a aba fechou antes do `Acompanhar` acabar
+ * o polling. A entrada aqui basta para o efeito de `Acompanhar` retomar
+ * sozinho — sem isso o Pal fica preso para sempre entre o cofre e o jogo.
+ */
+export function EntregasPendentes({ pendentes }: { pendentes: ResgatePendente[] }) {
+  if (!pendentes.length) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold">Entregas pendentes</h2>
+      <p className="mt-1 text-sm text-muted">
+        Ficaram no meio do caminho — provavelmente a aba fechou antes de
+        terminar. Retomando sozinho.
+      </p>
+      <div className="mt-3 flex flex-col gap-2">
+        {pendentes.map((p) => (
+          <div
+            key={p.transferId}
+            className="flex items-center justify-between rounded-[var(--radius-card)] border border-line bg-surface p-4"
+          >
+            <span className="text-sm font-medium">{nomeDoPal(p.palId)}</span>
+            <Acompanhar transferId={p.transferId} palId={p.palId} />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

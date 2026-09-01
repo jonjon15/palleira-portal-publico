@@ -308,6 +308,35 @@ export interface StatusResgate {
   palId: string;
 }
 
+export interface ResgatePendente {
+  transferId: number;
+  palId: string;
+}
+
+/**
+ * Resgates que ficaram pelo meio do caminho — a pessoa fechou a aba (ou a
+ * internet caiu) antes do `Acompanhar` no navegador terminar o polling.
+ *
+ * Sem isso, uma transferência parada em `aguardando_arquivo`/`arquivo_pronto`
+ * fica presa para sempre: o Pal já saiu do `vault_pals` mas o `givepal_j`
+ * nunca é chamado. A página do cofre usa isto para retomar o acompanhamento
+ * sozinha ao carregar.
+ */
+export async function meusResgatesPendentes(
+  discordId: string,
+): Promise<ResgatePendente[]> {
+  const rows = (await sql`
+    select id, template->>'PalID' as pal_id
+    from pal_transfers
+    where discord_id = ${discordId}
+      and direction = 'resgatar'
+      and status in ('aguardando_arquivo', 'arquivo_pronto')
+    order by created_at desc
+  `) as { id: number; pal_id: string }[];
+
+  return rows.map((r) => ({ transferId: r.id, palId: r.pal_id }));
+}
+
 /** O estado de uma transferência — para a página que fica de olho nela. */
 export async function statusDoResgate(
   transferId: number,
