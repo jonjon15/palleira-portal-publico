@@ -87,14 +87,26 @@ export function paraTemplate(pal: PalCru): PalTemplate {
  * O filtro do `deletepals` que melhor isola este Pal exato entre os outros
  * do jogador.
  *
- * 🔴 **Limite conhecido, e vale registrar em letras grandes:** a sintaxe do
- * `deletepals` filtra por `ID`, `Nick`, `Gender`, `Level`, `Rank` (=
- * `CondensedPals`), `Lucky` (= `Shiny`) e `Passives` — **não existe filtro
- * por IV, nem por identidade única do Pal**. Se o jogador tiver **dois** Pals
- * idênticos em todos esses campos (mesma espécie, nível, gênero, shiny,
- * condensação e passivas, mas IVs diferentes — dois `Anubis` nível 20
- * comuns, por exemplo), o `Limit=1` remove **um dos dois**, e não há como
- * garantir que seja o mesmo cujo template foi lido.
+ * 🔴 **`Rank` ficou de fora, e não por acaso — foi o que quebrava tudo.**
+ * A doc do PalDefender lista `Rank` (comparado a `CondensedPals`) como
+ * filtro válido, mas não diz se a contagem do jogo começa em 0 ou em 1.
+ * Com `Rank=CondensedPals` (0 para todo Pal não condensado — a
+ * imensa maioria), **100% das tentativas de guardar Pal retornavam
+ * "Deleted 0 pals"**, inclusive casos triviais (Pal comum, nível baixo,
+ * recém-capturado). Ou seja: se o jogo conta `Rank` a partir de 1, esse
+ * termo nunca batia com nada, e o Pal lido virava cópia no cofre sem o
+ * original nunca sair do jogador. Tirar `Rank` custa só a ambiguidade
+ * de condensação abaixo — e resolve a falha sistemática. Reintroduzir
+ * exige confirmar ao vivo, contra o RCON de verdade, se é `CondensedPals`
+ * ou `CondensedPals + 1`.
+ *
+ * **Limite que continua existindo, sem `Rank`:** a sintaxe do `deletepals`
+ * filtra por `ID`, `Nick`, `Gender`, `Level`, `Lucky` (= `Shiny`) e
+ * `Passives` — não existe filtro por IV nem por identidade única do Pal.
+ * Se o jogador tiver **dois** Pals idênticos nesses campos (mesma espécie,
+ * nível, gênero, shiny, apelido e passivas, mas IVs — ou condensação —
+ * diferentes), o `Limit=1` remove **um dos dois**, e não há como garantir
+ * que seja o mesmo cujo template foi lido.
  *
  * Isso não quebra a venda: o comprador recebe exatamente o template que foi
  * mostrado no anúncio, porque a entrega usa o template salvo, não uma nova
@@ -108,7 +120,6 @@ export function filtroDeExclusao(pal: PalCru): string {
     `Level=${num(pal.Level, 1)}`,
     `Gender ${str(pal.Gender, "Male").toLowerCase()}`,
     `Lucky ${bool(pal.Shiny)}`,
-    `Rank=${num(pal.CondensedPals)}`,
   ];
 
   const apelido = str(pal.Nickname).trim();
