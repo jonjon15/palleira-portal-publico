@@ -115,21 +115,45 @@ export function paraTemplate(pal: PalCru): PalTemplate {
  * o registro para quando alguém perguntar "por que sumiu o outro, não este".
  */
 export function filtroDeExclusao(pal: PalCru): string {
-  const partes = [
-    `ID ${str(pal.PalID)}`,
-    `Level=${num(pal.Level, 1)}`,
-    `Gender ${str(pal.Gender, "Male").toLowerCase()}`,
+  return candidatosDeFiltro(pal)[0];
+}
+
+/**
+ * 🔧 Bissecção temporária (§incidente 01/09/2026): mesmo sem `Rank`, guardar
+ * Pal continuava voltando "Deleted 0 pals" — algum outro campo do filtro não
+ * bate com o que o `deletepals` espera de verdade, e a doc do PalDefender não
+ * documenta o suficiente para adivinhar qual. Sem um exemplo real de comando
+ * que funcionou, e sem RCON direto para testar manualmente, a saída é testar
+ * ao vivo: do mais específico pro mais genérico, indo embora um campo por
+ * vez, até um bater.
+ *
+ * `importarPalParaCofre` tenta cada candidato em ordem e para no primeiro
+ * que apagar de verdade — o `detail` da transferência registra qual venceu,
+ * para eu ler no banco depois e transformar de volta num filtro fixo único.
+ * Isto é andaime de investigação, não é para viver no código depois de achar
+ * a resposta.
+ */
+export function candidatosDeFiltro(pal: PalCru): string[] {
+  const id = `ID ${str(pal.PalID)}`;
+
+  const opcionais: string[] = [
     `Lucky ${bool(pal.Shiny)}`,
+    `Gender ${str(pal.Gender, "Male").toLowerCase()}`,
   ];
 
   const apelido = str(pal.Nickname).trim();
-  if (apelido) partes.push(`Nick ${apelido}`);
+  if (apelido) opcionais.push(`Nick ${apelido}`);
 
   const passivas = arr(pal.Passives);
-  if (passivas.length) partes.push(`Passives ${passivas.join(",")}`);
+  if (passivas.length) opcionais.push(`Passives ${passivas.join(",")}`);
 
-  partes.push("Limit 1");
-  return partes.join(" ");
+  opcionais.push(`Level=${num(pal.Level, 1)}`);
+
+  const candidatos: string[] = [];
+  for (let i = 0; i <= opcionais.length; i++) {
+    candidatos.push([id, ...opcionais.slice(i), "Limit 1"].join(" "));
+  }
+  return candidatos;
 }
 
 /**

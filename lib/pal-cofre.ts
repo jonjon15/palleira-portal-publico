@@ -4,7 +4,7 @@ import { meuVinculo } from "@/lib/linking";
 import { serverBySlug } from "@/lib/servers";
 import { getPals, getPal, ForaDoJogo, type PalCru } from "@/lib/palworld/paldefender";
 import { delPal, givePalTemplate } from "@/lib/palworld/rcon";
-import { paraTemplate, filtroDeExclusao, nomeDoArquivo } from "@/lib/pal-template";
+import { paraTemplate, candidatosDeFiltro, nomeDoArquivo } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
 import { ondeEstouOnline, type PersonagemOnline } from "@/lib/cofre";
 import { isStaff, levelOf } from "@/lib/roles";
@@ -186,7 +186,7 @@ export async function importarPalParaCofre(
   }
 
   const template = paraTemplate(pal);
-  const filtro = filtroDeExclusao(pal);
+  const candidatos = candidatosDeFiltro(pal);
 
   // 2. Registro de intenção ANTES de tocar no jogo — mesma disciplina do
   //    cofre de item (`vault_transfers`).
@@ -198,13 +198,20 @@ export async function importarPalParaCofre(
     returning id
   `) as { id: number }[];
 
-  let resposta;
+  // 🔧 Bissecção temporária — ver `candidatosDeFiltro`. Tenta do mais
+  // específico pro mais genérico e para no primeiro que apagar de verdade.
+  let resposta: { ok: boolean; resposta: string } | undefined;
+  const tentativas: string[] = [];
   try {
-    resposta = await delPal(server, vinculo.uid, filtro);
+    for (let i = 0; i < candidatos.length; i++) {
+      resposta = await delPal(server, vinculo.uid, candidatos[i]);
+      tentativas.push(`#${i}(${candidatos[i].replace(/^ID \S+ /, "")}): ${resposta.resposta}`);
+      if (resposta.ok) break;
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await sql`
-      update pal_transfers set status = 'andando', detail = ${`sem resposta: ${msg}`.slice(0, 500)}
+      update pal_transfers set status = 'andando', detail = ${`sem resposta: ${[...tentativas, msg].join(" | ")}`.slice(0, 500)}
       where id = ${transferId}
     `;
     return {
@@ -214,9 +221,9 @@ export async function importarPalParaCofre(
     };
   }
 
-  if (!resposta.ok) {
+  if (!resposta?.ok) {
     await sql`
-      update pal_transfers set status = 'falhou', detail = ${resposta.resposta.slice(0, 500)}, finished_at = now()
+      update pal_transfers set status = 'falhou', detail = ${tentativas.join(" | ").slice(0, 500)}, finished_at = now()
       where id = ${transferId}
     `;
     return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
@@ -227,7 +234,7 @@ export async function importarPalParaCofre(
     values (${discordId}, ${template.PalID}, ${JSON.stringify(template)})
   `;
   await sql`
-    update pal_transfers set status = 'concluido', detail = ${resposta.resposta.slice(0, 500)}, finished_at = now()
+    update pal_transfers set status = 'concluido', detail = ${tentativas.join(" | ").slice(0, 500)}, finished_at = now()
     where id = ${transferId}
   `;
 
