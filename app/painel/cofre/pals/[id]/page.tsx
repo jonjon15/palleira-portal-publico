@@ -63,7 +63,10 @@ export default async function FichaNoCofre({
               timeZone: "America/Sao_Paulo",
             })}
           </p>
-          <ResgatarPal pal={{ id: pal.id, palId: pal.palId }} onde={onde} />
+          <ResgatarPal
+            pal={{ id: pal.id, palId: pal.palId, serverSlug: pal.serverSlug, serverNome: pal.serverNome }}
+            onde={onde}
+          />
         </div>
       </div>
     </>

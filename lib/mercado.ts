@@ -296,26 +296,26 @@ export async function anunciarPal(
   const debitado = (await sql`
     delete from vault_pals
     where id = ${vaultPalId} and discord_id = ${discordId}
-    returning pal_id, template
-  `) as { pal_id: string; template: Record<string, unknown> }[];
+    returning pal_id, template, server_slug
+  `) as { pal_id: string; template: Record<string, unknown>; server_slug: string | null }[];
 
   if (!debitado.length) {
     return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
   }
-  const { pal_id: palId, template } = debitado[0];
+  const { pal_id: palId, template, server_slug: origemSlug } = debitado[0];
 
   const taxa = taxaDaVenda(preco);
   try {
     await sql`
-      insert into listings (seller_id, kind, pal_template, price, fee)
-      values (${discordId}, 'pal', ${JSON.stringify(template)}, ${preco}, ${taxa})
+      insert into listings (seller_id, kind, pal_template, pal_server_slug, price, fee)
+      values (${discordId}, 'pal', ${JSON.stringify(template)}, ${origemSlug}, ${preco}, ${taxa})
     `;
   } catch {
     // Mesma disciplina do anúncio de item: o Pal já saiu do cofre, então
     // devolver vem antes de qualquer outra coisa.
     await sql`
-      insert into vault_pals (discord_id, pal_id, template)
-      values (${discordId}, ${palId}, ${JSON.stringify(template)})
+      insert into vault_pals (discord_id, pal_id, template, server_slug)
+      values (${discordId}, ${palId}, ${JSON.stringify(template)}, ${origemSlug})
     `;
     return {
       ok: false,
@@ -342,12 +342,13 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
     update listings
        set status = 'cancelado', closed_at = now()
      where id = ${id} and seller_id = ${discordId} and status = 'ativo'
-    returning kind, item_id, qty, pal_template
+    returning kind, item_id, qty, pal_template, pal_server_slug
   `) as {
     kind: TipoAnuncio;
     item_id: string | null;
     qty: number | null;
     pal_template: Record<string, unknown> | null;
+    pal_server_slug: string | null;
   }[];
 
   if (!rows.length) {
@@ -357,8 +358,8 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
 
   if (cancelado.kind === "pal" && cancelado.pal_template) {
     await sql`
-      insert into vault_pals (discord_id, pal_id, template)
-      values (${discordId}, ${String(cancelado.pal_template.PalID ?? "")}, ${JSON.stringify(cancelado.pal_template)})
+      insert into vault_pals (discord_id, pal_id, template, server_slug)
+      values (${discordId}, ${String(cancelado.pal_template.PalID ?? "")}, ${JSON.stringify(cancelado.pal_template)}, ${cancelado.pal_server_slug})
     `;
     return { ok: true, mensagem: "Anúncio cancelado e Pal de volta no cofre." };
   }
@@ -472,9 +473,16 @@ export async function comprar(id: number): Promise<Resultado> {
   //    O cofre do comprador pode passar do limite de slots aqui, e tudo bem:
   //    ele pagou. Erra a favor de quem comprou, nunca contra.
   if (venda.kind === "pal" && venda.pal_template) {
+    // A trava de servidor (§006) é para o próprio dono não usar guardar→
+    // resgatar repetido como um jeito de farmar contador de captura — não
+    // faz sentido contra quem comprou: o comprador pode nunca ter jogado no
+    // servidor de quem vendeu. Por isso `server_slug` nasce nulo aqui — o
+    // comprador resgata em qualquer servidor que estiver online. O cooldown
+    // continua valendo (recomeça do zero em `imported_at = now()`), porque
+    // esse é o pedaço que de fato limita o ciclo repetido, com ou sem venda.
     await sql`
-      insert into vault_pals (discord_id, pal_id, template)
-      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)})
+      insert into vault_pals (discord_id, pal_id, template, server_slug)
+      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)}, null)
     `;
   } else {
     await devolverAoCofre(discordId, venda.item_id as string, venda.qty as number);

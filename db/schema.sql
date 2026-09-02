@@ -248,6 +248,9 @@ create table if not exists listings (
   buyer_id    text,
   created_at  timestamptz not null default now(),
   closed_at   timestamptz,
+  -- Só quando kind='pal': o servidor de onde o vendedor tirou o Pal (vem de
+  -- `vault_pals.server_slug`). Migração 006 — atravessa para o comprador.
+  pal_server_slug text,
 
   constraint listings_kind_shape check (
     (kind = 'item' and item_id is not null and qty is not null and pal_template is null)
@@ -274,7 +277,12 @@ create table if not exists vault_pals (
   discord_id   text        not null,
   pal_id       text        not null,
   template     jsonb       not null,
-  imported_at  timestamptz not null default now()
+  imported_at  timestamptz not null default now(),
+  -- De qual servidor este Pal saiu. Nulo = veio de antes da migração 006
+  -- (ou de `semearPalDeTeste`, que nunca passa pelo jogo) — sem trava de
+  -- servidor nesses casos. Quando preenchido, o resgate só pode voltar
+  -- para este mesmo servidor (ver `iniciarResgateDePal`).
+  server_slug  text
 );
 
 create index if not exists vault_pals_dono_idx

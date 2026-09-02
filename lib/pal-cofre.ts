@@ -39,6 +39,15 @@ export interface Resultado {
   mensagem: string;
 }
 
+/**
+ * Migração 006 — guardar e resgatar de volta repetidas vezes, escolhendo um
+ * servidor diferente a cada resgate, inflava contadores de captura do jogo
+ * sem o jogador ter capturado nada de novo. A trava: um Pal guardado só
+ * resgata no mesmo servidor de onde saiu (`vault_pals.server_slug`), e só
+ * depois deste tempo mínimo dentro do cofre.
+ */
+export const COOLDOWN_RESGATE_HORAS = 3;
+
 /* ------------------------------------------------------------------ leitura */
 
 export interface PalNoCofre {
@@ -46,27 +55,37 @@ export interface PalNoCofre {
   palId: string;
   template: Record<string, unknown>;
   desde: string;
+  /** De qual servidor este Pal saiu — nulo para Pal de antes da migração 006. */
+  serverSlug: string | null;
+  serverNome: string | null;
 }
+
+interface LinhaVaultPal {
+  id: number;
+  pal_id: string;
+  template: Record<string, unknown>;
+  imported_at: string;
+  server_slug: string | null;
+}
+
+const paraPalNoCofre = (r: LinhaVaultPal): PalNoCofre => ({
+  id: r.id,
+  palId: r.pal_id,
+  template: r.template,
+  desde: r.imported_at,
+  serverSlug: r.server_slug,
+  serverNome: r.server_slug ? serverBySlug(r.server_slug)?.shortName ?? r.server_slug : null,
+});
 
 export async function meuCofreDePals(discordId: string): Promise<PalNoCofre[]> {
   const rows = (await sql`
-    select id, pal_id, template, imported_at
+    select id, pal_id, template, imported_at, server_slug
     from vault_pals
     where discord_id = ${discordId}
     order by imported_at desc
-  `) as {
-    id: number;
-    pal_id: string;
-    template: Record<string, unknown>;
-    imported_at: string;
-  }[];
+  `) as LinhaVaultPal[];
 
-  return rows.map((r) => ({
-    id: r.id,
-    palId: r.pal_id,
-    template: r.template,
-    desde: r.imported_at,
-  }));
+  return rows.map(paraPalNoCofre);
 }
 
 export async function palDoCofre(
@@ -74,19 +93,12 @@ export async function palDoCofre(
   id: number,
 ): Promise<PalNoCofre | null> {
   const rows = (await sql`
-    select id, pal_id, template, imported_at
+    select id, pal_id, template, imported_at, server_slug
     from vault_pals
     where id = ${id} and discord_id = ${discordId}
-  `) as {
-    id: number;
-    pal_id: string;
-    template: Record<string, unknown>;
-    imported_at: string;
-  }[];
+  `) as LinhaVaultPal[];
   const r = rows[0];
-  return r
-    ? { id: r.id, palId: r.pal_id, template: r.template, desde: r.imported_at }
-    : null;
+  return r ? paraPalNoCofre(r) : null;
 }
 
 export interface PalDisponivel {
@@ -229,14 +241,37 @@ export async function importarPalParaCofre(
     return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
   }
 
-  await sql`
-    insert into vault_pals (discord_id, pal_id, template)
-    values (${discordId}, ${template.PalID}, ${JSON.stringify(template)})
-  `;
-  await sql`
-    update pal_transfers set status = 'concluido', detail = ${tentativas.join(" | ").slice(0, 500)}, finished_at = now()
-    where id = ${transferId}
-  `;
+  // 3. O jogo já deletou de verdade — isto não tem mais volta. Se a gravação
+  //    no cofre falhar daqui pra frente, o Pal não pode simplesmente
+  //    desaparecer: marca um status próprio (não 'andando', que pareceria
+  //    uma transferência normal em andamento) para a administração achar e
+  //    recuperar na mão a partir do `template` já salvo em `pal_transfers`.
+  try {
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template, server_slug)
+      values (${discordId}, ${template.PalID}, ${JSON.stringify(template)}, ${serverSlug})
+    `;
+    await sql`
+      update pal_transfers set status = 'concluido', detail = ${tentativas.join(" | ").slice(0, 500)}, finished_at = now()
+      where id = ${transferId}
+    `;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    try {
+      await sql`
+        update pal_transfers set status = 'preso_sem_cofre', detail = ${`saiu do jogo mas não gravou no cofre: ${msg}`.slice(0, 500)}
+        where id = ${transferId}
+      `;
+    } catch {
+      // Nem isso — fica em 'andando' mesmo, mas o `template` já está salvo
+      // ali dentro para recuperação manual.
+    }
+    return {
+      ok: false,
+      mensagem:
+        "Seu Pal saiu do jogo, mas não consegui confirmar no cofre. Fale com a administração — o registro ficou salvo para recuperação manual.",
+    };
+  }
 
   return { ok: true, mensagem: `${template.PalID} guardado no cofre.` };
 }
@@ -263,17 +298,57 @@ export async function iniciarResgateDePal(
     return { ok: false, mensagem: "Esse servidor não recebe Pal agora." };
   }
 
-  // Debita já, para dois cliques não resgatarem o mesmo Pal duas vezes.
+  // Lê antes de debitar: precisa saber se este Pal pode voltar para ESTE
+  // servidor e se já passou o tempo mínimo guardado (migração 006) — fazer
+  // isso já dentro do `delete` deixaria a mensagem de erro sem dizer qual
+  // das duas travas pegou.
+  const linha = (await sql`
+    select pal_id, template, server_slug, imported_at,
+           imported_at <= now() - (interval '1 hour' * ${COOLDOWN_RESGATE_HORAS}) as maduro
+    from vault_pals
+    where id = ${vaultPalId} and discord_id = ${discordId}
+  `) as {
+    pal_id: string;
+    template: Record<string, unknown>;
+    server_slug: string | null;
+    imported_at: string;
+    maduro: boolean;
+  }[];
+  const achado = linha[0];
+  if (!achado) {
+    return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
+  }
+  if (achado.server_slug && achado.server_slug !== serverSlug) {
+    const nomeOrigem = serverBySlug(achado.server_slug)?.shortName ?? achado.server_slug;
+    return {
+      ok: false,
+      mensagem: `Esse Pal só pode ser resgatado no ${nomeOrigem} — foi guardado lá.`,
+    };
+  }
+  if (!achado.maduro) {
+    const libera = new Date(achado.imported_at).getTime() + COOLDOWN_RESGATE_HORAS * 3_600_000;
+    const faltam = Math.max(1, Math.ceil((libera - Date.now()) / 3_600_000));
+    return {
+      ok: false,
+      mensagem: `Ainda não — esse Pal libera para resgate em cerca de ${faltam}h.`,
+    };
+  }
+
+  // Debita já, para dois cliques não resgatarem o mesmo Pal duas vezes. As
+  // mesmas condições da leitura acima entram no `where` para a checagem não
+  // virar uma corrida com este delete.
   const debitado = (await sql`
     delete from vault_pals
     where id = ${vaultPalId} and discord_id = ${discordId}
-    returning pal_id, template
-  `) as { pal_id: string; template: Record<string, unknown> }[];
+      and (server_slug is null or server_slug = ${serverSlug})
+      and imported_at <= now() - (interval '1 hour' * ${COOLDOWN_RESGATE_HORAS})
+    returning pal_id, template, server_slug, imported_at
+  `) as { pal_id: string; template: Record<string, unknown>; server_slug: string | null; imported_at: string }[];
 
   if (!debitado.length) {
     return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
   }
-  const { pal_id: palId, template } = debitado[0];
+  const { pal_id: palId, template, server_slug: origemSlug, imported_at: origemDesde } = debitado[0];
 
   const [{ id: transferId }] = (await sql`
     insert into pal_transfers
@@ -293,8 +368,12 @@ export async function iniciarResgateDePal(
     });
   } catch (e) {
     // Não foi possível nem começar: devolve o Pal ao cofre, nada ficou pelo
-    // meio do caminho.
-    await sql`insert into vault_pals (discord_id, pal_id, template) values (${discordId}, ${palId}, ${JSON.stringify(template)})`;
+    // meio do caminho. Preserva servidor de origem e data de entrada — essa
+    // falha é técnica, não motivo para resetar a trava de cooldown.
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template, server_slug, imported_at)
+      values (${discordId}, ${palId}, ${JSON.stringify(template)}, ${origemSlug}, ${origemDesde})
+    `;
     await sql`update pal_transfers set status = 'falhou', detail = ${(e instanceof Error ? e.message : String(e)).slice(0, 500)}, finished_at = now() where id = ${transferId}`;
     return {
       ok: false,

@@ -145,7 +145,7 @@ function Cabecalho() {
     <PageHeader
       kicker="Cofre"
       title="Seu cofre"
-      description="O que está aqui saiu do jogo e está guardado pelo site. Dá para vender a qualquer hora, com você offline, e resgatar no servidor que quiser."
+      description="O que está aqui saiu do jogo e está guardado pelo site. Dá para vender a qualquer hora, com você offline — item resgata em qualquer servidor; Pal só volta para o servidor de onde saiu, depois de algumas horas."
     />
   );
 }
@@ -423,7 +423,10 @@ function SecaoPals({
                 </Link>
                 <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
                   <AnunciarPal pal={{ id: p.id, palId: p.palId }} />
-                  <ResgatarPal pal={{ id: p.id, palId: p.palId }} onde={onde} />
+                  <ResgatarPal
+                    pal={{ id: p.id, palId: p.palId, serverSlug: p.serverSlug, serverNome: p.serverNome }}
+                    onde={onde}
+                  />
                 </div>
               </div>
             ))}
@@ -490,6 +493,13 @@ function SecaoPals({
         <b className="text-text">palbox</b> entram no cofre — os que estão
         trabalhando numa base ficam de fora, para a base não perder produção
         sem avisar.
+      </p>
+      <p className="mt-2 max-w-2xl text-xs text-muted">
+        Pal que você mesmo guardar só resgata no{" "}
+        <b className="text-text">mesmo servidor</b> de onde saiu, e só depois
+        de algumas horas dentro do cofre. Pal comprado no mercado não tem essa
+        trava de servidor — resgate onde estiver online — mas espera a mesma
+        janela mínima.
       </p>
 
       {ehStaff && <SemearPalDeTeste />}

@@ -108,6 +108,9 @@ export function GuardarPals({
 interface ItemDoCofre {
   id: number;
   palId: string;
+  /** De qual servidor este Pal saiu — nulo para Pal de antes da trava (§006). */
+  serverSlug?: string | null;
+  serverNome?: string | null;
 }
 
 function CampoServidor({ onde }: { onde: PersonagemOnline[] }) {
@@ -140,6 +143,28 @@ export function ResgatarPal({
 
   if (estado.transferId) {
     return <Acompanhar transferId={estado.transferId} palId={pal.palId} />;
+  }
+
+  // Trava de servidor (§006): este Pal só resgata onde saiu. Sem isso, dava
+  // para escolher outro servidor a cada resgate e inflar contador de
+  // captura do jogo sem capturar nada de novo.
+  if (pal.serverSlug) {
+    const online = onde.find((o) => o.serverSlug === pal.serverSlug);
+    if (!online) {
+      return (
+        <span className="text-xs text-muted">
+          entre no jogo no {pal.serverNome ?? pal.serverSlug} para resgatar
+        </span>
+      );
+    }
+    return (
+      <form action={acao} className="flex items-center gap-2">
+        <input type="hidden" name="vaultPalId" value={pal.id} />
+        <input type="hidden" name="servidor" value={online.serverSlug} />
+        <Enviar>Resgatar no {online.serverName}</Enviar>
+        <Aviso estado={estado} />
+      </form>
+    );
   }
 
   if (!onde.length) {
