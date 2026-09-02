@@ -17,7 +17,7 @@ export interface ServerCardData {
  * pico ruim não pode pintar de vermelho um servidor saudável. Servidor com
  * jogadores costuma viver entre 40 e 60; abaixo de 30 é que dói de verdade.
  */
-function healthOf(metrics: ServerMetrics | null): Status {
+export function healthOf(metrics: ServerMetrics | null): Status {
   if (!metrics) return "offline";
   const fps = metrics.serverfpsaverage || metrics.serverfps;
   return fps < 30 ? "instavel" : "online";

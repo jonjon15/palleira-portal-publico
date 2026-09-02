@@ -104,6 +104,42 @@ body {
   border-radius: var(--radius-control);
 }
 
+/* Esteira de servidores no cabeçalho — rola pra esquerda sem costura porque
+   a lista vem duplicada (ver ServerTicker) e a metade é exatamente o loop. */
+@keyframes palleira-esteira {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.esteira-trilha {
+  animation: palleira-esteira 32s linear infinite;
+}
+
+.esteira-trilha:hover {
+  animation-play-state: paused;
+}
+
+.esteira-mascara {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 6%,
+    #000 94%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 6%,
+    #000 94%,
+    transparent
+  );
+}
+
 /* Grade de triângulos correndo — o fundo do card de passiva, do jeito que
    o jogo mostra: nunca parado, sempre um brilho fraco correndo por baixo.
    `textura-passiva.png` é `T_UItexture_EffTriangle` de verdade, extraída do

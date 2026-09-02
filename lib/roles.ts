@@ -89,6 +89,16 @@ export const canManageEconomy = (level: AccessLevel) =>
 export const canPowerServer = (level: AccessLevel) =>
   level === "dono" || level === "admin";
 
+/**
+ * Pode escrever no mural de eventos.
+ *
+ * Diferente das outras permissões daqui, não é só por `AccessLevel`: o
+ * cargo Criador de Evento é dado a pessoas específicas da comunidade que
+ * não são staff, então checa a lista de cargos crua também.
+ */
+export const canManageEvents = (level: AccessLevel, roles: string[]) =>
+  isStaff(level) || roles.includes(ROLE.criadorEvento);
+
 export const LEVEL_LABEL: Record<AccessLevel, string> = {
   dono: "Dono",
   admin: "Admin",

@@ -5,6 +5,8 @@ import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
 import { getMetrics, getRates } from "@/lib/palworld/rest";
 import { communityStats, topPlayers } from "@/lib/db";
+import { eventoAtual } from "@/lib/eventos";
+import { EventoSelo } from "@/components/evento-selo";
 
 // Status ao vivo, com cache — os servidores não aguentam uma chamada por
 // visita de página (§3.3).
@@ -23,10 +25,11 @@ async function loadServers(): Promise<ServerCardData[]> {
 }
 
 export default async function Home() {
-  const [servers, stats, best] = await Promise.all([
+  const [servers, stats, best, evento] = await Promise.all([
     loadServers(),
     communityStats().catch(() => null),
     topPlayers(5).catch(() => []),
+    eventoAtual().catch(() => null),
   ]);
   const online = servers.reduce(
     (n, s) => n + (s.metrics?.currentplayernum ?? 0),
@@ -96,6 +99,68 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {/* --------------------------------------------------- evento atual */}
+      {evento && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Evento atual
+              </h2>
+              <Link
+                href="/eventos"
+                className="text-sm font-semibold text-gold hover:text-gold-hi"
+              >
+                Ver todos os eventos →
+              </Link>
+            </div>
+
+            <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[1.1fr_1fr]">
+              <div
+                className="relative flex min-h-[170px] items-end p-4"
+                style={{
+                  background:
+                    "radial-gradient(60% 90% at 20% 20%, rgb(232 185 35 / 0.22), transparent 60%)," +
+                    "radial-gradient(70% 90% at 90% 80%, rgb(200 68 46 / 0.18), transparent 60%)," +
+                    "var(--surface-2)",
+                }}
+              >
+                {evento.coverEmoji && (
+                  <span className="absolute top-4 left-4 text-4xl" aria-hidden>
+                    {evento.coverEmoji}
+                  </span>
+                )}
+                <EventoSelo evento={evento} />
+              </div>
+              <div className="p-6">
+                {evento.startsAt && (
+                  <p className="tabular mb-1.5 font-mono text-xs text-gold-hi">
+                    {new Date(evento.startsAt).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                    {evento.serverSlug &&
+                      ` — ${activeServers().find((s) => s.slug === evento.serverSlug)?.shortName ?? evento.serverSlug}`}
+                  </p>
+                )}
+                <h3 className="text-xl font-bold">{evento.title}</h3>
+                {evento.body && (
+                  <p className="mt-2 line-clamp-3 text-sm text-muted">
+                    {evento.body}
+                  </p>
+                )}
+                <Link
+                  href={`/eventos/${evento.slug}`}
+                  className="mt-4 inline-block rounded-[var(--radius-control)] bg-gold px-5 py-2.5 font-semibold text-[#14120f] transition-colors hover:bg-gold-hi"
+                >
+                  Ler mais
+                </Link>
+              </div>
+            </article>
+          </div>
+        </section>
+      )}
 
       {/* ------------------------------------------------------ servidores */}
       <section className="mx-auto max-w-6xl px-4 py-16">

@@ -12,6 +12,7 @@ import {
   LEVEL_LABEL,
   isStaff,
   canManageEconomy,
+  canManageEvents,
 } from "@/lib/roles";
 import { meuVinculo, meusPersonagens } from "@/lib/linking";
 import { saldo, jaPegouODaily, DAILY_PALETAS } from "@/lib/economia";
@@ -155,6 +156,13 @@ export default async function Painel() {
               title="Moderação"
               body="Jogadores online, anúncio no jogo e log de auditoria."
               href="/admin/moderacao"
+            />
+          )}
+          {canManageEvents(level, user.roles) && (
+            <Card
+              title="Eventos"
+              body="Escrever no mural — o que aparece em /eventos e na home."
+              href="/admin/eventos"
             />
           )}
         </div>
