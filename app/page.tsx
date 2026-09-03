@@ -5,8 +5,9 @@ import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
 import { getMetrics, getRates } from "@/lib/palworld/rest";
 import { communityStats, topPlayers } from "@/lib/db";
-import { eventoAtual } from "@/lib/eventos";
+import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
+import { ImageCarousel, type CarouselSlide } from "@/components/image-carousel";
 
 // Status ao vivo, com cache — os servidores não aguentam uma chamada por
 // visita de página (§3.3).
@@ -31,6 +32,21 @@ export default async function Home() {
     topPlayers(5).catch(() => []),
     eventoAtual().catch(() => null),
   ]);
+
+  // Só busca a galeria se tiver um evento em destaque — a maioria das
+  // visitas não tem evento nenhum, e não vale a pena consultar à toa.
+  const galeriaDoEvento = evento
+    ? await imagensDoEvento(evento.id).catch(() => [])
+    : [];
+  const slidesDoEvento: CarouselSlide[] = evento
+    ? [
+        ...(evento.coverImageUrl ? [{ url: evento.coverImageUrl }] : []),
+        ...galeriaDoEvento
+          .filter((img) => img.url !== evento.coverImageUrl)
+          .map((img) => ({ url: img.url, caption: img.caption })),
+      ]
+    : [];
+
   const online = servers.reduce(
     (n, s) => n + (s.metrics?.currentplayernum ?? 0),
     0,
@@ -117,30 +133,29 @@ export default async function Home() {
             </div>
 
             <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[3fr_2fr]">
-              <div
-                className="relative flex min-h-[320px] items-end p-4"
-                style={{
-                  backgroundColor: "var(--surface-2)",
-                  backgroundImage: evento.coverImageUrl
-                    ? `linear-gradient(0deg, rgb(11 10 9 / 0.6), rgb(11 10 9 / 0.05)), url("${evento.coverImageUrl}")`
-                    : "radial-gradient(60% 90% at 20% 20%, rgb(232 185 35 / 0.22), transparent 60%)," +
-                      "radial-gradient(70% 90% at 90% 80%, rgb(200 68 46 / 0.18), transparent 60%)",
-                  // "contain" em vez de "cover": a imagem cabe inteira dentro do
-                  // retângulo (letterbox), em vez de cortar topo/base pra
-                  // preencher — o print de 1920×1080 não fica com a cabeça
-                  // cortada. Pra gradiente sem imagem, contain equivale a
-                  // 100% 100% (não tem proporção própria), então não muda nada.
-                  backgroundSize: "contain",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "center",
-                }}
-              >
-                {!evento.coverImageUrl && evento.coverEmoji && (
-                  <span className="absolute top-4 left-4 text-4xl" aria-hidden>
-                    {evento.coverEmoji}
-                  </span>
+              <div className="relative min-h-[320px]">
+                {slidesDoEvento.length > 0 ? (
+                  <ImageCarousel slides={slidesDoEvento} className="absolute inset-0" />
+                ) : (
+                  <div
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{
+                      backgroundColor: "var(--surface-2)",
+                      backgroundImage:
+                        "radial-gradient(60% 90% at 20% 20%, rgb(232 185 35 / 0.22), transparent 60%)," +
+                        "radial-gradient(70% 90% at 90% 80%, rgb(200 68 46 / 0.18), transparent 60%)",
+                    }}
+                  />
                 )}
-                <EventoSelo evento={evento} />
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  {slidesDoEvento.length === 0 && evento.coverEmoji && (
+                    <span className="text-4xl" aria-hidden>
+                      {evento.coverEmoji}
+                    </span>
+                  )}
+                  <EventoSelo evento={evento} />
+                </div>
               </div>
               <div className="p-6">
                 {evento.startsAt && (

@@ -104,8 +104,9 @@ export function EditarEvento({
           className={`${campo} mt-1.5`}
         />
         <p className="mt-1 text-xs text-muted">
-          É essa imagem que aparece em destaque na home e no mural — a foto
-          da galeria, aqui embaixo, não entra nesse lugar sozinha.
+          Vira a primeira foto do carrossel (home e página do evento). As
+          fotos da galeria, aqui embaixo, entram em seguida, na ordem que
+          foram adicionadas.
         </p>
       </div>
 
