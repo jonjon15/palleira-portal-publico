@@ -118,15 +118,16 @@ export default async function Home() {
 
             <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[1.1fr_1fr]">
               <div
-                className="relative flex min-h-[170px] items-end p-4"
+                className="relative flex min-h-[170px] items-end bg-cover bg-center p-4"
                 style={{
-                  background:
-                    "radial-gradient(60% 90% at 20% 20%, rgb(232 185 35 / 0.22), transparent 60%)," +
-                    "radial-gradient(70% 90% at 90% 80%, rgb(200 68 46 / 0.18), transparent 60%)," +
-                    "var(--surface-2)",
+                  backgroundImage: evento.coverImageUrl
+                    ? `linear-gradient(0deg, rgb(11 10 9 / 0.75), rgb(11 10 9 / 0.15)), url("${evento.coverImageUrl}")`
+                    : "radial-gradient(60% 90% at 20% 20%, rgb(232 185 35 / 0.22), transparent 60%)," +
+                      "radial-gradient(70% 90% at 90% 80%, rgb(200 68 46 / 0.18), transparent 60%)," +
+                      "var(--surface-2)",
                 }}
               >
-                {evento.coverEmoji && (
+                {!evento.coverImageUrl && evento.coverEmoji && (
                   <span className="absolute top-4 left-4 text-4xl" aria-hidden>
                     {evento.coverEmoji}
                   </span>

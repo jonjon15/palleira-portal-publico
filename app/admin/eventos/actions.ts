@@ -45,6 +45,7 @@ export async function publicarNovoEvento(
     title: String(form.get("title") ?? ""),
     body: String(form.get("body") ?? ""),
     coverEmoji: String(form.get("coverEmoji") ?? ""),
+    coverImageUrl: String(form.get("coverImageUrl") ?? ""),
     serverSlug: String(form.get("serverSlug") ?? ""),
     startsAt: String(form.get("startsAt") ?? ""),
     endsAt: String(form.get("endsAt") ?? ""),

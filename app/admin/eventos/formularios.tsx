@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { publicarNovoEvento, agirSobreEvento, type Estado } from "./actions";
 import type { Evento, StatusEvento } from "@/lib/eventos";
@@ -77,6 +78,23 @@ export function NovoEvento({ servidores }: { servidores: PalleiraServer[] }) {
           placeholder="⚔️"
           className={`${campo} mt-1.5`}
         />
+      </div>
+
+      <div>
+        <label htmlFor="coverImageUrl" className="block text-sm text-muted">
+          Link da imagem de capa (opcional)
+        </label>
+        <input
+          id="coverImageUrl"
+          name="coverImageUrl"
+          type="url"
+          placeholder="https://..."
+          className={`${campo} mt-1.5`}
+        />
+        <p className="mt-1 text-xs text-muted">
+          Cole o link de uma imagem já hospedada (Discord: botão direito →
+          Copiar link da imagem, ou Imgur). Sem upload de arquivo aqui.
+        </p>
       </div>
 
       <div>
@@ -212,6 +230,13 @@ export function LinhaEvento({ evento }: { evento: Evento }) {
             {STATUS_LABEL[evento.status]} · por {evento.createdByName || "Palleira"}
           </span>
         </span>
+
+        <Link
+          href={`/admin/eventos/${evento.id}`}
+          className="rounded-[var(--radius-control)] border border-line-strong px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-surface-2"
+        >
+          Fotos
+        </Link>
 
         <form action={acao} className="flex shrink-0 gap-2">
           <input type="hidden" name="id" value={evento.id} />

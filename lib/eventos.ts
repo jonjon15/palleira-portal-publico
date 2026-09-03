@@ -19,6 +19,8 @@ export interface Evento {
   slug: string;
   body: string;
   coverEmoji: string | null;
+  /** Link colado, não upload — ver 008-imagens-de-evento.sql. */
+  coverImageUrl: string | null;
   serverSlug: string | null;
   startsAt: string | null;
   endsAt: string | null;
@@ -35,6 +37,7 @@ interface LinhaEvento {
   slug: string;
   body: string;
   cover_emoji: string | null;
+  cover_image_url: string | null;
   server_slug: string | null;
   starts_at: string | null;
   ends_at: string | null;
@@ -51,6 +54,7 @@ const paraEvento = (r: LinhaEvento): Evento => ({
   slug: r.slug,
   body: r.body,
   coverEmoji: r.cover_emoji,
+  coverImageUrl: r.cover_image_url,
   serverSlug: r.server_slug,
   startsAt: r.starts_at,
   endsAt: r.ends_at,
@@ -66,8 +70,9 @@ const paraEvento = (r: LinhaEvento): Evento => ({
 /** O evento em destaque — fixado, senão o publicado mais recente. Home e topo do mural. */
 export async function eventoAtual(): Promise<Evento | null> {
   const rows = (await sql`
-    select id, title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-           status, pinned, created_by, created_by_name, created_at
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
     from events
     where status = 'publicado'
     order by pinned desc, coalesce(starts_at, created_at) desc
@@ -79,8 +84,9 @@ export async function eventoAtual(): Promise<Evento | null> {
 /** O mural inteiro — fixado primeiro, depois do mais novo pro mais velho. */
 export async function listarEventosPublicados(limite = 30): Promise<Evento[]> {
   const rows = (await sql`
-    select id, title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-           status, pinned, created_by, created_by_name, created_at
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
     from events
     where status = 'publicado'
     order by pinned desc, coalesce(starts_at, created_at) desc
@@ -92,8 +98,9 @@ export async function listarEventosPublicados(limite = 30): Promise<Evento[]> {
 /** Barra lateral "próximos eventos" — só quem tem data futura marcada. */
 export async function proximosEventos(limite = 5): Promise<Evento[]> {
   const rows = (await sql`
-    select id, title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-           status, pinned, created_by, created_by_name, created_at
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
     from events
     where status = 'publicado' and starts_at is not null and starts_at > now()
     order by starts_at asc
@@ -104,10 +111,23 @@ export async function proximosEventos(limite = 5): Promise<Evento[]> {
 
 export async function buscarEventoPorSlug(slug: string): Promise<Evento | null> {
   const rows = (await sql`
-    select id, title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-           status, pinned, created_by, created_by_name, created_at
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
     from events
     where slug = ${slug} and status = 'publicado'
+  `) as LinhaEvento[];
+  return rows[0] ? paraEvento(rows[0]) : null;
+}
+
+/** Para /admin/eventos/[id]: acha por id, qualquer status — a edição precisa achar rascunho e arquivado também. */
+export async function buscarEventoPorId(id: number): Promise<Evento | null> {
+  const rows = (await sql`
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
+    from events
+    where id = ${id}
   `) as LinhaEvento[];
   return rows[0] ? paraEvento(rows[0]) : null;
 }
@@ -115,8 +135,9 @@ export async function buscarEventoPorSlug(slug: string): Promise<Evento | null> 
 /** Para o /admin/eventos: todo mundo, inclusive rascunho, do mais novo pro mais velho. */
 export async function listarTodosOsEventos(limite = 60): Promise<Evento[]> {
   const rows = (await sql`
-    select id, title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-           status, pinned, created_by, created_by_name, created_at
+    select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
+           starts_at, ends_at, status, pinned, created_by, created_by_name,
+           created_at
     from events
     order by created_at desc
     limit ${limite}
@@ -175,11 +196,17 @@ export interface NovoEvento {
   title: string;
   body: string;
   coverEmoji: string;
+  /** Link colado (Discord, Imgur…) — nunca upload, ver 008-imagens-de-evento.sql. */
+  coverImageUrl: string;
   serverSlug: string;
   startsAt: string;
   endsAt: string;
   pinned: boolean;
   publicar: boolean;
+}
+
+function linkValido(url: string): boolean {
+  return /^https?:\/\/\S+$/i.test(url);
 }
 
 /** Cria o evento — como rascunho ou já publicado, conforme o formulário. */
@@ -191,6 +218,14 @@ export async function criarEvento(
   const title = input.title.trim();
   if (!title) return { ok: false, mensagem: "Dê um título ao evento." };
 
+  const coverImageUrl = input.coverImageUrl.trim();
+  if (coverImageUrl && !linkValido(coverImageUrl)) {
+    return {
+      ok: false,
+      mensagem: "O link da imagem precisa começar com http:// ou https://.",
+    };
+  }
+
   const slug = await slugUnico(slugify(title));
   const status: StatusEvento = input.publicar ? "publicado" : "rascunho";
 
@@ -201,10 +236,11 @@ export async function criarEvento(
 
   await sql`
     insert into events (
-      title, slug, body, cover_emoji, server_slug, starts_at, ends_at,
-      status, pinned, created_by, created_by_name
+      title, slug, body, cover_emoji, cover_image_url, server_slug,
+      starts_at, ends_at, status, pinned, created_by, created_by_name
     ) values (
       ${title}, ${slug}, ${input.body.trim()}, ${input.coverEmoji.trim() || null},
+      ${coverImageUrl || null},
       ${input.serverSlug || null}, ${input.startsAt || null}, ${input.endsAt || null},
       ${status}, ${input.pinned}, ${autorId}, ${autorNome}
     )
@@ -269,4 +305,69 @@ export async function excluirRascunho(id: number): Promise<Resultado> {
     };
   }
   return { ok: true, mensagem: `Rascunho "${rows[0].title}" excluído.` };
+}
+
+/* ------------------------------------------------------------- galeria */
+
+/**
+ * Fotos soltas de um evento — o pedido de "colocar mais imagens depois,
+ * tipo campeões do evento". Cresce a qualquer momento, mesmo com o evento
+ * já arquivado: a foto do campeão só existe depois que o evento acabou.
+ */
+export interface ImagemEvento {
+  id: number;
+  eventId: number;
+  url: string;
+  caption: string;
+  createdAt: string;
+}
+
+interface LinhaImagemEvento {
+  id: number;
+  event_id: number;
+  url: string;
+  caption: string;
+  created_at: string;
+}
+
+const paraImagem = (r: LinhaImagemEvento): ImagemEvento => ({
+  id: r.id,
+  eventId: r.event_id,
+  url: r.url,
+  caption: r.caption,
+  createdAt: r.created_at,
+});
+
+export async function imagensDoEvento(eventId: number): Promise<ImagemEvento[]> {
+  const rows = (await sql`
+    select id, event_id, url, caption, created_at
+    from event_images
+    where event_id = ${eventId}
+    order by position asc, id asc
+  `) as LinhaImagemEvento[];
+  return rows.map(paraImagem);
+}
+
+export async function adicionarImagemDoEvento(
+  eventId: number,
+  url: string,
+  caption: string,
+): Promise<Resultado> {
+  const limpo = url.trim();
+  if (!linkValido(limpo)) {
+    return { ok: false, mensagem: "Cole um link começando com http:// ou https://." };
+  }
+  await sql`
+    insert into event_images (event_id, url, caption)
+    values (${eventId}, ${limpo}, ${caption.trim()})
+  `;
+  return { ok: true, mensagem: "Foto adicionada." };
+}
+
+export async function removerImagemDoEvento(imageId: number): Promise<Resultado> {
+  const rows = (await sql`
+    delete from event_images where id = ${imageId} returning id
+  `) as { id: number }[];
+  if (!rows.length) return { ok: false, mensagem: "Essa foto já não existe mais." };
+  return { ok: true, mensagem: "Foto removida." };
 }

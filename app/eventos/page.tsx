@@ -42,9 +42,18 @@ export default async function Eventos() {
                   href={`/eventos/${e.slug}`}
                   className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-2/60"
                 >
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br from-gold/30 to-gold-deep/40 text-xl">
-                    {e.pinned ? "📌" : e.coverEmoji || "📣"}
-                  </span>
+                  {e.coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- link colado de qualquer host, sem lista fixa de domínio pra otimizar
+                    <img
+                      src={e.coverImageUrl}
+                      alt=""
+                      className="size-11 shrink-0 rounded-[var(--radius-control)] object-cover"
+                    />
+                  ) : (
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br from-gold/30 to-gold-deep/40 text-xl">
+                      {e.pinned ? "📌" : e.coverEmoji || "📣"}
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">
                       {e.title}
