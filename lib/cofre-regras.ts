@@ -14,11 +14,11 @@
 /**
  * Quanto custa o próximo slot, dado quantos essa pessoa já tem de graça.
  *
- * 15 · 30 · 60 · 120 · 240… Preço que dobra é o melhor sink que existe: quem
- * acumulou muita Paleta gasta muito, e ninguém é obrigado a comprar. Vale
- * igual para o cofre de item e o de Pal.
+ * 60 · 90 · 120 · 150 · 180… Sobe 30 a cada slot — sink linear, não mais
+ * dobrando. Vale igual para o cofre de item e o de Pal.
  */
 export function precoDoSlot(numeroDoSlot: number, slotsGratis: number): number {
   if (numeroDoSlot <= slotsGratis) return 0;
-  return 15 * 2 ** (numeroDoSlot - slotsGratis - 1);
+  const posicao = numeroDoSlot - slotsGratis;
+  return 60 + 30 * (posicao - 1);
 }
