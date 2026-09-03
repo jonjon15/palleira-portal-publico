@@ -225,7 +225,7 @@ function SecaoItens({
               / {cofre.total}
             </span>
           </div>
-          <p className="mt-4 max-w-md text-sm text-muted">
+          <p className="mt-4 text-sm text-muted">
             Cada <b className="text-text">tipo</b> de item ocupa um slot — a
             quantidade não importa. Juntar 500 balas numa pilha que já existe
             é de graça; guardar um item novo é que pede espaço.
@@ -396,7 +396,7 @@ function SecaoPals({
               / {cofre.total}
             </span>
           </div>
-          <p className="mt-4 max-w-md text-sm text-muted">
+          <p className="mt-4 text-sm text-muted">
             Cada Pal guardado ocupa um slot — mesma lógica do cofre de item.
           </p>
           <p className="mt-2 text-sm text-muted">
