@@ -255,6 +255,54 @@ export async function criarEvento(
   };
 }
 
+export interface EdicaoEvento {
+  title: string;
+  body: string;
+  coverEmoji: string;
+  coverImageUrl: string;
+  serverSlug: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+/**
+ * Edita o conteúdo de um evento que já existe — título, texto, capa, data.
+ * Não mexe em status/fixado/slug: aqueles já têm ação própria (mudar o slug
+ * quebraria link que já circulou).
+ */
+export async function editarEvento(
+  id: number,
+  input: EdicaoEvento,
+): Promise<Resultado> {
+  const title = input.title.trim();
+  if (!title) return { ok: false, mensagem: "Dê um título ao evento." };
+
+  const coverImageUrl = input.coverImageUrl.trim();
+  if (coverImageUrl && !linkValido(coverImageUrl)) {
+    return {
+      ok: false,
+      mensagem: "O link da imagem precisa começar com http:// ou https://.",
+    };
+  }
+
+  const rows = (await sql`
+    update events set
+      title = ${title},
+      body = ${input.body.trim()},
+      cover_emoji = ${input.coverEmoji.trim() || null},
+      cover_image_url = ${coverImageUrl || null},
+      server_slug = ${input.serverSlug || null},
+      starts_at = ${input.startsAt || null},
+      ends_at = ${input.endsAt || null},
+      updated_at = now()
+    where id = ${id}
+    returning title
+  `) as { title: string }[];
+
+  if (!rows.length) return { ok: false, mensagem: "Evento não encontrado." };
+  return { ok: true, mensagem: `"${rows[0].title}" atualizado.` };
+}
+
 /** Publica, arquiva ou republica — a mesma ação para as três transições. */
 export async function mudarStatusEvento(
   id: number,

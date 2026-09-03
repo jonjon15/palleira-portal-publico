@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
-import { adicionarFoto, removerFoto, type Estado } from "./actions";
-import type { ImagemEvento } from "@/lib/eventos";
+import { adicionarFoto, removerFoto, salvarEdicao, type Estado } from "./actions";
+import type { Evento, ImagemEvento } from "@/lib/eventos";
+import type { PalleiraServer } from "@/lib/servers";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 
@@ -25,6 +26,141 @@ function Aviso({ ok, mensagem }: Estado) {
     >
       {mensagem}
     </p>
+  );
+}
+
+/** `datetime-local` quer "AAAA-MM-DDTHH:mm" no fuso local — sem isso o campo aparece vazio mesmo com data salva. */
+function paraDatetimeLocal(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function EditarEvento({
+  evento,
+  servidores,
+}: {
+  evento: Evento;
+  servidores: PalleiraServer[];
+}) {
+  const [estado, acao, pendente] = useActionState(salvarEdicao, SEM_ESTADO);
+
+  return (
+    <form action={acao} className="grid gap-4 sm:grid-cols-2">
+      <input type="hidden" name="eventId" value={evento.id} />
+
+      <div className="sm:col-span-2">
+        <label htmlFor="title" className="block text-sm text-muted">
+          Título
+        </label>
+        <input
+          id="title"
+          name="title"
+          required
+          maxLength={120}
+          defaultValue={evento.title}
+          className={`${campo} mt-1.5`}
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <label htmlFor="body" className="block text-sm text-muted">
+          Texto
+        </label>
+        <textarea
+          id="body"
+          name="body"
+          rows={5}
+          defaultValue={evento.body}
+          className={`${campo} mt-1.5 resize-y`}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="coverEmoji" className="block text-sm text-muted">
+          Ícone (opcional)
+        </label>
+        <input
+          id="coverEmoji"
+          name="coverEmoji"
+          maxLength={4}
+          defaultValue={evento.coverEmoji ?? ""}
+          placeholder="⚔️"
+          className={`${campo} mt-1.5`}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="coverImageUrl" className="block text-sm text-muted">
+          Link da imagem de capa (opcional)
+        </label>
+        <input
+          id="coverImageUrl"
+          name="coverImageUrl"
+          type="url"
+          defaultValue={evento.coverImageUrl ?? ""}
+          placeholder="https://..."
+          className={`${campo} mt-1.5`}
+        />
+        <p className="mt-1 text-xs text-muted">
+          É essa imagem que aparece em destaque na home e no mural — a foto
+          da galeria, aqui embaixo, não entra nesse lugar sozinha.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="serverSlug" className="block text-sm text-muted">
+          Servidor
+        </label>
+        <select
+          id="serverSlug"
+          name="serverSlug"
+          defaultValue={evento.serverSlug ?? ""}
+          className={`${campo} mt-1.5`}
+        >
+          <option value="">Todos os servidores</option>
+          {servidores.map((s) => (
+            <option key={s.slug} value={s.slug}>
+              {s.shortName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="startsAt" className="block text-sm text-muted">
+          Começa em (opcional)
+        </label>
+        <input
+          id="startsAt"
+          name="startsAt"
+          type="datetime-local"
+          defaultValue={paraDatetimeLocal(evento.startsAt)}
+          className={`${campo} mt-1.5`}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="endsAt" className="block text-sm text-muted">
+          Termina em (opcional)
+        </label>
+        <input
+          id="endsAt"
+          name="endsAt"
+          type="datetime-local"
+          defaultValue={paraDatetimeLocal(evento.endsAt)}
+          className={`${campo} mt-1.5`}
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <button type="submit" disabled={pendente} className={botao}>
+          {pendente ? "Salvando…" : "Salvar alterações"}
+        </button>
+        <Aviso {...estado} />
+      </div>
+    </form>
   );
 }
 

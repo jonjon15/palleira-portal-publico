@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { levelOf, canManageEvents } from "@/lib/roles";
-import { adicionarImagemDoEvento, removerImagemDoEvento } from "@/lib/eventos";
+import {
+  adicionarImagemDoEvento,
+  removerImagemDoEvento,
+  editarEvento,
+  type EdicaoEvento,
+} from "@/lib/eventos";
 
 export interface Estado {
   ok: boolean;
@@ -16,6 +21,35 @@ async function exigirCriador() {
   if (!session) throw new Error("Sem sessão");
   const nivel = levelOf(session.user.roles, session.user.isMember);
   if (!canManageEvents(nivel, session.user.roles)) throw new Error("Sem permissão");
+}
+
+export async function salvarEdicao(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  await exigirCriador();
+  const eventId = Number(form.get("eventId"));
+  if (!Number.isInteger(eventId)) return { ok: false, mensagem: "Evento inválido." };
+
+  const input: EdicaoEvento = {
+    title: String(form.get("title") ?? ""),
+    body: String(form.get("body") ?? ""),
+    coverEmoji: String(form.get("coverEmoji") ?? ""),
+    coverImageUrl: String(form.get("coverImageUrl") ?? ""),
+    serverSlug: String(form.get("serverSlug") ?? ""),
+    startsAt: String(form.get("startsAt") ?? ""),
+    endsAt: String(form.get("endsAt") ?? ""),
+  };
+
+  const resultado = await editarEvento(eventId, input);
+  if (resultado.ok) {
+    revalidatePath("/");
+    revalidatePath("/eventos");
+    revalidatePath(`/eventos/${eventId}`);
+    revalidatePath(`/admin/eventos/${eventId}`);
+    revalidatePath("/admin/eventos");
+  }
+  return resultado;
 }
 
 export async function adicionarFoto(

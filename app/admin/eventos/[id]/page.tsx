@@ -4,10 +4,11 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { levelOf, canManageEvents } from "@/lib/roles";
+import { activeServers } from "@/lib/servers";
 import { buscarEventoPorId, imagensDoEvento } from "@/lib/eventos";
-import { AdicionarFoto, FotoDoEvento } from "./formularios";
+import { EditarEvento, AdicionarFoto, FotoDoEvento } from "./formularios";
 
-export const metadata: Metadata = { title: "Fotos do evento" };
+export const metadata: Metadata = { title: "Editar evento" };
 export const dynamic = "force-dynamic";
 
 export default async function FotosDoEvento({
@@ -37,7 +38,7 @@ export default async function FotosDoEvento({
       <PageHeader
         kicker="Administração"
         title={evento.title}
-        description="Capa é uma só, lá no formulário do evento — aqui é a galeria que cresce depois, tipo foto dos campeões."
+        description="Editar título, texto e capa, e a galeria que cresce depois — tipo foto dos campeões."
       />
 
       <div className="mx-auto max-w-4xl px-4 py-12">
@@ -49,6 +50,13 @@ export default async function FotosDoEvento({
         </Link>
 
         <section className="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+          <h2 className="text-lg font-semibold">Editar evento</h2>
+          <div className="mt-4">
+            <EditarEvento evento={evento} servidores={activeServers()} />
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
           <h2 className="text-lg font-semibold">Adicionar foto</h2>
           <div className="mt-4">
             <AdicionarFoto eventId={eventId} />
