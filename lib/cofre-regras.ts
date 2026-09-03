@@ -14,11 +14,14 @@
 /**
  * Quanto custa o próximo slot, dado quantos essa pessoa já tem de graça.
  *
- * 60 · 90 · 120 · 150 · 180… Sobe 30 a cada slot — sink linear, não mais
- * dobrando. Vale igual para o cofre de item e o de Pal.
+ * 100 · 200 · 400 · 800 · 1600… Os dois primeiros sobem de 100 em 100; a
+ * partir do terceiro, dobra. Pedido do dono em 03/09/2026. Vale igual para
+ * o cofre de item e o de Pal.
  */
 export function precoDoSlot(numeroDoSlot: number, slotsGratis: number): number {
   if (numeroDoSlot <= slotsGratis) return 0;
   const posicao = numeroDoSlot - slotsGratis;
-  return 60 + 30 * (posicao - 1);
+  if (posicao === 1) return 100;
+  if (posicao === 2) return 200;
+  return 200 * 2 ** (posicao - 2);
 }

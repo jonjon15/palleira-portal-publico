@@ -232,7 +232,8 @@ function SecaoItens({
           </p>
           <p className="mt-2 text-sm text-muted">
             Os {slotsGratis} primeiros são seus, conforme seu plano. Do
-            seguinte em diante o preço sobe 30 Paletas a cada slot.
+            seguinte em diante: 100, depois 200, e a partir daí dobra a
+            cada slot.
           </p>
         </div>
 
@@ -401,7 +402,8 @@ function SecaoPals({
           </p>
           <p className="mt-2 text-sm text-muted">
             Os {slotsGratis} primeiros são seus, conforme seu plano. Do
-            seguinte em diante o preço sobe 30 Paletas a cada slot.
+            seguinte em diante: 100, depois 200, e a partir daí dobra a
+            cada slot.
           </p>
         </div>
 
