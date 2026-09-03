@@ -63,59 +63,67 @@ export function ImageCarousel({
   if (slides.length === 0) return null;
   const atual = slides[Math.min(indice, slides.length - 1)];
 
+  // `className` é de quem chama (posição/tamanho da caixa — pode vir com
+  // "absolute inset-0" ou "aspect-video w-full"). Fica num wrapper à parte
+  // porque `relative` e `absolute` na MESMA div brigam pela mesma
+  // propriedade — o mais forte na cascata do Tailwind vence e a caixa
+  // colapsa pra tamanho zero. A camada de dentro é sempre `relative
+  // size-full`, então nunca conflita com o que vier de fora.
   return (
-    <div
-      className={`relative overflow-hidden bg-surface-2 ${className}`}
-      onMouseEnter={() => setPausado(true)}
-      onMouseLeave={() => setPausado(false)}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- link colado de qualquer host, sem lista fixa de domínio pra otimizar */}
-      <img
-        src={atual.url}
-        alt={atual.caption || ""}
-        className="absolute inset-0 size-full object-contain"
-      />
+    <div className={className}>
+      <div
+        className="relative size-full overflow-hidden rounded-[inherit] bg-surface-2"
+        onMouseEnter={() => setPausado(true)}
+        onMouseLeave={() => setPausado(false)}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- link colado de qualquer host, sem lista fixa de domínio pra otimizar */}
+        <img
+          src={atual.url}
+          alt={atual.caption || ""}
+          className="absolute inset-0 size-full object-contain"
+        />
 
-      {atual.caption && (
-        <p className="absolute inset-x-0 top-0 truncate bg-gradient-to-b from-bg/85 to-transparent px-3 pt-2 pb-5 text-center text-xs text-text">
-          {atual.caption}
-        </p>
-      )}
+        {atual.caption && (
+          <p className="absolute inset-x-0 top-0 truncate bg-gradient-to-b from-bg/85 to-transparent px-3 pt-2 pb-5 text-center text-xs text-text">
+            {atual.caption}
+          </p>
+        )}
 
-      {slides.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={() => mudarPara((indice - 1 + slides.length) % slides.length)}
-            aria-label="Foto anterior"
-            className="absolute top-1/2 left-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-bg/70 text-text transition-colors hover:bg-bg/90"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={() => mudarPara((indice + 1) % slides.length)}
-            aria-label="Próxima foto"
-            className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-bg/70 text-text transition-colors hover:bg-bg/90"
-          >
-            ›
-          </button>
-          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {slides.map((s, i) => (
-              <button
-                key={s.url + i}
-                type="button"
-                onClick={() => mudarPara(i)}
-                aria-label={`Ir para a foto ${i + 1}`}
-                aria-current={i === indice}
-                className={`size-1.5 rounded-full transition-colors ${
-                  i === indice ? "bg-gold" : "bg-text/35 hover:bg-text/60"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
+        {slides.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => mudarPara((indice - 1 + slides.length) % slides.length)}
+              aria-label="Foto anterior"
+              className="absolute top-1/2 left-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-bg/70 text-text transition-colors hover:bg-bg/90"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => mudarPara((indice + 1) % slides.length)}
+              aria-label="Próxima foto"
+              className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-bg/70 text-text transition-colors hover:bg-bg/90"
+            >
+              ›
+            </button>
+            <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {slides.map((s, i) => (
+                <button
+                  key={s.url + i}
+                  type="button"
+                  onClick={() => mudarPara(i)}
+                  aria-label={`Ir para a foto ${i + 1}`}
+                  aria-current={i === indice}
+                  className={`size-1.5 rounded-full transition-colors ${
+                    i === indice ? "bg-gold" : "bg-text/35 hover:bg-text/60"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
