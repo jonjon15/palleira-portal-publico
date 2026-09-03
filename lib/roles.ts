@@ -13,11 +13,9 @@ export const ROLE = {
   modDiscord: "1527448282354290839",
   pvpVip: "1528839890593255464",
   pveVip: "1528840127160516748",
-  planoColossal: "1527443363039678525",
-  planoDiamante: "1527443223503569137",
-  planoOuro: "1527443110559482066",
-  planoPrata: "1527442831235612702",
-  planoBronze: "1527441969268396184",
+  planoPalleira: "1527443363039678525",
+  planoNewMetal: "1527443223503569137",
+  planoHardMetal: "1527443110559482066",
   criadorEvento: "1527631716687286323",
   booster: "1457782290573955093",
   palleiro: "1527449340686368929",
@@ -35,21 +33,31 @@ const LEVEL_ROLES: [AccessLevel, string[]][] = [
 ];
 
 /**
- * Planos de assinatura, do menor para o maior.
+ * Planos VIP pagos, do menor para o maior — cada um com sua paga de daily e
+ * seus slots grátis no cofre (item e Pal contam separado, mesmo número).
  *
- * ⚠️ Os cartazes de divulgação falam em "Hard Metal", "New Metal" e
- * "Palleira", que **não existem como cargo**. O que existe no Discord é esta
- * escada de cinco. Conferir qual é a verdade antes de publicar benefício.
+ * Os nomes batem com os cartazes de divulgação (Hard Metal, New Metal,
+ * Palleira); os cargos por trás são os mesmos IDs de sempre, só renomeados
+ * aqui para não precisar decorar a tradução.
  */
 export const PLANOS = [
-  { key: "bronze", nome: "Bronze", role: ROLE.planoBronze, ordem: 1 },
-  { key: "prata", nome: "Prata", role: ROLE.planoPrata, ordem: 2 },
-  { key: "ouro", nome: "Ouro", role: ROLE.planoOuro, ordem: 3 },
-  { key: "diamante", nome: "Diamante", role: ROLE.planoDiamante, ordem: 4 },
-  { key: "colossal", nome: "Colossal", role: ROLE.planoColossal, ordem: 5 },
+  { key: "hardMetal", nome: "Hard Metal", role: ROLE.planoHardMetal, ordem: 1, dailyPaletas: 4, slotsCofre: 2 },
+  { key: "newMetal", nome: "New Metal", role: ROLE.planoNewMetal, ordem: 2, dailyPaletas: 8, slotsCofre: 3 },
+  { key: "palleira", nome: "Palleira", role: ROLE.planoPalleira, ordem: 3, dailyPaletas: 12, slotsCofre: 4 },
 ] as const;
 
 export type Plano = (typeof PLANOS)[number];
+
+/** Slots grátis de cofre (item ou Pal) para quem não tem nenhum plano VIP. */
+export const SLOTS_COFRE_PADRAO = 1;
+
+/**
+ * Quantos slots grátis esta pessoa tem no cofre — item e Pal usam a mesma
+ * conta, cada um com sua própria lista de slots comprados por cima.
+ */
+export function slotsGratisDoCofre(roles: string[]): number {
+  return planoOf(roles)?.slotsCofre ?? SLOTS_COFRE_PADRAO;
+}
 
 /** Nível de acesso a partir dos cargos que o Discord devolveu. */
 export function levelOf(roles: string[], isMember = true): AccessLevel {

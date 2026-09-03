@@ -7,7 +7,9 @@ import { delPal, givePalTemplate } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
 import { ondeEstouOnline, type PersonagemOnline } from "@/lib/cofre";
-import { isStaff, levelOf } from "@/lib/roles";
+import { isStaff, levelOf, slotsGratisDoCofre } from "@/lib/roles";
+import { precoDoSlot } from "@/lib/cofre-regras";
+import { lancar } from "@/lib/economia";
 
 /**
  * O cofre de Pals, e a entrega em duas fases (§7.3 do PROMPT.md).
@@ -77,15 +79,87 @@ const paraPalNoCofre = (r: LinhaVaultPal): PalNoCofre => ({
   serverNome: r.server_slug ? serverBySlug(r.server_slug)?.shortName ?? r.server_slug : null,
 });
 
-export async function meuCofreDePals(discordId: string): Promise<PalNoCofre[]> {
-  const rows = (await sql`
-    select id, pal_id, template, imported_at, server_slug
-    from vault_pals
-    where discord_id = ${discordId}
-    order by imported_at desc
-  `) as LinhaVaultPal[];
+export interface EstadoDoCofreDePals {
+  pals: PalNoCofre[];
+  usados: number;
+  total: number;
+  precoDoProximo: number;
+}
 
-  return rows.map(paraPalNoCofre);
+export async function meuCofreDePals(
+  discordId: string,
+  roles: string[],
+): Promise<EstadoDoCofreDePals> {
+  const [rows, extras] = await Promise.all([
+    sql`
+      select id, pal_id, template, imported_at, server_slug
+      from vault_pals
+      where discord_id = ${discordId}
+      order by imported_at desc
+    ` as unknown as Promise<LinhaVaultPal[]>,
+    // Mesmo esquema do cofre de item: slot comprado é uma linha do extrato,
+    // só que de origem "slotPal" — as duas contagens não se misturam.
+    sql`
+      select count(*)::int as n
+      from ledger
+      where discord_id = ${discordId} and kind = 'slotPal'
+    ` as unknown as Promise<{ n: number }[]>,
+  ]);
+
+  const pals = rows.map(paraPalNoCofre);
+  const gratis = slotsGratisDoCofre(roles);
+  const total = gratis + (extras[0]?.n ?? 0);
+  return {
+    pals,
+    usados: pals.length,
+    total,
+    precoDoProximo: precoDoSlot(total + 1, gratis),
+  };
+}
+
+/** Quantos Pals a pessoa tem guardados — o mercado checa antes de entregar. */
+export async function cofreDePalsCheio(
+  discordId: string,
+  roles: string[],
+): Promise<boolean> {
+  const c = await meuCofreDePals(discordId, roles);
+  return c.usados >= c.total;
+}
+
+/**
+ * Compra o próximo slot de Pal — mesmo mecanismo do slot de item
+ * (`comprarSlot` em `lib/cofre.ts`), preço e sink incluídos.
+ */
+export async function comprarSlotDePal(
+  discordId: string,
+  roles: string[],
+): Promise<Resultado> {
+  const cofre = await meuCofreDePals(discordId, roles);
+  const numero = cofre.total + 1;
+  const preco = precoDoSlot(numero, slotsGratisDoCofre(roles));
+
+  const r = await lancar({
+    discordId,
+    delta: -preco,
+    origem: "slotPal",
+    descricao: `Slot ${numero} do cofre de Pals`,
+    refId: String(numero),
+    chave: `slotPal:${discordId}:${numero}`,
+  });
+
+  if (r.status === "sem-saldo") {
+    return {
+      ok: false,
+      mensagem: `O slot ${numero} custa ${preco} Paletas e você tem ${r.saldo}.`,
+    };
+  }
+  if (r.status === "repetido") {
+    return { ok: false, mensagem: "Esse slot já foi comprado." };
+  }
+  return {
+    ok: true,
+    mensagem: `Slot ${numero} liberado por ${preco} Paletas. Saldo: ${r.saldo}.`,
+  };
 }
 
 export async function palDoCofre(
@@ -197,10 +271,20 @@ export async function importarPalParaCofre(
     };
   }
 
+  // 2. O slot só é checado aqui — cofre cheio não pode nem começar a mexer
+  //    no jogo. Mesma disciplina do cofre de item.
+  const cofre = await meuCofreDePals(discordId, session.user.roles);
+  if (cofre.usados >= cofre.total) {
+    return {
+      ok: false,
+      mensagem: `Seu cofre de Pals está cheio (${cofre.usados}/${cofre.total}). Compre um slot ou resgate algo primeiro.`,
+    };
+  }
+
   const template = paraTemplate(pal);
   const candidatos = candidatosDeFiltro(pal);
 
-  // 2. Registro de intenção ANTES de tocar no jogo — mesma disciplina do
+  // 3. Registro de intenção ANTES de tocar no jogo — mesma disciplina do
   //    cofre de item (`vault_transfers`).
   const [{ id: transferId }] = (await sql`
     insert into pal_transfers
@@ -241,7 +325,7 @@ export async function importarPalParaCofre(
     return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
   }
 
-  // 3. O jogo já deletou de verdade — isto não tem mais volta. Se a gravação
+  // 4. O jogo já deletou de verdade — isto não tem mais volta. Se a gravação
   //    no cofre falhar daqui pra frente, o Pal não pode simplesmente
   //    desaparecer: marca um status próprio (não 'andando', que pareceria
   //    uma transferência normal em andamento) para a administração achar e

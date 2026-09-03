@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db";
+import { planoOf } from "@/lib/roles";
 
 /**
  * A carteira de Paletas (§7.1 e §7.8 do PROMPT.md).
@@ -23,6 +24,7 @@ export type Origem =
   | "compra"
   | "taxa"
   | "slot"
+  | "slotPal"
   | "ajuste"
   | "migracao"
   | "evento";
@@ -34,6 +36,7 @@ export const ORIGEM_LABEL: Record<Origem, string> = {
   compra: "Compra no mercado",
   taxa: "Taxa de venda",
   slot: "Slot de cofre",
+  slotPal: "Slot de cofre de Pal",
   ajuste: "Ajuste da administração",
   migracao: "Saldo trazido do Palbot",
   evento: "Evento",
@@ -48,8 +51,20 @@ export interface Lancamento {
   em: string;
 }
 
-/** Quanto o `/daily` paga. Calibrado na §7.1 — não mexer sem refazer a tabela. */
-export const DAILY_PALETAS = 2;
+/**
+ * Quanto o `/daily` paga para quem não tem nenhum plano VIP. Calibrado na
+ * §7.1 — não mexer sem refazer a tabela.
+ */
+export const DAILY_PALETAS_BASE = 2;
+
+/**
+ * Quanto o `/daily` paga para esta pessoa, considerando o plano VIP mais
+ * alto que ela tiver no Discord (Hard Metal, New Metal, Palleira). Sem
+ * nenhum plano, cai no valor padrão.
+ */
+export function dailyPaletas(roles: string[]): number {
+  return planoOf(roles)?.dailyPaletas ?? DAILY_PALETAS_BASE;
+}
 
 /* ------------------------------------------------------------------ leitura */
 

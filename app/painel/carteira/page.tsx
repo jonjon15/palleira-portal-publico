@@ -10,7 +10,7 @@ import {
   extrato,
   jaPegouODaily,
   proximoDaily,
-  DAILY_PALETAS,
+  dailyPaletas,
   ORIGEM_LABEL,
   type Lancamento,
 } from "@/lib/economia";
@@ -35,6 +35,7 @@ export default async function Carteira() {
     jaPegouODaily(discordId),
     temVinculo(discordId),
   ]);
+  const quanto = dailyPaletas(session.user.roles);
 
   return (
     <>
@@ -101,11 +102,11 @@ export default async function Carteira() {
             ) : (
               <>
                 <p className="mt-2 text-sm text-muted">
-                  {DAILY_PALETAS} Paletas por dia, todo dia. Um mês rende{" "}
-                  {DAILY_PALETAS * 30} — mais que uma doação de R$20.
+                  {quanto} Paletas por dia, todo dia. Um mês rende{" "}
+                  {quanto * 30} — mais que uma doação de R$20.
                 </p>
                 <div className="mt-4">
-                  <BotaoDaily quanto={DAILY_PALETAS} />
+                  <BotaoDaily quanto={quanto} />
                 </div>
               </>
             )}

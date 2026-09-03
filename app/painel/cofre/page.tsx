@@ -7,12 +7,11 @@ import { Pick } from "@/components/pick";
 import { PalCard } from "@/components/pal-card";
 import { meuVinculo } from "@/lib/linking";
 import { saldo } from "@/lib/economia";
-import { isStaff, levelOf } from "@/lib/roles";
+import { isStaff, levelOf, slotsGratisDoCofre } from "@/lib/roles";
 import {
   meuCofre,
   ondeEstouOnline,
   inventarioNoJogo,
-  SLOTS_GRATIS,
   type PersonagemOnline,
 } from "@/lib/cofre";
 import { meuCofreDePals, meusResgatesPendentes, palsNoJogo } from "@/lib/pal-cofre";
@@ -23,6 +22,7 @@ import {
   AnunciarPal,
   SemearPalDeTeste,
   EntregasPendentes,
+  BotaoSlotDePal,
 } from "./pals/formularios";
 
 export const metadata: Metadata = {
@@ -51,9 +51,9 @@ export default async function Cofre({
 
   const [vinculo, cofre, paletas, cofreDePals, resgatesPendentes] = await Promise.all([
     meuVinculo(discordId),
-    meuCofre(discordId),
+    meuCofre(discordId, session.user.roles),
     saldo(discordId),
-    meuCofreDePals(discordId),
+    meuCofreDePals(discordId, session.user.roles),
     meusResgatesPendentes(discordId),
   ]);
 
@@ -111,12 +111,13 @@ export default async function Cofre({
           ativo={aba}
           srv={escolhido?.serverSlug}
           contagemItens={cofre.usados}
-          contagemPals={cofreDePals.length}
+          contagemPals={cofreDePals.usados}
         />
 
         {aba === "itens" ? (
           <SecaoItens
             cofre={cofre}
+            slotsGratis={slotsGratisDoCofre(session.user.roles)}
             paletas={paletas}
             onde={onde}
             escolhido={escolhido}
@@ -127,6 +128,8 @@ export default async function Cofre({
         ) : (
           <SecaoPals
             cofre={cofreDePals}
+            slotsGratis={slotsGratisDoCofre(session.user.roles)}
+            paletas={paletas}
             onde={onde}
             escolhido={escolhido}
             disponiveis={disponiveis}
@@ -189,6 +192,7 @@ function Abas({
 
 function SecaoItens({
   cofre,
+  slotsGratis,
   paletas,
   onde,
   escolhido,
@@ -197,6 +201,7 @@ function SecaoItens({
   vinculoNome,
 }: {
   cofre: Awaited<ReturnType<typeof meuCofre>>;
+  slotsGratis: number;
   paletas: number;
   onde: PersonagemOnline[];
   escolhido: PersonagemOnline | null;
@@ -226,8 +231,8 @@ function SecaoItens({
             é de graça; guardar um item novo é que pede espaço.
           </p>
           <p className="mt-2 text-sm text-muted">
-            Os {SLOTS_GRATIS} primeiros são seus. Do quarto em diante o preço
-            dobra a cada slot.
+            Os {slotsGratis} primeiros são seus, conforme seu plano. Do
+            seguinte em diante o preço dobra a cada slot.
           </p>
         </div>
 
@@ -354,6 +359,8 @@ function SecaoItens({
 
 function SecaoPals({
   cofre,
+  slotsGratis,
+  paletas,
   onde,
   escolhido,
   disponiveis,
@@ -362,6 +369,8 @@ function SecaoPals({
   pendentes,
 }: {
   cofre: Awaited<ReturnType<typeof meuCofreDePals>>;
+  slotsGratis: number;
+  paletas: number;
   onde: PersonagemOnline[];
   escolhido: PersonagemOnline | null;
   disponiveis: Awaited<ReturnType<typeof palsNoJogo>>;
@@ -374,32 +383,57 @@ function SecaoPals({
       <EntregasPendentes pendentes={pendentes} />
 
       {/* ----------------------------------------------------------- estado */}
-      <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
-        <p className="text-xs font-bold tracking-[0.18em] text-muted uppercase">
-          Pals no cofre
-        </p>
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="tabular text-5xl font-bold tracking-tight">
-            {cofre.length}
-          </span>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
+          <p className="text-xs font-bold tracking-[0.18em] text-muted uppercase">
+            Pals no cofre
+          </p>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="tabular text-5xl font-bold tracking-tight">
+              {cofre.usados}
+            </span>
+            <span className="tabular text-2xl text-muted">
+              / {cofre.total}
+            </span>
+          </div>
+          <p className="mt-4 max-w-md text-sm text-muted">
+            Cada Pal guardado ocupa um slot — mesma lógica do cofre de item.
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Os {slotsGratis} primeiros são seus, conforme seu plano. Do
+            seguinte em diante o preço dobra a cada slot.
+          </p>
         </div>
-        <p className="mt-4 max-w-md text-sm text-muted">
-          Sem limite de vagas — guardar Pal não gasta slot nem Paleta,
-          diferente do cofre de itens.
-        </p>
+
+        <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
+          <h2 className="font-semibold">Mais espaço</h2>
+          <p className="mt-2 text-sm text-muted">
+            O slot {cofre.total + 1} custa{" "}
+            <b className="text-text tabular">{cofre.precoDoProximo}</b>{" "}
+            Paletas. Você tem{" "}
+            <span className="inline-flex items-baseline gap-1 align-baseline">
+              <Pick className="size-3.5 translate-y-0.5" withLetter={false} />
+              <b className="tabular text-text">{paletas}</b>
+            </span>
+            .
+          </p>
+          <div className="mt-4">
+            <BotaoSlotDePal preco={cofre.precoDoProximo} />
+          </div>
+        </div>
       </div>
 
       {/* ------------------------------------------------------ o que está lá */}
       <section className="mt-10">
         <h2 className="text-lg font-semibold">No cofre</h2>
 
-        {cofre.length === 0 ? (
+        {cofre.usados === 0 ? (
           <p className="mt-3 rounded-[var(--radius-card)] border border-dashed border-line-strong bg-surface p-6 text-sm text-muted">
             Nenhum Pal guardado ainda. Entre no jogo e guarde um lá embaixo.
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {cofre.map((p) => (
+            {cofre.pals.map((p) => (
               <div
                 key={p.id}
                 className="rounded-[var(--radius-card)] border border-line bg-surface p-3"
@@ -477,6 +511,13 @@ function SecaoPals({
             <p className="mt-2 text-sm text-muted">
               Time e palbox de <b className="text-text">{escolhido.name}</b>{" "}
               no {escolhido.serverName}
+              {cofre.usados >= cofre.total && (
+                <span className="text-warning">
+                  {" "}
+                  · cofre de Pals cheio: compre um slot ou resgate algo antes
+                  de guardar
+                </span>
+              )}
             </p>
             <div className="mt-3">
               <GuardarPals

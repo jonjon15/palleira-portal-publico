@@ -7,6 +7,7 @@ import {
   acaoResgatarPal,
   acaoAnunciarPal,
   acaoSemearTeste,
+  acaoComprarSlotDePal,
   consultarResgate,
   type Estado,
   type EstadoResgate,
@@ -46,6 +47,28 @@ function Enviar({ children }: { children: React.ReactNode }) {
     >
       {pending ? "…" : children}
     </button>
+  );
+}
+
+/* ----------------------------------------------------------------- slots */
+
+export function BotaoSlotDePal({ preco }: { preco: number }) {
+  const [estado, acao, pendente] = useActionState(
+    async () => acaoComprarSlotDePal(),
+    INICIAL,
+  );
+
+  return (
+    <form action={acao}>
+      <button
+        type="submit"
+        disabled={pendente}
+        className="rounded-[var(--radius-control)] bg-gold px-4 py-2 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pendente ? "Comprando…" : `Comprar slot por ${preco} Paletas`}
+      </button>
+      <Aviso estado={estado} />
+    </form>
   );
 }
 

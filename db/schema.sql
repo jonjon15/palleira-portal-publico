@@ -131,7 +131,7 @@ create table if not exists ledger (
   -- Paleta é SEMPRE inteira (§7.1). Nada de decimal aqui, nunca.
   delta           integer     not null,
   balance_after   integer     not null,
-  -- daily | doacao | venda | compra | taxa | ajuste | migracao | evento
+  -- daily | doacao | venda | compra | taxa | slot | slotPal | ajuste | migracao | evento
   kind            text        not null,
   descricao       text        not null default '',
   -- Aponta para o anúncio, a ordem ou a doação que gerou a linha

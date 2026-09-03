@@ -52,7 +52,7 @@ export async function acaoComprarSlot(): Promise<Estado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
 
-  const r = await comprarSlot(session.user.discordId);
+  const r = await comprarSlot(session.user.discordId, session.user.roles);
   atualiza();
   return r;
 }

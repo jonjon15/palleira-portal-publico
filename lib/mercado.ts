@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { lancar } from "@/lib/economia";
 import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
 import { debitarCofre, devolverAoCofre, temPilha, cofreCheio } from "@/lib/cofre";
+import { cofreDePalsCheio } from "@/lib/pal-cofre";
 import {
   taxaDaVenda,
   PRECO_MINIMO,
@@ -402,16 +403,22 @@ export async function comprar(id: number): Promise<Resultado> {
   }
 
   // Aviso cedo e amigável: o lote precisa caber no cofre de quem compra.
-  // Pal não tem limite de slots — só o cofre de item tem.
   if (
     alvo.kind === "item" &&
     !(await temPilha(discordId, alvo.itemId as string)) &&
-    (await cofreCheio(discordId))
+    (await cofreCheio(discordId, session.user.roles))
   ) {
     return {
       ok: false,
       mensagem:
         "Seu cofre está cheio. Compre um slot ou resgate algo antes de comprar.",
+    };
+  }
+  if (alvo.kind === "pal" && (await cofreDePalsCheio(discordId, session.user.roles))) {
+    return {
+      ok: false,
+      mensagem:
+        "Seu cofre de Pals está cheio. Compre um slot ou resgate algo antes de comprar.",
     };
   }
 

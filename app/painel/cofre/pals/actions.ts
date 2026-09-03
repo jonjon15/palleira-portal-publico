@@ -8,6 +8,7 @@ import {
   continuarResgate,
   statusDoResgate,
   semearPalDeTeste,
+  comprarSlotDePal,
   type Resultado,
   type StatusResgate,
 } from "@/lib/pal-cofre";
@@ -55,6 +56,15 @@ export async function acaoSemearTeste(
   form: FormData,
 ): Promise<Estado> {
   const r = await semearPalDeTeste(String(form.get("json") ?? ""));
+  atualiza();
+  return r;
+}
+
+export async function acaoComprarSlotDePal(): Promise<Estado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+
+  const r = await comprarSlotDePal(session.user.discordId, session.user.roles);
   atualiza();
   return r;
 }

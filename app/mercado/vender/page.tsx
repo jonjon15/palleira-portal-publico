@@ -21,7 +21,7 @@ export default async function Vender() {
   const discordId = session.user.discordId;
 
   const [cofre, anuncios] = await Promise.all([
-    meuCofre(discordId),
+    meuCofre(discordId, session.user.roles),
     meusAnuncios(discordId),
   ]);
   const ativos = anuncios.filter((a) => a.status === "ativo").length;

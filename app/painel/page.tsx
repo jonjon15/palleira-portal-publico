@@ -15,7 +15,7 @@ import {
   canManageEvents,
 } from "@/lib/roles";
 import { meuVinculo, meusPersonagens } from "@/lib/linking";
-import { saldo, jaPegouODaily, DAILY_PALETAS } from "@/lib/economia";
+import { saldo, jaPegouODaily, dailyPaletas } from "@/lib/economia";
 import { meuCofre } from "@/lib/cofre";
 import { meusAnuncios } from "@/lib/mercado";
 
@@ -28,6 +28,7 @@ export default async function Painel() {
   const { user } = session;
   const level = levelOf(user.roles, user.isMember);
   const plano = planoOf(user.roles);
+  const quantoDaily = dailyPaletas(user.roles);
   const [vinculo, personagens, paletas, pegouDaily, cofre, anuncios] =
     await Promise.all([
       meuVinculo(user.discordId),
@@ -35,7 +36,7 @@ export default async function Painel() {
       meusPersonagens(user.discordId),
       saldo(user.discordId),
       jaPegouODaily(user.discordId),
-      meuCofre(user.discordId),
+      meuCofre(user.discordId, user.roles),
       meusAnuncios(user.discordId),
     ]);
   const anunciosAtivos = anuncios.filter((a) => a.status === "ativo").length;
@@ -104,7 +105,7 @@ export default async function Painel() {
             title="Carteira de Paletas"
             body={
               vinculo && !pegouDaily
-                ? `${paletas} no saldo · o daily de ${DAILY_PALETAS} está esperando`
+                ? `${paletas} no saldo · o daily de ${quantoDaily} está esperando`
                 : `${paletas} ${paletas === 1 ? "Paleta" : "Paletas"} · extrato de tudo que entrou e saiu`
             }
             href="/painel/carteira"

@@ -6,7 +6,8 @@ import { getItems, getPlayers, ForaDoJogo } from "@/lib/palworld/paldefender";
 import { delItems, giveItems } from "@/lib/palworld/rcon";
 import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
 import { lancar } from "@/lib/economia";
-import { SLOTS_GRATIS, precoDoSlot } from "@/lib/cofre-regras";
+import { precoDoSlot } from "@/lib/cofre-regras";
+import { slotsGratisDoCofre } from "@/lib/roles";
 
 /**
  * O cofre na nuvem (§7.3 do PROMPT.md).
@@ -27,7 +28,8 @@ import { SLOTS_GRATIS, precoDoSlot } from "@/lib/cofre-regras";
  * servidor ao lado".
  */
 
-export { SLOTS_GRATIS, precoDoSlot } from "@/lib/cofre-regras";
+export { precoDoSlot } from "@/lib/cofre-regras";
+export { slotsGratisDoCofre } from "@/lib/roles";
 
 export interface ItemNoCofre {
   itemId: string;
@@ -50,7 +52,10 @@ export interface Resultado {
 
 /* ------------------------------------------------------------------ leitura */
 
-export async function meuCofre(discordId: string): Promise<EstadoDoCofre> {
+export async function meuCofre(
+  discordId: string,
+  roles: string[],
+): Promise<EstadoDoCofre> {
   const [itens, extras] = await Promise.all([
     sql`
       select item_id, qty, updated_at
@@ -69,7 +74,8 @@ export async function meuCofre(discordId: string): Promise<EstadoDoCofre> {
     ` as unknown as Promise<{ n: number }[]>,
   ]);
 
-  const total = SLOTS_GRATIS + (extras[0]?.n ?? 0);
+  const gratis = slotsGratisDoCofre(roles);
+  const total = gratis + (extras[0]?.n ?? 0);
   return {
     itens: itens.map((i) => ({
       itemId: i.item_id,
@@ -78,7 +84,7 @@ export async function meuCofre(discordId: string): Promise<EstadoDoCofre> {
     })),
     usados: itens.length,
     total,
-    precoDoProximo: precoDoSlot(total + 1),
+    precoDoProximo: precoDoSlot(total + 1, gratis),
   };
 }
 
@@ -177,10 +183,13 @@ export async function inventarioNoJogo(
  * cliques rápidos tentam comprar o slot 4 duas vezes, e o segundo esbarra na
  * chave em vez de cobrar de novo.
  */
-export async function comprarSlot(discordId: string): Promise<Resultado> {
-  const cofre = await meuCofre(discordId);
+export async function comprarSlot(
+  discordId: string,
+  roles: string[],
+): Promise<Resultado> {
+  const cofre = await meuCofre(discordId, roles);
   const numero = cofre.total + 1;
-  const preco = precoDoSlot(numero);
+  const preco = precoDoSlot(numero, slotsGratisDoCofre(roles));
 
   const r = await lancar({
     discordId,
@@ -339,7 +348,7 @@ export async function importarParaCofre(
   }
 
   // 2. O slot só é cobrado quando a pilha é nova no cofre.
-  const cofre = await meuCofre(discordId);
+  const cofre = await meuCofre(discordId, session.user.roles);
   const jaTem = cofre.itens.some((i) => i.itemId === itemId);
   if (!jaTem && cofre.usados >= cofre.total) {
     return {
@@ -470,8 +479,11 @@ export async function resgatarDoCofre(
 export const devolverAoCofre = creditarCofre;
 
 /** Quantas pilhas a pessoa tem guardadas — o mercado checa antes de entregar. */
-export async function cofreCheio(discordId: string): Promise<boolean> {
-  const c = await meuCofre(discordId);
+export async function cofreCheio(
+  discordId: string,
+  roles: string[],
+): Promise<boolean> {
+  const c = await meuCofre(discordId, roles);
   return c.usados >= c.total;
 }
 
