@@ -116,9 +116,9 @@ export default async function Home() {
               </Link>
             </div>
 
-            <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[1.1fr_1fr]">
+            <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[3fr_2fr]">
               <div
-                className="relative flex min-h-[170px] items-end p-4"
+                className="relative flex min-h-[320px] items-end p-4"
                 style={{
                   backgroundColor: "var(--surface-2)",
                   backgroundImage: evento.coverImageUrl
