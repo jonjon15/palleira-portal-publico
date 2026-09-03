@@ -93,7 +93,7 @@ export default async function EventoPagina({
                 <img
                   src={img.url}
                   alt={img.caption || ""}
-                  className="aspect-square w-full object-cover"
+                  className="aspect-square w-full bg-surface-2 object-contain"
                 />
                 {img.caption && (
                   <p className="truncate px-2.5 py-2 text-xs text-muted">

@@ -85,7 +85,7 @@ export function FotoDoEvento({
       <img
         src={imagem.url}
         alt={imagem.caption || "Foto do evento"}
-        className="aspect-square w-full object-cover"
+        className="aspect-square w-full bg-surface-2 object-contain"
       />
       {imagem.caption && (
         <p className="truncate px-2.5 py-2 text-xs text-muted">{imagem.caption}</p>
