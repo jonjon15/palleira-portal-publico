@@ -133,7 +133,7 @@ export default async function Home() {
             </div>
 
             <article className="mt-6 grid overflow-hidden rounded-[var(--radius-card)] border border-line-strong bg-surface md:grid-cols-[3fr_2fr] md:items-start">
-              <div className="relative aspect-video">
+              <div className="relative aspect-video md:overflow-hidden md:rounded-l-[var(--radius-card)]">
                 {slidesDoEvento.length > 0 ? (
                   <ImageCarousel slides={slidesDoEvento} className="absolute inset-0" />
                 ) : (
