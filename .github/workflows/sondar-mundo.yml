@@ -12,6 +12,10 @@ on:
         description: "Servidor (pve-free, pve-vip, pvp-free)"
         required: false
         default: "pve-free"
+      deep:
+        description: "Nome de uma seção do worldSaveData para mergulhar por inteiro"
+        required: false
+        default: ""
 
 jobs:
   sondar:
@@ -36,4 +40,5 @@ jobs:
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
           SLUG: ${{ inputs.slug }}
+          DEEP: ${{ inputs.deep }}
         run: python tools/sondar_mundo.py

@@ -78,6 +78,21 @@ def procurar_posicao(node, caminho="", achados=None, profundidade=0):
     return achados
 
 
+def para_json(node, profundidade=0):
+    """Converte o nó em algo serializável, truncando bytes crus e limitando
+    a profundidade — só para o mergulho pontual via DEEP, não para o
+    inventário normal (que usa `rotulo`)."""
+    if profundidade > 10:
+        return "…"
+    if isinstance(node, dict):
+        return {k: para_json(v, profundidade + 1) for k, v in node.items()}
+    if isinstance(node, list):
+        return [para_json(v, profundidade + 1) for v in node[:20]]
+    if isinstance(node, (bytes, bytearray)):
+        return f"<{len(node)} bytes crus>"
+    return node
+
+
 def fetch_save(cfg: dict) -> bytes:
     transport = paramiko.Transport((cfg["host"], 2022))
     transport.connect(username=cfg["user"], password=cfg["password"])
@@ -136,6 +151,18 @@ def main() -> int:
                 print(f"     {caminho} = {desc}")
         else:
             print("   nenhum campo de posição visível na árvore comum")
+
+    # Mergulho pontual: DEEP=NomeDaSecao imprime a árvore inteira dessa
+    # seção, sem o truncamento do `rotulo`. Serve para achar o campo exato
+    # dentro de uma seção que o inventário só mostrou por cima.
+    fundo = os.environ.get("DEEP", "").strip()
+    if fundo:
+        print("\n" + "=" * 70)
+        print(f"\n### mergulho em {fundo}")
+        if fundo not in world:
+            print("   NÃO EXISTE neste save")
+        else:
+            print(json.dumps(para_json(world[fundo]), indent=2, ensure_ascii=False, default=str))
     return 0
 
 
