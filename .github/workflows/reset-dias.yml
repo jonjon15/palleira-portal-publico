@@ -58,6 +58,7 @@ jobs:
       - name: Executar
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: |
           python tools/reset_dias.py \
             --servidor "${{ inputs.servidor }}" \
