@@ -1,0 +1,71 @@
+# Zera o contador de "Dias" do mundo (pedido do dono, 04/09/2026, §HANDOFF).
+#
+# Mesmo risco do reset-player: reescreve o Level.sav de todo mundo. Comece
+# sempre por `verificar` e depois `simular` antes de `aplicar`.
+name: reset-dias
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-vip
+      modo:
+        description: "verificar = só testa o ciclo | simular = mostra o que mudaria | aplicar = grava"
+        required: true
+        type: choice
+        options: [verificar, simular, aplicar]
+        default: verificar
+      dias:
+        description: "Para quantos dias zerar"
+        required: false
+        default: "0"
+      parar_servidor:
+        description: "Parar o servidor antes de gravar (obrigatório em 'aplicar')"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+          python -c "import palsav, palooz, paramiko; print('tudo pronto')"
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Executar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/reset_dias.py \
+            --servidor "${{ inputs.servidor }}" \
+            --dias "${{ inputs.dias }}" \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        if: always() && inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running
