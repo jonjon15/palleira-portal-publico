@@ -1019,6 +1019,57 @@ def main() -> int:
         print("     Nada foi gravado.")
         return 1
 
+    # ---- varredura ampla: que outro ponteiro pode estar solto? -------------
+    # A checagem acima cobre as categorias que já conhecemos. Esta olha TODOS
+    # os GUIDs que os objetos e trabalhos restaurados carregam e diz quais não
+    # resolvem para nada no save — por nome de campo, para dar nome ao que
+    # ainda falta em vez de descobrir com o servidor caindo de novo.
+    # Nem todo desconhecido é problema (um `build_player_uid` aponta para um
+    # jogador, um `..._spawner_...` para dado de mundo), mas um campo novo com
+    # muitas ocorrências é exatamente onde procurar.
+    universo: set[str] = set()
+    universo |= {norm_uid(dig(e, "Model", "value", "RawData", "value", "instance_id", default=""))
+                 for e in map_object_entries(recheck_world)}
+    universo |= {norm_uid(dig(e, "Model", "value", "RawData", "value", "concrete_model_instance_id", default=""))
+                 for e in map_object_entries(recheck_world)}
+    universo |= itens_ok.keys() | chars_ok.keys() | itens_vivos_ok | pals_vivos_ok
+    universo |= {norm_uid(dig(e, "RawData", "value", "id", default="")) for e in work_entries(recheck_world)}
+    universo |= set(base_camp_por_id(recheck_world))
+    universo |= set(guildas_por_id(recheck_world))
+    universo.discard("")
+
+    desconhecidos: dict[str, int] = {}
+
+    def catalogar(no, chave_pai: str, p: int):
+        if p <= 0:
+            return
+        if isinstance(no, dict):
+            for k, v in no.items():
+                nome = k if isinstance(k, str) else chave_pai
+                valor = scalar(v, None)
+                if valor is not None and not isinstance(valor, (int, float, bool)):
+                    g = norm_uid(valor)
+                    if len(g) == 32 and g != ZERO_UID and g not in universo:
+                        desconhecidos[nome] = desconhecidos.get(nome, 0) + 1
+                catalogar(v, nome, p - 1)
+        elif isinstance(no, list):
+            for item in no:
+                catalogar(item, chave_pai, p - 1)
+
+    for rel in relatorios:
+        for b in rel.get("bases_restauradas") or []:
+            for obj in map_objects_da_base(recheck_world, b["base_id"]):
+                catalogar(obj, "", 12)
+            for w in works_da_base(recheck_world, b["base_id"]):
+                catalogar(w, "", 12)
+
+    if desconhecidos:
+        print("\n  GUIDs que não resolvem para nada no save (por campo):")
+        for campo, n in sorted(desconhecidos.items(), key=lambda kv: -kv[1])[:15]:
+            print(f"    {campo}: {n}")
+    else:
+        print("\n  ✓ Todo GUID dos objetos e trabalhos restaurados resolve para algo no save.")
+
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
         return 0
