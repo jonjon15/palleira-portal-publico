@@ -67,7 +67,7 @@ def entries_of(prop):
     return None
 
 
-def guids_de_container(node, prof: int = 8) -> dict[str, set[str]]:
+def guids_de_container(node, prof: int = 14) -> dict[str, set[str]]:
     """Todo GUID guardado sob uma chave com 'container' no nome, por chave.
 
     Percorre a estrutura em vez de assumir um caminho: os módulos de um objeto
@@ -146,10 +146,10 @@ def analisar(rotulo: str, world, base_ids: set[str], mostrar_forma: bool) -> dic
             # ItemContainer — se a referência não aparece nele, não aparece
             # em lugar nenhum.
             bau = next((o for o in objetos
-                        if "chest" in str(scalar(o.get("MapObjectId"), "")).lower()
-                        or "box" in str(scalar(o.get("MapObjectId"), "")).lower()), objetos[0])
-            print(f"    forma de {scalar(bau.get('MapObjectId'), '?')}:")
-            print("      " + esboco(bau, prof=7))
+                        if "chest" in str(scalar(o.get("MapObjectId"), "")).lower()), objetos[0])
+            modulos = dig(bau, "ConcreteModel", "value", "ModuleMap", "value", default=[])
+            print(f"    ModuleMap de {scalar(bau.get('MapObjectId'), '?')} ({len(modulos)} módulos):")
+            print("      " + esboco(modulos, prof=9))
 
             with_ref = next((o for o in objetos if guids_de_container(o)), None)
             if with_ref is not None:
