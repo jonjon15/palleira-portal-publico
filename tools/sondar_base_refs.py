@@ -35,6 +35,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from restaurar_base import baixar, dig, norm_uid, scalar, servidores  # noqa: E402
+from sondar_containers import esboco  # noqa: E402
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
 BACKUP_PATH = "Pal/Saved/SaveGames/0/{guid}/{arquivo}"
@@ -132,11 +133,31 @@ def analisar(rotulo: str, world, base_ids: set[str], mostrar_forma: bool) -> dic
         if not objetos:
             continue
         if mostrar_forma:
+            mostrar_forma = False  # uma base basta
+            tipos = {}
+            for o in objetos:
+                t = str(scalar(o.get("MapObjectId"), "?"))
+                tipos[t] = tipos.get(t, 0) + 1
+            print("    tipos de objeto mais comuns:")
+            for t, n in sorted(tipos.items(), key=lambda kv: -kv[1])[:12]:
+                print(f"      {t}: {n}")
+
+            # Um baú é o caso mais claro de objeto que aponta para um
+            # ItemContainer — se a referência não aparece nele, não aparece
+            # em lugar nenhum.
+            bau = next((o for o in objetos
+                        if "chest" in str(scalar(o.get("MapObjectId"), "")).lower()
+                        or "box" in str(scalar(o.get("MapObjectId"), "")).lower()), objetos[0])
+            print(f"    forma de {scalar(bau.get('MapObjectId'), '?')}:")
+            print("      " + esboco(bau, prof=7))
+
             with_ref = next((o for o in objetos if guids_de_container(o)), None)
             if with_ref is not None:
-                print("    chaves do primeiro objeto que referencia container:")
+                print("    chaves com 'container' no primeiro objeto que tem alguma:")
                 for chave, guids in sorted(guids_de_container(with_ref).items()):
                     print(f"      {chave}: {sorted(guids)}")
+            else:
+                print("    ⚠ nenhum objeto desta base tem chave com 'container' legível")
 
         por_chave: dict[str, set[str]] = {}
         for obj in objetos:
