@@ -63,6 +63,10 @@ NEEDED_SECTIONS = (
     # inconsistente e a descarte no autosave seguinte (achado real, via
     # código-fonte do Save Pal — não documentado em lugar nenhum).
     ".worldSaveData.WorkSaveData",
+    # Precisa para renovar o `LastOnlineRealTime` do próprio personagem — o
+    # Save Pal atualiza o contador nos dois lugares (guild e SaveParameter),
+    # ver `sync_timestamps` em transfer.rs.
+    ".worldSaveData.CharacterSaveParameterMap.Value.RawData",
 )
 
 
@@ -98,14 +102,21 @@ TICKS_POR_DIA = 24 * 60 * 60 * 10_000_000  # ticks de 100ns num dia
 
 
 def agora_na_escala_do_save(world) -> int | None:
-    """O "agora" de `last_online_real_time`, medido pelo próprio save.
+    """O "agora" de `last_online_real_time`.
 
-    Esse campo NÃO é FDateTime (não conta desde o ano 1): medido, os valores
-    dão 19 a 52 dias, ou seja é um relógio que começa junto com o mundo. Em vez
-    de tentar adivinhar a origem dele, pega o maior valor que existe no save
-    inteiro — o jogador que entrou mais recentemente entre as centenas do
-    servidor. Esse é o "agora" na escala certa, seja ela qual for.
+    É `GameTimeSaveData.RealDateTimeTicks` — o relógio de tempo real do mundo,
+    campo irmão do `GameDateTimeTicks` que o `reset_dias.py` mexe. Fonte: o
+    Save Pal usa exatamente esse campo em `sync_timestamps` (transfer.rs).
+    Não é FDateTime: conta desde o início do mundo, não desde o ano 1.
+
+    Se o relógio não existir ou estiver zerado, cai para o maior
+    `last_online_real_time` do save (o jogador que entrou mais recentemente
+    entre as centenas do servidor), que é a mesma escala.
     """
+    relogio = dig(world, "GameTimeSaveData", "value", "RealDateTimeTicks", "value", default=None)
+    if isinstance(relogio, int) and relogio != 0:
+        return relogio
+
     maior = None
     for entry in dig(world, "GroupSaveDataMap", "value", default=[]) or []:
         raw = dig(entry, "value", "RawData", "value", default=None)
@@ -464,7 +475,9 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
         rel["aviso"] = ("não achei nenhum last_online_real_time no save para servir de"
                         " referência de 'agora' — contador NÃO foi renovado")
     else:
+        uids_da_guild = set()
         for membro in guild_atual["raw"].get("players") or []:
+            uids_da_guild.add(norm_uid(membro.get("player_uid", "")))
             info = membro.get("player_info")
             if not isinstance(info, dict):
                 continue
@@ -474,6 +487,20 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
                 "depois": agora,
             })
             info["last_online_real_time"] = agora
+
+        # O mesmo contador vive também no SaveParameter do personagem, e o
+        # Save Pal atualiza os dois. Só mexe onde a chave já existe — inventar
+        # o campo em quem não tem muda a forma da entrada.
+        rel["personagens_renovados"] = 0
+        for entrada in dig(atual, "CharacterSaveParameterMap", "value", default=[]) or []:
+            param = dig(entrada, "value", "RawData", "value", "object", "SaveParameter", "value")
+            if not isinstance(param, dict) or "LastOnlineRealTime" not in param:
+                continue
+            chave = norm_uid(scalar(dig(entrada, "key", "PlayerUId"), ""))
+            if chave in uids_da_guild:
+                param["LastOnlineRealTime"]["value"] = agora
+                rel["personagens_renovados"] += 1
+
     rel["membros_renovados"] = membros_tocados
 
     return rel
@@ -595,6 +622,8 @@ def main() -> int:
                 atraso = f" (estava {ticks_para_dias(m['depois'] - m['antes'])} atrás)"
             print(f"    ⏱  {m['nome']}: {ticks_para_dias(m['antes'])}"
                   f" -> {ticks_para_dias(m['depois'])}{atraso}")
+        if rel.get("personagens_renovados"):
+            print(f"    ⏱  LastOnlineRealTime renovado em {rel['personagens_renovados']} personagem(ns)")
         algo_mudou = algo_mudou or bool(rel["bases_restauradas"])
 
     if not algo_mudou:
