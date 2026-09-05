@@ -473,6 +473,36 @@ def main() -> int:
         print("\n  Nada a restaurar para os UIDs informados.")
         return 1
 
+    # ---- checagem pós-edição, sempre, mesmo em --simular -------------------
+    # Prova que a MUTAÇÃO EM MEMÓRIA sobrevive ao ciclo reserializar+reler,
+    # ANTES de decidir se o problema (se houver) está na escrita da lib ou em
+    # outra coisa (ex.: o próprio jogo descartando no autosave seguinte).
+    t0 = time.time()
+    checagem = compress_gvas_to_sav(gvas.write(PALWORLD_CUSTOM_PROPERTIES), tipo)
+    print(f"\n  reserializado (checagem): {len(checagem):,} bytes em {time.time()-t0:.0f}s "
+          f"(save atual original tinha {len(original):,})", flush=True)
+
+    recheck_bytes, _ = decompress_sav_to_gvas(checagem)
+    recheck_gvas = GvasFile.read(recheck_bytes, PALWORLD_TYPE_HINTS, custom)
+    recheck_world = recheck_gvas.properties["worldSaveData"]["value"]
+
+    print("  pós-reserialização (relendo o que acabamos de gravar em memória):")
+    for uid in uids:
+        g = guild_do_jogador(recheck_world, uid)
+        if not g:
+            print(f"    uid {uid}: guild não encontrada na releitura")
+            continue
+        bases = g["raw"].get("base_ids") or []
+        palboxes = g["raw"].get("map_object_instance_ids_base_camp_points") or []
+        print(f"    guild {g['raw'].get('guild_name')}: base_ids={len(bases)} "
+              f"map_object_instance_ids_base_camp_points={len(palboxes)}")
+    mo_total_antes = len(map_object_entries(world))
+    bc_total_antes = len(base_camp_entries(world))
+    mo_total_depois = len(map_object_entries(recheck_world))
+    bc_total_depois = len(base_camp_entries(recheck_world))
+    print(f"    MapObjectSaveData: {mo_total_antes} em memória -> {mo_total_depois} após reler o reserializado")
+    print(f"    BaseCampSaveData: {bc_total_antes} em memória -> {bc_total_depois} após reler o reserializado")
+
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
         return 0
