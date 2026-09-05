@@ -488,3 +488,55 @@ export async function dispararResetDias(
           : `Reset disparado. O servidor vai parar, os dias viram ${dias} e ele volta sozinho. Acompanhe em Ações recentes ou no GitHub.`,
   });
 }
+
+/* ------------------------------------------------------------------ wipe */
+
+const MODOS_WIPE = ["simular", "aplicar"] as const;
+type ModoWipe = (typeof MODOS_WIPE)[number];
+
+/**
+ * Wipe de verdade: move a pasta do mundo para backup e deixa o Palworld
+ * criar um mundo novo ao subir. Não tem "verificar" — diferente do reset de
+ * jogador e do reset de dias, aqui não existe GVAS para ler e reescrever,
+ * só uma pasta para mover. Ver `tools/wipe_mundo.py`.
+ */
+export async function dispararWipe(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as ModoWipe;
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+
+  if (!MODOS_WIPE.includes(modo)) {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+
+  // Wipe é a ação mais destrutiva do painel: apaga TODO MUNDO de uma vez,
+  // não uma pessoa. Exigir o nome do servidor (não uma palavra genérica)
+  // também evita escolher o servidor errado na lista.
+  if (modo === "aplicar" && confirmacao.toLowerCase() !== server.shortName.toLowerCase()) {
+    return {
+      ok: false,
+      mensagem: `Para apagar o mundo inteiro, digite exatamente: ${server.shortName}`,
+    };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "wipe",
+    detail: `wipe (${modo})`,
+    rodar: () =>
+      dispararWorkflow("wipe-mundo.yml", {
+        servidor: server.slug,
+        modo,
+        parar_servidor: String(modo === "aplicar"),
+      }),
+    sucesso:
+      modo === "simular"
+        ? "Simulação pedida — confere que o mundo existe, sem mover nada."
+        : `Wipe disparado em ${server.shortName}. O servidor vai parar, o mundo atual é movido para backup, e ele sobe do zero. Acompanhe em Ações recentes ou no GitHub.`,
+  });
+}

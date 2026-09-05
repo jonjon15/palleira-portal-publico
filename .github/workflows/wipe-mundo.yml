@@ -1,0 +1,65 @@
+# Wipe de verdade: move a pasta do mundo pra fora do caminho (pedido do
+# dono, 05/09/2026). Mais leve que reset-dias/reset-player: não precisa do
+# Oodle porque não descomprime nada, só move um diretório por SFTP.
+#
+# ⚠️ O modo `aplicar` MOVE O MUNDO INTEIRO PARA BACKUP. Todo jogador perde
+# personagem, base, itens e Pals — um mundo novo nasce quando o servidor
+# sobe de novo. Comece sempre por `simular`.
+name: wipe-mundo
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pvp-free
+      modo:
+        description: "simular = só confere e mostra | aplicar = move de verdade"
+        required: true
+        type: choice
+        options: [simular, aplicar]
+        default: simular
+      parar_servidor:
+        description: "Parar o servidor antes de mover (obrigatório em 'aplicar')"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  wipe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: pip install --quiet paramiko
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Executar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/wipe_mundo.py \
+            --servidor "${{ inputs.servidor }}" \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        if: always() && inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running

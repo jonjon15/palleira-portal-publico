@@ -14,6 +14,7 @@ import {
   Energia,
   ResetarJogador,
   ZerarDias,
+  WipeMundo,
   Anuncio,
   BanManual,
   UnbanManual,
@@ -254,6 +255,29 @@ export default async function Moderacao({
                 servidor={server.slug}
                 diasAtual={metrics ? metrics.days : null}
               />
+            </div>
+          </section>
+        )}
+
+        {/* --------------------------------------------------------- wipe */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border-2 border-danger/50 bg-danger/[0.05] p-6">
+            <h2 className="text-lg font-semibold text-danger">
+              Wipe do mundo — {server.shortName}
+            </h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              Apaga o mundo inteiro: personagem, base, item e Pal de{" "}
+              <b className="text-text">todo</b> jogador, não só de um. Serve
+              para começar um servidor do zero, não para punir ou zerar uma
+              pessoa — para isso já existem os botões acima.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              O mundo atual vira backup ao lado, não é apagado na hora — mas
+              não tem como restaurar pelo site. O botão dispara o GitHub
+              Actions, que para o servidor, move a pasta e religa.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <WipeMundo servidor={server.slug} nomeServidor={server.shortName} />
             </div>
           </section>
         )}
