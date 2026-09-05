@@ -51,8 +51,8 @@ import paramiko
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from energia_painel import PANEL_IDS, estado as estado_do_painel  # noqa: E402
 from restaurar_base import (  # noqa: E402
-    ZERO_UID, Servidor, _abortar, apagar, baixar, dig, enviar, info_arquivo,
-    norm_uid, renomear, scalar, servidores,
+    ZERO_UID, Servidor, _abortar, apagar, baixar, dig, enviar, escolher_backup,
+    info_arquivo, norm_uid, renomear, scalar, servidores,
 )
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
@@ -242,7 +242,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Devolve os Pals de um jogador a partir de um backup")
     ap.add_argument("--servidor", required=True)
     ap.add_argument("--uids", help="UIDs (32 hex), separados por vírgula")
-    ap.add_argument("--arquivo-backup", default="Level.sav.bak-20260905-172655")
+    ap.add_argument("--arquivo-backup", default="auto",
+                    help="nome do backup, ou 'auto' para achar sozinho o mais recente que ainda tem os Pals")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--verificar", action="store_true")
     modo.add_argument("--simular", action="store_true")
@@ -264,9 +265,28 @@ def main() -> int:
 
     uids = [norm_uid(u) for u in (args.uids or "").split(",") if u.strip()]
     caminho = SAVE_PATH.format(guid=cfg.guid)
-    caminho_backup = BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup)
 
     print(f"=== {cfg.slug} ===", flush=True)
+
+    if args.arquivo_backup == "auto" and uids:
+        # Serve o backup mais recente em que algum dos jogadores ainda tenha
+        # Pals. Aqui o teste é caro (CharacterSaveParameterMap é a seção
+        # grande), mas é a única que responde a pergunta.
+        def tem_pals(world) -> str:
+            achados = [(uid, len(pals_do_jogador(world, uid))) for uid in uids]
+            if not any(n for _, n in achados):
+                return ""
+            return ", ".join(f"{uid[:8]}…: {n} Pals" for uid, n in achados if n)
+
+        escolhido = escolher_backup(
+            cfg, (".worldSaveData.CharacterSaveParameterMap.Value.RawData",), tem_pals, limite=8)
+        if not escolhido:
+            print("\n  ❌ Nenhum backup disponível ainda tem Pals desses jogadores.")
+            return 1
+        args.arquivo_backup = escolhido
+        print(f"  → usando {escolhido}\n", flush=True)
+
+    caminho_backup = BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup)
 
     if args.aplicar:
         pid = PANEL_IDS.get(cfg.slug)

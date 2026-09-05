@@ -21,7 +21,7 @@ on:
         description: "Backup de onde tirar os Pals"
         required: false
         type: string
-        default: Level.sav.bak-20260905-172655
+        default: auto
       modo:
         description: "verificar | simular | aplicar"
         required: true

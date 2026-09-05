@@ -964,6 +964,62 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     return rel
 
 
+def candidatos_a_backup(cfg: Servidor) -> list[str]:
+    """Todo save antigo que dá para tentar, do mais novo para o mais velho.
+
+    Duas fontes: os `Level.sav.bak-*` que estes scripts deixam na pasta do
+    mundo e os backups automáticos do painel em `backup/world/<data>/`. Os
+    dois nomes são datados, então ordem alfabética invertida já é ordem
+    cronológica.
+    """
+    t, sftp = _sftp(cfg)
+    try:
+        pasta = f"Pal/Saved/SaveGames/0/{cfg.guid}"
+        nomes = [n for n in sftp.listdir(pasta) if n.startswith("Level.sav.bak-")]
+        nomes.sort(reverse=True)
+        try:
+            mundos = sorted(sftp.listdir(f"{pasta}/backup/world"), reverse=True)
+        except FileNotFoundError:
+            mundos = []
+        return nomes + [f"backup/world/{m}/Level.sav" for m in mundos]
+    finally:
+        t.close()
+
+
+def escolher_backup(cfg: Servidor, secoes: tuple, serve, limite: int = 12) -> str | None:
+    """O backup mais recente que ainda serve, segundo o teste `serve(world)`.
+
+    Existe para o painel do site não precisar perguntar nome de arquivo a
+    ninguém: o dono escolhe o jogador, e a ferramenta procura sozinha o save
+    mais recente que ainda tem o que devolver. Decodifica só as seções
+    pedidas — o teste custa uns 20s por candidato, então vale filtrar antes de
+    fazer o parse pesado.
+    """
+    from palsav.core import decompress_sav_to_gvas
+    from palsav.gvas import GvasFile
+    from palsav.paltypes import PALWORLD_CUSTOM_PROPERTIES, PALWORLD_TYPE_HINTS
+
+    custom = {k: v for k, v in PALWORLD_CUSTOM_PROPERTIES.items() if k in secoes}
+    print("  procurando sozinho o backup mais recente que serve:", flush=True)
+
+    for nome in candidatos_a_backup(cfg)[:limite]:
+        caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{nome}"
+        t0 = time.time()
+        try:
+            raw = baixar(cfg, caminho)
+            gvas_bytes, _ = decompress_sav_to_gvas(raw)
+            world = GvasFile.read(gvas_bytes, PALWORLD_TYPE_HINTS, custom
+                                  ).properties["worldSaveData"]["value"]
+        except Exception as err:  # noqa: BLE001 — um backup ruim não pode parar a busca
+            print(f"    {nome}: não deu para ler ({type(err).__name__})", flush=True)
+            continue
+        veredito = serve(world)
+        print(f"    {nome}: {veredito or 'não serve'} ({time.time()-t0:.0f}s)", flush=True)
+        if veredito:
+            return nome
+    return None
+
+
 def _abortar(motivo: str) -> int:
     print(f"\n  ❌ ABORTADO: {motivo}")
     print("     Nada foi sobrescrito. O mundo continua como estava.")
@@ -976,8 +1032,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Restaura base(s) perdida(s) por decay a partir de um backup")
     ap.add_argument("--servidor", required=True, help="slug: pve-free, pve-vip, pvp-free")
     ap.add_argument("--uids", help="UIDs dos jogadores (32 hex cada), separados por vírgula")
-    ap.add_argument("--arquivo-backup", default="Level.sav.bak-20260822-154657",
-                     help="nome do arquivo de backup na mesma pasta do save")
+    ap.add_argument("--arquivo-backup", default="auto",
+                     help="nome do backup, ou 'auto' para achar sozinho o mais recente que ainda tem a base")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--verificar", action="store_true",
                       help="só prova que ler+reserializar o save atual não corrompe. Não escreve.")
@@ -1002,9 +1058,29 @@ def main() -> int:
 
     uids = [norm_uid(u) for u in (args.uids or "").split(",") if u.strip()]
     caminho = SAVE_PATH.format(guid=cfg.guid)
-    caminho_backup = BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup)
 
     print(f"=== {cfg.slug} ===", flush=True)
+
+    if args.arquivo_backup == "auto" and uids:
+        # Qual backup serve: aquele em que a guild de algum dos jogadores
+        # ainda tem base. Só GroupSaveDataMap é preciso para responder isso, o
+        # que deixa o teste barato o bastante para varrer vários candidatos.
+        def tem_base(world) -> str:
+            for uid in uids:
+                g = guild_do_jogador(world, uid)
+                if g and (g["raw"].get("base_ids") or []):
+                    nome = (g["raw"].get("guild_name") or "").strip() or "guild"
+                    return f"{nome} com {len(g['raw']['base_ids'])} base(s)"
+            return ""
+
+        escolhido = escolher_backup(cfg, (".worldSaveData.GroupSaveDataMap",), tem_base)
+        if not escolhido:
+            print("\n  ❌ Nenhum backup disponível ainda tem base dessa guild.")
+            return 1
+        args.arquivo_backup = escolhido
+        print(f"  → usando {escolhido}\n", flush=True)
+
+    caminho_backup = BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup)
 
     if args.aplicar:
         pid = PANEL_IDS.get(cfg.slug)

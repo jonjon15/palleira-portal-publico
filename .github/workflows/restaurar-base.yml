@@ -24,7 +24,7 @@ on:
         description: "Arquivo de backup a restaurar (fica na mesma pasta do save no servidor)"
         required: false
         type: string
-        default: Level.sav.bak-20260822-154657
+        default: auto
       modo:
         description: "verificar = só prova que reescrever não corrompe | simular = mostra o que seria restaurado | aplicar = restaura de verdade"
         required: true

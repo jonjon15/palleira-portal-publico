@@ -28,15 +28,15 @@ on:
         required: true
         type: string
       backup_pals:
-        description: "Backup de onde tirar os Pals"
+        description: "Backup dos Pals (auto = o mais recente que ainda os tenha)"
         required: false
         type: string
-        default: Level.sav.bak-20260905-172655
+        default: auto
       backup_base:
-        description: "Backup de onde tirar a base"
+        description: "Backup da base (auto = o mais recente que ainda a tenha)"
         required: false
         type: string
-        default: Level.sav.bak-20260822-154657
+        default: auto
       modo:
         description: "simular | aplicar"
         required: true
