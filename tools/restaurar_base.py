@@ -57,6 +57,12 @@ NEEDED_SECTIONS = (
     ".worldSaveData.GroupSaveDataMap",
     ".worldSaveData.BaseCampSaveData.Value.RawData",
     ".worldSaveData.MapObjectSaveData",
+    # Cada base referencia uma lista de "trabalhos" (reparo, produção, etc.)
+    # pelo `WorkCollection.RawData.value.work_ids` — se essas entradas não
+    # existem em WorkSaveData, é bem provável que o jogo trate a base como
+    # inconsistente e a descarte no autosave seguinte (achado real, via
+    # código-fonte do Save Pal — não documentado em lugar nenhum).
+    ".worldSaveData.WorkSaveData",
 )
 
 
@@ -265,6 +271,47 @@ def instance_ids_presentes(world) -> set[str]:
     return presentes
 
 
+def work_entries(world) -> list:
+    return entries_of(dig(world, "WorkSaveData", default=None)) or []
+
+
+def work_ids_da_base(entry_camp: dict) -> list:
+    """work_ids que o WorkCollection dessa base referencia — achado no código-fonte
+    do Save Pal: se essas entradas não existirem em WorkSaveData, o jogo trata a
+    base como inconsistente e a descarta no autosave seguinte."""
+    return dig(entry_camp, "value", "WorkCollection", "value", "RawData", "value", "work_ids", default=[]) or []
+
+
+def work_por_id(world) -> dict[str, dict]:
+    out = {}
+    for entry in work_entries(world):
+        wid = dig(entry, "RawData", "value", "id", default=None)
+        if wid:
+            out[norm_uid(wid)] = entry
+    return out
+
+
+def work_list_ref(world) -> list:
+    """Referência MUTÁVEL da lista de WorkSaveData — mesmo cuidado do
+    map_object_list_ref, essa seção tem a forma de ArrayProperty simples
+    (sem o nível de aninhamento extra do MapObjectSaveData, a julgar pelo
+    path registrado sem `.Value`), mas usa o mesmo desembrulho genérico por
+    segurança em vez de assumir."""
+    prop = world.get("WorkSaveData")
+    if not isinstance(prop, dict):
+        prop = {"id": None, "type": "ArrayProperty", "value": []}
+        world["WorkSaveData"] = prop
+    inner = prop.get("value")
+    if isinstance(inner, list):
+        return inner
+    if not isinstance(inner, dict):
+        inner = {}
+        prop["value"] = inner
+    if not isinstance(inner.get("value"), list):
+        inner["value"] = []
+    return inner["value"]
+
+
 # -------------------------------------------------------------------- edição
 
 def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
@@ -313,6 +360,10 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     objetos_atual_lista = map_object_list_ref(atual)
     instance_ids_atuais = instance_ids_presentes(atual)
 
+    works_backup = work_por_id(backup)
+    works_atual_lista = work_list_ref(atual)
+    work_ids_ja_presentes = set(work_por_id(atual).keys())
+
     novos_base_ids = list(guild_atual["raw"].get("base_ids") or [])
     novos_palbox_ids = list(guild_atual["raw"].get("map_object_instance_ids_base_camp_points") or [])
 
@@ -346,12 +397,26 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
                 and norm_uid(owner_palbox) not in {norm_uid(x) for x in novos_palbox_ids}):
             novos_palbox_ids.append(owner_palbox)
 
+        trabalhos_copiados = 0
+        for wid in work_ids_da_base(entry_camp):
+            wid_norm = norm_uid(wid)
+            if not wid_norm or wid_norm in work_ids_ja_presentes:
+                continue
+            work_entry = works_backup.get(wid_norm)
+            if not work_entry:
+                continue
+            works_atual_lista.append(work_entry)
+            work_ids_ja_presentes.add(wid_norm)
+            trabalhos_copiados += 1
+
         rel["bases_restauradas"].append({
             "base_id": base_id,
             "nome": (raw_camp.get("name") or "").strip(),
             "objetos": copiados,
+            "trabalhos": trabalhos_copiados,
         })
         rel["objetos_restaurados"] += copiados
+        rel["trabalhos_restaurados"] = rel.get("trabalhos_restaurados", 0) + trabalhos_copiados
 
     guild_atual["raw"]["base_ids"] = novos_base_ids
     guild_atual["raw"]["map_object_instance_ids_base_camp_points"] = novos_palbox_ids
@@ -466,7 +531,7 @@ def main() -> int:
             continue
         print(f"    guild: {rel['guild_nome']} ({rel['guild']})")
         for b in rel["bases_restauradas"]:
-            print(f"    ✓ base {b['base_id']} \"{b['nome']}\" — {b['objetos']} objetos restaurados")
+            print(f"    ✓ base {b['base_id']} \"{b['nome']}\" — {b['objetos']} objetos, {b['trabalhos']} trabalhos restaurados")
         algo_mudou = algo_mudou or bool(rel["bases_restauradas"])
 
     if not algo_mudou:
@@ -498,10 +563,13 @@ def main() -> int:
               f"map_object_instance_ids_base_camp_points={len(palboxes)}")
     mo_total_antes = len(map_object_entries(world))
     bc_total_antes = len(base_camp_entries(world))
+    wk_total_antes = len(work_entries(world))
     mo_total_depois = len(map_object_entries(recheck_world))
     bc_total_depois = len(base_camp_entries(recheck_world))
+    wk_total_depois = len(work_entries(recheck_world))
     print(f"    MapObjectSaveData: {mo_total_antes} em memória -> {mo_total_depois} após reler o reserializado")
     print(f"    BaseCampSaveData: {bc_total_antes} em memória -> {bc_total_depois} após reler o reserializado")
+    print(f"    WorkSaveData: {wk_total_antes} em memória -> {wk_total_depois} após reler o reserializado")
 
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
