@@ -94,6 +94,25 @@ def norm_uid(valor) -> str:
 
 ZERO_UID = "0" * 32
 
+# FDateTime da Unreal: intervalos de 100ns desde 0001-01-01. É o formato de
+# `last_online_real_time` (o mesmo do GameDateTimeTicks, ver reset_dias.py).
+TICKS_EPOCH_UNIX = 62_135_596_800
+
+
+def ticks_agora() -> int:
+    return int((time.time() + TICKS_EPOCH_UNIX) * 10_000_000)
+
+
+def ticks_para_texto(ticks) -> str:
+    """Converte ticks FDateTime em data legível — serve de prova do formato."""
+    try:
+        segundos = int(ticks) / 10_000_000 - TICKS_EPOCH_UNIX
+        if not (0 < segundos < 4_102_444_800):  # até o ano 2100
+            return f"{ticks} (fora de faixa — formato diferente do esperado?)"
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(segundos)) + " UTC"
+    except (TypeError, ValueError, OverflowError):
+        return f"{ticks} (não convertível)"
+
 
 class Servidor:
     def __init__(self, slug, host, user, password, guid):
@@ -421,6 +440,26 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     guild_atual["raw"]["base_ids"] = novos_base_ids
     guild_atual["raw"]["map_object_instance_ids_base_camp_points"] = novos_palbox_ids
 
+    # ⚠️ SEM ISTO A RESTAURAÇÃO NÃO SOBREVIVE AO PRIMEIRO AUTOSAVE.
+    # O servidor roda com `bAutoResetGuildNoOnlinePlayers=true` e
+    # `AutoResetGuildTimeNoOnlinePlayers=72.0`: guild sem ninguém online há mais
+    # de 72h tem as bases apagadas de novo, que é justamente o que tirou a base
+    # do jogador. Marcar os membros como "online agora" devolve a eles a janela
+    # de 72h para entrar e reivindicar a base — sem isso, restaurar é jogar
+    # tempo fora (medido: a primeira tentativa sumiu no autosave seguinte).
+    agora = ticks_agora()
+    membros_tocados = []
+    for membro in guild_atual["raw"].get("players") or []:
+        info = membro.get("player_info")
+        if not isinstance(info, dict):
+            continue
+        membros_tocados.append({
+            "nome": info.get("player_name") or "(sem nome)",
+            "antes": info.get("last_online_real_time"),
+        })
+        info["last_online_real_time"] = agora
+    rel["membros_renovados"] = membros_tocados
+
     return rel
 
 
@@ -532,6 +571,9 @@ def main() -> int:
         print(f"    guild: {rel['guild_nome']} ({rel['guild']})")
         for b in rel["bases_restauradas"]:
             print(f"    ✓ base {b['base_id']} \"{b['nome']}\" — {b['objetos']} objetos, {b['trabalhos']} trabalhos restaurados")
+        for m in rel.get("membros_renovados") or []:
+            print(f"    ⏱  {m['nome']}: última vez online {ticks_para_texto(m['antes'])}"
+                  f" -> agora ({ticks_para_texto(ticks_agora())})")
         algo_mudou = algo_mudou or bool(rel["bases_restauradas"])
 
     if not algo_mudou:
