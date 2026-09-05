@@ -676,6 +676,44 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
     return conta
 
 
+def zerar_refs_perdidas(entradas: list, campos: tuple, conhecidos: set[str], zero,
+                        prof: int = 12) -> int:
+    """Zera, nas `entradas`, os GUIDs de `campos` que não existem em
+    `conhecidos`.
+
+    Para trabalho é o certo: `repair_work_id`/`target_work_id` nulo quer dizer
+    "sem trabalho pendente", que é o estado normal de um objeto recém-posto —
+    o dump do PalBoxV2 mostra exatamente esse campo zerado. Apontar para um
+    trabalho que não existe nem no backup, não: é ponteiro solto, e o jogo
+    morre seguindo.
+    """
+    if zero is None:
+        return 0
+    trocados = 0
+
+    def anda(no, p: int):
+        nonlocal trocados
+        if p <= 0:
+            return
+        if isinstance(no, dict):
+            for k, v in list(no.items()):
+                if k in campos:
+                    valor = scalar(v, None)
+                    g = norm_uid(valor) if valor is not None else ""
+                    if len(g) == 32 and g != ZERO_UID and g not in conhecidos:
+                        no[k] = zero
+                        trocados += 1
+                        continue
+                anda(v, p - 1)
+        elif isinstance(no, list):
+            for item in no:
+                anda(item, p - 1)
+
+    for entrada in entradas:
+        anda(entrada, prof)
+    return trocados
+
+
 def sanear_slots(atual: dict, copiados_item: list, copiados_char: list) -> tuple[int, int]:
     """Zera todo slot que aponta para um Pal ou item que não existe no save.
 
@@ -848,6 +886,12 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
             atual, dependencias.pop("_copiados_item"), dependencias.pop("_copiados_char"))
         dependencias["slots_esvaziados"] = esvaziados
         dependencias["slots_teimosos"] = teimosos
+
+        # Sobra o que nem o backup tinha: trabalhos que já não existiam em
+        # 22/08. Zerar é o único caminho — não há o que copiar.
+        dependencias["trabalhos_zerados"] = zerar_refs_perdidas(
+            objetos, ("target_work_id", "repair_work_id"),
+            set(indices(atual)["WorkSaveData"]), guid_zero(atual))
 
         rel["bases_restauradas"].append({
             "base_id": base_id,
@@ -1031,6 +1075,8 @@ def main() -> int:
                   + (f", {d['slots_esvaziados']} slots esvaziados" if d.get("slots_esvaziados") else "")
                   + (f" | ⚠ {d['faltando']} containers não estavam no backup" if d.get("faltando") else "")
                   + (f" | ⚠ {d['slots_teimosos']} slots que não consegui esvaziar" if d.get("slots_teimosos") else ""))
+            if d.get("trabalhos_zerados"):
+                print(f"        {d['trabalhos_zerados']} ponteiros de trabalho perdidos, zerados")
             fech = d.get("fechamento") or {}
             if fech:
                 print("        fechamento de referências: "
