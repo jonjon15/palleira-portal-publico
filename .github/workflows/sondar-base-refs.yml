@@ -1,0 +1,51 @@
+# Mede as referências órfãs de uma base restaurada. Ver tools/sondar_base_refs.py.
+# Só leitura.
+name: sondar-base-refs
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      bases:
+        description: "UUIDs de base, separados por vírgula"
+        required: false
+        type: string
+        default: "e71a3d75-c6fb-4eab-a4ba-20baaecd76c4,75eb802a-4842-8885-beb8-3eb76e6ef6ac,3f05b9ee-48ef-1eda-6ce5-c8b625cfb1e8"
+      arquivo_backup:
+        description: "Backup que ainda tem as bases"
+        required: false
+        type: string
+        default: Level.sav.bak-20260822-154657
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar referências
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_base_refs.py \
+            --servidor "${{ inputs.servidor }}" \
+            --bases "${{ inputs.bases }}" \
+            --arquivo-backup "${{ inputs.arquivo_backup }}"
