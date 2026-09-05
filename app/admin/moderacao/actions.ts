@@ -431,3 +431,60 @@ export async function dispararReset(
     sucesso: MODO_TEXTO[modo] + " Acompanhe em Ações recentes ou no GitHub.",
   });
 }
+
+/* ------------------------------------------------------ reset de dias */
+
+/**
+ * Zera (ou ajusta) o contador de "Dias" do mundo — o mesmo número que
+ * aparece no browser de servidor do jogo.
+ *
+ * Só existe um campo isolado (`GameTimeSaveData.GameDateTimeTicks`) sendo
+ * tocado — personagens, cofres e bases não são mexidos. Ver
+ * `tools/reset_dias.py` para como o campo foi achado e validado.
+ */
+export async function dispararResetDias(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as Modo;
+  const diasStr = String(form.get("dias") ?? "0").trim();
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+
+  if (!MODOS.includes(modo)) {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+
+  const dias = Number(diasStr);
+  if (modo !== "verificar" && (!Number.isFinite(dias) || dias < 0 || dias > 100_000)) {
+    return { ok: false, mensagem: "Dias inválido — use um número entre 0 e 100000." };
+  }
+
+  // Reescrever o Level.sav de todo mundo não tem volta. A frase fixa separa
+  // "cliquei sem querer" de "eu quis fazer isto" — mesmo espírito do reset
+  // de jogador, só que sem nome de pessoa para digitar aqui.
+  if (modo === "aplicar" && confirmacao.toUpperCase() !== "ZERAR") {
+    return { ok: false, mensagem: 'Para gravar, digite ZERAR.' };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "reset_days",
+    detail: `dias → ${dias} (${modo})`,
+    rodar: () =>
+      dispararWorkflow("reset-dias.yml", {
+        servidor: server.slug,
+        modo,
+        dias: diasStr || "0",
+        parar_servidor: String(modo === "aplicar"),
+      }),
+    sucesso:
+      modo === "verificar"
+        ? "Teste de integridade pedido — só lê o mundo e confere que reescrever não corrompe nada."
+        : modo === "simular"
+          ? "Simulação pedida — mostra o valor atual e o novo, sem gravar."
+          : `Reset disparado. O servidor vai parar, os dias viram ${dias} e ele volta sozinho. Acompanhe em Ações recentes ou no GitHub.`,
+  });
+}

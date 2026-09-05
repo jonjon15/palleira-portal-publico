@@ -15,7 +15,8 @@ export type AcaoModeracao =
   | "unban"
   | "save"
   | "shutdown"
-  | "power";
+  | "power"
+  | "reset_days";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -25,6 +26,7 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   save: "Salvar mundo",
   shutdown: "Desligamento",
   power: "Energia",
+  reset_days: "Zerar dias",
 };
 
 export interface AcaoRow {

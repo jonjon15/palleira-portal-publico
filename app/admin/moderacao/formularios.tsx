@@ -11,6 +11,7 @@ import {
   energiaServidor,
   buscarJogador,
   dispararReset,
+  dispararResetDias,
   type Estado,
   type EstadoBusca,
   type Achado,
@@ -514,6 +515,146 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
           <Aviso {...reset} />
         </form>
       )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- zerar dias */
+
+/**
+ * Zera o "Dias" do mundo — o campo GameDateTimeTicks do Level.sav.
+ *
+ * Duas travas antes de gravar: escolher "Zerar de verdade" (sai do modo
+ * verificar/simular) e digitar ZERAR — mesmo espírito do reset de jogador,
+ * mas sem nome de pessoa para conferir aqui.
+ */
+export function ZerarDias({
+  servidor,
+  diasAtual,
+}: {
+  servidor: string;
+  diasAtual: number | null;
+}) {
+  const [estado, acao, rodando] = useActionState(dispararResetDias, SEM_ESTADO);
+  const [dias, setDias] = useState("0");
+  const [confirmando, setConfirmando] = useState(false);
+  const [digitado, setDigitado] = useState("");
+
+  const confere = digitado.trim().toUpperCase() === "ZERAR";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="dias" className="block text-sm text-muted">
+          Para quantos dias zerar
+        </label>
+        <input
+          id="dias"
+          value={dias}
+          onChange={(e) => setDias(e.target.value)}
+          inputMode="numeric"
+          className={`${campo} mt-1.5 max-w-[10rem]`}
+        />
+      </div>
+
+      {!confirmando ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <form action={acao}>
+            <input type="hidden" name="servidor" value={servidor} />
+            <input type="hidden" name="modo" value="verificar" />
+            <button type="submit" disabled={rodando} className={botaoFantasma}>
+              {rodando ? "Rodando…" : "Testar integridade"}
+            </button>
+          </form>
+          <form action={acao}>
+            <input type="hidden" name="servidor" value={servidor} />
+            <input type="hidden" name="modo" value="simular" />
+            <input type="hidden" name="dias" value={dias} />
+            <button type="submit" disabled={rodando} className={botaoFantasma}>
+              {rodando ? "Rodando…" : "Simular"}
+            </button>
+          </form>
+          <button
+            type="button"
+            onClick={() => setConfirmando(true)}
+            className={botaoPerigo}
+          >
+            Zerar de verdade
+          </button>
+        </div>
+      ) : (
+        <form
+          action={acao}
+          onSubmit={(e) => {
+            const r = window.prompt(
+              `Isto reescreve o Level.sav de ${servidor} e para o servidor por cerca de 1 minuto.
+
+Digite CONFIRMAR para prosseguir:`,
+            );
+            if (r?.trim().toUpperCase() !== "CONFIRMAR") {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-3 rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.05] p-5"
+        >
+          <input type="hidden" name="servidor" value={servidor} />
+          <input type="hidden" name="modo" value="aplicar" />
+          <input type="hidden" name="dias" value={dias} />
+
+          <p className="text-sm text-muted">
+            {diasAtual !== null && (
+              <>
+                Dias atual: <b className="text-text">{diasAtual}</b>.{" "}
+              </>
+            )}
+            Vai virar <b className="text-text">{dias}</b>. Personagens,
+            cofres e bases não são tocados — só esse contador.
+          </p>
+
+          <ul className="space-y-1 text-xs text-muted">
+            <li>✓ O servidor é parado de verdade antes de gravar</li>
+            <li>
+              ✓ O backup é enviado <b className="text-text">e conferido byte
+              a byte</b> antes de qualquer sobrescrita
+            </li>
+            <li>✓ O servidor volta sozinho, mesmo se algo falhar no meio</li>
+          </ul>
+
+          <div>
+            <label htmlFor="confirmacaoDias" className="block text-sm text-muted">
+              Para confirmar, digite <b className="text-text">ZERAR</b>
+            </label>
+            <input
+              id="confirmacaoDias"
+              name="confirmacao"
+              autoComplete="off"
+              value={digitado}
+              onChange={(e) => setDigitado(e.target.value)}
+              className={`${campo} mt-1.5`}
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={rodando || !confere}
+              className={botaoPerigo}
+            >
+              {rodando ? "Disparando…" : `Zerar dias de ${servidor}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmando(false)}
+              className={botaoFantasma}
+            >
+              Cancelar
+            </button>
+          </div>
+          <Aviso {...estado} />
+        </form>
+      )}
+
+      {!confirmando && <Aviso {...estado} />}
     </div>
   );
 }

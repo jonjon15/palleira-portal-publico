@@ -13,6 +13,7 @@ import {
   Desligar,
   Energia,
   ResetarJogador,
+  ZerarDias,
   Anuncio,
   BanManual,
   UnbanManual,
@@ -230,6 +231,29 @@ export default async function Moderacao({
             </p>
             <div className="mt-5 max-w-2xl">
               <ResetarJogador servidor={server.slug} />
+            </div>
+          </section>
+        )}
+
+        {/* ------------------------------------------------- zerar dias */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
+            <h2 className="text-lg font-semibold">Zerar dias do mundo</h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              Ajusta o contador de &ldquo;Dias&rdquo; que aparece no browser
+              de servidor do jogo. Mexe só nesse número — personagens,
+              itens, cofres e bases continuam como estão.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              O trabalho não roda aqui: o mundo tem centenas de MB e o site não
+              aguenta. O botão dispara o GitHub Actions, que para o servidor,
+              faz backup, edita e religa — cerca de 2 minutos ao todo.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <ZerarDias
+                servidor={server.slug}
+                diasAtual={metrics ? metrics.days : null}
+              />
             </div>
           </section>
         )}
