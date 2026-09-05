@@ -872,6 +872,17 @@ def main() -> int:
     # fez o jogo descartar as bases da primeira vez.
     itens_ok = secao_por_id(recheck_world, "ItemContainerSaveData")
     chars_ok = secao_por_id(recheck_world, "CharacterContainerSaveData")
+    print(f"    ItemContainerSaveData: {len(secao_por_id(world, 'ItemContainerSaveData'))} em memória"
+          f" -> {len(itens_ok)} após reler")
+    print(f"    CharacterContainerSaveData: {len(secao_por_id(world, 'CharacterContainerSaveData'))} em memória"
+          f" -> {len(chars_ok)} após reler")
+
+    def com_dono(mundo) -> int:
+        return sum(1 for e in map_object_entries(mundo)
+                   if dig(e, "Model", "value", "RawData", "value", "base_camp_id_belong_to", default=None))
+    print(f"    objetos com base_camp_id_belong_to legível: {com_dono(world)} em memória"
+          f" -> {com_dono(recheck_world)} após reler")
+
     orfaos_totais = 0
     for rel in relatorios:
         for b in rel.get("bases_restauradas") or []:
