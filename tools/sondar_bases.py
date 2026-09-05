@@ -176,6 +176,25 @@ def analisar(raw: bytes, base_ids: set[str]) -> None:
             print(f"    {uid}: {n} entradas")
         print(f"    total de entradas em MapObjectSaveData: {total if total >= 0 else '? (ver diagnóstico acima)'}")
 
+    # ---- diagnóstico cru: uma base e um punhado de MapObjectSaveData ----
+    # A busca por texto acima deu zero — provavelmente os campos de ligação
+    # não são strings com hífen batendo com norm_uid(). Aqui a gente
+    # simplesmente imprime uma entrada real, sem tentar interpretar nada.
+    achados = procurar_base_camp(ultimo_world, base_ids)
+    if achados:
+        primeira_base_uid, primeira_base = next(iter(achados.items()))
+        print(f"\n  [cru] BaseCampSaveData completo de {primeira_base_uid}:")
+        print(f"    {json.dumps(primeira_base, default=str)[:3000]}")
+
+    prop_mo = dig(ultimo_world, "MapObjectSaveData", default=None)
+    secao_mo = entries_of(prop_mo)
+    if secao_mo:
+        print(f"\n  [cru] 3 primeiras entradas de MapObjectSaveData (só as chaves de topo):")
+        for entry in secao_mo[:3]:
+            print(f"    tipo={type(entry).__name__} chaves={list(entry.keys()) if isinstance(entry, dict) else '?'}")
+        print(f"\n  [cru] uma entrada completa de MapObjectSaveData:")
+        print(f"    {json.dumps(secao_mo[0], default=str)[:3000]}")
+
 
 def main() -> int:
     raw_cfg = os.environ.get("PALLEIRA_SERVERS", "").strip()
