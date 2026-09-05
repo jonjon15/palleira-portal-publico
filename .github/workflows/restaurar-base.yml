@@ -1,0 +1,80 @@
+# Restaura base(s) perdida(s) por decay, copiando de um backup antigo do
+# mesmo servidor. Ver tools/restaurar_base.py — três peças (BaseCampSaveData,
+# MapObjectSaveData, GroupSaveDataMap.base_ids) precisam viajar juntas.
+#
+# ⚠️ O modo `aplicar` REESCREVE O Level.sav DE TODO MUNDO. Comece sempre por
+# `verificar` (prova que o ciclo não corrompe) e depois `simular` (mostra o
+# que seria restaurado, sem gravar).
+name: restaurar-base
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      uids:
+        description: "UIDs dos jogadores (32 hex cada, separados por vírgula) — dispensável em 'verificar'"
+        required: false
+        type: string
+      arquivo_backup:
+        description: "Arquivo de backup a restaurar (fica na mesma pasta do save no servidor)"
+        required: false
+        type: string
+        default: Level.sav.bak-20260822-154657
+      modo:
+        description: "verificar = só prova que reescrever não corrompe | simular = mostra o que seria restaurado | aplicar = restaura de verdade"
+        required: true
+        type: choice
+        options: [verificar, simular, aplicar]
+        default: simular
+      parar_servidor:
+        description: "Parar o servidor antes de gravar (obrigatório em 'aplicar')"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Restaurar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/restaurar_base.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uids "${{ inputs.uids }}" \
+            --arquivo-backup "${{ inputs.arquivo_backup }}" \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        if: always() && inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running
