@@ -1,0 +1,56 @@
+# Sonda onde moram os containers de Pal de um jogador. Ver tools/sondar_containers.py.
+# Só leitura — não grava nada no servidor.
+name: sondar-containers
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      uids:
+        description: "UIDs dos jogadores (32 hex, separados por vírgula)"
+        required: true
+        type: string
+      arquivo_backup:
+        description: "Backup a sondar junto com o save de hoje"
+        required: false
+        type: string
+        default: Level.sav.bak-20260905-172655
+      pular_atual:
+        description: "Não ler o Level.sav de hoje (só o backup)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar containers
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_containers.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uids "${{ inputs.uids }}" \
+            --arquivo-backup "${{ inputs.arquivo_backup }}" \
+            ${{ inputs.pular_atual && '--pular-atual' || '' }}
