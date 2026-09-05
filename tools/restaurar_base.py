@@ -199,10 +199,55 @@ def base_camp_por_id(world) -> dict[str, dict]:
     return out
 
 
+def entries_of(prop) -> list | None:
+    """Desembrulha um valor de propriedade GVAS até achar a lista de entradas
+    de verdade. `BaseCampSaveData` guarda a lista direto em `.value`, mas
+    `MapObjectSaveData` tem mais um nível por baixo (achado real, não
+    documentado — confirmado por `tools/sondar_bases.py`). Sem esse
+    desembrulho extra, `entry_of` para em um dict e a lista nunca aparece."""
+    node = prop
+    for _ in range(4):
+        if isinstance(node, list):
+            return node
+        if isinstance(node, dict):
+            if "values" in node and isinstance(node["values"], list):
+                return node["values"]
+            if "value" in node:
+                node = node["value"]
+                continue
+        break
+    return None
+
+
+def map_object_entries(world) -> list:
+    return entries_of(dig(world, "MapObjectSaveData", default=None)) or []
+
+
+def map_object_list_ref(world) -> list:
+    """Referência MUTÁVEL de verdade pra lista de MapObjectSaveData dentro de
+    `world` — pra usar com `.append()` e o resultado aparecer no save
+    reserializado. Levanta erro em vez de adivinhar uma forma nova se a
+    seção não existir do jeito esperado (silenciosamente perder as
+    construções copiadas seria pior que travar aqui)."""
+    prop = world.get("MapObjectSaveData")
+    if not isinstance(prop, dict):
+        prop = {"id": None, "type": "MapProperty", "value": {"value": []}}
+        world["MapObjectSaveData"] = prop
+    inner = prop.get("value")
+    if isinstance(inner, list):
+        return inner  # forma simples, sem o nível extra — aceitar também
+    if not isinstance(inner, dict):
+        inner = {}
+        prop["value"] = inner
+    if not isinstance(inner.get("value"), list):
+        inner["value"] = []
+    return inner["value"]
+
+
 def map_objects_da_base(world, base_id_norm: str) -> list:
     """Entradas de MapObjectSaveData cujo base_camp_id_belong_to bate com a base pedida."""
     out = []
-    for entry in dig(world, "MapObjectSaveData", "value", default=[]) or []:
+    for entry in map_object_entries(world):
         dono = dig(entry, "Model", "value", "RawData", "value", "base_camp_id_belong_to", default=None)
         if dono and norm_uid(dono) == base_id_norm:
             out.append(entry)
@@ -213,7 +258,7 @@ def instance_ids_presentes(world) -> set[str]:
     """instance_id de cada objeto já presente em MapObjectSaveData — evita duplicar
     se o script rodar duas vezes sobre o mesmo save."""
     presentes = set()
-    for entry in dig(world, "MapObjectSaveData", "value", default=[]) or []:
+    for entry in map_object_entries(world):
         iid = dig(entry, "Model", "value", "RawData", "value", "instance_id", default=None)
         if iid:
             presentes.add(norm_uid(iid))
@@ -265,11 +310,7 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     camps_atual_lista = atual["BaseCampSaveData"]["value"]
     ids_ja_presentes = set(base_camp_por_id(atual).keys())
 
-    if not isinstance(atual.get("MapObjectSaveData"), dict):
-        atual["MapObjectSaveData"] = {"value": []}
-    if not isinstance(atual["MapObjectSaveData"].get("value"), list):
-        atual["MapObjectSaveData"]["value"] = []
-    objetos_atual_lista = atual["MapObjectSaveData"]["value"]
+    objetos_atual_lista = map_object_list_ref(atual)
     instance_ids_atuais = instance_ids_presentes(atual)
 
     novos_base_ids = list(guild_atual["raw"].get("base_ids") or [])
