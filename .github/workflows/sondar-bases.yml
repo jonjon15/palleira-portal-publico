@@ -1,0 +1,47 @@
+name: Sondar bases (BaseCampSaveData / MapObjectSaveData)
+
+# Investigação sob demanda: essas duas seções do save decodificam de verdade
+# nesta versão da lib, ou ainda são tratadas como "quebradas em versões
+# novas"? Não grava nada — só leitura.
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Servidor (pve-free, pve-vip, pvp-free)"
+        required: false
+        default: "pve-free"
+      arquivos:
+        description: "Arquivos a sondar, separados por vírgula"
+        required: false
+        default: "Level.sav.bak-20260822-154657"
+      base_ids:
+        description: "UUIDs de base a procurar, separados por vírgula"
+        required: false
+        default: "e71a3d75-c6fb-4eab-a4ba-20baaecd76c4,75eb802a-4842-8885-beb8-3eb76e6ef6ac,3f05b9ee-48ef-1eda-6ce5-c8b625cfb1e8"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SLUG: ${{ inputs.slug }}
+          ARQUIVOS: ${{ inputs.arquivos }}
+          BASE_IDS: ${{ inputs.base_ids }}
+        run: python tools/sondar_bases.py
