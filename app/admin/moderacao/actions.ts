@@ -513,9 +513,11 @@ export async function dispararWipe(
     return { ok: false, mensagem: "Modo inválido." };
   }
 
-  // Wipe é a ação mais destrutiva do painel: apaga TODO MUNDO de uma vez,
-  // não uma pessoa. Exigir o nome do servidor (não uma palavra genérica)
-  // também evita escolher o servidor errado na lista.
+  // O servidor já vem fixado pelas abas do topo da página — não há lista
+  // para errar aqui. A trava mora só no popup do lado do cliente (ver
+  // WipeMundo em formularios.tsx): ele pede o nome do servidor e manda a
+  // resposta neste campo. É a ação mais destrutiva do painel, então confere
+  // de novo aqui — nunca confiar só no que o cliente prometeu ter validado.
   if (modo === "aplicar" && confirmacao.toLowerCase() !== server.shortName.toLowerCase()) {
     return {
       ok: false,

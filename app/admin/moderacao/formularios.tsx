@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import {
   salvarMundo,
   enviarAnuncio,
@@ -665,10 +665,10 @@ Digite CONFIRMAR para prosseguir:`,
 /**
  * Wipe de verdade: apaga o mundo inteiro do servidor escolhido.
  *
- * A trava aqui é mais pesada que as outras de propósito — não tem
- * "verificar" (não existe ciclo de leitura/escrita para testar) e a
- * confirmação exige o nome do servidor, não uma palavra genérica, porque
- * escolher o servidor errado na lista é o erro mais fácil de cometer.
+ * Sem campo de texto na tela — o servidor já vem fixado pelas abas do topo
+ * da página, então não há o que selecionar errado aqui. A trava inteira
+ * mora no popup: ele pede para digitar o nome do servidor, e a resposta
+ * alimenta o campo oculto `confirmacao` que a Server Action confere.
  */
 export function WipeMundo({
   servidor,
@@ -678,100 +678,53 @@ export function WipeMundo({
   nomeServidor: string;
 }) {
   const [estado, acao, rodando] = useActionState(dispararWipe, SEM_ESTADO);
-  const [confirmando, setConfirmando] = useState(false);
-  const [digitado, setDigitado] = useState("");
-
-  const confere = digitado.trim().toLowerCase() === nomeServidor.toLowerCase();
+  const confirmacaoRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="space-y-4">
-      {!confirmando ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <form action={acao}>
-            <input type="hidden" name="servidor" value={servidor} />
-            <input type="hidden" name="modo" value="simular" />
-            <button type="submit" disabled={rodando} className={botaoFantasma}>
-              {rodando ? "Rodando…" : "Conferir mundo atual"}
-            </button>
-          </form>
-          <button
-            type="button"
-            onClick={() => setConfirmando(true)}
-            className={botaoPerigo}
-          >
-            Apagar o mundo inteiro
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <form action={acao}>
+          <input type="hidden" name="servidor" value={servidor} />
+          <input type="hidden" name="modo" value="simular" />
+          <button type="submit" disabled={rodando} className={botaoFantasma}>
+            {rodando ? "Rodando…" : "Conferir mundo atual"}
           </button>
-        </div>
-      ) : (
+        </form>
+
         <form
           action={acao}
           onSubmit={(e) => {
             const r = window.prompt(
-              `Isto apaga TUDO de ${nomeServidor}: todo jogador perde personagem, base, itens e Pals. Não tem volta pelo site.
+              `⚠️ ATENÇÃO — isto apaga o MUNDO INTEIRO de ${nomeServidor}, para sempre, pelo site.
 
-Digite CONFIRMAR para prosseguir:`,
+Todo jogador perde personagem, base, itens e Pals. Sem exceção. Isto não é zerar uma pessoa: é o servidor inteiro.
+
+Um mundo novo e vazio nasce quando o servidor subir de novo.
+
+Para confirmar, digite o nome do servidor: ${nomeServidor}`,
             );
-            if (r?.trim().toUpperCase() !== "CONFIRMAR") {
+            if (!r || r.trim().toLowerCase() !== nomeServidor.toLowerCase()) {
               e.preventDefault();
+              return;
             }
+            if (confirmacaoRef.current) confirmacaoRef.current.value = r.trim();
           }}
-          className="space-y-3 rounded-[var(--radius-card)] border border-danger/40 bg-danger/[0.08] p-5"
         >
           <input type="hidden" name="servidor" value={servidor} />
           <input type="hidden" name="modo" value="aplicar" />
-
-          <p className="text-sm text-muted">
-            <b className="text-danger">
-              Isto apaga o mundo inteiro de {nomeServidor}.
-            </b>{" "}
-            Todo personagem, base, item e Pal de todo jogador some. Um mundo
-            novo, vazio, nasce quando o servidor sobe de novo.
-          </p>
-
-          <ul className="space-y-1 text-xs text-muted">
-            <li>✓ O servidor é parado de verdade antes de mexer em qualquer arquivo</li>
-            <li>
-              ✓ O mundo atual não é apagado na hora — é movido para uma pasta
-              de backup ao lado, para o caso de arrependimento
-            </li>
-            <li>✓ O servidor volta sozinho com um mundo novo</li>
-          </ul>
-
-          <div>
-            <label htmlFor="confirmacaoWipe" className="block text-sm text-muted">
-              Para confirmar, digite <b className="text-text">{nomeServidor}</b>
-            </label>
-            <input
-              id="confirmacaoWipe"
-              name="confirmacao"
-              autoComplete="off"
-              value={digitado}
-              onChange={(e) => setDigitado(e.target.value)}
-              className={`${campo} mt-1.5`}
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={rodando || !confere}
-              className={botaoPerigo}
-            >
-              {rodando ? "Disparando…" : `Apagar o mundo de ${nomeServidor}`}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmando(false)}
-              className={botaoFantasma}
-            >
-              Cancelar
-            </button>
-          </div>
-          <Aviso {...estado} />
+          <input type="hidden" name="confirmacao" ref={confirmacaoRef} />
+          <button type="submit" disabled={rodando} className={botaoPerigo}>
+            {rodando ? "Disparando…" : "Apagar o mundo inteiro"}
+          </button>
         </form>
-      )}
+      </div>
 
-      {!confirmando && <Aviso {...estado} />}
+      <p className="text-xs text-muted">
+        O mundo atual não é apagado na hora — vira backup ao lado, no próprio
+        servidor, mas não tem como restaurar pelo site.
+      </p>
+
+      <Aviso {...estado} />
     </div>
   );
 }
