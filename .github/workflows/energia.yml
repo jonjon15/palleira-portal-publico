@@ -1,0 +1,55 @@
+# Liga, desliga ou consulta um servidor pelo painel. Ver tools/energia_painel.py.
+#
+# Existe porque a subida às vezes demora mais que o limite do passo embutido
+# nos outros workflows (05/09/2026: o pve-free ficou 300s em 'offline' depois
+# de um start e o job falhou com o servidor no chão) — daí precisar de um
+# jeito de religar sem rodar uma restauração inteira de novo.
+name: energia
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      sinal:
+        description: "start | stop | restart | kill"
+        required: true
+        type: choice
+        options: [start, stop, restart, kill]
+        default: start
+      esperar:
+        description: "Esperar chegar em: (vazio = não esperar)"
+        required: false
+        type: choice
+        options: ["", running, offline]
+        default: running
+      limite:
+        description: "Segundos de espera"
+        required: false
+        type: string
+        default: "600"
+
+jobs:
+  energia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sinal
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/energia_painel.py \
+            --servidor "${{ inputs.servidor }}" \
+            --sinal "${{ inputs.sinal }}" \
+            ${{ inputs.esperar && format('--esperar {0} --limite {1}', inputs.esperar, inputs.limite) || '' }}
