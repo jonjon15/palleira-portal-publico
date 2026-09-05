@@ -433,6 +433,20 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
         raw_camp = dig(entry_camp, "value", "RawData", "value", default={}) or {}
         owner_palbox = raw_camp.get("owner_map_object_instance_id")
 
+        # O Pal Box é o que faz a base ser uma base: a guild aponta pra ele em
+        # `map_object_instance_ids_base_camp_points`. Se ele não veio junto, o
+        # vínculo aponta pro vazio e o jogo tem todo motivo pra limpar a base.
+        ids_copiados = {
+            norm_uid(dig(o, "Model", "value", "RawData", "value", "instance_id", default=""))
+            for o in objetos
+        }
+        palbox_veio = bool(owner_palbox) and norm_uid(owner_palbox) in ids_copiados
+        tipos = {}
+        for o in objetos:
+            tipo = scalar(dig(o, "MapObjectId"), "?")
+            tipos[tipo] = tipos.get(tipo, 0) + 1
+        palbox_tipos = [t for t in tipos if "palbox" in str(t).lower()]
+
         novos_base_ids.append(entry_camp.get("key"))
         if (owner_palbox and norm_uid(owner_palbox) != ZERO_UID
                 and norm_uid(owner_palbox) not in {norm_uid(x) for x in novos_palbox_ids}):
@@ -455,6 +469,10 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
             "nome": (raw_camp.get("name") or "").strip(),
             "objetos": copiados,
             "trabalhos": trabalhos_copiados,
+            "palbox_veio": palbox_veio,
+            "palbox_id": norm_uid(owner_palbox) if owner_palbox else "(vazio)",
+            "palbox_tipos": palbox_tipos,
+            "work_ids_na_base": len(work_ids_da_base(entry_camp)),
         })
         rel["objetos_restaurados"] += copiados
         rel["trabalhos_restaurados"] = rel.get("trabalhos_restaurados", 0) + trabalhos_copiados
@@ -614,6 +632,10 @@ def main() -> int:
         print(f"    guild: {rel['guild_nome']} ({rel['guild']})")
         for b in rel["bases_restauradas"]:
             print(f"    ✓ base {b['base_id']} \"{b['nome']}\" — {b['objetos']} objetos, {b['trabalhos']} trabalhos restaurados")
+            print(f"        pal box {b['palbox_id']}: "
+                  + ("✓ veio junto" if b["palbox_veio"] else "❌ NÃO está entre os objetos copiados")
+                  + f" | tipos palbox achados: {b['palbox_tipos'] or 'nenhum'}"
+                  + f" | work_ids na base: {b['work_ids_na_base']}")
         if rel.get("aviso"):
             print(f"    ⚠️  {rel['aviso']}")
         for m in rel.get("membros_renovados") or []:
