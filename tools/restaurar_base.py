@@ -499,6 +499,98 @@ def works_da_base(world, base_id_norm: str) -> list:
     return out
 
 
+# Campos que são referência estrutural de verdade — a varredura de
+# fechamento só segue estes. Um `build_player_uid` também é um GUID, mas
+# aponta para um jogador, e persegui-lo traria meio mundo junto.
+CAMPOS_REFERENCIA = (
+    "instance_id", "owner_instance_id", "model_instance_id",
+    "concrete_model_instance_id", "owner_map_object_instance_id",
+    "target_work_id", "repair_work_id", "work_ids",
+    "target_container_id", "container_id",
+    "local_id_in_created_world",
+)
+
+
+def indices(world) -> dict[str, dict]:
+    """Os seis catálogos de "quem é quem" de um save, por GUID."""
+    mapobj = {}
+    for e in map_object_entries(world):
+        for campo in ("instance_id", "concrete_model_instance_id"):
+            gid = norm_uid(dig(e, "Model", "value", "RawData", "value", campo, default=""))
+            if gid and gid != ZERO_UID:
+                mapobj[gid] = e
+    works = {}
+    for e in work_entries(world):
+        gid = norm_uid(dig(e, "RawData", "value", "id", default=""))
+        if gid:
+            works[gid] = e
+    return {
+        "MapObjectSaveData": mapobj,
+        "WorkSaveData": works,
+        "ItemContainerSaveData": secao_por_id(world, "ItemContainerSaveData"),
+        "CharacterContainerSaveData": secao_por_id(world, "CharacterContainerSaveData"),
+        "DynamicItemSaveData": dynamic_items_por_id(world),
+        "CharacterSaveParameterMap": personagens_por_instance_id(world),
+    }
+
+
+def refs_de(entrada) -> set[str]:
+    achados: set[str] = set()
+    for campo in CAMPOS_REFERENCIA:
+        achados |= coletar_guids(entrada, campo)
+    return achados
+
+
+def fechar_referencias(atual: dict, backup: dict, sementes: list, limite_voltas: int = 6) -> dict:
+    """Copia do backup tudo que as `sementes` referenciam, e depois tudo que
+    *essas* cópias referenciam, até estabilizar.
+
+    Existe porque a primeira leva de dependências não bastou: a varredura
+    mostrou 11 `target_work_id`, 1 `repair_work_id`, 21 `instance_id` e 4
+    itens dinâmicos que não resolviam para nada. Cada um deles é um ponteiro
+    que o jogo segue — e seguir um ponteiro nulo foi o que derrubou o pve-free
+    (EXCEPTION_ACCESS_VIOLATION lendo 0x48). Ir atrás campo a campo seria
+    perseguir sintoma; fechar o grafo resolve a classe inteira.
+    """
+    conta: dict[str, int] = {}
+    idx_bkp = indices(backup)
+    idx_hoje = indices(atual)
+    listas = {
+        "MapObjectSaveData": lista_mutavel(atual, "MapObjectSaveData", tipo="ArrayProperty"),
+        "WorkSaveData": lista_mutavel(atual, "WorkSaveData", tipo="ArrayProperty"),
+        "ItemContainerSaveData": lista_mutavel(atual, "ItemContainerSaveData"),
+        "CharacterContainerSaveData": lista_mutavel(atual, "CharacterContainerSaveData"),
+        "DynamicItemSaveData": lista_mutavel(atual, "DynamicItemSaveData", tipo="ArrayProperty"),
+        "CharacterSaveParameterMap": lista_mutavel(atual, "CharacterSaveParameterMap"),
+    }
+
+    pendentes = set()
+    for s in sementes:
+        pendentes |= refs_de(s)
+
+    vistos: set[str] = set()
+    for _ in range(limite_voltas):
+        alvos = {g for g in pendentes if g not in vistos}
+        if not alvos:
+            break
+        vistos |= alvos
+        pendentes = set()
+        for gid in sorted(alvos):
+            if any(gid in idx for idx in idx_hoje.values()):
+                continue  # já existe hoje, nada a copiar
+            for secao, idx in idx_bkp.items():
+                entrada = idx.get(gid)
+                if entrada is None:
+                    continue
+                listas[secao].append(entrada)
+                idx_hoje[secao][gid] = entrada
+                conta[secao] = conta.get(secao, 0) + 1
+                pendentes |= refs_de(entrada)
+                break
+
+    return conta
+
+
 def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: dict) -> dict:
     """Traz para o save atual tudo que os objetos da base apontam: containers
     de item e de personagem, os itens dentro deles e os Pals que moram neles.
@@ -576,15 +668,26 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
             chars_hoje[iid] = entrada
             conta["pals_da_base"] += 1
 
-    # ---- e o que não pôde vir junto, esvazia ------------------------------
-    # Um slot que aponta para um Pal ou item que não existe é um ponteiro para
-    # o nada, e o jogo morre ao lê-lo: EXCEPTION_ACCESS_VIOLATION lendo 0x48,
-    # que foi exatamente o crash do pve-free em 05/09/2026 21:26 UTC. O Save
-    # Pal resolve do mesmo jeito (`empty_item_container_slots`): a caixa viaja,
-    # o conteúdo que não existe mais não.
+    # O saneamento dos slots NÃO acontece aqui: precisa rodar depois do
+    # `fechar_referencias`, senão esvaziaria um slot cujo conteúdo ainda ia
+    # ser trazido na volta seguinte.
+    conta["_copiados_item"] = copiados_item
+    conta["_copiados_char"] = copiados_char
+    return conta
+
+
+def sanear_slots(atual: dict, copiados_item: list, copiados_char: list) -> tuple[int, int]:
+    """Zera todo slot que aponta para um Pal ou item que não existe no save.
+
+    Um ponteiro desses é o que o jogo segue e morre lendo:
+    EXCEPTION_ACCESS_VIOLATION em 0x48, o crash do pve-free em 05/09/2026
+    21:26 UTC. O Save Pal faz igual (`empty_item_container_slots`): a caixa
+    viaja, o conteúdo que não existe mais não.
+    """
     zero = guid_zero(atual)
     itens_vivos = set(dynamic_items_por_id(atual))
     pals_vivos = set(personagens_por_instance_id(atual))
+    esvaziados = teimosos = 0
 
     for entrada in copiados_item:
         for slot in slots_do_container(entrada):
@@ -592,9 +695,9 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
             if not alvo or alvo <= itens_vivos:
                 continue
             if esvaziar_slot_de_item(slot, zero):
-                conta["slots_esvaziados"] += 1
+                esvaziados += 1
             else:
-                conta["slots_teimosos"] += 1
+                teimosos += 1
 
     for entrada in copiados_char:
         for slot in slots_do_container(entrada):
@@ -602,11 +705,11 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
             if not alvo or alvo <= pals_vivos:
                 continue
             if esvaziar_slot_de_pal(slot, zero):
-                conta["slots_esvaziados"] += 1
+                esvaziados += 1
             else:
-                conta["slots_teimosos"] += 1
+                teimosos += 1
 
-    return conta
+    return esvaziados, teimosos
 
 
 # -------------------------------------------------------------------- edição
@@ -733,6 +836,18 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
             trabalhos_copiados += 1
 
         dependencias = copiar_dependencias(atual, backup, objetos, entry_camp)
+
+        # E o que as dependências, por sua vez, referenciam. Só depois disso o
+        # saneamento de slots faz sentido: esvaziar antes seria jogar fora
+        # conteúdo que ainda podia ser trazido.
+        sementes = list(objetos) + works_da_base(backup, base_id) + [entry_camp]
+        sementes += dependencias["_copiados_item"] + dependencias["_copiados_char"]
+        dependencias["fechamento"] = fechar_referencias(atual, backup, sementes)
+
+        esvaziados, teimosos = sanear_slots(
+            atual, dependencias.pop("_copiados_item"), dependencias.pop("_copiados_char"))
+        dependencias["slots_esvaziados"] = esvaziados
+        dependencias["slots_teimosos"] = teimosos
 
         rel["bases_restauradas"].append({
             "base_id": base_id,
@@ -916,6 +1031,10 @@ def main() -> int:
                   + (f", {d['slots_esvaziados']} slots esvaziados" if d.get("slots_esvaziados") else "")
                   + (f" | ⚠ {d['faltando']} containers não estavam no backup" if d.get("faltando") else "")
                   + (f" | ⚠ {d['slots_teimosos']} slots que não consegui esvaziar" if d.get("slots_teimosos") else ""))
+            fech = d.get("fechamento") or {}
+            if fech:
+                print("        fechamento de referências: "
+                      + ", ".join(f"{n} de {secao}" for secao, n in sorted(fech.items())))
         if rel.get("aviso"):
             print(f"    ⚠️  {rel['aviso']}")
         for m in rel.get("membros_renovados") or []:
