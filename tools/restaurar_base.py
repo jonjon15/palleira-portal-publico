@@ -67,6 +67,20 @@ NEEDED_SECTIONS = (
     # Save Pal atualiza o contador nos dois lugares (guild e SaveParameter),
     # ver `sync_timestamps` em transfer.rs.
     ".worldSaveData.CharacterSaveParameterMap.Value.RawData",
+    # Integridade referencial. Cada baú, fábrica e caixa de Pal da base aponta
+    # para um container que mora em outra seção; o Save Pal avisa em
+    # `blueprint/capture.rs` que "a captured structure that references a
+    # container must ship with that container, or the game crashes
+    # dereferencing it". Medido em 05/09/2026 por `tools/sondar_base_refs.py`:
+    # as três bases referenciam 229 containers (226 de item, 3 de personagem)
+    # e NENHUM deles existe mais no save de hoje. Foi isso que apagou a base
+    # restaurada na subida — não o auto-reset de 72h, que estava satisfeito
+    # (as duas guildas constavam com 0.08d de inatividade).
+    ".worldSaveData.ItemContainerSaveData.Value.RawData",
+    ".worldSaveData.ItemContainerSaveData.Value.Slots.Slots.RawData",
+    ".worldSaveData.CharacterContainerSaveData.Value.Slots.Slots.RawData",
+    # Os itens dentro dos baús: os slots do ItemContainer apontam para cá.
+    ".worldSaveData.DynamicItemSaveData.DynamicItemSaveData.RawData",
 )
 
 
@@ -353,6 +367,164 @@ def work_list_ref(world) -> list:
     return inner["value"]
 
 
+# ------------------------------------------------- integridade referencial
+
+def coletar_guids(node, chave_alvo: str, prof: int = 14) -> set[str]:
+    """Todo GUID guardado sob uma chave chamada `chave_alvo`, em qualquer
+    profundidade.
+
+    Varre em vez de assumir caminho: `target_container_id` está a nove níveis
+    dentro do objeto (`ConcreteModel.ModuleMap[].value.RawData.value`) e a
+    forma muda com o tipo de estrutura. Adivinhar caminho já custou duas
+    rodadas nesta investigação; varrer acha e não quebra na próxima versão do
+    jogo.
+    """
+    achados: set[str] = set()
+
+    def anda(no, p: int):
+        if p <= 0:
+            return
+        if isinstance(no, dict):
+            for k, v in no.items():
+                if k == chave_alvo:
+                    valor = scalar(v, None)
+                    if valor is not None:
+                        g = norm_uid(valor)
+                        if len(g) == 32 and g != ZERO_UID:
+                            achados.add(g)
+                anda(v, p - 1)
+        elif isinstance(no, list):
+            for item in no:
+                anda(item, p - 1)
+
+    anda(node, prof)
+    return achados
+
+
+def secao_por_id(world, secao: str) -> dict[str, dict]:
+    """Entradas de uma seção mapeada por `key.ID` — a forma que
+    `ItemContainerSaveData` e `CharacterContainerSaveData` usam."""
+    out = {}
+    for entrada in entries_of(dig(world, secao, default=None)) or []:
+        cid = norm_uid(scalar(dig(entrada, "key", "ID"), ""))
+        if cid:
+            out[cid] = entrada
+    return out
+
+
+def lista_mutavel(world, secao: str, tipo: str = "MapProperty") -> list:
+    """Referência mutável de verdade da lista de uma seção. Sem isso o
+    `.append()` cai numa lista solta e some na reserialização."""
+    prop = world.get(secao)
+    if not isinstance(prop, dict):
+        prop = {"id": None, "type": tipo, "value": []}
+        world[secao] = prop
+    inner = prop.get("value")
+    if isinstance(inner, list):
+        return inner
+    if not isinstance(inner, dict):
+        inner = {}
+        prop["value"] = inner
+    for chave in ("values", "value"):
+        if isinstance(inner.get(chave), list):
+            return inner[chave]
+    inner["value"] = []
+    return inner["value"]
+
+
+def dynamic_items_por_id(world) -> dict[str, dict]:
+    """`local_id_in_created_world` -> entrada de DynamicItemSaveData."""
+    out = {}
+    for entrada in entries_of(dig(world, "DynamicItemSaveData", default=None)) or []:
+        for gid in coletar_guids(entrada, "local_id_in_created_world", prof=6):
+            out[gid] = entrada
+    return out
+
+
+def personagens_por_instance_id(world) -> dict[str, dict]:
+    out = {}
+    for entrada in dig(world, "CharacterSaveParameterMap", "value", default=[]) or []:
+        iid = norm_uid(scalar(dig(entrada, "key", "InstanceId"), ""))
+        if iid:
+            out[iid] = entrada
+    return out
+
+
+def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: dict) -> dict:
+    """Traz para o save atual tudo que os objetos da base apontam: containers
+    de item e de personagem, os itens dentro deles e os Pals que moram neles.
+
+    Sem isso a base volta, o jogo carrega, dereferencia um baú que aponta para
+    o nada e descarta tudo — medido em 05/09/2026.
+    """
+    conta = {"item_containers": 0, "char_containers": 0,
+             "itens": 0, "pals_da_base": 0, "faltando": 0}
+
+    # Os containers que os objetos declaram, mais o container de trabalhadores
+    # que o próprio BaseCamp nomeia (WorkerDirector).
+    alvos: set[str] = set()
+    for obj in objetos:
+        alvos |= coletar_guids(obj, "target_container_id")
+    alvos |= coletar_guids(entry_camp, "container_id")
+    alvos |= coletar_guids(entry_camp, "target_container_id")
+    if not alvos:
+        return conta
+
+    item_bkp = secao_por_id(backup, "ItemContainerSaveData")
+    item_hoje = secao_por_id(atual, "ItemContainerSaveData")
+    char_bkp = secao_por_id(backup, "CharacterContainerSaveData")
+    char_hoje = secao_por_id(atual, "CharacterContainerSaveData")
+    lista_item = lista_mutavel(atual, "ItemContainerSaveData")
+    lista_char = lista_mutavel(atual, "CharacterContainerSaveData")
+
+    ids_de_item: set[str] = set()
+    ids_de_pal: set[str] = set()
+
+    for cid in sorted(alvos):
+        if cid in item_hoje or cid in char_hoje:
+            continue
+        if cid in item_bkp:
+            entrada = item_bkp[cid]
+            lista_item.append(entrada)
+            item_hoje[cid] = entrada
+            ids_de_item |= coletar_guids(entrada, "local_id_in_created_world")
+            conta["item_containers"] += 1
+        elif cid in char_bkp:
+            entrada = char_bkp[cid]
+            lista_char.append(entrada)
+            char_hoje[cid] = entrada
+            ids_de_pal |= coletar_guids(entrada, "instance_id")
+            conta["char_containers"] += 1
+        else:
+            conta["faltando"] += 1
+
+    if ids_de_item:
+        din_bkp = dynamic_items_por_id(backup)
+        din_hoje = dynamic_items_por_id(atual)
+        lista_din = lista_mutavel(atual, "DynamicItemSaveData", tipo="ArrayProperty")
+        for iid in sorted(ids_de_item):
+            if iid in din_hoje or iid not in din_bkp:
+                continue
+            entrada = din_bkp[iid]
+            lista_din.append(entrada)
+            din_hoje[iid] = entrada
+            conta["itens"] += 1
+
+    if ids_de_pal:
+        chars_bkp = personagens_por_instance_id(backup)
+        chars_hoje = personagens_por_instance_id(atual)
+        lista_chars = lista_mutavel(atual, "CharacterSaveParameterMap")
+        for iid in sorted(ids_de_pal):
+            if iid in chars_hoje or iid not in chars_bkp:
+                continue
+            entrada = chars_bkp[iid]
+            lista_chars.append(entrada)
+            chars_hoje[iid] = entrada
+            conta["pals_da_base"] += 1
+
+    return conta
+
+
 # -------------------------------------------------------------------- edição
 
 def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
@@ -464,11 +636,14 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
             work_ids_ja_presentes.add(wid_norm)
             trabalhos_copiados += 1
 
+        dependencias = copiar_dependencias(atual, backup, objetos, entry_camp)
+
         rel["bases_restauradas"].append({
             "base_id": base_id,
             "nome": (raw_camp.get("name") or "").strip(),
             "objetos": copiados,
             "trabalhos": trabalhos_copiados,
+            "dependencias": dependencias,
             "palbox_veio": palbox_veio,
             "palbox_id": norm_uid(owner_palbox) if owner_palbox else "(vazio)",
             "palbox_tipos": palbox_tipos,
@@ -623,8 +798,10 @@ def main() -> int:
 
     print()
     algo_mudou = False
+    relatorios = []
     for uid in uids:
         rel = restaurar_jogador(world, backup_world, uid)
+        relatorios.append(rel)
         print(f"  uid {uid}:")
         if rel["erro"]:
             print(f"    ✗ {rel['erro']}")
@@ -636,6 +813,11 @@ def main() -> int:
                   + ("✓ veio junto" if b["palbox_veio"] else "❌ NÃO está entre os objetos copiados")
                   + f" | tipos palbox achados: {b['palbox_tipos'] or 'nenhum'}"
                   + f" | work_ids na base: {b['work_ids_na_base']}")
+            d = b.get("dependencias") or {}
+            print(f"        dependências: {d.get('item_containers', 0)} containers de item, "
+                  f"{d.get('char_containers', 0)} de personagem, {d.get('itens', 0)} itens, "
+                  f"{d.get('pals_da_base', 0)} Pals da base"
+                  + (f" | ⚠ {d['faltando']} containers não estavam no backup" if d.get("faltando") else ""))
         if rel.get("aviso"):
             print(f"    ⚠️  {rel['aviso']}")
         for m in rel.get("membros_renovados") or []:
@@ -684,6 +866,28 @@ def main() -> int:
     print(f"    MapObjectSaveData: {mo_total_antes} em memória -> {mo_total_depois} após reler o reserializado")
     print(f"    BaseCampSaveData: {bc_total_antes} em memória -> {bc_total_depois} após reler o reserializado")
     print(f"    WorkSaveData: {wk_total_antes} em memória -> {wk_total_depois} após reler o reserializado")
+
+    # O teste que faltava: nenhum objeto restaurado pode apontar para um
+    # container que não existe. Foi essa referência quebrada — 229 delas — que
+    # fez o jogo descartar as bases da primeira vez.
+    itens_ok = secao_por_id(recheck_world, "ItemContainerSaveData")
+    chars_ok = secao_por_id(recheck_world, "CharacterContainerSaveData")
+    orfaos_totais = 0
+    for rel in relatorios:
+        for b in rel.get("bases_restauradas") or []:
+            objetos = map_objects_da_base(recheck_world, b["base_id"])
+            alvos = set()
+            for obj in objetos:
+                alvos |= coletar_guids(obj, "target_container_id")
+            orfaos = alvos - itens_ok.keys() - chars_ok.keys()
+            orfaos_totais += len(orfaos)
+            print(f"    base {b['base_id']}: {len(objetos)} objetos relidos, "
+                  f"{len(alvos)} containers referenciados, "
+                  + (f"❌ {len(orfaos)} ÓRFÃOS" if orfaos else "✓ nenhum órfão"))
+    if orfaos_totais:
+        print("\n  ❌ Ainda há referência apontando para o nada — o jogo descartaria a base.")
+        print("     Nada foi gravado.")
+        return 1
 
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
