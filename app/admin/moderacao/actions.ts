@@ -542,3 +542,197 @@ export async function dispararWipe(
         : `Wipe disparado em ${server.shortName}. O servidor vai parar, o mundo atual é movido para backup, e ele sobe do zero. Acompanhe em Ações recentes ou no GitHub.`,
   });
 }
+
+/* ------------------------------------------- situação: Pals e bases */
+
+export interface Situacao {
+  uid: string;
+  nome: string;
+  level: number;
+  pals: number;
+  guild: string | null;
+  bases: number;
+  atualizado: string;
+}
+
+export interface EstadoSituacao extends Estado {
+  situacoes?: Situacao[];
+}
+
+/** "há 3 h", "há 2 dias" — para o dono saber o quanto o número está velho. */
+function desdeQuando(data: Date): string {
+  const min = Math.floor((Date.now() - data.getTime()) / 60000);
+  if (min < 2) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return `há ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  return `há ${dias} ${dias === 1 ? "dia" : "dias"}`;
+}
+
+/**
+ * Quantos Pals e quantas bases o jogador tem, para conferir antes e depois de
+ * restaurar.
+ *
+ * Sai do banco, não do save: `players.pal_count` e `guilds.base_count` são
+ * alimentados pelo import de 2 em 2 horas. Ler o `Level.sav` aqui não caberia
+ * numa função serverless — são 280 MB descomprimidos. Por isso a resposta diz
+ * de quando é o número em vez de fingir que é de agora.
+ */
+export async function consultarSituacao(
+  _anterior: EstadoSituacao,
+  form: FormData,
+): Promise<EstadoSituacao> {
+  await exigirModeracao();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const termo = String(form.get("termo") ?? "").trim();
+
+  if (termo.length < 2) {
+    return { ok: false, mensagem: "Escreva pelo menos 2 letras do nome." };
+  }
+
+  const linhas = (await sql`
+    select p.palworld_uid, p.name, p.level, p.pal_count, p.updated_at,
+           g.name as guild_name, g.base_count
+    from players p
+    left join guilds g
+      on g.server_slug = p.server_slug and g.guild_id = p.guild_id
+    where p.server_slug = ${server.slug} and p.name ilike ${"%" + termo + "%"}
+    order by p.level desc
+    limit 12
+  `) as {
+    palworld_uid: string;
+    name: string;
+    level: number;
+    pal_count: number;
+    updated_at: string;
+    guild_name: string | null;
+    base_count: number | null;
+  }[];
+
+  if (linhas.length === 0) {
+    return { ok: false, mensagem: `Ninguém com "${termo}" em ${server.shortName}.` };
+  }
+
+  return {
+    ok: true,
+    mensagem: `${linhas.length} encontrado(s).`,
+    situacoes: linhas.map((l) => ({
+      uid: l.palworld_uid,
+      nome: l.name,
+      level: l.level,
+      pals: l.pal_count,
+      guild: l.guild_name,
+      bases: l.base_count ?? 0,
+      atualizado: desdeQuando(new Date(l.updated_at)),
+    })),
+  };
+}
+
+/* ------------------------------------------------ restaurar jogador */
+
+/**
+ * Devolve a um jogador o que o servidor apagou: o save individual dele, os
+ * Pals com as caixas, e a base.
+ *
+ * Os três passos rodam em sequência com o servidor parado UMA vez — subir no
+ * meio acorda a limpeza do jogo, que apaga o que ainda está pela metade. Foi
+ * assim que 260 Pals do Tenshi se perderam em 05/09/2026. Ver
+ * `.github/workflows/restaurar-jogador.yml`.
+ *
+ * Nenhum nome de arquivo de backup aparece aqui de propósito: o script acha
+ * sozinho o backup mais recente que ainda tem o que devolver (`auto`).
+ */
+export async function dispararRestauracao(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as "simular" | "aplicar";
+  const uid = String(form.get("uid") ?? "").trim().toUpperCase();
+  const nome = String(form.get("nome") ?? "").trim();
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+  const semBase = String(form.get("pular_base") ?? "") === "1";
+
+  if (modo !== "simular" && modo !== "aplicar") {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+  if (!/^[0-9A-F]{32}$/.test(uid)) {
+    return { ok: false, mensagem: "Escolha um jogador na lista antes." };
+  }
+  // Restaurar não apaga nada do jogador, mas derruba o servidor de todo mundo
+  // por alguns minutos. A confirmação é por isso, não pelo risco ao alvo.
+  if (modo === "aplicar" && confirmacao.toLowerCase() !== nome.toLowerCase()) {
+    return { ok: false, mensagem: `Para restaurar, digite o nome do jogador: ${nome}` };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "restore",
+    target: uid,
+    detail: `restauração (${modo})${semBase ? " sem base" : ""} de ${nome}`,
+    rodar: () =>
+      dispararWorkflow("restaurar-jogador.yml", {
+        servidor: server.slug,
+        uids: uid,
+        modo,
+        pular_base: String(semBase),
+        backup_pals: "auto",
+        backup_base: "auto",
+      }),
+    sucesso:
+      modo === "simular"
+        ? `Simulação pedida para ${nome} — mostra o que voltaria, sem gravar e sem derrubar ninguém. O resultado sai no GitHub, em uns 5 minutos.`
+        : `Restauração de ${nome} disparada. O servidor para, os Pals e a base voltam, e ele sobe sozinho — uns 10 minutos ao todo.`,
+  });
+}
+
+/* -------------------------------------------------- reverter o save */
+
+/**
+ * Devolve o `Level.sav` ao backup mais recente e sobe o servidor.
+ *
+ * É a saída de emergência para quando uma gravação deixa o servidor sem subir
+ * — aconteceu em 05/09/2026, e a volta teve de ser feita à mão, arquivo por
+ * arquivo, com o servidor no chão.
+ *
+ * ⚠️ Isto desfaz TUDO desde aquele backup, para todo mundo: o que os
+ * jogadores fizeram depois some junto. Só faz sentido com o servidor já
+ * quebrado.
+ */
+export async function dispararReversao(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as "listar" | "aplicar";
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+
+  if (modo !== "listar" && modo !== "aplicar") {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+  if (modo === "aplicar" && confirmacao.toUpperCase() !== "REVERTER") {
+    return { ok: false, mensagem: "Para voltar o mundo, digite REVERTER." };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "revert",
+    detail: `reversão (${modo})`,
+    rodar: () =>
+      dispararWorkflow("reverter-save.yml", {
+        servidor: server.slug,
+        backup: "",
+        modo,
+        religar: "true",
+      }),
+    sucesso:
+      modo === "listar"
+        ? "Lista dos backups pedida — nada é alterado. O resultado sai no GitHub."
+        : `Reversão disparada em ${server.shortName}. O mundo volta ao último backup e o servidor sobe sozinho.`,
+  });
+}

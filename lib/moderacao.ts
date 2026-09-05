@@ -17,7 +17,9 @@ export type AcaoModeracao =
   | "shutdown"
   | "power"
   | "reset_days"
-  | "wipe";
+  | "wipe"
+  | "restore"
+  | "revert";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -29,6 +31,8 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   power: "Energia",
   reset_days: "Zerar dias",
   wipe: "Wipe do mundo",
+  restore: "Restaurar jogador",
+  revert: "Reverter save",
 };
 
 export interface AcaoRow {

@@ -13,9 +13,14 @@ import {
   dispararReset,
   dispararResetDias,
   dispararWipe,
+  consultarSituacao,
+  dispararRestauracao,
+  dispararReversao,
   type Estado,
   type EstadoBusca,
   type Achado,
+  type EstadoSituacao,
+  type Situacao,
 } from "./actions";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
@@ -725,6 +730,249 @@ Para confirmar, digite o nome do servidor: ${nomeServidor}`,
       </p>
 
       <Aviso {...estado} />
+    </div>
+  );
+}
+
+/* --------------------------------------------- restaurar jogador */
+
+const SEM_SITUACAO: EstadoSituacao = { ok: false, mensagem: "" };
+
+/**
+ * Devolve a um jogador os Pals e a base que o servidor apagou.
+ *
+ * Não pergunta nome de arquivo de backup nem UUID: o motor acha sozinho o
+ * backup mais recente que ainda tem o que devolver. O dono escolhe a pessoa,
+ * confere quantos Pals e bases ela tem hoje, e confirma pelo nome.
+ */
+export function RestaurarJogador({ servidor }: { servidor: string }) {
+  const [busca, buscarAcao, buscando] = useActionState(consultarSituacao, SEM_SITUACAO);
+  const [envio, enviarAcao, enviando] = useActionState(dispararRestauracao, SEM_ESTADO);
+  const [alvo, setAlvo] = useState<Situacao | null>(null);
+  const [digitado, setDigitado] = useState("");
+  const [semBase, setSemBase] = useState(false);
+
+  const confere = alvo && digitado.trim().toLowerCase() === alvo.nome.toLowerCase();
+
+  return (
+    <div className="space-y-5">
+      <form action={buscarAcao} className="space-y-3">
+        <input type="hidden" name="servidor" value={servidor} />
+        <label htmlFor="termo-restaurar" className="block text-sm text-muted">
+          Nome do jogador que perdeu a base ou os Pals
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="termo-restaurar"
+            name="termo"
+            required
+            minLength={2}
+            placeholder="Tenshi"
+            className={`${campo} flex-1`}
+          />
+          <button type="submit" disabled={buscando} className={botaoFantasma}>
+            {buscando ? "Procurando…" : "Procurar"}
+          </button>
+        </div>
+        {!busca.situacoes && <Aviso {...busca} />}
+      </form>
+
+      {busca.situacoes && busca.situacoes.length > 0 && (
+        <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line">
+          {busca.situacoes.map((s) => {
+            const escolhido = alvo?.uid === s.uid;
+            return (
+              <li
+                key={s.uid}
+                className={`flex items-center gap-3 px-4 py-3 text-sm ${
+                  escolhido ? "bg-gold/[0.07]" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{s.nome}</p>
+                  <p className="truncate text-xs text-muted">
+                    nível {s.level} · <b className="text-text">{s.pals}</b> Pals ·{" "}
+                    {s.guild ? (
+                      <>
+                        {s.guild} com <b className="text-text">{s.bases}</b>{" "}
+                        {s.bases === 1 ? "base" : "bases"}
+                      </>
+                    ) : (
+                      "sem guild"
+                    )}{" "}
+                    · {s.atualizado}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAlvo(escolhido ? null : s);
+                    setDigitado("");
+                  }}
+                  className={botaoFantasma}
+                >
+                  {escolhido ? "Cancelar" : "Escolher"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {alvo && (
+        <div className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface-2/40 p-5">
+          <p className="text-sm text-muted">
+            Devolve a <b className="text-text">{alvo.nome}</b> o save individual,
+            os Pals com as caixas e a base — tudo do backup mais recente que
+            ainda tiver o que voltar. O que ele tem hoje não é apagado.
+          </p>
+
+          <ul className="space-y-1 text-xs text-muted">
+            <li>✓ O servidor é parado uma vez só e volta sozinho no fim</li>
+            <li>
+              ✓ Um backup do mundo é gravado e conferido antes de qualquer
+              sobrescrita
+            </li>
+            <li>
+              ✓ A gravação é recusada se sobrar qualquer referência quebrada —
+              foi o que derrubou o servidor em 05/09
+            </li>
+            <li>⏱ Leva uns 10 minutos; o servidor fica fora do ar nesse tempo</li>
+          </ul>
+
+          <label className="flex items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={semBase}
+              onChange={(e) => setSemBase(e.target.checked)}
+            />
+            Só os Pals, sem mexer na base
+          </label>
+
+          {/* Simular primeiro é grátis e não derruba ninguém. */}
+          <form action={enviarAcao} className="flex flex-wrap gap-2">
+            <input type="hidden" name="servidor" value={servidor} />
+            <input type="hidden" name="uid" value={alvo.uid} />
+            <input type="hidden" name="nome" value={alvo.nome} />
+            <input type="hidden" name="pular_base" value={semBase ? "1" : "0"} />
+            <input type="hidden" name="modo" value="simular" />
+            <button type="submit" disabled={enviando} className={botaoFantasma}>
+              {enviando ? "Pedindo…" : "Ver o que voltaria (não altera nada)"}
+            </button>
+          </form>
+
+          <form
+            action={enviarAcao}
+            onSubmit={(e) => {
+              const r = window.prompt(
+                `Isto para o servidor por cerca de 10 minutos para devolver a base e os Pals de ${alvo.nome}.\n\nDigite CONFIRMAR para prosseguir:`,
+              );
+              if (r?.trim().toUpperCase() !== "CONFIRMAR") e.preventDefault();
+            }}
+            className="space-y-3 border-t border-line pt-4"
+          >
+            <input type="hidden" name="servidor" value={servidor} />
+            <input type="hidden" name="uid" value={alvo.uid} />
+            <input type="hidden" name="nome" value={alvo.nome} />
+            <input type="hidden" name="pular_base" value={semBase ? "1" : "0"} />
+            <input type="hidden" name="modo" value="aplicar" />
+
+            <div>
+              <label htmlFor="conf-restaurar" className="block text-sm text-muted">
+                Para restaurar de verdade, digite{" "}
+                <b className="text-text">{alvo.nome}</b>
+              </label>
+              <input
+                id="conf-restaurar"
+                name="confirmacao"
+                autoComplete="off"
+                value={digitado}
+                onChange={(e) => setDigitado(e.target.value)}
+                className={`${campo} mt-1.5`}
+              />
+            </div>
+
+            <button type="submit" disabled={enviando || !confere} className={botao}>
+              {enviando ? "Disparando…" : `Restaurar ${alvo.nome}`}
+            </button>
+          </form>
+
+          <Aviso {...envio} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------- reverter o save */
+
+/**
+ * Saída de emergência: volta o mundo ao último backup.
+ *
+ * Só faz sentido com o servidor já quebrado — desfaz TUDO desde aquele
+ * backup, para todo mundo.
+ */
+export function ReverterSave({ servidor }: { servidor: string }) {
+  const [estado, acao, enviando] = useActionState(dispararReversao, SEM_ESTADO);
+  const [digitado, setDigitado] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted">
+        Para quando o servidor <b className="text-text">não sobe mais</b> depois
+        de uma gravação. Devolve o mundo ao backup mais recente e liga o
+        servidor.
+      </p>
+
+      <form action={acao}>
+        <input type="hidden" name="servidor" value={servidor} />
+        <input type="hidden" name="modo" value="listar" />
+        <button type="submit" disabled={enviando} className={botaoFantasma}>
+          {enviando ? "Pedindo…" : "Ver os backups disponíveis"}
+        </button>
+      </form>
+
+      <form
+        action={acao}
+        onSubmit={(e) => {
+          const r = window.prompt(
+            "Isto desfaz TUDO o que aconteceu no mundo desde o último backup — de todos os jogadores, não só de um.\n\nSó use com o servidor quebrado.\n\nDigite CONFIRMAR para prosseguir:",
+          );
+          if (r?.trim().toUpperCase() !== "CONFIRMAR") e.preventDefault();
+        }}
+        className="space-y-3 rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.05] p-5"
+      >
+        <input type="hidden" name="servidor" value={servidor} />
+        <input type="hidden" name="modo" value="aplicar" />
+
+        <p className="text-sm text-muted">
+          <b className="text-danger">Desfaz o progresso de todo mundo</b> desde o
+          último backup. O save problemático é guardado, não apagado.
+        </p>
+
+        <div>
+          <label htmlFor="conf-reverter" className="block text-sm text-muted">
+            Para voltar o mundo, digite <b className="text-text">REVERTER</b>
+          </label>
+          <input
+            id="conf-reverter"
+            name="confirmacao"
+            autoComplete="off"
+            value={digitado}
+            onChange={(e) => setDigitado(e.target.value)}
+            className={`${campo} mt-1.5`}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={enviando || digitado.trim().toUpperCase() !== "REVERTER"}
+          className={botaoPerigo}
+        >
+          {enviando ? "Disparando…" : "Voltar o mundo ao último backup"}
+        </button>
+        <Aviso {...estado} />
+      </form>
     </div>
   );
 }

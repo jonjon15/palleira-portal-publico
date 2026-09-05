@@ -13,6 +13,8 @@ import {
   Desligar,
   Energia,
   ResetarJogador,
+  RestaurarJogador,
+  ReverterSave,
   ZerarDias,
   WipeMundo,
   Anuncio,
@@ -216,6 +218,27 @@ export default async function Moderacao({
           </section>
         </div>
 
+        {/* ------------------------------------------ restaurar jogador */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+            <h2 className="text-lg font-semibold">Devolver base e Pals</h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              Para quem perdeu a base por ficar muito tempo sem entrar. O
+              servidor apaga a base de qualquer guild parada há mais de 72
+              horas, e às vezes leva os Pals junto. Isto traz de volta a partir
+              de um backup — você não precisa saber de qual: a ferramenta acha
+              sozinha o mais recente que ainda tem o que devolver.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              Comece por &ldquo;Ver o que voltaria&rdquo;: é grátis, não altera
+              nada e não derruba ninguém.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <RestaurarJogador servidor={server.slug} />
+            </div>
+          </section>
+        )}
+
         {/* --------------------------------------------- reset de jogador */}
         {podeEnergia && (
           <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
@@ -278,6 +301,29 @@ export default async function Moderacao({
             </p>
             <div className="mt-5 max-w-2xl">
               <WipeMundo servidor={server.slug} nomeServidor={server.shortName} />
+            </div>
+          </section>
+        )}
+
+        {/* ------------------------------------------------ reverter save */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
+            <h2 className="text-lg font-semibold">
+              Emergência: voltar o mundo ao último backup
+            </h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              Use quando o servidor <b className="text-text">não sobe mais</b>{" "}
+              depois de uma gravação — ele tenta ligar, cai em menos de um
+              minuto e repete. Isto devolve o mundo ao backup mais recente e
+              liga o servidor.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              Desfaz o progresso de todos os jogadores desde aquele backup, que
+              costuma ser de minutos atrás. O mundo problemático é guardado ao
+              lado, para depois se descobrir o que quebrou.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <ReverterSave servidor={server.slug} />
             </div>
           </section>
         )}

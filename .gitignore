@@ -53,3 +53,4 @@ credencial*.txt
 
 # dumps de conversa: contem credenciais coladas no chat
 docs/conversa-*.md
+tools/__pycache__/
