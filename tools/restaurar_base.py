@@ -1201,7 +1201,24 @@ def main() -> int:
     universo |= {norm_uid(dig(e, "RawData", "value", "id", default="")) for e in work_entries(recheck_world)}
     universo |= set(base_camp_por_id(recheck_world))
     universo |= set(guildas_por_id(recheck_world))
+    # Os jogadores também são destino legítimo de ponteiro (quem construiu,
+    # quem trancou, quem pôs à venda). Sem eles no universo, cada objeto
+    # gerava um "desconhecido" e o ruído escondia o que importa.
+    for info in guildas_por_id(recheck_world).values():
+        for membro in info["raw"].get("players") or []:
+            universo.add(norm_uid(membro.get("player_uid", "")))
+    for e in dig(recheck_world, "CharacterSaveParameterMap", "value", default=[]) or []:
+        universo.add(norm_uid(scalar(dig(e, "key", "PlayerUId"), "")))
+        param = dig(e, "value", "RawData", "value", "object", "SaveParameter", "value")
+        if isinstance(param, dict):
+            universo.add(norm_uid(scalar(param.get("OwnerPlayerUId"), "")))
     universo.discard("")
+
+    # Campos que guardam nome de tipo, não GUID — 'PalMapObjectBuildProcess
+    # SaveData' tem 32 caracteres e passava por GUID na contagem.
+    NAO_SAO_GUID = {"struct_type", "concrete_model_type", "type", "prop_type",
+                    "type_name", "array_type", "key_type", "value_type",
+                    "value_struct_type", "key_struct_type", "static_id", "prop_name"}
 
     desconhecidos: dict[str, int] = {}
 
@@ -1212,7 +1229,8 @@ def main() -> int:
             for k, v in no.items():
                 nome = k if isinstance(k, str) else chave_pai
                 valor = scalar(v, None)
-                if valor is not None and not isinstance(valor, (int, float, bool)):
+                if (valor is not None and nome not in NAO_SAO_GUID
+                        and not isinstance(valor, (int, float, bool))):
                     g = norm_uid(valor)
                     if len(g) == 32 and g != ZERO_UID and g not in universo:
                         desconhecidos[nome] = desconhecidos.get(nome, 0) + 1
