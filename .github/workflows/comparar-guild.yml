@@ -1,0 +1,47 @@
+name: Comparar guild entre saves
+
+# Investigação sob demanda: um jogador/guild que sumiu do save atual (por
+# decay, por exemplo) ainda existe num backup antigo do mesmo servidor? Não
+# grava nada — lê os dois `.sav`, decodifica só guild+jogadores e imprime.
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Servidor (pve-free, pve-vip, pvp-free)"
+        required: false
+        default: "pve-free"
+      nome:
+        description: "Nome do jogador a procurar"
+        required: false
+        default: "Tenshi"
+      arquivos:
+        description: "Arquivos a comparar, separados por vírgula"
+        required: false
+        default: "Level.sav,Level.sav.bak-20260822-154657"
+
+jobs:
+  comparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Comparar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SLUG: ${{ inputs.slug }}
+          NOME: ${{ inputs.nome }}
+          ARQUIVOS: ${{ inputs.arquivos }}
+        run: python tools/comparar_guild.py
