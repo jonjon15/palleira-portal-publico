@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: Level.sav
+      guildas:
+        description: "Nomes de guild a detalhar, separados por vírgula"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   sondar:
@@ -42,4 +47,5 @@ jobs:
         run: |
           python tools/sondar_decay.py \
             --servidor "${{ inputs.servidor }}" \
-            --arquivo "${{ inputs.arquivo }}"
+            --arquivo "${{ inputs.arquivo }}" \
+            --guildas "${{ inputs.guildas }}"

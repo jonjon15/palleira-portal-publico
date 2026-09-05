@@ -60,6 +60,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Mede a relação entre inatividade e base viva")
     ap.add_argument("--servidor", required=True)
     ap.add_argument("--arquivo", default="Level.sav", help="qual save ler (default: o vivo)")
+    ap.add_argument("--guildas", default="", help="nomes a detalhar, separados por vírgula")
     args = ap.parse_args()
 
     from palsav.core import decompress_sav_to_gvas
@@ -106,6 +107,20 @@ def main() -> int:
     for dias, g in sorted(com_base_paradas, reverse=True)[:15]:
         quanto = "sem registro de online" if dias > 1e8 else f"{dias:.1f}d parada"
         print(f"    {g['nome']}: {g['bases']} base(s), {g['membros']} membro(s), {quanto}")
+
+    procurados = [n.strip().lower() for n in args.guildas.split(",") if n.strip()]
+    if procurados:
+        # A pergunta que sobra: a renovação do contador feita pelo
+        # restaurar_base pegou? Se a guild aparece como ativa e mesmo assim
+        # perdeu a base, o critério do jogo é outro campo.
+        print("\n  Guildas pedidas:")
+        for g in todas:
+            if not any(p in g["nome"].lower() for p in procurados):
+                continue
+            dias = (agora - g["ultimo"]) / TICKS_POR_DIA if (agora and g["ultimo"]) else None
+            quanto = "sem registro de online" if dias is None else f"{dias:.2f}d parada"
+            print(f"    {g['nome']}: {g['bases']} base(s), {g['membros']} membro(s), "
+                  f"{quanto} (last_online={g['ultimo']})")
 
     return 0
 

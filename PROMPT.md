@@ -1,7 +1,7 @@
 # PROMPT MESTRE — PALLEIRA.COM.BR
 
 > Documento vivo. Vá adicionando/riscando itens. Tudo marcado com `[?]` precisa de decisão sua.
-> Última atualização: 2026-08-21
+> Última atualização: 2026-08-23
 
 ---
 
@@ -1561,6 +1561,100 @@ tem ícone para os NPCs humanos que faltam (mesmo padrão de nome,
 `T_<chave>_icon_normal.webp`), mas o site não declara licença de reuso —
 só "projeto de fã, sem vínculo com a Pocketpair". Fica em aberto junto com
 o catálogo completo da §7.4: não copiar sem licença clara.
+
+#### 🟡 3D animado (esqueleto + idle) para Lendários e Míticos — decidido em 23/08/2026
+
+Os 324 modelos 3D acima (Save Pal) **não têm esqueleto nem animação** — quem
+dá vida é só a câmera girando. O jogo em si tem a versão de verdade: malha
+com esqueleto + animação de idle, renderizada ao vivo na tela de status.
+**Decisão do dono:** dar esse tratamento completo só para os Pals
+**lendários e míticos** — o resto do Paldex continua no modelo estático do
+Save Pal (leve, já funciona, zero retrabalho). Custo escala com quantidade;
+limitar a uma lista curta mantém peso e tempo de desenvolvimento
+proporcionais.
+
+**Ferramenta e caminho, testados em 23/08/2026:**
+
+- **FModel já instalado e configurado nesta máquina** —
+  `G:\Downloads\MODS ULTIMATE\afb02f5bbd8d0d94fe47e171a61cd51ee2ffeb73\FModel.exe`,
+  apontando para `G:\SteamLibrary\steamapps\common\Palworld`, com
+  `Mappings.usmap` carregado (`AppSettings.json` do FModel, seção
+  `PerDirectory`). Não precisa reconfigurar nada — abrir e usar.
+- ⚠️ **Correção:** este documento chegou a dizer que o export já saía em
+  glTF 2.0 — **não sai.** `MeshExportFormat: 3` no `AppSettings.json` do
+  FModel gera `.uemodel` (formato próprio do CUE4Parse/FModel), não glTF.
+  Testado em 23/08/2026 exportando `SK_SnowTigerBeastman` de verdade: virou
+  `SK_SnowTigerBeastman.uemodel` (1,25 MB) + 10 texturas `.png` em
+  resolução original (2,5–4,6 MB cada, sem otimização), **12 MB no total**
+  pra um Pal só. Pra virar glTF/GLB pro `three.js`, falta um passo a mais:
+  importar o `.uemodel` no **Blender** com o plugin
+  [UEFormat](https://github.com/FabianFG/UEFormat) e reexportar de lá —
+  é o pipeline padrão de quem tira modelo da Unreal pra web, não é
+  invenção nossa, mas é um passo que este documento não tinha contado.
+- **Como exportar de verdade (testado):** clique direito no `.uasset` da
+  malha (`SK_<codename>`) → *Export* → *Model* → abre uma janela **"Export
+  Session"** com a fila (pode vir com lixo de sessões antigas dentro, sem
+  problema) → **precisa clicar no botão "Export" dentro dessa janela** —
+  só botão direito não dispara nada sozinho, fica só "Queued for export"
+  parado. Sai em `Output/Exports/<mesmo caminho do pacote>/`.
+- **Estrutura de pastas dentro do `.pak`, mapeada navegando pelo FModel:**
+  - Ícone 2D — `Pal/Content/Pal/Texture/PalIcon/Normal/T_<codename>_icon_normal` (413 pacotes, um por espécie/variante). Testado: duplo clique abre o preview, botão direito **na miniatura** → *Save Image* salva o PNG de verdade em `Output/Exports/...`. (Botão direito na *lista* só exporta JSON de propriedades — ver [[extracao-assets-fmodel-palworld]] na memória.)
+  - Malha 3D com esqueleto — `Pal/Content/Pal/Model/Character/Monster/<codename>/SK_<codename>` + material (`MI_<codename>_Body`) + texturas, incluindo a variante `_EM` (emissiva — é o brilho de fogo/lava/etc que aparece no jogo).
+  - Esqueleto — `Pal/Content/Pal/Model/Character/Skeleton/<codename>/`.
+  - Animação de idle — **ainda não localizada**; deve morar em `Pal/Content/Pal/Animation/...`, falta mapear pasta por pasta.
+- **O `codename` (PalID) não é óbvio pelo nome em português — usar o catálogo, não chutar pela aparência.** `lib/pals-especies.json` (já importado, §7.5) mapeia PalID → nome PT-BR e já tem **campo `raridade`** (0–10ish) por Pal — forte candidato pra resolver o `[?]` da lista de lendário/mítico abaixo, em vez de curar à mão. Confirmado nos dois primeiros testes:
+  - **Orserk** → PalID `thunderdragonman`, elementos Dragon+Elétrico, `raridade: 9`. (Primeira tentativa errou por aparência: um cavalo/unicórnio azul, `NightBlueHorse`, parecia mais com a lembrança do dono — o catálogo corrigiu.)
+  - **Bastigor** → PalID `snowtigerbeastman`, elemento Gelo, `raridade: 8`.
+- **Caso testado de ponta a ponta:** o dragão-boss de fogo (visual de lendário, HP altíssimo) tem codename interno **`KingBahamut_Dragon`**. `SK_KingBahamut_Dragon` abriu no visualizador 3D nativo do FModel com esqueleto completo e texturas de olho/corpo, rodando a 71 FPS — confirma que a malha existe e está íntegra. Achado pela busca por `Dragon` dentro de `Model/Character/Monster` (a busca do FModel é sempre por pasta atual, não é global).
+
+**Custo estimado — corrigido com medição real em 23/08/2026:**
+
+| | Modelo atual (Save Pal, os 324 Pals) | Modelo animado (FModel → Blender → glTF, só lendários/míticos) |
+|---|---|---|
+| Peso por Pal | ~105 KB (glTF sem esqueleto) + ~8 KB ícone | **8–12 MB brutos** (medido: Bastigor 12 MB, Orserk 8 MB) antes de otimizar; depois de comprimir textura + Draco no Blender, estimativa de ~500 KB – 2 MB |
+| Movimento | só a câmera gira — o bicho fica parado | anima de verdade, mesma animação de idle do jogo (falta achar a animação em si, ver acima) |
+| Escopo | 324 espécies | dezenas — a lista de lendários/míticos |
+| Tempo de implementação | já pronto (acima) | pipeline tem **um passo a mais do que eu achava**: FModel exporta `.uemodel`, precisa passar pelo Blender (UEFormat) pra virar glTF otimizado, e só depois entra no visualizador `three.js` novo — câmera, luz, loop de animação, fallback para celular fraco. Estimativa de **alguns dias** de trabalho, contando o Blender |
+
+#### ✅ Pipeline FModel → Blender → glTF testado de ponta a ponta — 23/08/2026
+
+**Os dois primeiros (Bastigor e Orserk) já viraram glTF de verdade, texturizados, e renderizaram exatamente como no jogo.** Arquivos finais em
+`public/models/pals-legendarios/snowtigerbeastman.glb` (1,68 MB) e
+`public/models/pals-legendarios/thunderdragonman.glb` (1,13 MB) — bem dentro
+da estimativa de 500 KB–2 MB.
+
+**O que o `.uemodel` NÃO traz — descoberta que quase estragou o resultado:**
+
+- O import do Blender (addon `io_scene_ueformat` /
+  [h4lfheart/UEFormat](https://github.com/h4lfheart/UEFormat), instalado via
+  `blender --command extension install-file`) traz **malha + esqueleto +
+  nomes de material**, mas **nenhuma textura vem conectada** — os slots de
+  material ficam vazios. É preciso religar cada `MI_<codename>_<parte>` na
+  textura `T_<codename>_<parte>_B.png` (Base Color) e `_N.png` (Normal, com
+  color space `Non-Color`) manualmente por script.
+- **A textura `_EM` (emissiva) NÃO é "preto com brilho colorido"** como eu
+  assumia — é o **oposto**: fundo sólido colorido (no caso do Orserk, um
+  amarelo forte) com os raios/brilhos **em preto**. Ligar ela direto no
+  `Emission Color` do Principled BSDF lava a cor do corpo inteiro (o Orserk
+  saiu todo amarelo, irreconhecível). **Não usar `_EM` como emission direto
+  sem entender a máscara primeiro** — por ora, exportar só com Base Color +
+  Normal dá resultado fiel (confirmado nos dois testes).
+- Enquadrar a câmera pela bounding box **nos 3 eixos** (não só a altura) —
+  a primeira tentativa cortou a cabeça do Orserk porque os braços abertos
+  dominavam a largura e o cálculo só olhava pra altura.
+
+**Scripts que funcionam** (rodados via `blender --background --python
+script.py -- args`, sem precisar abrir a GUI do Blender):
+1. Importa `.uemodel` (`bpy.ops.uf.import_uemodel`)
+2. Pra cada material `MI_*`, cria nó de textura e liga Base Color + Normal
+3. Exporta glTF/GLB (`bpy.ops.export_scene.gltf`, `export_image_format='JPEG'` pra comprimir)
+
+**Pendente antes de escalar pros outros lendários/míticos:**
+
+- `[?]` **Definir a lista exata de quem é "lendário" e "mítico".** O campo `raridade` de `lib/pals-especies.json` (achado em 23/08) é o candidato mais forte pra isso — falta só decidir o corte (ex.: `raridade >= 8`?) em vez de curar a lista à mão.
+- Localizar a pasta de animação de idle e confirmar que existe **uma por espécie**, não só para bosses — os dois testados até aqui são só malha parada (T-pose), sem animação ainda.
+- Entender a máscara da textura `_EM` de verdade (provavelmente precisa de um canal alfa ou textura de máscara separada que o `.uemodel` também não exporta) antes de tentar recriar o brilho elétrico/lava.
+- Automatizar o processo pros próximos Pals (hoje é script + caminho manual por Pal) e decidir se o visualizador é um componente novo ou uma variante de `components/pal-3d.tsx`.
 
 ### 7.5 Ficha do Item
 
