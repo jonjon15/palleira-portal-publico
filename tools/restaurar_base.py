@@ -893,6 +893,16 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
             objetos, ("target_work_id", "repair_work_id"),
             set(indices(atual)["WorkSaveData"]), guid_zero(atual))
 
+        # E os ponteiros para jogadores que saíram do servidor: um baú
+        # trancado por quem não existe mais, um item reservado para ninguém.
+        # Zerado quer dizer "sem tranca" / "sem dono", que é estado válido.
+        jogadores_vivos = {norm_uid(scalar(dig(e, "key", "PlayerUId"), ""))
+                           for e in dig(atual, "CharacterSaveParameterMap", "value", default=[]) or []}
+        jogadores_vivos.discard("")
+        dependencias["donos_zerados"] = zerar_refs_perdidas(
+            objetos, ("private_lock_player_uid", "pickupdable_player_uid"),
+            jogadores_vivos, guid_zero(atual))
+
         rel["bases_restauradas"].append({
             "base_id": base_id,
             "nome": (raw_camp.get("name") or "").strip(),
