@@ -1,0 +1,45 @@
+# Mede se a limpeza de 72h (bAutoResetGuildNoOnlinePlayers) é mesmo o que
+# apaga a base restaurada. Ver tools/sondar_decay.py. Só leitura.
+name: sondar-decay
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      arquivo:
+        description: "Qual save ler (Level.sav = o vivo)"
+        required: false
+        type: string
+        default: Level.sav
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar decay
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_decay.py \
+            --servidor "${{ inputs.servidor }}" \
+            --arquivo "${{ inputs.arquivo }}"
