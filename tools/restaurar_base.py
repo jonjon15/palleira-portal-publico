@@ -428,6 +428,77 @@ def personagens_por_instance_id(world) -> dict[str, dict]:
     return out
 
 
+def guid_zero(world):
+    """Um GUID nulo de verdade, emprestado do próprio save.
+
+    Para esvaziar um slot é preciso escrever um GUID zerado, e o objeto é de
+    um tipo interno da lib (`palsav.archive.UUID`). Em vez de tentar
+    construí-lo — e depender de uma API que muda entre versões — pega
+    emprestado um dos muitos zeros que o save já carrega (`struct_id` de
+    qualquer struct é nulo).
+    """
+    for secao in ("CharacterContainerSaveData", "ItemContainerSaveData"):
+        for entrada in entries_of(dig(world, secao, default=None)) or []:
+            z = dig(entrada, "key", "ID", "struct_id", default=None)
+            if z is not None and norm_uid(z) == ZERO_UID:
+                return z
+    return None
+
+
+def slots_do_container(entrada) -> list:
+    slots = dig(entrada, "value", "Slots", "value", "values", default=None)
+    if not isinstance(slots, list):
+        slots = dig(entrada, "value", "Slots", "value", default=None)
+    return slots if isinstance(slots, list) else []
+
+
+def esvaziar_slot_de_item(slot, zero) -> bool:
+    """Zera um slot de baú cujo item não existe mais. Mesma receita do
+    `empty_item_container_slots` do Save Pal: contagem 0, static_id vazio e os
+    dois GUIDs do dynamic_id nulos."""
+    raw = dig(slot, "RawData", "value", default=None)
+    if not isinstance(raw, dict):
+        return False
+    item = raw.get("item")
+    if not isinstance(item, dict):
+        return False
+    din = item.get("dynamic_id")
+    if not isinstance(din, dict):
+        return False
+    raw["count"] = 0
+    if isinstance(item.get("static_id"), str):
+        item["static_id"] = ""
+    if zero is not None:
+        for chave in ("created_world_id", "local_id_in_created_world"):
+            if chave in din:
+                din[chave] = zero
+    return True
+
+
+def esvaziar_slot_de_pal(slot, zero) -> bool:
+    """Zera um slot de caixa de Pal cujo Pal não veio junto —
+    `empty_character_container_slots` no Save Pal."""
+    raw = dig(slot, "RawData", "value", default=None)
+    if not isinstance(raw, dict) or "instance_id" not in raw or zero is None:
+        return False
+    raw["instance_id"] = zero
+    return True
+
+
+def works_da_base(world, base_id_norm: str) -> list:
+    """Os trabalhos da base, achados como o Save Pal acha (`works_of`): pelo
+    `base_camp_id_belong_to` de cada WorkSaveData, **não** pela lista
+    `work_ids` do WorkCollection — que nestas bases veio vazia."""
+    out = []
+    for entrada in work_entries(world):
+        dono = dig(entrada, "RawData", "value", "base_data", "base_camp_id_belong_to", default=None)
+        if dono is None:
+            dono = next(iter(coletar_guids(entrada, "base_camp_id_belong_to", prof=8)), None)
+        if dono and norm_uid(dono) == base_id_norm:
+            out.append(entrada)
+    return out
+
+
 def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: dict) -> dict:
     """Traz para o save atual tudo que os objetos da base apontam: containers
     de item e de personagem, os itens dentro deles e os Pals que moram neles.
@@ -436,7 +507,8 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
     o nada e descarta tudo — medido em 05/09/2026.
     """
     conta = {"item_containers": 0, "char_containers": 0,
-             "itens": 0, "pals_da_base": 0, "faltando": 0}
+             "itens": 0, "pals_da_base": 0, "faltando": 0,
+             "slots_esvaziados": 0, "slots_teimosos": 0}
 
     # Os containers que os objetos declaram, mais o container de trabalhadores
     # que o próprio BaseCamp nomeia (WorkerDirector).
@@ -457,6 +529,8 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
 
     ids_de_item: set[str] = set()
     ids_de_pal: set[str] = set()
+    copiados_item: list = []
+    copiados_char: list = []
 
     for cid in sorted(alvos):
         if cid in item_hoje or cid in char_hoje:
@@ -465,12 +539,14 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
             entrada = item_bkp[cid]
             lista_item.append(entrada)
             item_hoje[cid] = entrada
+            copiados_item.append(entrada)
             ids_de_item |= coletar_guids(entrada, "local_id_in_created_world")
             conta["item_containers"] += 1
         elif cid in char_bkp:
             entrada = char_bkp[cid]
             lista_char.append(entrada)
             char_hoje[cid] = entrada
+            copiados_char.append(entrada)
             ids_de_pal |= coletar_guids(entrada, "instance_id")
             conta["char_containers"] += 1
         else:
@@ -499,6 +575,36 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
             lista_chars.append(entrada)
             chars_hoje[iid] = entrada
             conta["pals_da_base"] += 1
+
+    # ---- e o que não pôde vir junto, esvazia ------------------------------
+    # Um slot que aponta para um Pal ou item que não existe é um ponteiro para
+    # o nada, e o jogo morre ao lê-lo: EXCEPTION_ACCESS_VIOLATION lendo 0x48,
+    # que foi exatamente o crash do pve-free em 05/09/2026 21:26 UTC. O Save
+    # Pal resolve do mesmo jeito (`empty_item_container_slots`): a caixa viaja,
+    # o conteúdo que não existe mais não.
+    zero = guid_zero(atual)
+    itens_vivos = set(dynamic_items_por_id(atual))
+    pals_vivos = set(personagens_por_instance_id(atual))
+
+    for entrada in copiados_item:
+        for slot in slots_do_container(entrada):
+            alvo = coletar_guids(slot, "local_id_in_created_world", prof=6)
+            if not alvo or alvo <= itens_vivos:
+                continue
+            if esvaziar_slot_de_item(slot, zero):
+                conta["slots_esvaziados"] += 1
+            else:
+                conta["slots_teimosos"] += 1
+
+    for entrada in copiados_char:
+        for slot in slots_do_container(entrada):
+            alvo = coletar_guids(slot, "instance_id", prof=6)
+            if not alvo or alvo <= pals_vivos:
+                continue
+            if esvaziar_slot_de_pal(slot, zero):
+                conta["slots_esvaziados"] += 1
+            else:
+                conta["slots_teimosos"] += 1
 
     return conta
 
@@ -598,8 +704,14 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
                 and norm_uid(owner_palbox) not in {norm_uid(x) for x in novos_palbox_ids}):
             novos_palbox_ids.append(owner_palbox)
 
+        # Os trabalhos da base vêm por dois caminhos, e o segundo é o que
+        # realmente traz alguma coisa: a lista `work_ids` do WorkCollection
+        # veio vazia nestas três bases, mas o WorkSaveData tem entradas com
+        # `base_data.base_camp_id_belong_to` apontando para elas — é assim que
+        # o Save Pal os acha (`works_of`).
         trabalhos_copiados = 0
-        for wid in work_ids_da_base(entry_camp):
+        candidatos = list(work_ids_da_base(entry_camp))
+        for wid in candidatos:
             wid_norm = norm_uid(wid)
             if not wid_norm or wid_norm in work_ids_ja_presentes:
                 continue
@@ -608,6 +720,16 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
                 continue
             works_atual_lista.append(work_entry)
             work_ids_ja_presentes.add(wid_norm)
+            trabalhos_copiados += 1
+
+        for work_entry in works_da_base(backup, base_id):
+            wid = dig(work_entry, "RawData", "value", "id", default=None)
+            wid_norm = norm_uid(wid) if wid else ""
+            if wid_norm and wid_norm in work_ids_ja_presentes:
+                continue
+            works_atual_lista.append(work_entry)
+            if wid_norm:
+                work_ids_ja_presentes.add(wid_norm)
             trabalhos_copiados += 1
 
         dependencias = copiar_dependencias(atual, backup, objetos, entry_camp)
@@ -791,7 +913,9 @@ def main() -> int:
             print(f"        dependências: {d.get('item_containers', 0)} containers de item, "
                   f"{d.get('char_containers', 0)} de personagem, {d.get('itens', 0)} itens, "
                   f"{d.get('pals_da_base', 0)} Pals da base"
-                  + (f" | ⚠ {d['faltando']} containers não estavam no backup" if d.get("faltando") else ""))
+                  + (f", {d['slots_esvaziados']} slots esvaziados" if d.get("slots_esvaziados") else "")
+                  + (f" | ⚠ {d['faltando']} containers não estavam no backup" if d.get("faltando") else "")
+                  + (f" | ⚠ {d['slots_teimosos']} slots que não consegui esvaziar" if d.get("slots_teimosos") else ""))
         if rel.get("aviso"):
             print(f"    ⚠️  {rel['aviso']}")
         for m in rel.get("membros_renovados") or []:
@@ -857,6 +981,8 @@ def main() -> int:
     print(f"    objetos com base_camp_id_belong_to legível: {com_dono(world)} em memória"
           f" -> {com_dono(recheck_world)} após reler")
 
+    itens_vivos_ok = set(dynamic_items_por_id(recheck_world))
+    pals_vivos_ok = set(personagens_por_instance_id(recheck_world))
     orfaos_totais = 0
     for rel in relatorios:
         for b in rel.get("bases_restauradas") or []:
@@ -866,9 +992,28 @@ def main() -> int:
                 alvos |= coletar_guids(obj, "target_container_id")
             orfaos = alvos - itens_ok.keys() - chars_ok.keys()
             orfaos_totais += len(orfaos)
+
+            # E dentro das caixas: nenhum slot pode apontar para um Pal ou item
+            # que não existe. Foi um ponteiro desses que matou o servidor.
+            slots_orfaos = 0
+            for cid in alvos:
+                if cid in itens_ok:
+                    for slot in slots_do_container(itens_ok[cid]):
+                        alvo = coletar_guids(slot, "local_id_in_created_world", prof=6)
+                        if alvo and not alvo <= itens_vivos_ok:
+                            slots_orfaos += 1
+                elif cid in chars_ok:
+                    for slot in slots_do_container(chars_ok[cid]):
+                        alvo = coletar_guids(slot, "instance_id", prof=6)
+                        if alvo and not alvo <= pals_vivos_ok:
+                            slots_orfaos += 1
+            orfaos_totais += slots_orfaos
+
             print(f"    base {b['base_id']}: {len(objetos)} objetos relidos, "
                   f"{len(alvos)} containers referenciados, "
-                  + (f"❌ {len(orfaos)} ÓRFÃOS" if orfaos else "✓ nenhum órfão"))
+                  + (f"❌ {len(orfaos)} containers ÓRFÃOS" if orfaos else "✓ nenhum container órfão")
+                  + (f", ❌ {slots_orfaos} slots apontando para o nada" if slots_orfaos
+                     else ", ✓ nenhum slot órfão"))
     if orfaos_totais:
         print("\n  ❌ Ainda há referência apontando para o nada — o jogo descartaria a base.")
         print("     Nada foi gravado.")
