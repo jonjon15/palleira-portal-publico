@@ -1,0 +1,38 @@
+name: checar-integridade
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      arquivos:
+        description: "Arquivos a checar, separados por vírgula"
+        required: true
+        type: string
+        default: "Level.sav"
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+      - name: Checar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SLUG: ${{ inputs.servidor }}
+          ARQUIVOS: ${{ inputs.arquivos }}
+        run: python tools/checar_integridade.py
