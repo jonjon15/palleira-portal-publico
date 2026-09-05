@@ -67,24 +67,61 @@ def fetch(sftp, guid: str, arquivo: str) -> bytes:
     return buf.getvalue()
 
 
+def diagnosticar_forma(nome: str, node) -> None:
+    """Imprime o formato bruto de uma propriedade que não é a lista esperada — para descobrir o wrapper real em vez de adivinhar."""
+    print(f"    [diagnóstico {nome}] tipo={type(node).__name__}")
+    if isinstance(node, dict):
+        print(f"    [diagnóstico {nome}] chaves={list(node.keys())[:12]}")
+        for k in ("values", "value", "array_type", "prop_type", "prop_name"):
+            if k in node:
+                v = node[k]
+                print(f"    [diagnóstico {nome}] .{k} -> tipo={type(v).__name__}" + (f" len={len(v)}" if hasattr(v, "__len__") else ""))
+
+
+def entries_of(prop) -> list | None:
+    """Desembrulha um valor de propriedade GVAS até achar a lista de entradas de verdade.
+
+    ArrayProperty/MapProperty às vezes vem como {"value": [...]} (uso direto),
+    às vezes como {"value": {"values": [...]}} (um nível a mais, tipo comum
+    para ArrayProperty de StructProperty). Tenta as formas conhecidas antes
+    de desistir.
+    """
+    node = prop
+    for _ in range(4):
+        if isinstance(node, list):
+            return node
+        if isinstance(node, dict):
+            if "values" in node and isinstance(node["values"], list):
+                return node["values"]
+            if "value" in node:
+                node = node["value"]
+                continue
+        break
+    return None
+
+
 def procurar_base_camp(world, base_ids: set[str]) -> dict:
     achados = {}
-    secao = dig(world, "BaseCampSaveData", "value", default=None)
+    prop = dig(world, "BaseCampSaveData", default=None)
+    secao = entries_of(prop)
     if secao is None:
+        diagnosticar_forma("BaseCampSaveData", prop)
         return achados
     # BaseCampSaveData é um MapProperty: lista de {key, value}.
-    for entry in secao if isinstance(secao, list) else []:
+    for entry in secao:
         chave = norm_uid(dig(entry, "key", default=""))
         if chave in base_ids:
             achados[chave] = dig(entry, "value", "RawData", "value", default=entry.get("value"))
     return achados
 
 
-def contar_map_objects(world, base_ids: set[str]) -> dict[str, int]:
+def contar_map_objects(world, base_ids: set[str]) -> tuple[dict[str, int], int]:
     contagem = {b: 0 for b in base_ids}
-    secao = dig(world, "MapObjectSaveData", "value", default=None)
-    if not isinstance(secao, list):
-        return contagem
+    prop = dig(world, "MapObjectSaveData", default=None)
+    secao = entries_of(prop)
+    if secao is None:
+        diagnosticar_forma("MapObjectSaveData", prop)
+        return contagem, -1
     for entry in secao:
         # Estrutura ainda desconhecida nesta versão — procura qualquer campo
         # de string/uuid no entry que bata com uma das base_ids pedidas.
@@ -92,7 +129,7 @@ def contar_map_objects(world, base_ids: set[str]) -> dict[str, int]:
         for b in base_ids:
             if b.lower() in texto.lower() or b in texto:
                 contagem[b] += 1
-    return contagem
+    return contagem, len(secao)
 
 
 def analisar(raw: bytes, base_ids: set[str]) -> None:
@@ -133,12 +170,11 @@ def analisar(raw: bytes, base_ids: set[str]) -> None:
             print(f"    faltando: {faltando}")
 
     if "MapObjectSaveData" in ultimo_world:
-        contagem = contar_map_objects(ultimo_world, base_ids)
+        contagem, total = contar_map_objects(ultimo_world, base_ids)
         print(f"\n  MapObjectSaveData: entradas que citam cada base_id (heurística de texto)")
         for uid, n in contagem.items():
             print(f"    {uid}: {n} entradas")
-        total = dig(ultimo_world, "MapObjectSaveData", "value", default=[])
-        print(f"    total de entradas em MapObjectSaveData: {len(total) if isinstance(total, list) else '?'}")
+        print(f"    total de entradas em MapObjectSaveData: {total if total >= 0 else '? (ver diagnóstico acima)'}")
 
 
 def main() -> int:
