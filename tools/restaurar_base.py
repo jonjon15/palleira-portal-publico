@@ -285,24 +285,17 @@ def map_object_entries(world) -> list:
 
 
 def map_object_list_ref(world) -> list:
-    """Referência MUTÁVEL de verdade pra lista de MapObjectSaveData dentro de
-    `world` — pra usar com `.append()` e o resultado aparecer no save
-    reserializado. Levanta erro em vez de adivinhar uma forma nova se a
-    seção não existir do jeito esperado (silenciosamente perder as
-    construções copiadas seria pior que travar aqui)."""
-    prop = world.get("MapObjectSaveData")
-    if not isinstance(prop, dict):
-        prop = {"id": None, "type": "MapProperty", "value": {"value": []}}
-        world["MapObjectSaveData"] = prop
-    inner = prop.get("value")
-    if isinstance(inner, list):
-        return inner  # forma simples, sem o nível extra — aceitar também
-    if not isinstance(inner, dict):
-        inner = {}
-        prop["value"] = inner
-    if not isinstance(inner.get("value"), list):
-        inner["value"] = []
-    return inner["value"]
+    """Referência MUTÁVEL de verdade pra lista de MapObjectSaveData.
+
+    ⚠️ Esta função já teve um bug que custou três tentativas de restauração.
+    A lista real de um ArrayProperty mora em `.value.values`; a versão antiga
+    procurava só `.value.value`, não achava, **criava uma chave nova vazia** e
+    devolvia essa lista solta. Os 2.201 objetos eram copiados para o nada: o
+    total de MapObjectSaveData não mudava, a base nunca voltava, e nada
+    reclamava. Por isso a ordem "values" antes de "value" importa — é a mesma
+    ordem que `entries_of` usa para LER, e as duas têm de cair na mesma lista.
+    """
+    return lista_mutavel(world, "MapObjectSaveData", tipo="ArrayProperty")
 
 
 def map_objects_da_base(world, base_id_norm: str) -> list:
@@ -347,24 +340,9 @@ def work_por_id(world) -> dict[str, dict]:
 
 
 def work_list_ref(world) -> list:
-    """Referência MUTÁVEL da lista de WorkSaveData — mesmo cuidado do
-    map_object_list_ref, essa seção tem a forma de ArrayProperty simples
-    (sem o nível de aninhamento extra do MapObjectSaveData, a julgar pelo
-    path registrado sem `.Value`), mas usa o mesmo desembrulho genérico por
-    segurança em vez de assumir."""
-    prop = world.get("WorkSaveData")
-    if not isinstance(prop, dict):
-        prop = {"id": None, "type": "ArrayProperty", "value": []}
-        world["WorkSaveData"] = prop
-    inner = prop.get("value")
-    if isinstance(inner, list):
-        return inner
-    if not isinstance(inner, dict):
-        inner = {}
-        prop["value"] = inner
-    if not isinstance(inner.get("value"), list):
-        inner["value"] = []
-    return inner["value"]
+    """Referência MUTÁVEL da lista de WorkSaveData — mesmo cuidado (e o mesmo
+    bug antigo) do `map_object_list_ref`."""
+    return lista_mutavel(world, "WorkSaveData", tipo="ArrayProperty")
 
 
 # ------------------------------------------------- integridade referencial
@@ -563,11 +541,7 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     # Referência de verdade pra dentro de `atual` — nunca o `default=[]` do
     # dig() sozinho, que devolveria uma lista solta e o .append() abaixo não
     # apareceria no save reserializado.
-    if not isinstance(atual.get("BaseCampSaveData"), dict):
-        atual["BaseCampSaveData"] = {"value": []}
-    if not isinstance(atual["BaseCampSaveData"].get("value"), list):
-        atual["BaseCampSaveData"]["value"] = []
-    camps_atual_lista = atual["BaseCampSaveData"]["value"]
+    camps_atual_lista = lista_mutavel(atual, "BaseCampSaveData")
     ids_ja_presentes = set(base_camp_por_id(atual).keys())
 
     objetos_atual_lista = map_object_list_ref(atual)
