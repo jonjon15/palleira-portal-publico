@@ -94,24 +94,35 @@ def norm_uid(valor) -> str:
 
 ZERO_UID = "0" * 32
 
-# FDateTime da Unreal: intervalos de 100ns desde 0001-01-01. É o formato de
-# `last_online_real_time` (o mesmo do GameDateTimeTicks, ver reset_dias.py).
-TICKS_EPOCH_UNIX = 62_135_596_800
+TICKS_POR_DIA = 24 * 60 * 60 * 10_000_000  # ticks de 100ns num dia
 
 
-def ticks_agora() -> int:
-    return int((time.time() + TICKS_EPOCH_UNIX) * 10_000_000)
+def agora_na_escala_do_save(world) -> int | None:
+    """O "agora" de `last_online_real_time`, medido pelo próprio save.
+
+    Esse campo NÃO é FDateTime (não conta desde o ano 1): medido, os valores
+    dão 19 a 52 dias, ou seja é um relógio que começa junto com o mundo. Em vez
+    de tentar adivinhar a origem dele, pega o maior valor que existe no save
+    inteiro — o jogador que entrou mais recentemente entre as centenas do
+    servidor. Esse é o "agora" na escala certa, seja ela qual for.
+    """
+    maior = None
+    for entry in dig(world, "GroupSaveDataMap", "value", default=[]) or []:
+        raw = dig(entry, "value", "RawData", "value", default=None)
+        if not isinstance(raw, dict):
+            continue
+        for membro in raw.get("players") or []:
+            valor = dig(membro, "player_info", "last_online_real_time", default=None)
+            if isinstance(valor, int) and (maior is None or valor > maior):
+                maior = valor
+    return maior
 
 
-def ticks_para_texto(ticks) -> str:
-    """Converte ticks FDateTime em data legível — serve de prova do formato."""
+def ticks_para_dias(ticks) -> str:
     try:
-        segundos = int(ticks) / 10_000_000 - TICKS_EPOCH_UNIX
-        if not (0 < segundos < 4_102_444_800):  # até o ano 2100
-            return f"{ticks} (fora de faixa — formato diferente do esperado?)"
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(segundos)) + " UTC"
-    except (TypeError, ValueError, OverflowError):
-        return f"{ticks} (não convertível)"
+        return f"{int(ticks) / TICKS_POR_DIA:.1f}d"
+    except (TypeError, ValueError):
+        return str(ticks)
 
 
 class Servidor:
@@ -447,17 +458,22 @@ def restaurar_jogador(atual: dict, backup: dict, uid: str) -> dict:
     # do jogador. Marcar os membros como "online agora" devolve a eles a janela
     # de 72h para entrar e reivindicar a base — sem isso, restaurar é jogar
     # tempo fora (medido: a primeira tentativa sumiu no autosave seguinte).
-    agora = ticks_agora()
+    agora = agora_na_escala_do_save(atual)
     membros_tocados = []
-    for membro in guild_atual["raw"].get("players") or []:
-        info = membro.get("player_info")
-        if not isinstance(info, dict):
-            continue
-        membros_tocados.append({
-            "nome": info.get("player_name") or "(sem nome)",
-            "antes": info.get("last_online_real_time"),
-        })
-        info["last_online_real_time"] = agora
+    if agora is None:
+        rel["aviso"] = ("não achei nenhum last_online_real_time no save para servir de"
+                        " referência de 'agora' — contador NÃO foi renovado")
+    else:
+        for membro in guild_atual["raw"].get("players") or []:
+            info = membro.get("player_info")
+            if not isinstance(info, dict):
+                continue
+            membros_tocados.append({
+                "nome": info.get("player_name") or "(sem nome)",
+                "antes": info.get("last_online_real_time"),
+                "depois": agora,
+            })
+            info["last_online_real_time"] = agora
     rel["membros_renovados"] = membros_tocados
 
     return rel
@@ -571,9 +587,14 @@ def main() -> int:
         print(f"    guild: {rel['guild_nome']} ({rel['guild']})")
         for b in rel["bases_restauradas"]:
             print(f"    ✓ base {b['base_id']} \"{b['nome']}\" — {b['objetos']} objetos, {b['trabalhos']} trabalhos restaurados")
+        if rel.get("aviso"):
+            print(f"    ⚠️  {rel['aviso']}")
         for m in rel.get("membros_renovados") or []:
-            print(f"    ⏱  {m['nome']}: última vez online {ticks_para_texto(m['antes'])}"
-                  f" -> agora ({ticks_para_texto(ticks_agora())})")
+            atraso = ""
+            if isinstance(m["antes"], int) and isinstance(m["depois"], int):
+                atraso = f" (estava {ticks_para_dias(m['depois'] - m['antes'])} atrás)"
+            print(f"    ⏱  {m['nome']}: {ticks_para_dias(m['antes'])}"
+                  f" -> {ticks_para_dias(m['depois'])}{atraso}")
         algo_mudou = algo_mudou or bool(rel["bases_restauradas"])
 
     if not algo_mudou:
