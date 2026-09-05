@@ -719,9 +719,18 @@ def main() -> int:
     renomear(cfg, temporario, caminho)
     print(f"  ✅ Level.sav trocado ({len(novo):,} bytes, por rename)", flush=True)
 
+    # ⚠️ Aqui este script APAGAVA o `Players/<uid>.sav` — herança do
+    # `reset_player.py`, onde apagar é o objetivo. Numa restauração é
+    # destrutivo: esse arquivo guarda os ponteiros das caixas de Pal
+    # (`PalStorageContainerId`/`OtomoCharacterContainerId`, que não existem no
+    # Level.sav). Sem ele o servidor tratou as caixas como órfãs e apagou os
+    # Pals na subida seguinte — 05/09/2026 17:27 UTC, Tenshi 260 -> 0 e
+    # Givaldo 107 -> 0. Nunca mais apagar; só conferir que está lá.
     for uid in uids:
         individual = PLAYER_PATH.format(guid=cfg.guid, uid=uid)
-        print(f"  Players/{uid}.sav: " + ("apagado" if apagar(cfg, individual) else "não existia"), flush=True)
+        existe = info_arquivo(cfg, individual)
+        estado = f"presente ({existe[0]:,} bytes)" if existe else "❌ AUSENTE — restaure antes de subir o servidor"
+        print(f"  Players/{uid}.sav: {estado}", flush=True)
 
     print("\n  ✅ Feito. Suba o servidor e peça para os jogadores entrarem.")
     return 0

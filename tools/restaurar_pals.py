@@ -9,9 +9,22 @@ levou junto os Pals dos donos. Medido: Tenshi 260 -> 0, Givaldo 107 -> 0.
 
 Um Pal de jogador mora em dois lugares que precisam viajar juntos:
   1. A entrada dele em `CharacterSaveParameterMap` (o Pal em si).
-  2. O slot que o aponta em `CharacterContainerSaveData` — o container é
-     nomeado pelo `PalStorageContainerId` (Pal Box) e pelo
-     `OtomoCharacterContainerId` (party) no SaveParameter do jogador.
+  2. O slot que o aponta em `CharacterContainerSaveData` (a caixa).
+
+Qual é a caixa de cada jogador: **não dá para descobrir pelo `Level.sav`**.
+`PalStorageContainerId` (Pal Box) e `OtomoCharacterContainerId` (party) moram
+no `Players/<uid>.sav`, não no SaveParameter do mundo — medido por
+`tools/sondar_containers.py`, que listou os 17 campos do SaveParameter do
+Tenshi sem nenhum com "Container" no nome, e confirmado pelo Save Pal
+(`player::container_id_from` recebe o SaveData do save individual).
+
+O caminho que funciona é o inverso, e é o mesmo que o Save Pal usa em
+`base_container_membership`: cada Pal carrega `SlotId.ContainerId.ID` (a
+grafia `SlotID` aparece em outras versões), ou seja, **o próprio Pal diz em
+que caixa está**. Juntando os Pals do dono, saem os containers dele — sem
+depender de arquivo nenhum. Medido no backup: Tenshi 255 Pals na caixa
+`6E9ABA51…` + 5 na party `37916D58…`; Givaldo 102 + 5.
+
 Sem o container, o Pal existe no mundo mas não aparece na caixa de ninguém.
 
 Mesmo padrão de segurança do `reset_player.py`: `--verificar`/`--simular`/
@@ -38,8 +51,8 @@ import paramiko
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from energia_painel import PANEL_IDS, estado as estado_do_painel  # noqa: E402
 from restaurar_base import (  # noqa: E402
-    Servidor, _abortar, apagar, baixar, dig, enviar, info_arquivo, norm_uid,
-    renomear, scalar, servidores,
+    ZERO_UID, Servidor, _abortar, apagar, baixar, dig, enviar, info_arquivo,
+    norm_uid, renomear, scalar, servidores,
 )
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
@@ -66,20 +79,34 @@ def entrada_do_jogador(world, uid: str):
     return None, None
 
 
-def container_id(param: dict, campo: str) -> str:
-    """O GUID do container nomeado por `campo` no SaveParameter do jogador.
+def container_do_pal(param: dict) -> str:
+    """A caixa em que este Pal está, por `SlotId.ContainerId.ID`.
 
-    A forma exata varia entre versões (`{'value': {'ID': ...}}` ou direto),
-    então desce por `scalar` em vez de assumir um caminho só.
+    O jogo escreve o campo com duas grafias conforme a versão (`SlotId` no
+    pve-free, `SlotID` em outras), e o GUID vem embrulhado em dois níveis de
+    struct — daí a lista de caminhos em vez de um só.
     """
-    node = param.get(campo)
-    for caminho in (("value", "ID"), ("value", "value", "ID"), ("ID",)):
-        achado = dig(node, *caminho, default=None)
-        valor = scalar(achado, None)
+    slot = param.get("SlotId", param.get("SlotID"))
+    if slot is None:
+        return ""
+    for caminho in (("value", "ContainerId", "value", "ID"),
+                    ("value", "ContainerId", "ID"),
+                    ("ContainerId", "value", "ID")):
+        valor = scalar(dig(slot, *caminho, default=None), None)
         if valor:
             return norm_uid(valor)
-    valor = scalar(node, None)
-    return norm_uid(valor) if valor else ""
+    return ""
+
+
+def containers_dos_pals(pals: list) -> dict[str, int]:
+    """GUID da caixa -> quantos Pals do dono estão nela."""
+    out: dict[str, int] = {}
+    for entrada in pals:
+        param = dig(entrada, "value", "RawData", "value", "object", "SaveParameter", "value")
+        cid = container_do_pal(param) if isinstance(param, dict) else ""
+        if cid and cid != ZERO_UID:
+            out[cid] = out.get(cid, 0) + 1
+    return out
 
 
 def pals_do_jogador(world, uid: str) -> list:
@@ -105,6 +132,22 @@ def containers_por_id(world) -> dict[str, dict]:
         if cid:
             out[cid] = entrada
     return out
+
+
+def slots_ocupados(entrada) -> int:
+    """Quantos slots da caixa têm um Pal de verdade dentro."""
+    if entrada is None:
+        return 0
+    slots = dig(entrada, "value", "Slots", "value", "values", default=None)
+    if not isinstance(slots, list):
+        return 0
+    n = 0
+    for s in slots:
+        iid = norm_uid(scalar(dig(s, "RawData", "value", "instance_id"), "")
+                       or scalar(dig(s, "IndividualId", "value", "InstanceId"), ""))
+        if iid and iid != ZERO_UID:
+            n += 1
+    return n
 
 
 def lista_mutavel(world, secao: str) -> list:
@@ -157,43 +200,36 @@ def restaurar_pals_do_jogador(atual: dict, backup: dict, uid: str) -> dict:
             ja_presentes.add(iid)
         rel["pals_copiados"] += 1
 
-    # ---- 2. os containers que apontam pra eles ---------------------------
-    # O container atual está vazio (a limpeza esvaziou os slots), então a
-    # entrada inteira do backup substitui a de hoje. Trocar no lugar mantém a
-    # posição na lista, que é o que os índices de slot enxergam.
+    # ---- 2. as caixas que apontam pra eles -------------------------------
+    # Quais caixas: as que os próprios Pals do backup declaram em
+    # `SlotId.ContainerId.ID`. O GUID é o mesmo dos dois lados, então a
+    # entrada do backup substitui a de hoje (que a limpeza esvaziou) no
+    # mesmo lugar da lista — trocar in-place preserva a posição.
     containers_bkp = containers_por_id(backup)
     containers_atuais = containers_por_id(atual)
     lista_containers = lista_mutavel(atual, "CharacterContainerSaveData")
 
-    for campo in ("PalStorageContainerId", "OtomoCharacterContainerId"):
-        cid_atual = container_id(param_atual, campo)
-        cid_bkp = container_id(param_bkp, campo)
-        info = {"campo": campo, "id_atual": cid_atual or "(vazio)",
-                "id_backup": cid_bkp or "(vazio)", "acao": ""}
+    for cid, quantos in sorted(containers_dos_pals(pals_backup).items(),
+                               key=lambda kv: -kv[1]):
+        info = {"id": cid, "pals": quantos, "acao": ""}
 
-        alvo = containers_bkp.get(cid_bkp) if cid_bkp else None
+        alvo = containers_bkp.get(cid)
         if not alvo:
-            info["acao"] = "container não achado no backup — pulado"
+            info["acao"] = "caixa não existe no backup — pulada (Pals ficam órfãos)"
             rel["containers"].append(info)
             continue
 
-        if cid_atual and cid_atual in containers_atuais:
-            antigo = containers_atuais[cid_atual]
+        antigo = containers_atuais.get(cid)
+        if antigo is not None:
             try:
-                posicao = lista_containers.index(antigo)
-                lista_containers[posicao] = alvo
-                info["acao"] = "substituído pelo do backup"
+                lista_containers[lista_containers.index(antigo)] = alvo
+                info["acao"] = "substituída pela do backup"
             except ValueError:
                 lista_containers.append(alvo)
-                info["acao"] = "adicionado (o atual não estava na lista)"
+                info["acao"] = "adicionada (a de hoje não estava na lista)"
         else:
             lista_containers.append(alvo)
-            info["acao"] = "adicionado (não existia hoje)"
-
-        # O jogador precisa apontar pro container que acabou de entrar.
-        if cid_bkp and cid_atual != cid_bkp:
-            param_atual[campo] = param_bkp[campo]
-            info["acao"] += " + ponteiro do jogador atualizado"
+            info["acao"] = "adicionada (não existia hoje)"
 
         rel["containers"].append(info)
 
@@ -282,8 +318,10 @@ def main() -> int:
             continue
         print(f"    Pals hoje: {rel['pals_antes']} | no backup: {rel['pals_no_backup']}"
               f" | copiados: {rel['pals_copiados']}")
+        if not rel["containers"]:
+            print("    ⚠ NENHUMA caixa identificada — os Pals ficariam órfãos. Não aplicar.")
         for c in rel["containers"]:
-            print(f"    container {c['campo']}: atual={c['id_atual']} backup={c['id_backup']} — {c['acao']}")
+            print(f"    caixa {c['id']} ({c['pals']} Pals) — {c['acao']}")
         algo_mudou = algo_mudou or rel["pals_copiados"] > 0
 
     if not algo_mudou:
@@ -296,8 +334,24 @@ def main() -> int:
     recheck_gvas = GvasFile.read(recheck_bytes, PALWORLD_TYPE_HINTS, custom)
     recheck_world = recheck_gvas.properties["worldSaveData"]["value"]
     print(f"\n  reserializado (checagem): {len(checagem):,} bytes em {time.time()-t0:.0f}s")
+    tudo_ok = True
     for uid in uids:
-        print(f"    pós-reserialização, uid {uid}: {len(pals_do_jogador(recheck_world, uid))} Pals")
+        pals = pals_do_jogador(recheck_world, uid)
+        conts = containers_por_id(recheck_world)
+        print(f"    pós-reserialização, uid {uid}: {len(pals)} Pals")
+        # O teste que faltava da primeira vez: o Pal só aparece no Pal Box se a
+        # caixa que ele declara existir de verdade no save reserializado.
+        for cid, quantos in sorted(containers_dos_pals(pals).items(), key=lambda kv: -kv[1]):
+            ocupados = slots_ocupados(conts.get(cid))
+            marca = "✓" if ocupados >= quantos else "❌"
+            print(f"      {marca} caixa {cid}: {quantos} Pals apontam, "
+                  f"{ocupados if cid in conts else 'CAIXA AUSENTE'} slots ocupados")
+            if ocupados < quantos:
+                tudo_ok = False
+    if not tudo_ok:
+        print("\n  ❌ Alguma caixa não sobreviveu ao ciclo — os Pals ficariam órfãos.")
+        print("     Nada foi gravado.")
+        return 1
 
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
@@ -321,9 +375,16 @@ def main() -> int:
     renomear(cfg, temporario, caminho)
     print(f"  ✅ Level.sav trocado ({len(novo):,} bytes, por rename)", flush=True)
 
+    # NÃO apagar `Players/<uid>.sav` aqui. Esse arquivo guarda os ponteiros
+    # `PalStorageContainerId`/`OtomoCharacterContainerId`; sem ele o servidor
+    # trata as caixas do jogador como órfãs e apaga os Pals na subida
+    # seguinte. Foi exatamente o que aconteceu em 05/09/2026 17:27 UTC
+    # (Tenshi 260 -> 0, Givaldo 107 -> 0) — ver `restaurar_player_sav.py`.
     for uid in uids:
         individual = PLAYER_PATH.format(guid=cfg.guid, uid=uid)
-        print(f"  Players/{uid}.sav: " + ("apagado" if apagar(cfg, individual) else "não existia"))
+        existe = info_arquivo(cfg, individual)
+        estado = f"presente ({existe[0]:,} bytes)" if existe else "❌ AUSENTE — restaure antes de subir o servidor"
+        print(f"  Players/{uid}.sav: {estado}")
 
     print("\n  ✅ Feito.")
     return 0
