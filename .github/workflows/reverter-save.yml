@@ -1,0 +1,67 @@
+# Saída de emergência: devolve o Level.sav para um backup e sobe o servidor.
+# Ver tools/reverter_save.py. Criado depois de 05/09/2026, quando uma gravação
+# derrubou o pve-free e a volta teve de ser feita à mão com o servidor no chão.
+name: reverter-save
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      backup:
+        description: "Nome do backup (vazio = o mais recente)"
+        required: false
+        type: string
+        default: ""
+      modo:
+        description: "listar | aplicar"
+        required: true
+        type: choice
+        options: [listar, aplicar]
+        default: listar
+      religar:
+        description: "Subir o servidor no fim"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  reverter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: pip install --quiet paramiko
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar'
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Reverter
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/reverter_save.py \
+            --servidor "${{ inputs.servidor }}" \
+            ${{ inputs.backup && format('--backup {0}', inputs.backup) || '' }} \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        if: always() && inputs.modo == 'aplicar' && inputs.religar
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running --limite 600
