@@ -22,6 +22,16 @@ on:
         required: false
         type: string
         default: ""
+      containers:
+        description: "GUIDs de container crus (32 hex, vírgula) — sonda sem passar pelo player.sav"
+        required: false
+        type: string
+        default: ""
+      detalhar:
+        description: "Listar item por item o conteúdo de cada container"
+        required: false
+        type: boolean
+        default: false
       limite:
         description: "Quantos backups olhar"
         required: false
@@ -60,5 +70,7 @@ jobs:
             --servidor "${{ inputs.servidor }}" \
             --uids "${{ inputs.uids }}" \
             --guildas "${{ inputs.guildas }}" \
+            --containers "${{ inputs.containers }}" \
+            ${{ inputs.detalhar && '--detalhar' || '' }} \
             --limite "${{ inputs.limite }}" \
             --arquivos "${{ inputs.arquivos }}"

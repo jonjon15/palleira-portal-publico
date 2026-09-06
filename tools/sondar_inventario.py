@@ -52,6 +52,9 @@ SECOES_MUNDO = (
     ".worldSaveData.ItemContainerSaveData.Value.RawData",
     ".worldSaveData.ItemContainerSaveData.Value.Slots.Slots.RawData",
     ".worldSaveData.CharacterContainerSaveData.Value.Slots.Slots.RawData",
+    # Sem esta, `RawData` da guild fica byte cru e `--guildas` não acha membro
+    # nenhum — foi o que aconteceu na primeira rodada sobre as duas guildas.
+    ".worldSaveData.GroupSaveDataMap",
 )
 
 
@@ -158,7 +161,30 @@ def slots_com_coisa(entrada) -> tuple[int, int]:
     return ocupados, len(slots)
 
 
-def olhar(rotulo: str, world, alvos: dict[str, str]) -> int:
+def conteudo(entrada) -> list[tuple[str, int]]:
+    """(item, quantidade) de cada slot ocupado — o que identifica uma bag.
+
+    Container vazio todo mundo tem igual; é a lista de itens que diz se um
+    container órfão é mesmo de quem se procura.
+    """
+    slots = dig(entrada, "value", "Slots", "value", "values", default=None)
+    if not isinstance(slots, list):
+        slots = dig(entrada, "value", "Slots", "value", default=None)
+    if not isinstance(slots, list):
+        return []
+    out = []
+    for s in slots:
+        raw = dig(s, "RawData", "value", default={})
+        if not isinstance(raw, dict):
+            continue
+        qtd = int(scalar(raw.get("count"), 0) or 0)
+        if qtd <= 0:
+            continue
+        out.append((str(scalar(dig(raw, "item", "static_id"), "") or "?"), qtd))
+    return out
+
+
+def olhar(rotulo: str, world, alvos: dict[str, str], detalhar: bool = False) -> int:
     itens = secao_por_id(world, "ItemContainerSaveData")
     chars = secao_por_id(world, "CharacterContainerSaveData")
     print(f"\n--- {rotulo} ---")
@@ -173,6 +199,9 @@ def olhar(rotulo: str, world, alvos: dict[str, str]) -> int:
         total_com_coisa += ocupados
         marca = "✓" if ocupados else "vazio"
         print(f"    {campo} ({gid[:8]}…): {marca} — {ocupados}/{total} slots com coisa")
+        if detalhar and ocupados:
+            for item, qtd in conteudo(entrada):
+                print(f"        {item} x{qtd}")
     print(f"  → total de slots com conteúdo: {total_com_coisa}")
     return total_com_coisa
 
@@ -207,6 +236,11 @@ def main() -> int:
     ap.add_argument("--uids", default="")
     ap.add_argument("--guildas", default="",
                     help="nomes de guild — sonda TODOS os membros de cada uma")
+    ap.add_argument("--containers", default="",
+                    help="GUIDs de container crus (32 hex, separados por vírgula) — "
+                         "sonda direto, sem passar pelo Players/<uid>.sav")
+    ap.add_argument("--detalhar", action="store_true",
+                    help="lista item por item o que há dentro de cada container")
     ap.add_argument("--limite", type=int, default=6, help="quantos backups olhar")
     ap.add_argument("--arquivos", default="",
                     help="caminhos específicos a olhar (relativos à pasta do mundo), "
@@ -237,10 +271,33 @@ def main() -> int:
         ja = {u for u, _, _ in alvos_uid}
         alvos_uid += [a for a in achados if a[0] not in ja]
 
-    if not alvos_uid:
-        sys.exit("informe --uids ou --guildas")
+    crus = {}
+    for g in args.containers.split(","):
+        gid = norm_uid(g.strip())
+        if gid:
+            crus[gid[:8] + "…"] = gid
+
+    if not alvos_uid and not crus:
+        sys.exit("informe --uids, --guildas ou --containers")
 
     resumo: list[str] = []
+
+    # Container solto: serve para conferir se um GUID que um save ANTIGO
+    # apontava ainda existe no mundo, e com o quê dentro. É assim que se
+    # descobre para onde a bag foi quando o jogo trocou os GUIDs.
+    if crus:
+        print(f"\n======== {len(crus)} container(s) avulso(s) ========", flush=True)
+        total = olhar("Level.sav (hoje)", world, crus, args.detalhar)
+        resumo.append(f"containers avulsos: {total} slots com conteudo no save vivo")
+        for arq in [a.strip() for a in args.arquivos.split(",") if a.strip()]:
+            caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{arq}"
+            try:
+                w = ler_gvas(baixar(cfg, caminho), custom).properties["worldSaveData"]["value"]
+            except Exception as err:  # noqa: BLE001
+                print(f"\n--- {arq} --- nao deu para ler ({type(err).__name__})")
+                continue
+            olhar(arq, w, crus, args.detalhar)
+
     for uid, nome, guild in alvos_uid:
         titulo = f"{nome} ({uid})" if nome != "?" else f"uid {uid}"
         print(f"\n================ {titulo} ================", flush=True)
@@ -258,7 +315,7 @@ def main() -> int:
         for campo, gid in alvos.items():
             print(f"    {campo} = {gid}")
 
-        total = olhar("Level.sav (hoje)", world, alvos)
+        total = olhar("Level.sav (hoje)", world, alvos, args.detalhar)
         vazios = [c for c, g in alvos.items()
                   if "Container" in c and "Pal" not in c and "Otomo" not in c
                   and slots_com_coisa(secao_por_id(world, "ItemContainerSaveData").get(g))[1] == 0]
@@ -274,7 +331,7 @@ def main() -> int:
             except Exception as err:  # noqa: BLE001
                 print(f"\n--- {arq} --- não deu para ler ({type(err).__name__})")
                 continue
-            olhar(arq, w, alvos)
+            olhar(arq, w, alvos, args.detalhar)
 
     print("\n================ RESUMO ================")
     for linha in resumo:
