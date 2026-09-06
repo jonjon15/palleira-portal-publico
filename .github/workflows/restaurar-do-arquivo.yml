@@ -1,0 +1,81 @@
+# Devolve a base de um jogador a partir do ARQUIVO no banco, não do
+# backup/world do servidor. Ver tools/restaurar_do_arquivo.py.
+#
+# É o motor do autoatendimento: o pedido do jogador vira uma execução destas.
+#
+# ⚠️ O modo `aplicar` para o servidor, reescreve o Level.sav e religa.
+name: restaurar-do-arquivo
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      uid:
+        description: "UID do jogador (32 hex)"
+        required: true
+        type: string
+      snapshot:
+        description: "ID do snapshot (0 = o melhor guardado dessa pessoa)"
+        required: false
+        type: string
+        default: "0"
+      destino:
+        description: "x,y,z de mundo (vazio = no lugar original)"
+        required: false
+        type: string
+        default: ""
+      modo:
+        description: "simular | aplicar"
+        required: true
+        type: choice
+        options: [simular, aplicar]
+        default: simular
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko "psycopg[binary]"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar'
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Restaurar do arquivo
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/restaurar_do_arquivo.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uid "${{ inputs.uid }}" \
+            --snapshot "${{ inputs.snapshot }}" \
+            --destino "${{ inputs.destino }}" \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        if: always() && inputs.modo == 'aplicar'
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running
