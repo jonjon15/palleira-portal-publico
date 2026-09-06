@@ -105,6 +105,15 @@ export default async function Home() {
             >
               Ver o mercado
             </Link>
+            {/* Quem cai aqui sem conhecer a comunidade não tinha para onde ir
+                entender o que o site faz — os dois botões acima já supõem
+                que a pessoa sabe. */}
+            <Link
+              href="/como-funciona"
+              className="px-1 py-2.5 font-semibold text-muted underline-offset-4 transition-colors hover:text-text hover:underline"
+            >
+              Como funciona
+            </Link>
           </div>
 
           {anyUp && (
