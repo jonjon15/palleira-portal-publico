@@ -90,17 +90,12 @@ def norm_uid(valor) -> str:
     return str(valor or "").replace("-", "").upper()
 
 
-class Servidor:
-    def __init__(self, slug, host, user, password, guid):
-        self.slug, self.host = slug, host
-        self.user, self.password, self.guid = user, password, guid
-
-
-def servidores() -> dict[str, Servidor]:
-    bruto = os.environ.get("PALLEIRA_SERVERS", "").strip()
-    if not bruto:
-        sys.exit("PALLEIRA_SERVERS ausente (JSON com a lista de servidores)")
-    return {s["slug"]: Servidor(**s) for s in json.loads(bruto)}
+# Uma definição só de servidor, em restaurar_base. Aqui havia uma cópia, e
+# cópia significa que a resolução automática de GUID — a que salva todos os
+# scripts quando um wipe muda a pasta do mundo — valeria para uns scripts e
+# não para outros. `wipe_mundo.py` importa `servidores` daqui, e é justamente
+# ele que provoca a troca de pasta.
+from restaurar_base import Servidor, servidores  # noqa: E402,F401
 
 
 def _sftp(cfg: Servidor):

@@ -151,9 +151,63 @@ def ticks_para_dias(ticks) -> str:
 
 
 class Servidor:
+    """Um servidor de Palworld, com o caminho do mundo dele.
+
+    O `guid` vem de `PALLEIRA_SERVERS`, mas é resolvido sob demanda: **um wipe
+    troca o GUID do mundo**. O wipe move `SaveGames/0/<guid>/` para fora e o
+    jogo cria uma pasta nova, com nome novo, ao subir — e a partir daí todo
+    script que confiasse no valor configurado passaria a ler um caminho que
+    não existe mais, calado, até alguém reparar. Como o pvp-free vai ser
+    wipado (dono, 06/09/2026), isso deixaria o arquivo diário falhando todo
+    dia sem ninguém notar.
+
+    Quando a pasta configurada some, o mundo de verdade é procurado no
+    servidor e o novo GUID é anunciado, para o secret ser atualizado.
+    """
+
     def __init__(self, slug, host, user, password, guid):
         self.slug, self.host = slug, host
-        self.user, self.password, self.guid = user, password, guid
+        self.user, self.password = user, password
+        self._guid_configurado = guid
+        self._guid: str | None = None
+
+    @property
+    def guid(self) -> str:
+        if self._guid is None:
+            self._guid = self._resolver_guid()
+        return self._guid
+
+    def _resolver_guid(self) -> str:
+        alvo = self._guid_configurado
+        try:
+            t, sftp = _sftp(self)
+        except Exception:  # noqa: BLE001
+            # Sem SFTP não dá para conferir nada — devolve o configurado e
+            # deixa o erro aparecer onde ele importa, no download.
+            return alvo
+        try:
+            try:
+                sftp.stat(f"Pal/Saved/SaveGames/0/{alvo}/Level.sav")
+                return alvo
+            except FileNotFoundError:
+                pass
+
+            achados = []
+            for nome in sftp.listdir("Pal/Saved/SaveGames/0"):
+                try:
+                    st = sftp.stat(f"Pal/Saved/SaveGames/0/{nome}/Level.sav")
+                except (FileNotFoundError, OSError):
+                    continue
+                achados.append((st.st_mtime, nome))
+
+            if not achados:
+                return alvo
+            novo = max(achados)[1]
+            print(f"  ⚠️ o mundo de {self.slug} mudou de pasta: "
+                  f"{alvo} → {novo}. Atualize PALLEIRA_SERVERS.", flush=True)
+            return novo
+        finally:
+            t.close()
 
 
 def servidores() -> dict[str, Servidor]:
