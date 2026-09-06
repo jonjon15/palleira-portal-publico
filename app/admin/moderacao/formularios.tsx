@@ -15,6 +15,7 @@ import {
   dispararWipe,
   consultarSituacao,
   dispararRestauracao,
+  dispararRestauracaoBag,
   dispararSondagemBags,
   dispararReversao,
   type Estado,
@@ -765,6 +766,7 @@ export function RestaurarJogador({
   const [busca, buscarAcao, buscando] = useActionState(consultarSituacao, SEM_SITUACAO);
   const [envio, enviarAcao, enviando] = useActionState(dispararRestauracao, SEM_ESTADO);
   const [bags, bagsAcao, sondando] = useActionState(dispararSondagemBags, SEM_ESTADO);
+  const [bag, bagAcao, devolvendo] = useActionState(dispararRestauracaoBag, SEM_ESTADO);
   const [alvo, setAlvo] = useState<Situacao | null>(null);
   const [digitado, setDigitado] = useState("");
 
@@ -898,6 +900,52 @@ export function RestaurarJogador({
             </form>
           )}
 
+          {/*
+            Devolver a bag é um conserto à parte: religa itens que ficaram
+            para trás nos backups sob GUIDs antigos. Fica junto porque a
+            pergunta vem sempre depois de conferir — e porque o que o jogador
+            juntou desde a perda é somado, não jogado fora.
+          */}
+          {semBase && (
+            <div className="space-y-3 border-t border-line pt-4">
+              <p className="text-sm text-muted">
+                Se a conferência acusou containers zerados, dá para devolver os
+                itens de <b className="text-text">{alvo.nome}</b> — mochila,
+                essenciais, armas, armadura e comida. O que ele juntou desde a
+                perda é somado, não jogado fora.
+              </p>
+              <form action={bagAcao}>
+                <input type="hidden" name="servidor" value={servidor} />
+                <input type="hidden" name="uid" value={alvo.uid} />
+                <input type="hidden" name="nome" value={alvo.nome} />
+                <input type="hidden" name="modo" value="simular" />
+                <button type="submit" disabled={devolvendo} className={botaoFantasma}>
+                  {devolvendo ? "Pedindo…" : "Ver a bag que voltaria (item por item)"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/*
+            O campo de confirmação mora fora dos formulários porque destrava
+            mais de um botão: devolver a bag e devolver os Pals são disparos
+            diferentes e ambos pedem o nome digitado. Repetir o campo em cada
+            um só faria digitar duas vezes a mesma coisa.
+          */}
+          <div className="border-t border-line pt-4">
+            <label htmlFor={`conf-${id}`} className="block text-sm text-muted">
+              Para disparar de verdade, digite{" "}
+              <b className="text-text">{alvo.nome}</b>
+            </label>
+            <input
+              id={`conf-${id}`}
+              autoComplete="off"
+              value={digitado}
+              onChange={(e) => setDigitado(e.target.value)}
+              className={`${campo} mt-1.5`}
+            />
+          </div>
+
           {/* Simular primeiro é grátis e não derruba ninguém. */}
           <form action={enviarAcao} className="flex flex-wrap gap-2">
             <input type="hidden" name="servidor" value={servidor} />
@@ -920,28 +968,14 @@ export function RestaurarJogador({
               );
               if (r?.trim().toUpperCase() !== "CONFIRMAR") e.preventDefault();
             }}
-            className="space-y-3 border-t border-line pt-4"
+            className="space-y-3"
           >
             <input type="hidden" name="servidor" value={servidor} />
             <input type="hidden" name="uid" value={alvo.uid} />
             <input type="hidden" name="nome" value={alvo.nome} />
             <input type="hidden" name="pular_base" value={semBase ? "1" : "0"} />
             <input type="hidden" name="modo" value="aplicar" />
-
-            <div>
-              <label htmlFor={`conf-${id}`} className="block text-sm text-muted">
-                Para restaurar de verdade, digite{" "}
-                <b className="text-text">{alvo.nome}</b>
-              </label>
-              <input
-                id={`conf-${id}`}
-                name="confirmacao"
-                autoComplete="off"
-                value={digitado}
-                onChange={(e) => setDigitado(e.target.value)}
-                className={`${campo} mt-1.5`}
-              />
-            </div>
+            <input type="hidden" name="confirmacao" value={digitado} />
 
             <button type="submit" disabled={enviando || !confere} className={botao}>
               {enviando
@@ -952,6 +986,32 @@ export function RestaurarJogador({
             </button>
           </form>
 
+          {semBase && (
+            <form
+              action={bagAcao}
+              onSubmit={(e) => {
+                const r = window.prompt(
+                  `Isto para o servidor por alguns minutos para devolver os itens de ${alvo.nome}.\n\nDigite CONFIRMAR para prosseguir:`,
+                );
+                if (r?.trim().toUpperCase() !== "CONFIRMAR") e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="servidor" value={servidor} />
+              <input type="hidden" name="uid" value={alvo.uid} />
+              <input type="hidden" name="nome" value={alvo.nome} />
+              <input type="hidden" name="modo" value="aplicar" />
+              <input type="hidden" name="confirmacao" value={digitado} />
+              <button
+                type="submit"
+                disabled={devolvendo || !confere}
+                className={botaoFantasma}
+              >
+                {devolvendo ? "Disparando…" : `Devolver a bag de ${alvo.nome}`}
+              </button>
+            </form>
+          )}
+
+          <Aviso {...bag} />
           <Aviso {...envio} />
         </div>
       )}

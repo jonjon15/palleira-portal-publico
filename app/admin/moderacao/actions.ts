@@ -741,6 +741,60 @@ export async function dispararSondagemBags(
   });
 }
 
+/* ------------------------------------------------ devolver a bag */
+
+/**
+ * Devolve os itens de um jogador cuja bag se desligou.
+ *
+ * Separado da restauração de Pals porque é um conserto de outra natureza: em
+ * vez de trazer objetos que sumiram, religa conteúdo que continuou existindo
+ * nos backups sob GUIDs antigos. Ver `tools/restaurar_itens.py`.
+ *
+ * O que o jogador juntou desde a perda é somado nas pilhas que voltam — nada
+ * dele é jogado fora sem aviso.
+ */
+export async function dispararRestauracaoBag(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as "simular" | "aplicar";
+  const uid = String(form.get("uid") ?? "").trim().toUpperCase();
+  const nome = String(form.get("nome") ?? "").trim();
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+
+  if (modo !== "simular" && modo !== "aplicar") {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+  if (!/^[0-9A-F]{32}$/.test(uid)) {
+    return { ok: false, mensagem: "Escolha um jogador na lista antes." };
+  }
+  if (modo === "aplicar" && confirmacao.toLowerCase() !== nome.toLowerCase()) {
+    return { ok: false, mensagem: `Para devolver a bag, digite o nome do jogador: ${nome}` };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "restore",
+    target: uid,
+    detail: `bag (${modo}) de ${nome}`,
+    rodar: () =>
+      dispararWorkflow("restaurar-itens.yml", {
+        servidor: server.slug,
+        uids: uid,
+        backup: "auto",
+        sobrescrever: "false",
+        modo,
+      }),
+    sucesso:
+      modo === "simular"
+        ? `Simulação pedida para ${nome} — lista item por item o que voltaria, sem gravar e sem derrubar ninguém. O resultado sai no GitHub.`
+        : `Devolução da bag de ${nome} disparada. O servidor para, os itens voltam, e ele sobe sozinho.`,
+  });
+}
+
 /* -------------------------------------------------- reverter o save */
 
 /**
