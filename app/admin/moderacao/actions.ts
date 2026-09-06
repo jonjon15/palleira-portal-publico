@@ -41,6 +41,17 @@ async function exigirEnergia() {
   return session.user.discordId;
 }
 
+/**
+ * O nome sem espaços e em minúsculas, dos dois lados da busca.
+ *
+ * Existe porque em 06/09/2026 o dono não achou o jogador `C H R I S` — o nome
+ * dele tem espaço entre cada letra, e digitar "chris" não casava com nada. Um
+ * `ilike` sozinho compara texto cru, e nomes espaçados são comuns no jogo.
+ */
+function semEspaco(texto: string): string {
+  return texto.toLowerCase().replace(/\s+/g, "");
+}
+
 function servidorOuFalha(slug: string): PalleiraServer {
   const server = serverBySlug(slug);
   if (!server) throw new Error("Servidor inválido ou desativado.");
@@ -348,7 +359,9 @@ export async function buscarJogador(
   const linhas = (await sql`
     select palworld_uid, name, level, guild_id
     from players
-    where server_slug = ${server.slug} and name ilike ${"%" + termo + "%"}
+    where server_slug = ${server.slug}
+      and (name ilike ${"%" + termo + "%"}
+           or replace(lower(name), ' ', '') like ${"%" + semEspaco(termo) + "%"})
     order by level desc
     limit 12
   `) as { palworld_uid: string; name: string; level: number; guild_id: string | null }[];
@@ -597,7 +610,9 @@ export async function consultarSituacao(
     from players p
     left join guilds g
       on g.server_slug = p.server_slug and g.guild_id = p.guild_id
-    where p.server_slug = ${server.slug} and p.name ilike ${"%" + termo + "%"}
+    where p.server_slug = ${server.slug}
+      and (p.name ilike ${"%" + termo + "%"}
+           or replace(lower(p.name), ' ', '') like ${"%" + semEspaco(termo) + "%"})
     order by p.level desc
     limit 12
   `) as {
