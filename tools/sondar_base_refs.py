@@ -98,6 +98,29 @@ def guids_de_container(node, prof: int = 14) -> dict[str, set[str]]:
     return achados
 
 
+def secao_por_id_local(world, secao: str) -> dict[str, dict]:
+    out = {}
+    for entrada in entries_of(dig(world, secao)) or []:
+        cid = norm_uid(scalar(dig(entrada, "key", "ID"), ""))
+        if cid:
+            out[cid] = entrada
+    return out
+
+
+def slots_com_coisa(entrada) -> int:
+    slots = dig(entrada, "value", "Slots", "value", "values", default=None)
+    if not isinstance(slots, list):
+        slots = dig(entrada, "value", "Slots", "value", default=None)
+    if not isinstance(slots, list):
+        return 0
+    n = 0
+    for s in slots:
+        raw = dig(s, "RawData", "value", default={})
+        if isinstance(raw, dict) and int(scalar(raw.get("count"), 0) or 0) > 0:
+            n += 1
+    return n
+
+
 def containers_existentes(world, secao: str) -> set[str]:
     out = set()
     for entrada in entries_of(dig(world, secao)) or []:
@@ -172,6 +195,21 @@ def analisar(rotulo: str, world, base_ids: set[str], mostrar_forma: bool) -> dic
                   f"{em_char} em Character, {orfaos} ÓRFÃOS")
             referidos_total.setdefault(chave, set()).update(guids)
 
+        # Quanta coisa há de fato dentro dos baús desta base — a pergunta que
+        # o dono faz ("o jogador perdeu os itens?") não é sobre o container
+        # existir, é sobre ter algo dentro.
+        conteudo = vazios = 0
+        idx_itens = secao_por_id_local(world, "ItemContainerSaveData")
+        for chave, guids in por_chave.items():
+            for gid in guids:
+                entrada = idx_itens.get(gid)
+                if entrada is None:
+                    continue
+                n = slots_com_coisa(entrada)
+                conteudo += n
+                vazios += 1 if n == 0 else 0
+        print(f"    conteúdo dos baús: {conteudo} slots com item, {vazios} containers vazios")
+
     return referidos_total
 
 
@@ -203,10 +241,11 @@ def main() -> int:
         gvas = GvasFile.read(gvas_bytes, PALWORLD_TYPE_HINTS, custom)
         return gvas.properties["worldSaveData"]["value"]
 
-    backup = ler(BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup))
-    referidos = analisar(f"{args.arquivo_backup} (backup com as bases)", backup, base_ids, True)
-
     hoje = ler(SAVE_PATH.format(guid=cfg.guid))
+    analisar("Level.sav (hoje)", hoje, base_ids, False)
+
+    backup = ler(BACKUP_PATH.format(guid=cfg.guid, arquivo=args.arquivo_backup))
+    referidos = analisar(f"{args.arquivo_backup} (backup com as bases)", backup, base_ids, False)
     itens_hoje = containers_existentes(hoje, "ItemContainerSaveData")
     chars_hoje = containers_existentes(hoje, "CharacterContainerSaveData")
     print(f"\n--- Level.sav (hoje) ---")
