@@ -207,6 +207,7 @@ def arquivar(cfg, simular: bool) -> int:
                   f"{len(pecas):>5} peça(s)  {len(blob)/1024:>7,.0f} KB  {extras}",
                   flush=True)
 
+            gravadas += 1
             if conn is None:
                 continue
 
@@ -254,7 +255,6 @@ def arquivar(cfg, simular: bool) -> int:
                      cfg.slug, bid),
                 )
             conn.commit()
-            gravadas += 1
 
         print(f"\n=== {gravadas} base(s) arquivada(s), "
               f"{total_bytes/1_048_576:.2f} MB nesta rodada ===")
