@@ -167,10 +167,19 @@ def mover(entradas: list, origem: tuple, delta: tuple, raio: float) -> tuple[int
     return movidas, ignoradas
 
 
-def bases_por_perto(world, ponto: tuple, raio_novo: float) -> list[tuple[str, float]]:
-    """Bases cujo território encostaria no destino."""
+def bases_por_perto(world, ponto: tuple, raio_novo: float,
+                    ignorar: str = "") -> list[tuple[str, float]]:
+    """Bases cujo território encostaria no destino.
+
+    `ignorar` existe para a própria base não contar como vizinha de si mesma:
+    quando ela ainda está no mundo, a distância dá zero e o destino original
+    pareceria ocupado. Esse caso tem resposta melhor — "a base ainda existe,
+    não há o que restaurar" — e ela é dada antes de chegar aqui.
+    """
     perto = []
     for bid, entrada in base_camp_por_id(world).items():
+        if ignorar and bid == ignorar:
+            continue
         raw = dig(entrada, "value", "RawData", "value", default={}) or {}
         t = (translacoes(raw) or [None])[0]
         if not t:
@@ -353,13 +362,20 @@ def main() -> int:
     atual = gvas.properties["worldSaveData"]["value"]
     print(f"  save vivo: {len(original):,} bytes, lido em {time.time()-t0:.0f}s", flush=True)
 
+    # Antes de falar de destino: se a base ainda está lá, não há o que fazer.
+    # Perguntar do lugar primeiro daria a resposta errada — "ocupado" — sendo
+    # que quem ocupa é ela mesma.
+    if base_id in base_camp_por_id(atual):
+        print("  ✗ essa base ainda existe no save — nada a restaurar.")
+        return 1
+
     # ---- destino ---------------------------------------------------------
     if args.destino:
         try:
             dx, dy, dz = (float(v) for v in args.destino.split(","))
         except ValueError:
             sys.exit("--destino tem de ser x,y,z")
-        vizinhas = bases_por_perto(atual, (dx, dy, dz), raio)
+        vizinhas = bases_por_perto(atual, (dx, dy, dz), raio, ignorar=base_id)
         if vizinhas:
             print(f"  ✗ o destino encosta em {len(vizinhas)} base(s):")
             for bid, d in vizinhas[:3]:
@@ -378,7 +394,7 @@ def main() -> int:
             return 1
     else:
         print(f"  destino: o lugar original ({ox:,.0f}, {oy:,.0f})")
-        vizinhas = bases_por_perto(atual, (ox, oy, oz), raio)
+        vizinhas = bases_por_perto(atual, (ox, oy, oz), raio, ignorar=base_id)
         if vizinhas:
             print(f"  ⚠️ o lugar original já tem {len(vizinhas)} base(s) por perto:")
             for bid, d in vizinhas[:3]:
