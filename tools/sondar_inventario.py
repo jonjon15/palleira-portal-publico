@@ -64,6 +64,55 @@ def ler_gvas(raw: bytes, custom):
     return GvasFile.read(gvas_bytes, PALWORLD_TYPE_HINTS, custom)
 
 
+def primeiro_guid(no, prof: int = 8) -> str:
+    """O primeiro GUID de verdade abaixo deste nó.
+
+    No save individual o container vem embrulhado em dois structs
+    (`campo.value.ID.value`), e um `scalar()` para no dict do meio — foi por
+    isso que a primeira sondagem não achou campo nenhum e disse que não
+    existiam. Descer até encontrar resolve sem depender da profundidade exata.
+    """
+    if prof <= 0:
+        return ""
+    if isinstance(no, dict):
+        for v in no.values():
+            if not isinstance(v, (dict, list)):
+                g = norm_uid(v)
+                if len(g) == 32 and g != ZERO_UID and all(c in "0123456789ABCDEF" for c in g):
+                    return g
+        for v in no.values():
+            achado = primeiro_guid(v, prof - 1)
+            if achado:
+                return achado
+    elif isinstance(no, list):
+        for item in no:
+            achado = primeiro_guid(item, prof - 1)
+            if achado:
+                return achado
+    return ""
+
+
+def guid_sob(no, campo: str, prof: int = 12) -> str:
+    """O GUID guardado sob a chave `campo`, em qualquer profundidade."""
+    if prof <= 0:
+        return ""
+    if isinstance(no, dict):
+        if campo in no:
+            achado = primeiro_guid(no[campo])
+            if achado:
+                return achado
+        for v in no.values():
+            achado = guid_sob(v, campo, prof - 1)
+            if achado:
+                return achado
+    elif isinstance(no, list):
+        for item in no:
+            achado = guid_sob(item, campo, prof - 1)
+            if achado:
+                return achado
+    return ""
+
+
 def containers_do_jogador(cfg, uid: str) -> dict[str, str]:
     """campo -> GUID, lido do `Players/<uid>.sav`."""
     raw = baixar(cfg, PLAYER_PATH.format(guid=cfg.guid, uid=uid))
@@ -71,7 +120,8 @@ def containers_do_jogador(cfg, uid: str) -> dict[str, str]:
     save_data = dig(props, "SaveData", "value", default=None)
     achados: dict[str, str] = {}
     for campo in CAMPOS_DE_CONTAINER:
-        for gid in coletar_guids(save_data if save_data is not None else props, campo, prof=12):
+        gid = guid_sob(save_data if save_data is not None else props, campo)
+        if gid:
             achados[campo] = gid
     if not achados:
         # Dump cru em vez de adivinhar de novo — foi assim que se achou o
