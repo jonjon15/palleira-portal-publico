@@ -1,0 +1,51 @@
+# Procura containers de item órfãos e com conteúdo — caixas que ninguém aponta
+# mas que ainda têm coisa dentro. Ver tools/sondar_orfaos.py. Só leitura.
+name: sondar-orfaos
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      minimo:
+        description: "Só mostrar containers com pelo menos N slots ocupados"
+        required: false
+        type: string
+        default: "1"
+      mostrar:
+        description: "Quantos órfãos detalhar"
+        required: false
+        type: string
+        default: "25"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Procurar órfãos
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_orfaos.py \
+            --servidor "${{ inputs.servidor }}" \
+            --minimo "${{ inputs.minimo }}" \
+            --mostrar "${{ inputs.mostrar }}"
