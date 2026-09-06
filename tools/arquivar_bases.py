@@ -55,7 +55,7 @@ FORMATO = 1
 
 # Quantas versões guardar de cada base. Três dá margem para descobrir tarde
 # que a mais recente já veio estragada, sem virar depósito: 3 × 200 KB por
-# base grande.
+# base grande, uns 10 MB para os três servidores — 2% dos 0,5 GB do Neon.
 VERSOES_POR_BASE = 3
 
 
@@ -167,8 +167,17 @@ def arquivar(cfg, simular: bool) -> int:
                      len(pecas), blob, len(blob), FORMATO),
                 )
                 # Some com as versões velhas na mesma transação: sem isto a
-                # tabela cresce para sempre, e a mais antiga de todas é
-                # justamente a que menos serve.
+                # tabela cresce para sempre.
+                #
+                # ⚠️ A maior versão nunca é apagada, mesmo que fique velha. Uma
+                # base pode continuar existindo e vir esvaziada — jogador
+                # derrubou tudo, ou um bug comeu as peças — e três dias assim
+                # empurrariam a última versão boa para fora só por idade.
+                # Guardar a de mais peças custa um registro e é exatamente a
+                # que alguém vai querer de volta.
+                #
+                # Base APAGADA não passa por aqui: se ela sumiu do save, não
+                # há insert novo, e o que estava guardado fica intacto.
                 cur.execute(
                     """
                     delete from base_snapshots
@@ -178,8 +187,14 @@ def arquivar(cfg, simular: bool) -> int:
                         where server_slug = %s and base_id = %s
                         order by taken_at desc limit %s
                       )
+                      and id <> (
+                        select id from base_snapshots
+                        where server_slug = %s and base_id = %s
+                        order by piece_count desc, taken_at desc limit 1
+                      )
                     """,
-                    (cfg.slug, bid, cfg.slug, bid, VERSOES_POR_BASE),
+                    (cfg.slug, bid, cfg.slug, bid, VERSOES_POR_BASE,
+                     cfg.slug, bid),
                 )
             conn.commit()
             gravadas += 1

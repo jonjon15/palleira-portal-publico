@@ -43,11 +43,23 @@ jobs:
           pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
           pip install --quiet "git+$REPO#subdirectory=src/palsav"
 
-      - name: Arquivar
+      - name: Arquivar as bases
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           python tools/arquivar_bases.py \
+            --servidores "${{ inputs.servidor }}" \
+            ${{ inputs.simular && '--simular' || '' }}
+
+      # Roda mesmo se as bases falharem: são coberturas independentes, e meio
+      # arquivo é melhor que nenhum.
+      - name: Arquivar os saves individuais
+        if: always()
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python tools/arquivar_players.py \
             --servidores "${{ inputs.servidor }}" \
             ${{ inputs.simular && '--simular' || '' }}
