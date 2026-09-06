@@ -1,0 +1,51 @@
+# Sonda os containers de inventário de um jogador (mochila, equipamento, arma,
+# comida) e diz em qual backup ainda há conteúdo. Ver tools/sondar_inventario.py.
+# Só leitura.
+name: sondar-inventario
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      uids:
+        description: "UIDs dos jogadores (32 hex, separados por vírgula)"
+        required: true
+        type: string
+      limite:
+        description: "Quantos backups olhar"
+        required: false
+        type: string
+        default: "6"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar inventário
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_inventario.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uids "${{ inputs.uids }}" \
+            --limite "${{ inputs.limite }}"
