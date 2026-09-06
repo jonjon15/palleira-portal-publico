@@ -65,10 +65,18 @@ def main() -> int:
             (a.filename, a.st_size) for a in sftp.listdir_attr(base)
             if a.filename.startswith("Level.sav.bak-")
         )
+        # O Level.sav vivo separa "o backup parou" de "o servidor parou de
+        # salvar". São problemas diferentes e a diferença importa.
+        vivo = sftp.stat(f"{base}/Level.sav")
     finally:
         t.close()
 
     print(f"=== {cfg.slug}: {len(pastas)} backup(s) em backup/world/ ===")
+
+    agora_ts = datetime.now(timezone.utc)
+    salvo = datetime.fromtimestamp(vivo.st_mtime, timezone.utc)
+    print(f"  Level.sav vivo: {vivo.st_size:,} bytes, salvo {salvo:%d/%m %H:%M} UTC "
+          f"(há {(agora_ts - salvo).total_seconds()/60:.0f} min)")
 
     datas = [d for d in (quando(p) for p in pastas) if d]
     datas.sort(reverse=True)
