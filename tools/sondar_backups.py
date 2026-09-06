@@ -28,12 +28,12 @@ from restaurar_base import _sftp, servidores  # noqa: E402
 BASE_DIR = "Pal/Saved/SaveGames/0/{guid}"
 
 
-def quando(nome: str) -> datetime | None:
-    """A data no nome da pasta: `2026.09.04-23.59.35`."""
-    try:
-        return datetime.strptime(nome, "%Y.%m.%d-%H.%M.%S").replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
+# ⚠️ O nome da pasta (`2026.09.04-23.59.35`) vem no relógio do servidor, que
+# está em America/Sao_Paulo (UTC−3) — não em UTC. Ler o nome como UTC faz todo
+# backup parecer 3 horas mais velho, e em 06/09/2026 isso me levou a anunciar
+# que o backup do host tinha parado quando ele rodava normalmente, de 10 em 10
+# minutos. Toda medição de tempo aqui usa `st_mtime` do SFTP, que é epoch e
+# não tem fuso para errar. O nome serve só de rótulo.
 
 
 def main() -> int:
@@ -51,9 +51,13 @@ def main() -> int:
     t, sftp = _sftp(cfg)
     try:
         try:
-            pastas = sorted(sftp.listdir(f"{base}/backup/world"), reverse=True)
+            # `listdir_attr`, não `listdir`: é o mtime que diz a hora de
+            # verdade. O nome da pasta vem no fuso do servidor e mente por 3h.
+            itens = sftp.listdir_attr(f"{base}/backup/world")
         except FileNotFoundError:
-            pastas = []
+            itens = []
+        pastas = sorted((a.filename for a in itens), reverse=True)
+        mtimes = {a.filename: a.st_mtime for a in itens}
         # Tamanho do Level.sav de cada um, para ver se algum veio truncado.
         tamanhos: dict[str, int] = {}
         for p in pastas[: args.listar]:
@@ -78,8 +82,10 @@ def main() -> int:
     print(f"  Level.sav vivo: {vivo.st_size:,} bytes, salvo {salvo:%d/%m %H:%M} UTC "
           f"(há {(agora_ts - salvo).total_seconds()/60:.0f} min)")
 
-    datas = [d for d in (quando(p) for p in pastas) if d]
-    datas.sort(reverse=True)
+    datas = sorted(
+        (datetime.fromtimestamp(ts, timezone.utc) for ts in mtimes.values()),
+        reverse=True,
+    )
 
     if datas:
         agora = datetime.now(timezone.utc)
