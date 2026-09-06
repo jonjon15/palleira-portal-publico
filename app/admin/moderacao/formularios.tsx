@@ -15,6 +15,7 @@ import {
   dispararWipe,
   consultarSituacao,
   dispararRestauracao,
+  dispararSondagemBags,
   dispararReversao,
   type Estado,
   type EstadoBusca,
@@ -739,31 +740,50 @@ Para confirmar, digite o nome do servidor: ${nomeServidor}`,
 const SEM_SITUACAO: EstadoSituacao = { ok: false, mensagem: "" };
 
 /**
- * Devolve a um jogador os Pals e a base que o servidor apagou.
+ * Devolve a um jogador o que o servidor apagou.
+ *
+ * Vem em dois escopos, e a diferença não é técnica, é de risco:
+ *
+ *   - `jogador` — save individual, Pals e bag. Só acrescenta ao dono, não tira
+ *     nada de ninguém, e o resto da guild nem percebe.
+ *   - `guild` — o mesmo mais a **base**, que é da guild inteira: mexe no
+ *     território de todos os membros.
+ *
+ * Ficaram separados a pedido do dono: eram uma seção só com um checkbox
+ * "sem base", e a coisa segura acabava escondida dentro da arriscada.
  *
  * Não pergunta nome de arquivo de backup nem UUID: o motor acha sozinho o
- * backup mais recente que ainda tem o que devolver. O dono escolhe a pessoa,
- * confere quantos Pals e bases ela tem hoje, e confirma pelo nome.
+ * backup mais recente que ainda tem o que devolver.
  */
-export function RestaurarJogador({ servidor }: { servidor: string }) {
+export function RestaurarJogador({
+  servidor,
+  escopo = "guild",
+}: {
+  servidor: string;
+  escopo?: "jogador" | "guild";
+}) {
   const [busca, buscarAcao, buscando] = useActionState(consultarSituacao, SEM_SITUACAO);
   const [envio, enviarAcao, enviando] = useActionState(dispararRestauracao, SEM_ESTADO);
+  const [bags, bagsAcao, sondando] = useActionState(dispararSondagemBags, SEM_ESTADO);
   const [alvo, setAlvo] = useState<Situacao | null>(null);
   const [digitado, setDigitado] = useState("");
-  const [semBase, setSemBase] = useState(false);
 
+  const semBase = escopo === "jogador";
+  const id = escopo; // os dois formulários convivem na mesma página
   const confere = alvo && digitado.trim().toLowerCase() === alvo.nome.toLowerCase();
 
   return (
     <div className="space-y-5">
       <form action={buscarAcao} className="space-y-3">
         <input type="hidden" name="servidor" value={servidor} />
-        <label htmlFor="termo-restaurar" className="block text-sm text-muted">
-          Nome do jogador que perdeu a base ou os Pals
+        <label htmlFor={`termo-${id}`} className="block text-sm text-muted">
+          {semBase
+            ? "Nome do jogador que perdeu os Pals ou os itens"
+            : "Nome de um membro da guild que perdeu a base"}
         </label>
         <div className="flex gap-2">
           <input
-            id="termo-restaurar"
+            id={`termo-${id}`}
             name="termo"
             required
             minLength={2}
@@ -822,9 +842,21 @@ export function RestaurarJogador({ servidor }: { servidor: string }) {
       {alvo && (
         <div className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface-2/40 p-5">
           <p className="text-sm text-muted">
-            Devolve a <b className="text-text">{alvo.nome}</b> o save individual,
-            os Pals com as caixas e a base — tudo do backup mais recente que
-            ainda tiver o que voltar. O que ele tem hoje não é apagado.
+            {semBase ? (
+              <>
+                Devolve a <b className="text-text">{alvo.nome}</b> o save
+                individual e os Pals com as caixas, do backup mais recente que
+                ainda tiver o que voltar. <b className="text-text">Não mexe na
+                base</b> e não tira nada de ninguém — nem dele, nem da guild.
+              </>
+            ) : (
+              <>
+                Devolve à guild de <b className="text-text">{alvo.nome}</b> a
+                base, junto com o save individual e os Pals dele. A base é da{" "}
+                <b className="text-text">guild inteira</b>: confira com os
+                membros antes.
+              </>
+            )}
           </p>
 
           <ul className="space-y-1 text-xs text-muted">
@@ -840,14 +872,31 @@ export function RestaurarJogador({ servidor }: { servidor: string }) {
             <li>⏱ Leva uns 10 minutos; o servidor fica fora do ar nesse tempo</li>
           </ul>
 
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input
-              type="checkbox"
-              checked={semBase}
-              onChange={(e) => setSemBase(e.target.checked)}
-            />
-            Só os Pals, sem mexer na base
-          </label>
+          {/*
+            Conferir a bag é só leitura — não para o servidor e não grava. Fica
+            aqui porque a pergunta "os itens dele voltaram mesmo?" aparece
+            junto com a restauração, e porque em 05/09 quem perdeu a bag foi a
+            guild inteira, não só quem reclamou.
+          */}
+          {semBase && (
+            <form action={bagsAcao} className="border-t border-line pt-4">
+              <input type="hidden" name="servidor" value={servidor} />
+              <input type="hidden" name="uid" value={alvo.uid} />
+              <input type="hidden" name="guilda" value={alvo.guild ?? ""} />
+              <button type="submit" disabled={sondando} className={botaoFantasma}>
+                {sondando
+                  ? "Pedindo…"
+                  : alvo.guild
+                    ? `Conferir as bags da guild ${alvo.guild}`
+                    : "Conferir a bag deste jogador"}
+              </button>
+              <p className="mt-2 text-xs text-muted">
+                Só lê o mundo: diz quem está com os containers de item zerados —
+                o sintoma de bag desligada. Não derruba ninguém.
+              </p>
+              <Aviso {...bags} />
+            </form>
+          )}
 
           {/* Simular primeiro é grátis e não derruba ninguém. */}
           <form action={enviarAcao} className="flex flex-wrap gap-2">
@@ -865,7 +914,9 @@ export function RestaurarJogador({ servidor }: { servidor: string }) {
             action={enviarAcao}
             onSubmit={(e) => {
               const r = window.prompt(
-                `Isto para o servidor por cerca de 10 minutos para devolver a base e os Pals de ${alvo.nome}.\n\nDigite CONFIRMAR para prosseguir:`,
+                semBase
+                  ? `Isto para o servidor por cerca de 10 minutos para devolver os Pals e o save de ${alvo.nome}. A base não é tocada.\n\nDigite CONFIRMAR para prosseguir:`
+                  : `Isto para o servidor por cerca de 10 minutos e devolve a BASE da guild de ${alvo.nome} — território de todos os membros.\n\nDigite CONFIRMAR para prosseguir:`,
               );
               if (r?.trim().toUpperCase() !== "CONFIRMAR") e.preventDefault();
             }}
@@ -878,12 +929,12 @@ export function RestaurarJogador({ servidor }: { servidor: string }) {
             <input type="hidden" name="modo" value="aplicar" />
 
             <div>
-              <label htmlFor="conf-restaurar" className="block text-sm text-muted">
+              <label htmlFor={`conf-${id}`} className="block text-sm text-muted">
                 Para restaurar de verdade, digite{" "}
                 <b className="text-text">{alvo.nome}</b>
               </label>
               <input
-                id="conf-restaurar"
+                id={`conf-${id}`}
                 name="confirmacao"
                 autoComplete="off"
                 value={digitado}
@@ -893,7 +944,11 @@ export function RestaurarJogador({ servidor }: { servidor: string }) {
             </div>
 
             <button type="submit" disabled={enviando || !confere} className={botao}>
-              {enviando ? "Disparando…" : `Restaurar ${alvo.nome}`}
+              {enviando
+                ? "Disparando…"
+                : semBase
+                  ? `Devolver os Pals de ${alvo.nome}`
+                  : `Devolver a base da guild de ${alvo.nome}`}
             </button>
           </form>
 

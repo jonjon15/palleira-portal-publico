@@ -218,23 +218,47 @@ export default async function Moderacao({
           </section>
         </div>
 
-        {/* ------------------------------------------ restaurar jogador */}
+        {/* ---------------------------------------- devolver ao jogador */}
+        {/*
+          Separado da base de propósito: devolver Pals e itens só acrescenta a
+          quem perdeu — não tira nada de ninguém. A base é da guild inteira, e
+          por isso ganhou seção própria logo abaixo.
+        */}
         {podeEnergia && (
           <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-            <h2 className="text-lg font-semibold">Devolver base e Pals</h2>
+            <h2 className="text-lg font-semibold">Devolver Pals e itens ao jogador</h2>
             <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Para quem perdeu a base por ficar muito tempo sem entrar. O
-              servidor apaga a base de qualquer guild parada há mais de 72
-              horas, e às vezes leva os Pals junto. Isto traz de volta a partir
-              de um backup — você não precisa saber de qual: a ferramenta acha
-              sozinha o mais recente que ainda tem o que devolver.
+              Para quem voltou e achou a Pal Box ou a mochila vazia. Traz de
+              volta o save individual e os Pals com as caixas, do backup mais
+              recente que ainda os tiver — você não precisa saber de qual.
             </p>
             <p className="mt-2 max-w-3xl text-xs text-muted">
-              Comece por &ldquo;Ver o que voltaria&rdquo;: é grátis, não altera
-              nada e não derruba ninguém.
+              Não mexe na base e não tira nada de ninguém. Aqui também fica o
+              botão de <b>conferir as bags da guild</b>, que só lê o mundo e diz
+              quem está com o inventário desligado.
             </p>
             <div className="mt-5 max-w-2xl">
-              <RestaurarJogador servidor={server.slug} />
+              <RestaurarJogador servidor={server.slug} escopo="jogador" />
+            </div>
+          </section>
+        )}
+
+        {/* -------------------------------------- devolver a base da guild */}
+        {podeEnergia && (
+          <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+            <h2 className="text-lg font-semibold">Devolver a base da guild</h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              O servidor apaga a base de qualquer guild parada há mais de 72
+              horas. Isto devolve a base a partir de um backup — junto com os
+              Pals e o save do membro escolhido.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs text-muted">
+              A base é <b>da guild inteira</b>, não só de quem pediu. Comece por
+              &ldquo;Ver o que voltaria&rdquo;: é grátis, não altera nada e não
+              derruba ninguém.
+            </p>
+            <div className="mt-5 max-w-2xl">
+              <RestaurarJogador servidor={server.slug} escopo="guild" />
             </div>
           </section>
         )}

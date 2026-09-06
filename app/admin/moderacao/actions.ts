@@ -689,6 +689,58 @@ export async function dispararRestauracao(
   });
 }
 
+/* ------------------------------------------- conferir as bags da guild */
+
+/**
+ * Confere, membro a membro, se o inventário de cada jogador de uma guild
+ * ainda está ligado aos containers do mundo.
+ *
+ * Existe porque em 05/09/2026 o jogo recriou os seis containers de item do
+ * Tenshi com GUIDs novos e vazios — a bag não sumiu, se desligou. Quem
+ * reclama é um; quem foi atingido pode ser a guild inteira, e ninguém
+ * descobre isso esperando cada um reparar na falta.
+ *
+ * Só lê: não para o servidor, não grava nada. Por isso basta permissão de
+ * moderação, e não a de energia que as restaurações exigem.
+ */
+export async function dispararSondagemBags(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirModeracao();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const guilda = String(form.get("guilda") ?? "").trim();
+  const uid = String(form.get("uid") ?? "").trim().toUpperCase();
+
+  // Sem guild (jogador solo) ainda dá para conferir só ele pelo uid.
+  if (!guilda && !/^[0-9A-F]{32}$/.test(uid)) {
+    return { ok: false, mensagem: "Escolha um jogador na lista antes." };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "probe",
+    target: uid || undefined,
+    detail: guilda ? `conferir bags da guild ${guilda}` : "conferir bag do jogador",
+    rodar: () =>
+      dispararWorkflow("sondar-inventario.yml", {
+        servidor: server.slug,
+        uids: guilda ? "" : uid,
+        guildas: guilda,
+        containers: "",
+        detalhar: "false",
+        // Só o save vivo: é o que responde "está ligado ou não". Vasculhar
+        // backups multiplica o tempo por membro e não muda a resposta.
+        limite: "0",
+        arquivos: "",
+      }),
+    sucesso: guilda
+      ? `Conferência das bags da guild ${guilda} pedida — só leitura, ninguém é derrubado. O resultado sai no GitHub em uns 3 minutos, com um RESUMO de quem está com container zerado.`
+      : "Conferência da bag pedida — só leitura. O resultado sai no GitHub em uns 3 minutos.",
+  });
+}
+
 /* -------------------------------------------------- reverter o save */
 
 /**

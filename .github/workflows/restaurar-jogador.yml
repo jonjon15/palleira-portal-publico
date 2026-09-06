@@ -1,5 +1,5 @@
-# Restauração completa de um jogador que perdeu base + Pals: faz as três
-# peças na ordem certa, com o servidor parado UMA vez só.
+# Restauração completa de um jogador que perdeu base, Pals e itens: faz as
+# quatro peças na ordem certa, com o servidor parado UMA vez só.
 #
 # A ordem importa. Subir o servidor entre um passo e outro acorda a rotina de
 # limpeza do jogo, que apaga o que ainda está pela metade — foi assim que se
@@ -8,7 +8,9 @@
 #   1. Players/<uid>.sav  — os ponteiros das caixas de Pal. Sem ele, o resto
 #      é jogado fora na subida seguinte.
 #   2. Pals + caixas      — de um backup do Level.sav que ainda os tenha.
-#   3. Base               — de um backup mais antigo, junto com a renovação do
+#   3. Bag                — o conteúdo dos containers de item. Sem este passo o
+#      jogo recria a mochila vazia na primeira vez que o jogador entra.
+#   4. Base               — de um backup mais antigo, junto com a renovação do
 #      contador de inatividade (senão o auto-reset de guild apaga em minutos).
 #
 # ⚠️ O modo `aplicar` reescreve o Level.sav de todo mundo. Comece por `simular`.
@@ -74,7 +76,7 @@ jobs:
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
 
-      - name: 1/3 — devolver Players/<uid>.sav
+      - name: 1/4 — devolver Players/<uid>.sav
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
@@ -84,7 +86,7 @@ jobs:
             --uids "${{ inputs.uids }}" \
             --${{ inputs.modo }}
 
-      - name: 2/3 — devolver Pals e caixas
+      - name: 2/4 — devolver Pals e caixas
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
@@ -95,7 +97,23 @@ jobs:
             --arquivo-backup "${{ inputs.backup_pals }}" \
             --${{ inputs.modo }}
 
-      - name: 3/3 — devolver a base
+      # Sem este passo o jogador entra, o jogo não acha os containers de item
+      # que o save individual aponta e cria seis novos e vazios — foi como
+      # Tenshi e Givaldo perderam a bag em 05/09/2026, no mesmo minuto.
+      # Roda depois dos Pals e antes da base: é a mesma janela de servidor
+      # parado, e ler o Level.sav já editado evita desfazer o passo anterior.
+      - name: 3/4 — devolver a bag (itens)
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/restaurar_itens.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uids "${{ inputs.uids }}" \
+            --arquivo-backup auto \
+            --${{ inputs.modo }}
+
+      - name: 4/4 — devolver a base
         if: ${{ !inputs.pular_base }}
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}

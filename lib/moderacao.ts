@@ -19,7 +19,8 @@ export type AcaoModeracao =
   | "reset_days"
   | "wipe"
   | "restore"
-  | "revert";
+  | "revert"
+  | "probe";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -33,6 +34,7 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   wipe: "Wipe do mundo",
   restore: "Restaurar jogador",
   revert: "Reverter save",
+  probe: "Conferir bags",
 };
 
 export interface AcaoRow {
