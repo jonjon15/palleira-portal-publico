@@ -1,0 +1,45 @@
+# Mede quanto ocupa guardar a base de um jogador fora do servidor, para
+# escolher onde arquivar. Ver tools/medir_arquivo_base.py. Só leitura.
+name: medir-arquivo-base
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      quantas:
+        description: "Quantas bases medir (das maiores para as menores)"
+        required: false
+        type: string
+        default: "3"
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Medir
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/medir_arquivo_base.py \
+            --servidor "${{ inputs.servidor }}" \
+            --quantas "${{ inputs.quantas }}"
