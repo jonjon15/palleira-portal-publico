@@ -1,0 +1,53 @@
+# Guarda no banco o recorte de cada base dos servidores — o arquivo de bases.
+# Ver tools/arquivar_bases.py.
+#
+# Só lê o servidor; grava apenas no banco. Roda sozinho todo dia porque a
+# pasta backup/world do jogo rotaciona em horas, e o painel não guarda backup
+# nenhum (backup_count: 0).
+name: arquivar-bases
+
+on:
+  schedule:
+    # 05:40 UTC = 2h40 no horário de Brasília, vinte minutos antes do restart
+    # das 06:00 que o painel já faz. Save quieto, ninguém construindo.
+    - cron: "40 5 * * *"
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor (vazio = todos os que estiverem em PALLEIRA_SERVERS)"
+        required: false
+        type: string
+        default: ""
+      simular:
+        description: "Só medir, sem gravar no banco"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  arquivar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko "psycopg[binary]"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Arquivar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python tools/arquivar_bases.py \
+            --servidores "${{ inputs.servidor }}" \
+            ${{ inputs.simular && '--simular' || '' }}
