@@ -1,0 +1,45 @@
+# Compara os containers que cada versão do Players/<uid>.sav aponta, para achar
+# onde a bag de um jogador se desligou. Ver tools/comparar_player_sav.py.
+# Só leitura.
+name: comparar-player-sav
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      uid:
+        description: "UID do jogador (32 hex)"
+        required: true
+        type: string
+
+jobs:
+  comparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Comparar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/comparar_player_sav.py \
+            --servidor "${{ inputs.servidor }}" \
+            --uid "${{ inputs.uid }}"
