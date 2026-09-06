@@ -21,6 +21,11 @@ on:
         required: false
         type: string
         default: "6"
+      arquivos:
+        description: "Caminhos específicos (ignora o limite), separados por vírgula"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   sondar:
@@ -48,4 +53,4 @@ jobs:
           python tools/sondar_inventario.py \
             --servidor "${{ inputs.servidor }}" \
             --uids "${{ inputs.uids }}" \
-            --limite "${{ inputs.limite }}"
+            --limite "${{ inputs.limite }}"             --arquivos "${{ inputs.arquivos }}"

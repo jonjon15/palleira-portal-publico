@@ -182,6 +182,9 @@ def main() -> int:
     ap.add_argument("--servidor", required=True)
     ap.add_argument("--uids", required=True)
     ap.add_argument("--limite", type=int, default=6, help="quantos backups olhar")
+    ap.add_argument("--arquivos", default="",
+                    help="caminhos específicos a olhar (relativos à pasta do mundo), "
+                         "separados por vírgula — ignora --limite")
     args = ap.parse_args()
 
     from palsav.paltypes import PALWORLD_CUSTOM_PROPERTIES
@@ -210,7 +213,8 @@ def main() -> int:
                          ).properties["worldSaveData"]["value"]
         olhar("Level.sav (hoje)", world, alvos)
 
-        for nome in candidatos_a_backup(cfg)[: args.limite]:
+        escolhidos = [a.strip() for a in args.arquivos.split(",") if a.strip()]
+        for nome in escolhidos or candidatos_a_backup(cfg)[: args.limite]:
             caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{nome}"
             try:
                 w = ler_gvas(baixar(cfg, caminho), custom).properties["worldSaveData"]["value"]
