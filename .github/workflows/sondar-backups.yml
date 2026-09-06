@@ -1,0 +1,41 @@
+# De quanto em quanto tempo o servidor faz backup, e por quanto tempo guarda.
+# Ver tools/sondar_backups.py. Só leitura, não abre o save.
+name: sondar-backups
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-vip, pve-free, pvp-free]
+        default: pve-free
+      listar:
+        description: "Quantos backups mostrar"
+        required: false
+        type: string
+        default: "12"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: pip install --quiet paramiko
+
+      - name: Sondar backups
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_backups.py \
+            --servidor "${{ inputs.servidor }}" \
+            --listar "${{ inputs.listar }}"
