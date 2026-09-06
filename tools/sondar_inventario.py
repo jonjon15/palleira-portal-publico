@@ -30,6 +30,7 @@ from restaurar_base import (  # noqa: E402
     ZERO_UID, baixar, candidatos_a_backup, coletar_guids, dig, entries_of,
     norm_uid, scalar, secao_por_id, servidores,
 )
+from sondar_containers import esboco  # noqa: E402
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
 PLAYER_PATH = "Pal/Saved/SaveGames/0/{guid}/Players/{uid}.sav"
@@ -66,11 +67,23 @@ def ler_gvas(raw: bytes, custom):
 def containers_do_jogador(cfg, uid: str) -> dict[str, str]:
     """campo -> GUID, lido do `Players/<uid>.sav`."""
     raw = baixar(cfg, PLAYER_PATH.format(guid=cfg.guid, uid=uid))
-    save_data = dig(ler_gvas(raw, {}).properties, "SaveData", "value", default={})
+    props = ler_gvas(raw, {}).properties
+    save_data = dig(props, "SaveData", "value", default=None)
     achados: dict[str, str] = {}
     for campo in CAMPOS_DE_CONTAINER:
-        for gid in coletar_guids(save_data, campo, prof=10):
+        for gid in coletar_guids(save_data if save_data is not None else props, campo, prof=12):
             achados[campo] = gid
+    if not achados:
+        # Dump cru em vez de adivinhar de novo — foi assim que se achou o
+        # `base_camp_id_belong_to` e o `SlotId.ContainerId`.
+        print(f"  raiz do save individual: {sorted(props)}")
+        if isinstance(save_data, dict):
+            print(f"  SaveData tem {len(save_data)} campos: {sorted(save_data)}")
+            for chave in sorted(save_data):
+                if "ontainer" in chave or "nventor" in chave:
+                    print(f"  {chave} = " + esboco(save_data[chave], prof=6))
+        else:
+            print("  SaveData não é struct: " + esboco(props, prof=4))
     return achados
 
 
