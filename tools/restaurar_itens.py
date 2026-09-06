@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from energia_painel import PANEL_IDS, estado as estado_do_painel  # noqa: E402
 from restaurar_base import (  # noqa: E402
     _abortar, _sftp, apagar, baixar, dig, enviar, info_arquivo, lista_mutavel,
-    norm_uid, renomear, secao_por_id, servidores,
+    norm_uid, renomear, scalar, secao_por_id, servidores,
 )
 from sondar_inventario import (  # noqa: E402
     SECOES_MUNDO, conteudo, guid_sob, ler_gvas, slots_com_coisa,
@@ -125,9 +125,47 @@ def trocar_guid(no, de: str, para, prof: int = 14) -> int:
     return trocados
 
 
+def somar_nas_pilhas(miolo, tinha: list[tuple[str, int]]) -> tuple[int, list]:
+    """Soma o que o jogador tinha hoje às pilhas do conteúdo que volta.
+
+    O container que vem do backup costuma estar cheio, sem slot livre para
+    receber o que ele juntou desde então — mas quase sempre é mais do mesmo
+    (dinheiro, esferas), e aí basta somar na pilha que já existe. O que não
+    tiver pilha correspondente volta na lista de "não coube", e o campo
+    inteiro é abandonado em vez de apagar item de jogador em silêncio.
+    """
+    slots = dig(miolo, "Slots", "value", "values", default=None)
+    if not isinstance(slots, list):
+        slots = dig(miolo, "Slots", "value", default=None)
+    if not isinstance(slots, list):
+        return 0, list(tinha)
+
+    por_item: dict[str, dict] = {}
+    for s in slots:
+        raw = dig(s, "RawData", "value", default={})
+        if not isinstance(raw, dict):
+            continue
+        if int(scalar(raw.get("count"), 0) or 0) <= 0:
+            continue
+        nome = str(scalar(dig(raw, "item", "static_id"), "") or "")
+        if nome:
+            por_item.setdefault(nome, raw)
+
+    somados, nao_coube = 0, []
+    for nome, qtd in tinha:
+        destino = por_item.get(nome)
+        if destino is None:
+            nao_coube.append((nome, qtd))
+            continue
+        destino["count"] = int(scalar(destino.get("count"), 0) or 0) + qtd
+        somados += qtd
+    return somados, nao_coube
+
+
 def restaurar_itens_do_jogador(atual: dict, backup: dict,
                                hoje: dict[str, str],
-                               antigos: dict[str, str]) -> dict:
+                               antigos: dict[str, str],
+                               sobrescrever: bool = False) -> dict:
     """Transplanta o conteúdo de cada container de item, campo a campo."""
     rel = {"campos": [], "slots_copiados": 0, "erro": None}
 
@@ -168,15 +206,27 @@ def restaurar_itens_do_jogador(atual: dict, backup: dict,
         # hoje com coisa dentro é sinal de que ele voltou a jogar, e a cópia
         # apagaria isso — pior que o problema.
         ja_tem, _ = slots_com_coisa(destino)
-        if ja_tem:
-            info["acao"] = f"o de hoje já tem {ja_tem} slot(s) — pulado para não sobrescrever"
-            rel["campos"].append(info)
-            continue
+        info["hoje"] = ja_tem
+        tinha = conteudo(destino) if ja_tem else []
 
         chave_de_hoje = dig(destino, "key", "ID", default=None)
         miolo = copy.deepcopy(origem.get("value"))
         if chave_de_hoje is not None:
             trocar_guid(miolo, velho_id, chave_de_hoje)
+
+        # O que ele juntou desde a perda não pode sumir por causa do conserto.
+        if tinha:
+            somados, nao_coube = somar_nas_pilhas(miolo, tinha)
+            info["somados"] = somados
+            info["nao_coube"] = nao_coube
+            if nao_coube and not sobrescrever:
+                info["acao"] = ("o de hoje tem item que não cabe no que volta — "
+                                "pulado (use sobrescrever para trocar mesmo assim)")
+                rel["campos"].append(info)
+                continue
+            if nao_coube:
+                info["perdido"] = nao_coube
+
         destino["value"] = miolo
         # A entrada é a mesma que já está na lista, mas quando a seção guarda
         # cópias em vez de referências o `.index()` garante que a troca apareça
@@ -186,7 +236,8 @@ def restaurar_itens_do_jogador(atual: dict, backup: dict,
         except ValueError:
             pass
 
-        info["acao"] = "conteúdo transplantado"
+        info["acao"] = ("conteúdo transplantado, o de hoje somado nas pilhas"
+                        if ja_tem else "conteúdo transplantado")
         rel["slots_copiados"] += ocupados
         rel["campos"].append(info)
 
@@ -200,6 +251,9 @@ def main() -> int:
     ap.add_argument("--arquivo-backup", default="auto",
                     help="pasta de backup/world a usar; auto = a mais nova que "
                          "ainda tenha a bag")
+    ap.add_argument("--sobrescrever", action="store_true",
+                    help="troca o conteúdo mesmo quando o container de hoje já "
+                         "tem itens — o que o jogador juntou desde então se perde")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--simular", action="store_true", help="mede e não grava")
     modo.add_argument("--aplicar", action="store_true", help="grava o Level.sav")
@@ -302,10 +356,17 @@ def main() -> int:
 
         pasta, antigos, mundo_bkp = melhor
         print(f"  → usando {pasta}")
-        rel = restaurar_itens_do_jogador(atual, mundo_bkp, hoje, antigos)
+        rel = restaurar_itens_do_jogador(atual, mundo_bkp, hoje, antigos,
+                                         args.sobrescrever)
         for info in rel["campos"]:
             print(f"    {info['campo']:<28} {info['slots']:>3} slot(s) — {info['acao']}")
-            if info["acao"] == "conteúdo transplantado":
+            if info.get("somados"):
+                print(f"        + {info['somados']} unidade(s) do inventário de hoje "
+                      "somadas nas pilhas que voltaram")
+            for item, qtd in info.get("nao_coube", []):
+                marca = "⚠ SAI" if info.get("perdido") else "sem pilha para somar"
+                print(f"        {marca}: {item} x{qtd}")
+            if info["acao"].startswith("conteúdo transplantado"):
                 esperados[(uid, info["campo"])] = info["slots"]
                 for item, qtd in conteudo(secao_por_id(mundo_bkp, "ItemContainerSaveData")
                                           .get(info["de"]))[:8]:

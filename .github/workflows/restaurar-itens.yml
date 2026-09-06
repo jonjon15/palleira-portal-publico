@@ -25,6 +25,11 @@ on:
         required: false
         type: string
         default: auto
+      sobrescrever:
+        description: "Trocar mesmo quando o de hoje tem item que não cabe (esse item se perde)"
+        required: false
+        type: boolean
+        default: false
       modo:
         description: "simular | aplicar"
         required: true
@@ -66,6 +71,7 @@ jobs:
             --servidor "${{ inputs.servidor }}" \
             --uids "${{ inputs.uids }}" \
             --arquivo-backup "${{ inputs.backup }}" \
+            ${{ inputs.sobrescrever && '--sobrescrever' || '' }} \
             --${{ inputs.modo }}
 
       - name: Religar o servidor
