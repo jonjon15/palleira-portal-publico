@@ -177,10 +177,36 @@ def olhar(rotulo: str, world, alvos: dict[str, str]) -> int:
     return total_com_coisa
 
 
+def membros_das_guildas(world, nomes: list[str]) -> list[tuple[str, str, str]]:
+    """(uid, nome do jogador, nome da guild) de cada membro das guildas pedidas.
+
+    Existe porque a verificação de bag não é de um jogador só: toda guild que
+    teve base restaurada precisa ser conferida membro a membro. Procurar UID a
+    UID à mão é o tipo de passo que a pressa pula.
+    """
+    procurados = [n.strip().lower() for n in nomes if n.strip()]
+    out: list[tuple[str, str, str]] = []
+    for entrada in dig(world, "GroupSaveDataMap", "value", default=[]) or []:
+        raw = dig(entrada, "value", "RawData", "value", default={}) or {}
+        if raw.get("group_type") != "EPalGroupType::Guild":
+            continue
+        nome_guild = (raw.get("guild_name") or "").strip()
+        if not any(p in nome_guild.lower() for p in procurados):
+            continue
+        for membro in raw.get("players") or []:
+            uid = norm_uid(membro.get("player_uid", ""))
+            info = membro.get("player_info") or {}
+            if uid:
+                out.append((uid, info.get("player_name") or "?", nome_guild))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Sonda os containers de inventário de um jogador")
     ap.add_argument("--servidor", required=True)
-    ap.add_argument("--uids", required=True)
+    ap.add_argument("--uids", default="")
+    ap.add_argument("--guildas", default="",
+                    help="nomes de guild — sonda TODOS os membros de cada uma")
     ap.add_argument("--limite", type=int, default=6, help="quantos backups olhar")
     ap.add_argument("--arquivos", default="",
                     help="caminhos específicos a olhar (relativos à pasta do mundo), "
@@ -195,33 +221,64 @@ def main() -> int:
     if not cfg:
         sys.exit(f"servidor '{args.servidor}' não está em PALLEIRA_SERVERS")
 
-    for uid in [norm_uid(u) for u in args.uids.split(",") if u.strip()]:
-        print(f"\n================ uid {uid} ================", flush=True)
+    # O Level.sav é lido UMA vez e reaproveitado para todos os jogadores —
+    # são ~30s de parse cada, e a rotina roda sobre a guild inteira.
+    world = ler_gvas(baixar(cfg, SAVE_PATH.format(guid=cfg.guid)), custom
+                     ).properties["worldSaveData"]["value"]
+
+    alvos_uid: list[tuple[str, str, str]] = [
+        (norm_uid(u), "?", "") for u in args.uids.split(",") if u.strip()
+    ]
+    if args.guildas:
+        achados = membros_das_guildas(world, args.guildas.split(","))
+        print(f"  guildas pedidas: {len(achados)} membro(s) encontrados", flush=True)
+        for uid, nome, guild in achados:
+            print(f"    {nome} ({uid}) — {guild}")
+        ja = {u for u, _, _ in alvos_uid}
+        alvos_uid += [a for a in achados if a[0] not in ja]
+
+    if not alvos_uid:
+        sys.exit("informe --uids ou --guildas")
+
+    resumo: list[str] = []
+    for uid, nome, guild in alvos_uid:
+        titulo = f"{nome} ({uid})" if nome != "?" else f"uid {uid}"
+        print(f"\n================ {titulo} ================", flush=True)
         try:
             alvos = containers_do_jogador(cfg, uid)
         except FileNotFoundError:
             print("  ✗ Players/<uid>.sav não existe — sem ele nem dá para saber quais são os containers")
+            resumo.append(f"{nome}: SEM save individual")
             continue
         if not alvos:
             print("  ✗ o save individual não tem nenhum campo *ContainerId legível")
+            resumo.append(f"{nome}: save individual ilegível")
             continue
         print("  containers que o save individual aponta:")
         for campo, gid in alvos.items():
             print(f"    {campo} = {gid}")
 
-        world = ler_gvas(baixar(cfg, SAVE_PATH.format(guid=cfg.guid)), custom
-                         ).properties["worldSaveData"]["value"]
-        olhar("Level.sav (hoje)", world, alvos)
+        total = olhar("Level.sav (hoje)", world, alvos)
+        vazios = [c for c, g in alvos.items()
+                  if "Container" in c and "Pal" not in c and "Otomo" not in c
+                  and slots_com_coisa(secao_por_id(world, "ItemContainerSaveData").get(g))[1] == 0]
+        resumo.append(f"{nome}: {total} slots com conteúdo"
+                      + (f" | ⚠ {len(vazios)} containers de item com tamanho zero" if vazios else ""))
 
         escolhidos = [a.strip() for a in args.arquivos.split(",") if a.strip()]
-        for nome in escolhidos or candidatos_a_backup(cfg)[: args.limite]:
-            caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{nome}"
+        # `arq`, não `nome`: `nome` é o do jogador e o loop o sobrescrevia.
+        for arq in escolhidos or candidatos_a_backup(cfg)[: args.limite]:
+            caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{arq}"
             try:
                 w = ler_gvas(baixar(cfg, caminho), custom).properties["worldSaveData"]["value"]
             except Exception as err:  # noqa: BLE001
-                print(f"\n--- {nome} --- não deu para ler ({type(err).__name__})")
+                print(f"\n--- {arq} --- não deu para ler ({type(err).__name__})")
                 continue
-            olhar(nome, w, alvos)
+            olhar(arq, w, alvos)
+
+    print("\n================ RESUMO ================")
+    for linha in resumo:
+        print(f"  {linha}")
 
     return 0
 
