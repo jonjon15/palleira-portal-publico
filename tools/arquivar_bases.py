@@ -37,21 +37,23 @@ import psycopg
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from restaurar_base import (  # noqa: E402
-    baixar, base_camp_entries, coletar_guids, dig, entries_of, norm_uid,
-    scalar, servidores,
+    NEEDED_SECTIONS, baixar, base_camp_entries, coletar_guids, dig,
+    entries_of, indices, norm_uid, refs_de, scalar, servidores, works_da_base,
 )
 from sondar_inventario import ler_gvas  # noqa: E402
 from sondar_posicoes import achar_posicao  # noqa: E402
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
 
-SECOES = (
-    ".worldSaveData.GroupSaveDataMap",
-    ".worldSaveData.BaseCampSaveData.Value.RawData",
-    ".worldSaveData.MapObjectSaveData",
-)
+# As mesmas seções que a restauração precisa. Guardar menos que isso seria
+# guardar uma base que não volta: o recorte da primeira versão tinha só a
+# entrada do BaseCamp e as peças, e devolveria a base com os baús vazios e
+# sem os Pals que moram nela — o erro de 05/09/2026 pela outra ponta.
+SECOES = NEEDED_SECTIONS
 
-FORMATO = 1
+# 1 = base + peças (incompleto, não restaura sozinho)
+# 2 = + o fecho de referências: baús, itens, caixas de Pal, os Pals e os works
+FORMATO = 2
 
 # Quantas versões guardar de cada base. Três dá margem para descobrir tarde
 # que a mais recente já veio estragada, sem virar depósito: 3 × 200 KB por
@@ -77,6 +79,46 @@ def guildas(world) -> dict[str, dict]:
             if chave:
                 out[chave] = info
     return out
+
+
+def fecho_da_base(idx: dict, sementes: list, limite_voltas: int = 6) -> dict:
+    """Tudo que as `sementes` apontam, e tudo que *isso* aponta, até parar.
+
+    Mesma varredura do `fechar_referencias` da restauração, só que colhendo em
+    vez de copiar para outro save. É o que garante que o arquivo tenha o baú
+    junto com a peça que o aponta: o Save Pal avisa, em `blueprint/capture.rs`,
+    que estrutura sem o container dela faz o jogo estourar ao dereferenciar —
+    e foi o que apagou a base restaurada em 05/09/2026.
+
+    Seguir o grafo em vez de listar campo a campo resolve a classe inteira:
+    baú aponta item dinâmico, caixa aponta Pal, peça aponta trabalho.
+    """
+    coletado: dict[str, dict] = {secao: {} for secao in idx}
+    vistos: set[str] = set()
+    fila = list(sementes)
+
+    for _ in range(limite_voltas):
+        novos: list = []
+        for entrada in fila:
+            for gid in refs_de(entrada):
+                if gid in vistos:
+                    continue
+                vistos.add(gid)
+                for secao, catalogo in idx.items():
+                    achado = catalogo.get(gid)
+                    if achado is None:
+                        continue
+                    # MapObjectSaveData já vem inteiro nas peças da base;
+                    # guardar de novo aqui só duplicaria peso no blob.
+                    if secao != "MapObjectSaveData":
+                        coletado[secao][gid] = achado
+                    novos.append(achado)
+                    break
+        if not novos:
+            break
+        fila = novos
+
+    return {secao: list(itens.values()) for secao, itens in coletado.items() if itens}
 
 
 def main() -> int:
@@ -127,6 +169,9 @@ def arquivar(cfg, simular: bool) -> int:
             break
 
     donos = guildas(world)
+    # Os catálogos são caros de montar e valem para o mundo todo: uma vez só,
+    # fora do laço das bases.
+    idx = indices(world)
 
     conn = None if simular else psycopg.connect(os.environ["DATABASE_URL"])
     total_bytes = 0
@@ -143,12 +188,24 @@ def arquivar(cfg, simular: bool) -> int:
             raio = float(scalar(raw.get("area_range"), 3500) or 3500)
             info = donos.get(bid, {"guild_id": "", "guild_name": "", "membros": []})
 
-            blob = gzip.compress(
-                pickle.dumps({"base": entrada, "pecas": pecas}, protocol=5), 6)
+            # Os works não são achados por referência (a lista `work_ids` do
+            # WorkCollection vem vazia nestas bases), então entram como
+            # semente, do mesmo jeito que a restauração os acha.
+            works = works_da_base(world, bid)
+            fecho = fecho_da_base(idx, [entrada, *pecas, *works])
+            fecho.setdefault("WorkSaveData", [])
+            ja = {id(w) for w in fecho["WorkSaveData"]}
+            fecho["WorkSaveData"] += [w for w in works if id(w) not in ja]
+
+            blob = gzip.compress(pickle.dumps(
+                {"base": entrada, "pecas": pecas, "fecho": fecho}, protocol=5), 6)
             total_bytes += len(blob)
 
+            extras = " ".join(f"{s.replace('SaveData','')}:{len(v)}"
+                              for s, v in sorted(fecho.items()) if v)
             print(f"  {bid[:8]}… {info['guild_name'] or '(sem guild)':<24} "
-                  f"{len(pecas):>5} peça(s)  {len(blob)/1024:>7,.0f} KB", flush=True)
+                  f"{len(pecas):>5} peça(s)  {len(blob)/1024:>7,.0f} KB  {extras}",
+                  flush=True)
 
             if conn is None:
                 continue
