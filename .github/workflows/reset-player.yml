@@ -61,9 +61,13 @@ jobs:
           ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
 
+      # A ENX_API_KEY não é só do liga-desliga: em `aplicar` o script pergunta
+      # ao painel se o servidor está mesmo parado antes de gravar, e sem a
+      # chave ele morre com "ENX_API_KEY ausente" antes de tocar no mundo.
       - name: Executar
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
         run: |
           python tools/reset_player.py \
             --servidor "${{ inputs.servidor }}" \
