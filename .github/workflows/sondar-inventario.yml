@@ -14,8 +14,14 @@ on:
         default: pve-free
       uids:
         description: "UIDs dos jogadores (32 hex, separados por vírgula)"
-        required: true
+        required: false
         type: string
+        default: ""
+      guildas:
+        description: "Nomes de guild — confere TODOS os membros de cada uma"
+        required: false
+        type: string
+        default: ""
       limite:
         description: "Quantos backups olhar"
         required: false
@@ -53,4 +59,6 @@ jobs:
           python tools/sondar_inventario.py \
             --servidor "${{ inputs.servidor }}" \
             --uids "${{ inputs.uids }}" \
-            --limite "${{ inputs.limite }}"             --arquivos "${{ inputs.arquivos }}"
+            --guildas "${{ inputs.guildas }}" \
+            --limite "${{ inputs.limite }}" \
+            --arquivos "${{ inputs.arquivos }}"
