@@ -62,7 +62,7 @@ VERSOES_POR_BASE = 3
 
 
 def guildas(world) -> dict[str, dict]:
-    """base_id -> {guild_id, guild_name, membros} para cada base conhecida."""
+    """base_id -> {guild_id, guild_name, membros, leader_uid} para cada base."""
     out: dict[str, dict] = {}
     for entrada in dig(world, "GroupSaveDataMap", "value", default=[]) or []:
         raw = dig(entrada, "value", "RawData", "value", default={}) or {}
@@ -73,6 +73,7 @@ def guildas(world) -> dict[str, dict]:
             "guild_id": norm_uid(scalar(raw.get("group_id"), "")),
             "guild_name": (raw.get("guild_name") or "").strip(),
             "membros": [m for m in membros if m],
+            "leader_uid": norm_uid(scalar(raw.get("admin_player_uid"), "")),
         }
         for bid in raw.get("base_ids") or []:
             chave = norm_uid(bid)
@@ -186,7 +187,10 @@ def arquivar(cfg, simular: bool) -> int:
             raw = dig(entrada, "value", "RawData", "value", default={}) or {}
             pos = achar_posicao(raw) or (0.0, 0.0, 0.0)
             raio = float(scalar(raw.get("area_range"), 3500) or 3500)
-            info = donos.get(bid, {"guild_id": "", "guild_name": "", "membros": []})
+            info = donos.get(
+                bid,
+                {"guild_id": "", "guild_name": "", "membros": [], "leader_uid": ""},
+            )
 
             # Os works não são achados por referência (a lista `work_ids` do
             # WorkCollection vem vazia nestas bases), então entram como
@@ -203,8 +207,10 @@ def arquivar(cfg, simular: bool) -> int:
 
             extras = " ".join(f"{s.replace('SaveData','')}:{len(v)}"
                               for s, v in sorted(fecho.items()) if v)
+            lider = info["leader_uid"][:8] + "…" if info["leader_uid"] else "?"
             print(f"  {bid[:8]}… {info['guild_name'] or '(sem guild)':<24} "
-                  f"{len(pecas):>5} peça(s)  {len(blob)/1024:>7,.0f} KB  {extras}",
+                  f"{len(pecas):>5} peça(s)  {len(blob)/1024:>7,.0f} KB  "
+                  f"líder:{lider}  {extras}",
                   flush=True)
 
             gravadas += 1
@@ -216,12 +222,13 @@ def arquivar(cfg, simular: bool) -> int:
                     """
                     insert into base_snapshots
                       (server_slug, base_id, guild_id, guild_name, member_uids,
-                       world_x, world_y, world_z, area_range,
+                       leader_uid, world_x, world_y, world_z, area_range,
                        piece_count, blob, blob_bytes, formato)
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     """,
                     (cfg.slug, bid, info["guild_id"], info["guild_name"],
-                     info["membros"], pos[0], pos[1], pos[2], raio,
+                     info["membros"], info["leader_uid"] or None,
+                     pos[0], pos[1], pos[2], raio,
                      len(pecas), blob, len(blob), FORMATO),
                 )
                 # Some com as versões velhas na mesma transação: sem isto a

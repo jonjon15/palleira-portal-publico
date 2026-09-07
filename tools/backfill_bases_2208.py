@@ -140,7 +140,10 @@ def main() -> int:
                 puladas_repetidas += 1
                 continue
 
-            info = donos.get(bid, {"guild_id": "", "guild_name": "", "membros": []})
+            info = donos.get(
+                bid,
+                {"guild_id": "", "guild_name": "", "membros": [], "leader_uid": ""},
+            )
             if any(m in cobertos for m in info["membros"]):
                 puladas_cobertas += 1
                 continue
@@ -175,13 +178,14 @@ def main() -> int:
                     """
                     insert into base_snapshots
                       (server_slug, base_id, guild_id, guild_name, member_uids,
-                       world_x, world_y, world_z, area_range,
+                       leader_uid, world_x, world_y, world_z, area_range,
                        piece_count, blob, blob_bytes, formato, taken_at)
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                             to_timestamp(1787413622))
                     """,
                     (SLUG, bid, info["guild_id"], info["guild_name"],
-                     info["membros"], pos[0], pos[1], pos[2], raio,
+                     info["membros"], info["leader_uid"] or None,
+                     pos[0], pos[1], pos[2], raio,
                      len(pecas), blob, len(blob), FORMATO),
                 )
             conn.commit()
