@@ -1,0 +1,54 @@
+# Processa a fila de restauração de base (base_restore_requests, status
+# 'fila') — o motor do autoatendimento pago. Ver tools/processar_fila.py.
+#
+# Um servidor sem nenhum pedido em fila não é tocado: não para, não baixa.
+name: processar-fila
+
+on:
+  schedule:
+    # 05:50 UTC = 2h50 no horário de Brasília, dez minutos antes do restart
+    # das 06:00 que o painel já faz sozinho — o tempo fora do ar do pedido é
+    # o que já ia acontecer, não um adicional.
+    - cron: "50 5 * * *"
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor (vazio = todos os que tiverem pedido em fila)"
+        required: false
+        type: string
+        default: ""
+      modo:
+        description: "simular | aplicar (a execução agendada sempre aplica)"
+        required: true
+        type: choice
+        options: [simular, aplicar]
+        default: simular
+
+jobs:
+  processar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências Python
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko "psycopg[binary]"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Processar a fila
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          MODO="${{ inputs.modo }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then MODO="aplicar"; fi
+          python tools/processar_fila.py --servidor "${{ inputs.servidor }}" --$MODO
