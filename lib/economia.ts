@@ -27,7 +27,8 @@ export type Origem =
   | "slotPal"
   | "ajuste"
   | "migracao"
-  | "evento";
+  | "evento"
+  | "restauracao";
 
 export const ORIGEM_LABEL: Record<Origem, string> = {
   daily: "Daily",
@@ -40,6 +41,7 @@ export const ORIGEM_LABEL: Record<Origem, string> = {
   ajuste: "Ajuste da administração",
   migracao: "Saldo trazido do Palbot",
   evento: "Evento",
+  restauracao: "Restauração de base",
 };
 
 export interface Lancamento {

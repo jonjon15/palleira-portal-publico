@@ -18,6 +18,7 @@ import { meuVinculo, meusPersonagens } from "@/lib/linking";
 import { saldo, jaPegouODaily, dailyPaletas } from "@/lib/economia";
 import { meuCofre } from "@/lib/cofre";
 import { meusAnuncios } from "@/lib/mercado";
+import { basesResgataveis } from "@/lib/resgate-base";
 
 export const metadata: Metadata = { title: "Meu painel" };
 
@@ -40,6 +41,8 @@ export default async function Painel() {
       meusAnuncios(user.discordId),
     ]);
   const anunciosAtivos = anuncios.filter((a) => a.status === "ativo").length;
+  // Depende do UID do vínculo — não dá para entrar no mesmo Promise.all.
+  const bases = vinculo ? await basesResgataveis(vinculo.uid) : [];
 
   return (
     <>
@@ -121,6 +124,15 @@ export default async function Painel() {
             }
             href="/vincular"
             done={Boolean(vinculo)}
+          />
+          <Card
+            title="Resgatar base"
+            body={
+              bases.length > 0
+                ? `${bases.length} base${bases.length === 1 ? "" : "s"} arquivada${bases.length === 1 ? "" : "s"} esperando por você`
+                : "Se sua base sumiu, ela pode estar arquivada — recupere sozinho."
+            }
+            href="/painel/resgate"
           />
           <Card
             title="Cofre"

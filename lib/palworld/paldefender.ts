@@ -37,6 +37,9 @@ export interface PdPlayer {
    */
   worldX: number;
   worldY: number;
+  /** Altura crua — o save não guarda relevo, então isto só presta enquanto
+   *  vem de alguém pisando no chão agora (§ restauração paga). */
+  worldZ: number;
 }
 
 export interface PdBase {
@@ -147,6 +150,7 @@ export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
     mapY: Math.round(p.MapLocation?.y ?? 0),
     worldX: p.WorldLocation?.x ?? 0,
     worldY: p.WorldLocation?.y ?? 0,
+    worldZ: p.WorldLocation?.z ?? 0,
   }));
 }
 
