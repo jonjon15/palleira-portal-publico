@@ -385,7 +385,9 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
       <form action={buscarAcao} className="space-y-3">
         <input type="hidden" name="servidor" value={servidor} />
         <label htmlFor="termo" className="block text-sm text-muted">
-          Nome do jogador — vem do último import, que roda de 2 em 2 horas
+          Nome de quem vai ser{" "}
+          <b className="text-danger">apagado do mundo</b> — vem do último
+          import, que roda de 2 em 2 horas
         </label>
         <div className="flex gap-2">
           <input
@@ -405,14 +407,19 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
 
       {/* -------------------------------------------------------- achados */}
       {busca.achados && busca.achados.length > 0 && (
-        <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line">
+        /*
+          A lista de achados é o momento do clique errado: aqui e na
+          restauração ela tem o mesmo formato. Por isso esta é vermelha e o
+          botão diz "apagar" — não basta a seção lá em cima estar marcada.
+        */
+        <ul className="divide-y divide-danger/15 overflow-hidden rounded-[var(--radius-card)] border border-danger/30 bg-danger/[0.03]">
           {busca.achados.map((a) => {
             const escolhido = alvo?.uid === a.uid;
             return (
               <li
                 key={a.uid}
                 className={`flex items-center gap-3 px-4 py-3 text-sm ${
-                  escolhido ? "bg-danger/[0.07]" : ""
+                  escolhido ? "bg-danger/[0.1]" : ""
                 }`}
               >
                 <div className="min-w-0 flex-1">
@@ -426,9 +433,9 @@ export function ResetarJogador({ servidor }: { servidor: string }) {
                     setAlvo(escolhido ? null : a);
                     setDigitado("");
                   }}
-                  className={escolhido ? botaoPerigo : botaoFantasma}
+                  className={botaoPerigo}
                 >
-                  {escolhido ? "Cancelar" : "Escolher"}
+                  {escolhido ? "Cancelar" : "Escolher para apagar"}
                 </button>
               </li>
             );

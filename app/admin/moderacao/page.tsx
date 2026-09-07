@@ -218,138 +218,194 @@ export default async function Moderacao({
           </section>
         </div>
 
-        {/* ---------------------------------------- devolver ao jogador */}
+        {/* ================================================== resgate */}
         {/*
-          Separado da base de propósito: devolver Pals e itens só acrescenta a
-          quem perdeu — não tira nada de ninguém. A base é da guild inteira, e
-          por isso ganhou seção própria logo abaixo.
+          Resgate e destruição moram no mesmo painel e têm formulário quase
+          igual (procurar por nome → escolher → confirmar). Em 06/09 o dono
+          quis resgatar a conta do C H R I S e clicou em "Apagar" duas vezes.
+          Daí a faixa: os dois grupos ganharam cabeçalho, cor e distância, e
+          nenhuma seção de apagar encosta numa de devolver.
         */}
         {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-            <h2 className="text-lg font-semibold">Devolver Pals e itens ao jogador</h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Para quem voltou e achou a Pal Box ou a mochila vazia. Traz de
-              volta o save individual e os Pals com as caixas, do backup mais
-              recente que ainda os tiver — você não precisa saber de qual.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              Não mexe na base e não tira nada de ninguém. Aqui também fica o
-              botão de <b>conferir as bags da guild</b>, que só lê o mundo e diz
-              quem está com o inventário desligado.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <RestaurarJogador servidor={server.slug} escopo="jogador" />
+          <div className="mt-12">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xs font-bold tracking-[0.18em] text-success uppercase">
+                Resgate
+              </h2>
+              <div className="h-px flex-1 bg-success/25" />
             </div>
-          </section>
+            <p className="mt-2 max-w-3xl text-sm text-muted">
+              Tudo neste bloco só <b className="text-text">acrescenta</b>:
+              devolve o que sumiu, a partir de um backup. Nada aqui apaga o
+              progresso de ninguém.
+            </p>
+
+            {/* ------------------------------------ devolver ao jogador */}
+            {/*
+              Separado da base de propósito: devolver Pals e itens só
+              acrescenta a quem perdeu — não tira nada de ninguém. A base é da
+              guild inteira, e por isso ganhou seção própria logo abaixo.
+            */}
+            <section className="mt-5 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold">
+                Devolver Pals e itens ao jogador
+              </h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Para quem voltou e achou a Pal Box ou a mochila vazia. Traz de
+                volta o save individual e os Pals com as caixas, do backup mais
+                recente que ainda os tiver — você não precisa saber de qual.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                Não mexe na base e não tira nada de ninguém. Aqui também fica o
+                botão de <b>conferir as bags da guild</b>, que só lê o mundo e
+                diz quem está com o inventário desligado.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <RestaurarJogador servidor={server.slug} escopo="jogador" />
+              </div>
+            </section>
+
+            {/* -------------------------------- devolver a base da guild */}
+            <section className="mt-4 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold">Devolver a base da guild</h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                O servidor apaga a base de qualquer guild parada há mais de 72
+                horas. Isto devolve a base a partir de um backup — junto com os
+                Pals e o save do membro escolhido.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                A base é <b>da guild inteira</b>, não só de quem pediu. Comece
+                por &ldquo;Ver o que voltaria&rdquo;: é grátis, não altera nada
+                e não derruba ninguém.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <RestaurarJogador servidor={server.slug} escopo="guild" />
+              </div>
+            </section>
+          </div>
         )}
 
-        {/* -------------------------------------- devolver a base da guild */}
+        {/* ============================================= zona de risco */}
         {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-            <h2 className="text-lg font-semibold">Devolver a base da guild</h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              O servidor apaga a base de qualquer guild parada há mais de 72
-              horas. Isto devolve a base a partir de um backup — junto com os
-              Pals e o save do membro escolhido.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              A base é <b>da guild inteira</b>, não só de quem pediu. Comece por
-              &ldquo;Ver o que voltaria&rdquo;: é grátis, não altera nada e não
-              derruba ninguém.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <RestaurarJogador servidor={server.slug} escopo="guild" />
+          <div className="mt-16">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xs font-bold tracking-[0.18em] text-danger uppercase">
+                Zona de risco
+              </h2>
+              <div className="h-px flex-1 bg-danger/30" />
             </div>
-          </section>
-        )}
+            <p className="mt-2 max-w-3xl text-sm text-muted">
+              Daqui para baixo <b className="text-text">nada devolve nada</b>:
+              são as ações que apagam ou desfazem progresso. Se você veio
+              recuperar a conta, a base ou os Pals de alguém, o lugar é o bloco
+              de <b className="text-text">Resgate</b>, acima.
+            </p>
 
-        {/* --------------------------------------------- reset de jogador */}
-        {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
-            <h2 className="text-lg font-semibold">Apagar jogador do mundo</h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Zera alguém de verdade: personagem, itens e Pals somem, e ele
-              recomeça do nível 1. Serve para quem pede recomeço, não para
-              punir — para isso existem kick e ban.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              O trabalho não roda aqui: o mundo tem centenas de MB e o site não
-              aguenta. O botão dispara o GitHub Actions, que para o servidor,
-              faz backup, edita e religa — cerca de 2 minutos ao todo.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <ResetarJogador servidor={server.slug} />
-            </div>
-          </section>
-        )}
+            {/* --------------------------------------------- zerar dias */}
+            <section className="mt-5 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
+              <h2 className="text-lg font-semibold">Zerar dias do mundo</h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Ajusta o contador de &ldquo;Dias&rdquo; que aparece no browser
+                de servidor do jogo. Mexe só nesse número — personagens,
+                itens, cofres e bases continuam como estão.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                O trabalho não roda aqui: o mundo tem centenas de MB e o site
+                não aguenta. O botão dispara o GitHub Actions, que para o
+                servidor, faz backup, edita e religa — cerca de 2 minutos ao
+                todo.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <ZerarDias
+                  servidor={server.slug}
+                  diasAtual={metrics ? metrics.days : null}
+                />
+              </div>
+            </section>
 
-        {/* ------------------------------------------------- zerar dias */}
-        {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
-            <h2 className="text-lg font-semibold">Zerar dias do mundo</h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Ajusta o contador de &ldquo;Dias&rdquo; que aparece no browser
-              de servidor do jogo. Mexe só nesse número — personagens,
-              itens, cofres e bases continuam como estão.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              O trabalho não roda aqui: o mundo tem centenas de MB e o site não
-              aguenta. O botão dispara o GitHub Actions, que para o servidor,
-              faz backup, edita e religa — cerca de 2 minutos ao todo.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <ZerarDias
-                servidor={server.slug}
-                diasAtual={metrics ? metrics.days : null}
-              />
-            </div>
-          </section>
-        )}
+            {/* ----------------------------------------- reset de jogador */}
+            {/*
+              Fica depois do "zerar dias" de propósito: assim nenhuma seção de
+              apagar encosta numa de devolver, e a faixa vermelha inteira entra
+              no caminho antes de chegar aqui.
+            */}
+            <section className="mt-4 rounded-[var(--radius-card)] border-2 border-danger/50 bg-danger/[0.05] p-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-lg font-semibold text-danger">
+                  Apagar jogador do mundo
+                </h2>
+                <span className="rounded-full border border-danger/40 bg-danger/10 px-2.5 py-0.5 text-[0.65rem] font-bold tracking-wider text-danger uppercase">
+                  Não tem volta
+                </span>
+              </div>
+              <p className="mt-3 max-w-3xl rounded-[var(--radius-control)] border border-danger/30 bg-danger/[0.08] px-4 py-3 text-sm text-muted">
+                <b className="text-danger">Isto não devolve nada.</b> Para
+                trazer de volta o que sumiu, use{" "}
+                <b className="text-text">Devolver Pals e itens</b> ou{" "}
+                <b className="text-text">Devolver a base da guild</b>, no bloco
+                de Resgate acima.
+              </p>
+              <p className="mt-3 max-w-3xl text-sm text-muted">
+                Zera alguém de verdade: personagem, itens e Pals somem, e ele
+                recomeça do nível 1. Serve para quem pede recomeço, não para
+                punir — para isso existem kick e ban.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                O trabalho não roda aqui: o mundo tem centenas de MB e o site
+                não aguenta. O botão dispara o GitHub Actions, que para o
+                servidor, faz backup, edita e religa — cerca de 2 minutos ao
+                todo.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <ResetarJogador servidor={server.slug} />
+              </div>
+            </section>
 
-        {/* --------------------------------------------------------- wipe */}
-        {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border-2 border-danger/50 bg-danger/[0.05] p-6">
-            <h2 className="text-lg font-semibold text-danger">
-              Wipe do mundo — {server.shortName}
-            </h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Apaga o mundo inteiro: personagem, base, item e Pal de{" "}
-              <b className="text-text">todo</b> jogador, não só de um. Serve
-              para começar um servidor do zero, não para punir ou zerar uma
-              pessoa — para isso já existem os botões acima.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              O mundo atual vira backup ao lado, não é apagado na hora — mas
-              não tem como restaurar pelo site. O botão dispara o GitHub
-              Actions, que para o servidor, move a pasta e religa.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <WipeMundo servidor={server.slug} nomeServidor={server.shortName} />
-            </div>
-          </section>
-        )}
+            {/* ----------------------------------------- reverter save */}
+            <section className="mt-4 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
+              <h2 className="text-lg font-semibold">
+                Emergência: voltar o mundo ao último backup
+              </h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Use quando o servidor <b className="text-text">não sobe mais</b>{" "}
+                depois de uma gravação — ele tenta ligar, cai em menos de um
+                minuto e repete. Isto devolve o mundo ao backup mais recente e
+                liga o servidor.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                Desfaz o progresso de todos os jogadores desde aquele backup,
+                que costuma ser de minutos atrás. O mundo problemático é
+                guardado ao lado, para depois se descobrir o que quebrou.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <ReverterSave servidor={server.slug} />
+              </div>
+            </section>
 
-        {/* ------------------------------------------------ reverter save */}
-        {podeEnergia && (
-          <section className="mt-8 rounded-[var(--radius-card)] border border-danger/25 bg-danger/[0.03] p-6">
-            <h2 className="text-lg font-semibold">
-              Emergência: voltar o mundo ao último backup
-            </h2>
-            <p className="mt-1.5 max-w-3xl text-sm text-muted">
-              Use quando o servidor <b className="text-text">não sobe mais</b>{" "}
-              depois de uma gravação — ele tenta ligar, cai em menos de um
-              minuto e repete. Isto devolve o mundo ao backup mais recente e
-              liga o servidor.
-            </p>
-            <p className="mt-2 max-w-3xl text-xs text-muted">
-              Desfaz o progresso de todos os jogadores desde aquele backup, que
-              costuma ser de minutos atrás. O mundo problemático é guardado ao
-              lado, para depois se descobrir o que quebrou.
-            </p>
-            <div className="mt-5 max-w-2xl">
-              <ReverterSave servidor={server.slug} />
-            </div>
-          </section>
+            {/* ------------------------------------------------- wipe */}
+            <section className="mt-4 rounded-[var(--radius-card)] border-2 border-danger/50 bg-danger/[0.05] p-6">
+              <h2 className="text-lg font-semibold text-danger">
+                Wipe do mundo — {server.shortName}
+              </h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Apaga o mundo inteiro: personagem, base, item e Pal de{" "}
+                <b className="text-text">todo</b> jogador, não só de um. Serve
+                para começar um servidor do zero, não para punir ou zerar uma
+                pessoa — para isso já existem os botões acima.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                O mundo atual vira backup ao lado, não é apagado na hora — mas
+                não tem como restaurar pelo site. O botão dispara o GitHub
+                Actions, que para o servidor, move a pasta e religa.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <WipeMundo
+                  servidor={server.slug}
+                  nomeServidor={server.shortName}
+                />
+              </div>
+            </section>
+          </div>
         )}
 
         {/* ------------------------------------------------ jogadores online */}
