@@ -654,7 +654,11 @@ def copiar_dependencias(atual: dict, backup: dict, objetos: list, entry_camp: di
     """
     conta = {"item_containers": 0, "char_containers": 0,
              "itens": 0, "pals_da_base": 0, "faltando": 0,
-             "slots_esvaziados": 0, "slots_teimosos": 0}
+             "slots_esvaziados": 0, "slots_teimosos": 0,
+             # Sempre presentes, mesmo no retorno cedo: quem chama (injetar())
+             # faz dependencias["_copiados_item"] e depois .pop() incondicional
+             # — achado com uma base de 1 peça sem baú nenhum, que caía aqui.
+             "_copiados_item": [], "_copiados_char": []}
 
     # Os containers que os objetos declaram, mais o container de trabalhadores
     # que o próprio BaseCamp nomeia (WorkerDirector).
