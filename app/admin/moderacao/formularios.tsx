@@ -18,12 +18,15 @@ import {
   dispararRestauracaoBag,
   dispararSondagemBags,
   dispararReversao,
+  cancelarPedidoDeFila,
+  estornarPedidoDeFila,
   type Estado,
   type EstadoBusca,
   type Achado,
   type EstadoSituacao,
   type Situacao,
 } from "./actions";
+import type { PedidoAdmin } from "@/lib/resgate-base";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 
@@ -1096,5 +1099,110 @@ export function ReverterSave({ servidor }: { servidor: string }) {
         <Aviso {...estado} />
       </form>
     </div>
+  );
+}
+
+/* ------------------------------------------------ fila de restauração paga */
+
+const STATUS_LABEL: Record<string, string> = {
+  fila: "Na fila",
+  rodando: "Rodando",
+  feito: "Feito",
+  recusado: "Recusado",
+};
+
+const STATUS_COR: Record<string, string> = {
+  fila: "border-warning/30 bg-warning/10 text-warning",
+  rodando: "border-gold/30 bg-gold/10 text-gold",
+  feito: "border-success/30 bg-success/10 text-success",
+  recusado: "border-danger/30 bg-danger/10 text-danger",
+};
+
+function LinhaFila({ pedido, nome }: { pedido: PedidoAdmin; nome: string }) {
+  const [cancelar, cancelarAcao, cancelando] = useActionState(cancelarPedidoDeFila, SEM_ESTADO);
+  const [estornar, estornarAcao, estornando] = useActionState(estornarPedidoDeFila, SEM_ESTADO);
+
+  const precisaEstorno =
+    pedido.status === "recusado" && pedido.paletas > 0 && !pedido.estornado;
+
+  return (
+    <li className="px-4 py-3 text-sm">
+      <div className="flex flex-wrap items-center gap-3">
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[0.65rem] font-bold tracking-wider uppercase ${
+            STATUS_COR[pedido.status] ?? "border-line text-muted"
+          }`}
+        >
+          {STATUS_LABEL[pedido.status] ?? pedido.status}
+        </span>
+        <span className="text-muted">{pedido.serverName}</span>
+        <span className="font-semibold">{nome}</span>
+        {pedido.guildName && (
+          <span className="text-muted">
+            {pedido.guildName}
+            {pedido.pieceCount !== null && ` · ${pedido.pieceCount} peça(s)`}
+          </span>
+        )}
+        {pedido.paletas > 0 && (
+          <span className="tabular text-xs text-muted">
+            {pedido.paletas} Paletas{pedido.estornado ? " (estornado)" : ""}
+          </span>
+        )}
+        <span className="ml-auto shrink-0 text-xs text-muted">
+          {new Date(pedido.createdAt).toLocaleString("pt-BR")}
+        </span>
+      </div>
+      {pedido.detail && <p className="mt-1 text-xs text-muted">{pedido.detail}</p>}
+
+      {pedido.status === "fila" && (
+        <form action={cancelarAcao} className="mt-2">
+          <input type="hidden" name="id" value={pedido.id} />
+          <input type="hidden" name="servidor" value={pedido.serverSlug} />
+          <button type="submit" disabled={cancelando} className={botaoPerigo}>
+            {cancelando ? "Cancelando…" : "Cancelar pedido"}
+          </button>
+        </form>
+      )}
+
+      {precisaEstorno && (
+        <form action={estornarAcao} className="mt-2">
+          <input type="hidden" name="id" value={pedido.id} />
+          <input type="hidden" name="servidor" value={pedido.serverSlug} />
+          <button type="submit" disabled={estornando} className={botao}>
+            {estornando ? "Estornando…" : `Estornar ${pedido.paletas} Paletas`}
+          </button>
+        </form>
+      )}
+
+      <Aviso {...cancelar} />
+      <Aviso {...estornar} />
+    </li>
+  );
+}
+
+/**
+ * A fila de `base_restore_requests` — item 6 da fase 2 da restauração paga.
+ *
+ * Não é escopada pelo servidor selecionado no topo da página: um pedido já
+ * carrega o servidor dele, e a lista inteira cabe numa tela só. Em andamento
+ * (`rodando`, `fila`) vem primeiro; o histórico depois — é a ordem que
+ * `filaAdmin()` já devolve.
+ */
+export function FilaDeRestauracao({
+  pedidos,
+  nomes,
+}: {
+  pedidos: PedidoAdmin[];
+  nomes: Record<string, string>;
+}) {
+  if (pedidos.length === 0) {
+    return <p className="text-sm text-muted">Nenhum pedido de restauração ainda.</p>;
+  }
+  return (
+    <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+      {pedidos.map((p) => (
+        <LinhaFila key={p.id} pedido={p} nome={nomes[p.discordId] ?? p.discordId} />
+      ))}
+    </ul>
   );
 }

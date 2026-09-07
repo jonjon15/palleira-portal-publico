@@ -17,6 +17,10 @@ import { espelharAnuncio, logarNoDiscord } from "@/lib/discord";
 import { enviarEnergia, SINAL_LABEL, type Sinal } from "@/lib/painel";
 import { dispararWorkflow } from "@/lib/github";
 import { sql } from "@/lib/db";
+import {
+  cancelarPedidoAdmin,
+  estornarPedidoRecusado,
+} from "@/lib/resgate-base";
 
 export interface Estado {
   ok: boolean;
@@ -856,4 +860,80 @@ export async function dispararReversao(
         ? "Lista dos backups pedida — nada é alterado. O resultado sai no GitHub."
         : `Reversão disparada em ${server.shortName}. O mundo volta ao último backup e o servidor sobe sozinho.`,
   });
+}
+
+/* ------------------------------------------------ fila de restauração paga */
+
+/**
+ * Cancela um pedido travado em `fila` — para quando o dono não quer esperar
+ * a próxima janela de manutenção, ou o pedido não faz mais sentido. Estorna
+ * sozinho, se tiver cobrado. Ver `cancelarPedidoAdmin` em `lib/resgate-base.ts`.
+ *
+ * Usa `exigirEnergia` (cúpula) porque mexe na carteira de outra pessoa —
+ * mesmo padrão de `canManageEconomy`.
+ */
+export async function cancelarPedidoDeFila(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const id = Number(form.get("id"));
+  const servidor = String(form.get("servidor") ?? "");
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, mensagem: "Pedido inválido." };
+  }
+  const server = servidorOuFalha(servidor);
+
+  const r = await cancelarPedidoAdmin(id);
+  await registrar({
+    actorId,
+    serverSlug: server.slug,
+    action: "restore_queue",
+    target: String(id),
+    detail: "cancelado pelo admin",
+    ok: r.ok,
+    error: r.ok ? undefined : r.mensagem,
+  });
+  if (r.ok) {
+    await logarNoDiscord(
+      `🛠️ **${server.shortName}** · Fila de restauração · \`${id}\` — <@${actorId}>\n> ${r.mensagem}`,
+    );
+  }
+  revalidatePath("/admin/moderacao");
+  return r;
+}
+
+/**
+ * Devolve as Paletas de um pedido pago que virou `recusado` — o gap deixado
+ * em aberto pela fase 2: `processar_fila.py` recusa sem mexer na carteira.
+ */
+export async function estornarPedidoDeFila(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const id = Number(form.get("id"));
+  const servidor = String(form.get("servidor") ?? "");
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, mensagem: "Pedido inválido." };
+  }
+  const server = servidorOuFalha(servidor);
+
+  const r = await estornarPedidoRecusado(id, actorId);
+  await registrar({
+    actorId,
+    serverSlug: server.slug,
+    action: "restore_queue",
+    target: String(id),
+    detail: "estorno de pedido recusado",
+    ok: r.ok,
+    error: r.ok ? undefined : r.mensagem,
+  });
+  if (r.ok) {
+    await logarNoDiscord(
+      `🛠️ **${server.shortName}** · Fila de restauração · \`${id}\` — <@${actorId}>\n> ${r.mensagem}`,
+    );
+  }
+  revalidatePath("/admin/moderacao");
+  return r;
 }

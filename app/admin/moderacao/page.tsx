@@ -8,6 +8,7 @@ import { activeServers, serverBySlug } from "@/lib/servers";
 import { getInfo, getMetrics, getPlayers } from "@/lib/palworld/rest";
 import { recentes, ACAO_LABEL } from "@/lib/moderacao";
 import { buscarMembro } from "@/lib/discord";
+import { filaAdmin } from "@/lib/resgate-base";
 import {
   SalvarMundo,
   Desligar,
@@ -21,6 +22,7 @@ import {
   BanManual,
   UnbanManual,
   LinhaJogador,
+  FilaDeRestauracao,
 } from "./formularios";
 
 export const metadata: Metadata = { title: "Moderação" };
@@ -84,11 +86,12 @@ export default async function Moderacao({
     );
   }
 
-  const [info, metrics, players, log] = await Promise.all([
+  const [info, metrics, players, log, fila] = await Promise.all([
     getInfo(server).catch(() => null),
     getMetrics(server).catch(() => null),
     getPlayers(server).catch(() => []),
     recentes(20).catch(() => []),
+    podeEnergia ? filaAdmin().catch(() => []) : Promise.resolve([]),
   ]);
 
   const logComNome = await Promise.all(
@@ -99,6 +102,17 @@ export default async function Moderacao({
         l.actor_id,
       nomeServidor: serverBySlug(l.server_slug)?.shortName ?? l.server_slug,
     })),
+  );
+
+  // Um nome por discordId só uma vez, mesmo com vários pedidos da mesma
+  // pessoa — evita bater na API do Discord repetido à toa.
+  const nomesFila = Object.fromEntries(
+    await Promise.all(
+      [...new Set(fila.map((p) => p.discordId))].map(async (id) => [
+        id,
+        (await buscarMembro(id).catch(() => null))?.displayName ?? id,
+      ]),
+    ),
   );
 
   return (
@@ -280,6 +294,30 @@ export default async function Moderacao({
               </p>
               <div className="mt-5 max-w-2xl">
                 <RestaurarJogador servidor={server.slug} escopo="guild" />
+              </div>
+            </section>
+
+            {/* -------------------------------- fila de restauração paga */}
+            {/*
+              Diferente das outras seções deste bloco, não é escopada pelo
+              servidor selecionado no topo — um pedido já carrega o servidor
+              dele (§ item 6 da fase 2, ver plans/restauracao-paga-fase-2.md).
+            */}
+            <section className="mt-4 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold">
+                Fila de restauração paga
+              </h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                O que o próprio jogador pediu em{" "}
+                <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
+                  /painel/resgate
+                </code>
+                . Processa sozinho perto das 06:00 UTC — aqui só dá para
+                destravar um pedido parado ou devolver Paletas de um que foi
+                recusado.
+              </p>
+              <div className="mt-5">
+                <FilaDeRestauracao pedidos={fila} nomes={nomesFila} />
               </div>
             </section>
           </div>

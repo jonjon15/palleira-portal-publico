@@ -236,6 +236,161 @@ export async function pedirRestauracao(opts: {
   };
 }
 
+/* --------------------------------------------------------- visão do admin */
+
+export interface PedidoAdmin {
+  id: number;
+  discordId: string;
+  serverSlug: string;
+  serverName: string;
+  status: string;
+  detail: string;
+  paletas: number;
+  estornado: boolean;
+  guildName: string | null;
+  pieceCount: number | null;
+  createdAt: string;
+  doneAt: string | null;
+}
+
+/**
+ * Os pedidos que importam olhar: os em andamento primeiro (`rodando`,
+ * `fila`), depois o histórico recente. Junta com `base_snapshots` só para
+ * mostrar de qual base/guild se trata — o pedido em si não guarda isso.
+ */
+export async function filaAdmin(limite = 50): Promise<PedidoAdmin[]> {
+  const rows = (await sql`
+    select r.id, r.discord_id, r.server_slug, r.status, r.detail, r.paletas,
+           r.estornado, r.created_at, r.done_at,
+           s.guild_name, s.piece_count
+    from base_restore_requests r
+    left join base_snapshots s on s.id = r.snapshot_id
+    order by
+      case r.status when 'rodando' then 0 when 'fila' then 1 else 2 end,
+      r.created_at desc
+    limit ${limite}
+  `) as {
+    id: number;
+    discord_id: string;
+    server_slug: string;
+    status: string;
+    detail: string;
+    paletas: number;
+    estornado: boolean;
+    created_at: string;
+    done_at: string | null;
+    guild_name: string | null;
+    piece_count: number | null;
+  }[];
+
+  return rows.map((r) => ({
+    id: r.id,
+    discordId: r.discord_id,
+    serverSlug: r.server_slug,
+    serverName: nomeDoServidor(r.server_slug),
+    status: r.status,
+    detail: r.detail,
+    paletas: r.paletas,
+    estornado: r.estornado,
+    guildName: r.guild_name,
+    pieceCount: r.piece_count,
+    createdAt: r.created_at,
+    doneAt: r.done_at,
+  }));
+}
+
+/**
+ * Cancela um pedido pelo `id`, de qualquer pessoa — para quando um pedido
+ * fica travado e o dono quer destravar sem esperar. Só funciona em `fila`,
+ * pelo mesmo motivo do cancelamento do próprio jogador: uma vez `rodando`,
+ * o servidor já está parado por causa dele.
+ */
+export async function cancelarPedidoAdmin(id: number): Promise<Resultado> {
+  const rows = (await sql`
+    select id, discord_id, status, paletas from base_restore_requests where id = ${id}
+  `) as { id: number; discord_id: string; status: string; paletas: number }[];
+
+  const p = rows[0];
+  if (!p) return { ok: false, mensagem: "Pedido não encontrado." };
+  if (p.status !== "fila") {
+    return {
+      ok: false,
+      mensagem: `Só dá para cancelar pedido ainda em fila — este está "${p.status}".`,
+    };
+  }
+
+  await sql`delete from base_restore_requests where id = ${p.id}`;
+
+  if (p.paletas > 0) {
+    await lancar({
+      discordId: p.discord_id,
+      delta: p.paletas,
+      origem: "ajuste",
+      descricao: `Estorno: pedido de restauração #${p.id} cancelado pelo admin`,
+      refId: String(p.id),
+      chave: `restauracao:estorno:${p.id}`,
+    });
+  }
+
+  return {
+    ok: true,
+    mensagem:
+      `Pedido #${p.id} cancelado.` +
+      (p.paletas > 0 ? ` ${p.paletas} Paletas devolvidas.` : ""),
+  };
+}
+
+/**
+ * Devolve as Paletas de um pedido pago que virou `recusado` — o gap
+ * conhecido da fase 2: `processar_fila.py` recusa sem mexer na carteira,
+ * porque quem escreve o `Level.sav` não é quem sabe de saldo. A coluna
+ * `estornado` trava contra clicar duas vezes.
+ */
+export async function estornarPedidoRecusado(
+  id: number,
+  actorId: string,
+): Promise<Resultado> {
+  const rows = (await sql`
+    select id, discord_id, status, paletas, estornado
+    from base_restore_requests where id = ${id}
+  `) as {
+    id: number;
+    discord_id: string;
+    status: string;
+    paletas: number;
+    estornado: boolean;
+  }[];
+
+  const p = rows[0];
+  if (!p) return { ok: false, mensagem: "Pedido não encontrado." };
+  if (p.status !== "recusado") {
+    return { ok: false, mensagem: "Só dá para estornar pedido recusado." };
+  }
+  if (p.estornado) {
+    return { ok: false, mensagem: "Este pedido já foi estornado." };
+  }
+  if (p.paletas <= 0) {
+    return { ok: false, mensagem: "Este pedido não cobrou Paletas." };
+  }
+
+  const r = await lancar({
+    discordId: p.discord_id,
+    delta: p.paletas,
+    origem: "ajuste",
+    descricao: `Estorno: pedido de restauração #${p.id} recusado`,
+    refId: String(p.id),
+    chave: `restauracao:estorno:${p.id}`,
+    actorId,
+  });
+
+  await sql`update base_restore_requests set estornado = true where id = ${p.id}`;
+
+  return {
+    ok: r.status !== "sem-saldo",
+    mensagem: `${p.paletas} Paletas devolvidas a ${p.discord_id}.`,
+  };
+}
+
 /**
  * Cancela um pedido AINDA em `fila` (não dá para cancelar o que já está
  * `rodando` — a essa altura o servidor já está parado por causa dele).

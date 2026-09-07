@@ -20,7 +20,8 @@ export type AcaoModeracao =
   | "wipe"
   | "restore"
   | "revert"
-  | "probe";
+  | "probe"
+  | "restore_queue";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -35,6 +36,7 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   restore: "Restaurar jogador",
   revert: "Reverter save",
   probe: "Conferir bags",
+  restore_queue: "Fila de restauração",
 };
 
 export interface AcaoRow {
