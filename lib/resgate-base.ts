@@ -12,8 +12,14 @@ import { lancar } from "@/lib/economia";
  *   mundo, então a única altura confiável é a de alguém pisando ali agora.
  *   Por isso a posição nunca vem do formulário — é lida ao vivo do
  *   PalDefender, no momento exato da confirmação.
- * - **Preço: primeira restauração grátis (uma vez na vida), da segunda em
- *   diante 100 Paletas fixo.** Decidido em 07/09/2026.
+ * - **Preço: a primeira restauração de cada GUILD é grátis, a partir daí
+ *   100 Paletas fixo — por guild, não por conta de Discord.** Ajustado em
+ *   07/09/2026: a base é sempre da guild inteira, e a grátis nasceu porque
+ *   o decay foi ligado sem o gatilho certo e apagou bases à toa, não como
+ *   mimo por pessoa. Qualquer membro vinculado pode confirmar e pagar —
+ *   não só o líder, porque às vezes ele já nem joga mais. O que decide o
+ *   preço é se ESSA GUILD, NESSE SERVIDOR, já teve alguma restauração
+ *   `feito` antes — não quem está clicando.
  * - Quem processa o pedido é `tools/processar_fila.py`, pelo cron
  *   `processar-fila` — este arquivo só abre e fecha a linha em
  *   `base_restore_requests`. Nada aqui toca no servidor do jogo.
@@ -25,6 +31,8 @@ export interface BaseResgatavel {
   serverSlug: string;
   serverName: string;
   snapshotId: number;
+  guildId: string;
+  guildName: string;
   pieceCount: number;
   takenAt: string;
 }
@@ -64,13 +72,15 @@ const nomeDoServidor = (slug: string) => serverBySlug(slug)?.shortName ?? slug;
 export async function basesResgataveis(uid: string): Promise<BaseResgatavel[]> {
   const rows = (await sql`
     select distinct on (server_slug)
-      server_slug, id, piece_count, taken_at
+      server_slug, id, guild_id, guild_name, piece_count, taken_at
     from base_snapshots
     where ${uid} = any(member_uids) and formato >= 2
     order by server_slug, piece_count desc, taken_at desc
   `) as {
     server_slug: string;
     id: number;
+    guild_id: string;
+    guild_name: string;
     piece_count: number;
     taken_at: string;
   }[];
@@ -79,6 +89,8 @@ export async function basesResgataveis(uid: string): Promise<BaseResgatavel[]> {
     serverSlug: r.server_slug,
     serverName: nomeDoServidor(r.server_slug),
     snapshotId: r.id,
+    guildId: r.guild_id,
+    guildName: r.guild_name,
     pieceCount: r.piece_count,
     takenAt: r.taken_at,
   }));
@@ -138,19 +150,40 @@ export async function meuHistorico(discordId: string): Promise<PedidoPassado[]> 
   }));
 }
 
-/** Já teve alguma restauração concluída? Decide se a próxima é grátis. */
-async function jaTeveRestauracaoFeita(discordId: string): Promise<boolean> {
+/**
+ * Esta GUILD, NESTE servidor, já teve alguma restauração concluída? Decide
+ * se a próxima é grátis — por guild, não por quem está pedindo.
+ *
+ * Ajustado em 07/09/2026: a base é sempre da guild inteira, e "grátis por
+ * conta" deixava a segunda base de uma pessoa sempre paga só por ela ter
+ * jogado em mais de um servidor — e não cobria o caso comum de outro membro
+ * (não o líder) ser quem confirma. `guild_id` fica congelado no PEDIDO, não
+ * é relido de `base_snapshots` depois — a guild pode mudar de id numa
+ * recaptura futura, e o histórico não pode reescrever sozinho.
+ */
+async function jaTeveRestauracaoFeita(
+  serverSlug: string,
+  guildId: string,
+): Promise<boolean> {
+  if (!guildId) return false; // sem guild_id não dá para provar "já teve" — não bloqueia
   const rows = (await sql`
     select 1 from base_restore_requests
-    where discord_id = ${discordId} and status = 'feito'
+    where server_slug = ${serverSlug}
+      and guild_id = ${guildId}
+      and status = 'feito'
     limit 1
   `) as unknown[];
   return rows.length > 0;
 }
 
-/** Quanto custaria a próxima restauração desta pessoa, sem gravar nada. */
-export async function precoDaProximaRestauracao(discordId: string): Promise<number> {
-  return (await jaTeveRestauracaoFeita(discordId)) ? PRECO_RESTAURACAO : 0;
+/** Quanto custaria a próxima restauração desta guild, NESTE servidor. */
+export async function precoDaProximaRestauracao(
+  serverSlug: string,
+  guildId: string,
+): Promise<number> {
+  return (await jaTeveRestauracaoFeita(serverSlug, guildId))
+    ? PRECO_RESTAURACAO
+    : 0;
 }
 
 /**
@@ -187,16 +220,25 @@ export async function pedirRestauracao(opts: {
     };
   }
 
-  const gratis = !(await jaTeveRestauracaoFeita(opts.discordId));
+  // O guild_id vem do banco, nunca do formulário — o mesmo espírito da
+  // posição: o cliente escolhe QUAL base (snapshotId), não quanto ela custa.
+  const snap = (await sql`
+    select guild_id from base_snapshots
+    where id = ${opts.snapshotId} and server_slug = ${opts.serverSlug}
+  `) as { guild_id: string }[];
+  const guildId = snap[0]?.guild_id ?? "";
+  if (!snap[0]) return { ok: false, mensagem: "Base não encontrada." };
+
+  const gratis = !(await jaTeveRestauracaoFeita(opts.serverSlug, guildId));
   const custo = gratis ? 0 : PRECO_RESTAURACAO;
 
   let requestId: number;
   try {
     const rows = (await sql`
       insert into base_restore_requests
-        (discord_id, server_slug, palworld_uid, snapshot_id,
+        (discord_id, server_slug, palworld_uid, snapshot_id, guild_id,
          dest_x, dest_y, dest_z, status, paletas)
-      values (${opts.discordId}, ${opts.serverSlug}, ${opts.uid}, ${opts.snapshotId},
+      values (${opts.discordId}, ${opts.serverSlug}, ${opts.uid}, ${opts.snapshotId}, ${guildId || null},
               ${eu.worldX}, ${eu.worldY}, ${eu.worldZ}, 'fila', ${custo})
       returning id
     `) as { id: number }[];
@@ -231,7 +273,7 @@ export async function pedirRestauracao(opts: {
   return {
     ok: true,
     mensagem: gratis
-      ? "Pedido na fila — sua primeira restauração é grátis. Entra na próxima janela de manutenção (~06:00 UTC)."
+      ? `Pedido na fila — a primeira restauração desta guild em ${server.shortName} é grátis. Entra na próxima janela de manutenção (~06:00 UTC).`
       : `Pedido na fila por ${custo} Paletas. Entra na próxima janela de manutenção (~06:00 UTC).`,
   };
 }

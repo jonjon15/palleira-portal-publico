@@ -57,13 +57,24 @@ export default async function Resgate() {
     );
   }
 
-  const [bases, aberto, historico, preco, paletas] = await Promise.all([
+  const [bases, aberto, historico, paletas] = await Promise.all([
     basesResgataveis(vinculo.uid),
     pedidoAberto(discordId),
     meuHistorico(discordId),
-    precoDaProximaRestauracao(discordId),
     saldo(discordId),
   ]);
+
+  // Preço por GUILD, não por conta: a base é sempre da guild inteira, então
+  // o que decide se é grátis é se ESSA guild, NESSE servidor, já teve
+  // alguma restauração — não quem está logado. Ajustado em 07/09/2026.
+  const precos = new Map(
+    await Promise.all(
+      bases.map(async (b) => {
+        const p = await precoDaProximaRestauracao(b.serverSlug, b.guildId);
+        return [b.serverSlug, p] as const;
+      }),
+    ),
+  );
 
   // Online agora, por servidor — só para os servidores onde há algo a
   // resgatar. A ação confirma de novo, ao vivo, no momento do clique; isto
@@ -122,49 +133,52 @@ export default async function Resgate() {
         )}
 
         {!aberto &&
-          bases.map((b) => (
-            <section
-              key={b.serverSlug}
-              className="mb-4 rounded-[var(--radius-card)] border border-line bg-surface p-6"
-            >
-              <h2 className="font-semibold">{b.serverName}</h2>
-              <p className="mt-1.5 text-sm text-muted">
-                Sua base de <b className="text-text">{b.pieceCount}</b> peça
-                {b.pieceCount === 1 ? "" : "s"}, arquivada em{" "}
-                {new Date(b.takenAt).toLocaleDateString("pt-BR")}.
-              </p>
-
-              <div className="mt-4 rounded-[var(--radius-control)] border border-line bg-surface-2/40 p-4 text-sm text-muted">
-                <p>
-                  <b className="text-text">Como funciona:</b> entre no jogo,
-                  vá até o lugar onde quer que a base renasça, e confirme
-                  aqui — sem sair do lugar. A posição é lida de você
-                  pisando ali, na hora da confirmação; não dá para escolher
-                  pelo mapa.
+          bases.map((b) => {
+            const preco = precos.get(b.serverSlug) ?? 0;
+            return (
+              <section
+                key={b.serverSlug}
+                className="mb-4 rounded-[var(--radius-card)] border border-line bg-surface p-6"
+              >
+                <h2 className="font-semibold">{b.serverName}</h2>
+                <p className="mt-1.5 text-sm text-muted">
+                  Sua base de <b className="text-text">{b.pieceCount}</b> peça
+                  {b.pieceCount === 1 ? "" : "s"}, arquivada em{" "}
+                  {new Date(b.takenAt).toLocaleDateString("pt-BR")}.
                 </p>
-                <p className="mt-2">
-                  <b className="text-text">Preço:</b>{" "}
-                  {preco === 0 ? (
-                    <>grátis — sua primeira restauração</>
-                  ) : (
-                    <>
-                      {preco} Paletas · você tem {paletas}
-                    </>
-                  )}
-                </p>
-              </div>
 
-              <div className="mt-4">
-                <PedirRestauracao
-                  serverSlug={b.serverSlug}
-                  serverName={b.serverName}
-                  snapshotId={b.snapshotId}
-                  online={online.get(b.serverSlug) ?? false}
-                  preco={preco}
-                />
-              </div>
-            </section>
-          ))}
+                <div className="mt-4 rounded-[var(--radius-control)] border border-line bg-surface-2/40 p-4 text-sm text-muted">
+                  <p>
+                    <b className="text-text">Como funciona:</b> entre no jogo,
+                    vá até o lugar onde quer que a base renasça, e confirme
+                    aqui — sem sair do lugar. A posição é lida de você
+                    pisando ali, na hora da confirmação; não dá para escolher
+                    pelo mapa.
+                  </p>
+                  <p className="mt-2">
+                    <b className="text-text">Preço:</b>{" "}
+                    {preco === 0 ? (
+                      <>grátis — primeira restauração desta guild em {b.serverName}</>
+                    ) : (
+                      <>
+                        {preco} Paletas · você tem {paletas}
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="mt-4">
+                  <PedirRestauracao
+                    serverSlug={b.serverSlug}
+                    serverName={b.serverName}
+                    snapshotId={b.snapshotId}
+                    online={online.get(b.serverSlug) ?? false}
+                    preco={preco}
+                  />
+                </div>
+              </section>
+            );
+          })}
 
         {historico.length > 0 && (
           <section className="mt-8">
