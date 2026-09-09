@@ -2309,7 +2309,7 @@ o `PlayerUID`. Os comandos de RCON aceitam ele, e é o que o vínculo usa.
 | Onde roda o servidor? | **ENX Host**; acesso por RCON, FTP e painel. Sem SSH → sem agente próprio (§3.3) |
 | Quantos servidores? | **3** — PVE FREE, PVE VIP, PVP FREE NEW. Portas mapeadas e **testadas** (§3.4) |
 | A Vercel alcança os servidores? | **Alcança** ✅ — REST respondeu `HTTP 401` nos três |
-| Tem PalDefender? | **Tem, v1.8.3** ✅ (a última) — já inclui `deletepals` e a REST API completa (§3.5, §3.6) |
+| Tem PalDefender? | **Tem, v1.9.1** ✅ (atualizado em 09/09/2026 nos 3 servidores) — já inclui `deletepals` e a REST API completa (§3.5, §3.6) |
 | Trocar as senhas de admin? | **Não** — decisão do dono, registrada na §10.0 com as mitigações do lado do portal |
 | Dá para remover Pal do jogador? | **Dá:** `deletepals <uid> <filtro>` — clonagem resolvida (§3.5) |
 | Dá para ler o inventário? | **Dá:** `GET /items/{uid}` e `GET /pals/{uid}` na API do PalDefender (§3.6) |
