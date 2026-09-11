@@ -141,7 +141,7 @@ export async function meusPersonagens(
 /**
  * Se a conta já tem personagem visto naquele servidor específico.
  *
- * Existe para a trava de mercado do DOMINATIONS (§ 11/09/2026,
+ * Existe para a trava de mercado do Dominantes (§ 11/09/2026,
  * `PalleiraServer.mercadoRestrito`): o vínculo em si vale a comunidade
  * inteira (comentário no topo do arquivo), então não dá para usar
  * `meuVinculo` para saber se a pessoa "está" num servidor — só `players`

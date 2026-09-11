@@ -247,7 +247,7 @@ export async function anunciar(
 
   // A trava de posse é o próprio débito: se não havia a quantidade, ele não
   // encontra linha para atualizar e devolve falso. A chave efetiva decide
-  // QUAL pilha — só o DOMINATIONS separa por servidor (migração 014); os
+  // QUAL pilha — só o Dominantes separa por servidor (migração 014); os
   // demais continuam no pool "livre" de sempre.
   const chave = chaveDeServidor(serverSlug);
   if (!(await debitarCofre(discordId, itemId, qty, chave))) {
@@ -428,7 +428,7 @@ export async function comprar(id: number): Promise<Resultado> {
     return { ok: false, mensagem: "Esse anúncio é seu." };
   }
 
-  // Trava do DOMINATIONS (§ 11/09/2026): item/Pal vindo de um servidor
+  // Trava do Dominantes (§ 11/09/2026): item/Pal vindo de um servidor
   // `mercadoRestrito` só troca de mão com quem também jogou lá — não basta
   // ter vínculo, porque o vínculo vale a comunidade inteira. `alvo.serverSlug`
   // só é não-nulo quando a origem é de fato restrita (`paraAnuncio`
@@ -526,10 +526,10 @@ export async function comprar(id: number): Promise<Resultado> {
   if (venda.kind === "pal" && venda.pal_template) {
     // A trava de servidor (§006) é para o próprio dono não usar guardar→
     // resgatar repetido como um jeito de farmar contador de captura. Fora do
-    // DOMINATIONS ela não faz sentido contra quem comprou — o comprador pode
+    // Dominantes ela não faz sentido contra quem comprou — o comprador pode
     // nunca ter jogado no servidor de quem vendeu — então `pal_server_slug`
     // já vem nulo do banco e o comprador resgata em qualquer servidor online.
-    // No DOMINATIONS a checagem lá em cima já barrou quem não joga lá, então
+    // No Dominantes a checagem lá em cima já barrou quem não joga lá, então
     // aqui o Pal HERDA o servidor de origem — mesma trava do dono.
     await sql`
       insert into vault_pals (discord_id, pal_id, template, server_slug)
@@ -537,7 +537,7 @@ export async function comprar(id: number): Promise<Resultado> {
     `;
   } else {
     // Mesma lógica para item: `item_server_slug` só vem preenchido quando a
-    // origem é o DOMINATIONS (§ `chaveDeServidor`) — nos demais casos já é
+    // origem é o Dominantes (§ `chaveDeServidor`) — nos demais casos já é
     // nulo, e a pilha nasce "livre" para resgatar em qualquer servidor.
     await devolverAoCofre(
       discordId,

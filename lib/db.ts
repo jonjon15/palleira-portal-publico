@@ -25,12 +25,21 @@ export interface PlayerRow {
   pal_count: number;
 }
 
-/** Ranking de guilds por Pals trabalhando. Vem do import do save (§3.8). */
-export async function topGuilds(limit = 25): Promise<GuildRow[]> {
+/**
+ * Ranking de guilds por Pals trabalhando. Vem do import do save (§3.8).
+ *
+ * `serverSlug` filtra para um único servidor — usado pelo ranking dedicado
+ * do Dominantes (§ 11/09/2026); sem ele, mistura os três como sempre.
+ */
+export async function topGuilds(
+  limit = 25,
+  serverSlug?: string,
+): Promise<GuildRow[]> {
   return (await sql`
     select server_slug, guild_id, name, base_count, pal_count, member_count
     from guilds
-    where pal_count > 0 or base_count > 0
+    where (pal_count > 0 or base_count > 0)
+      and (${serverSlug ?? null}::text is null or server_slug = ${serverSlug ?? null})
     order by pal_count desc, base_count desc
     limit ${limit}
   `) as GuildRow[];
@@ -41,12 +50,18 @@ export async function topGuilds(limit = 25): Promise<GuildRow[]> {
  *
  * É o que a API do jogo não consegue entregar: ela só enxerga quem está
  * conectado. Estes números vêm do save.
+ *
+ * `serverSlug` filtra para um único servidor — mesmo motivo de `topGuilds`.
  */
-export async function topPlayers(limit = 25): Promise<PlayerRow[]> {
+export async function topPlayers(
+  limit = 25,
+  serverSlug?: string,
+): Promise<PlayerRow[]> {
   return (await sql`
     select server_slug, palworld_uid, name, level, pal_count
     from players
     where name <> ''
+      and (${serverSlug ?? null}::text is null or server_slug = ${serverSlug ?? null})
     order by level desc, pal_count desc
     limit ${limit}
   `) as PlayerRow[];

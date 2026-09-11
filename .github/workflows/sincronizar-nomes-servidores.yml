@@ -3,11 +3,15 @@
 # Existe porque o painel pode renomear ou migrar um servidor de node sem
 # aviso (aconteceu em 10/09/2026 com o pvp-free) e o site ficava mostrando o
 # nome velho até alguém notar. Ver tools/sincronizar_nomes_servidores.py.
+#
+# ⚠️ Schedule PAUSADO em 11/09/2026: o dono trocou o nome do pvp-free para
+# "Dominantes" só no site, sem renomear no painel (que ainda diz
+# "DOMINATIONS") — rodar sozinho reverteria essa escolha na próxima janela.
+# Reativar o `schedule` quando o nome do painel acompanhar o do site nome
+# escolhido. `workflow_dispatch` continua disponível para rodar na mão.
 name: sincronizar nomes dos servidores
 
 on:
-  schedule:
-    - cron: "0 9 * * *" # 06:00 em UTC-3, todo dia
   workflow_dispatch: {}
 
 jobs:

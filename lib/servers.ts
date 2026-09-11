@@ -50,7 +50,7 @@ export interface PalleiraServer {
    * Se item/Pal vindo daqui só pode ser comprado, vendido e resgatado por
    * quem também joga neste servidor (§ trava de mercado, 11/09/2026).
    *
-   * Pedido específico do dono para o DOMINATIONS: os outros servidores
+   * Pedido específico do dono para o Dominantes: os outros servidores
    * (PVE Free, PVE VIP) continuam com mercado livre entre si, sem essa
    * restrição — só este slug fica isolado do resto da economia.
    */
@@ -98,8 +98,8 @@ export const SERVERS: PalleiraServer[] = [
   },
   {
     slug: "pvp-free",
-    name: "[BR] Palleira PVE|PVP DOMINATIONS",
-    shortName: "DOMINATIONS",
+    name: "[BR] Palleira Dominantes",
+    shortName: "Dominantes",
     host: "enx-cirion-16.enx.host",
     gamePort: 11144,
     restPort: 10058,
@@ -114,7 +114,7 @@ export const SERVERS: PalleiraServer[] = [
     mode: "PvP",
     tier: "free",
     // Pedido do dono em 11/09/2026: item/Pal vindo daqui só troca com quem
-    // também joga no DOMINATIONS — os outros dois servidores não têm essa
+    // também joga no Dominantes — os outros dois servidores não têm essa
     // trava.
     mercadoRestrito: true,
   },

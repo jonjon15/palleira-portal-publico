@@ -68,7 +68,7 @@ export function NomeDoItem({ itemId }: { itemId: string }) {
  * Um `<select>` só aparece quando a escolha existe de verdade.
  *
  * `travadoEm`, quando presente, restringe a lista ao único servidor de onde
- * a pilha pode sair (§ trava de mercado do DOMINATIONS) — sem isso a pessoa
+ * a pilha pode sair (§ trava de mercado do Dominantes) — sem isso a pessoa
  * escolheria um servidor livre onde está online e o resgate falharia sem
  * explicar o motivo.
  */
@@ -173,7 +173,7 @@ export function ItensDoCofre({
     <>
       <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
         {itens.map((i) => {
-          // Pilha travada (§ DOMINATIONS): só pode resgatar estando online
+          // Pilha travada (§ Dominantes): só pode resgatar estando online
           // justamente nesse servidor — sem isso o resgate falharia sem
           // explicar o motivo.
           const podeResgatar =

@@ -59,7 +59,7 @@ export interface Resultado {
  * String vazia = "livre": o item circula entre qualquer servidor que não
  * seja `mercadoRestrito` — exatamente o pool único que sempre existiu entre
  * PVE Free e PVE VIP, sem mudança de comportamento para quem já usa o cofre.
- * Só um servidor `mercadoRestrito` (hoje, só o DOMINATIONS) grava sua
+ * Só um servidor `mercadoRestrito` (hoje, só o Dominantes) grava sua
  * própria chave e trava de verdade a pilha nele.
  */
 export const chaveDeServidor = (serverSlug: string): string =>
@@ -381,7 +381,7 @@ export async function importarParaCofre(
   }
 
   // 2. O slot só é cobrado quando a pilha é nova no cofre — pilha aqui já
-  //    quer dizer (item, chave de servidor): só o DOMINATIONS separa pilha
+  //    quer dizer (item, chave de servidor): só o Dominantes separa pilha
   //    por servidor (migração 014); os demais continuam no pool "livre"
   //    (`chaveDeServidor` — comportamento idêntico ao que sempre existiu
   //    entre PVE Free e PVE VIP).
