@@ -87,8 +87,8 @@ export const SERVERS: PalleiraServer[] = [
   },
   {
     slug: "pvp-free",
-    name: "[BR] Palleira PVP FREE NEW",
-    shortName: "PVP Free",
+    name: "[BR] Palleira PVE|PVP DOMINATIONS",
+    shortName: "DOMINATIONS",
     host: "enx-cirion-16.enx.host",
     gamePort: 11144,
     restPort: 10058,

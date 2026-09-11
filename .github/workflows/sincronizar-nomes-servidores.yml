@@ -1,0 +1,40 @@
+# Mantém lib/servers.ts com o nome atual de cada servidor no painel da ENX.
+#
+# Existe porque o painel pode renomear ou migrar um servidor de node sem
+# aviso (aconteceu em 10/09/2026 com o pvp-free) e o site ficava mostrando o
+# nome velho até alguém notar. Ver tools/sincronizar_nomes_servidores.py.
+name: sincronizar nomes dos servidores
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # 06:00 em UTC-3, todo dia
+  workflow_dispatch: {}
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Consultar painel e atualizar lib/servers.ts
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/sincronizar_nomes_servidores.py --aplicar
+
+      - name: Commitar se algo mudou
+        run: |
+          if git diff --quiet -- lib/servers.ts; then
+            echo "sem mudanças"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/servers.ts
+          git commit -m "servers: sincronizar nome com o painel da ENX"
+          git push
