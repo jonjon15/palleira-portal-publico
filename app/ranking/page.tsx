@@ -22,6 +22,9 @@ const SERVER_NAME = Object.fromEntries(
 
 const MEDAL = ["text-gold", "text-[#c9c9c9]", "text-[#c08457]"];
 
+/** Conta de staff no ranking, não jogador — mesmo critério de `topPlayers`. */
+const ehAdmin = (nome: string) => /adm/i.test(nome);
+
 interface GuildRow {
   id: string;
   server: string;
@@ -67,7 +70,7 @@ const loadLive = unstable_cache(
 
           totalPlayers += players.length;
           for (const p of players) {
-            if (!p.online) continue;
+            if (!p.online || ehAdmin(p.name)) continue;
             online.push({
               name: p.name || "Jogador sem nome",
               guild: p.guildName,

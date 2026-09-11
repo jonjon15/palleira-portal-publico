@@ -61,6 +61,7 @@ export async function topPlayers(
     select server_slug, palworld_uid, name, level, pal_count
     from players
     where name <> ''
+      and name !~* 'adm'
       and (${serverSlug ?? null}::text is null or server_slug = ${serverSlug ?? null})
     order by level desc, pal_count desc
     limit ${limit}

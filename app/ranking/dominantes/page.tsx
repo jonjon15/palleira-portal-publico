@@ -19,6 +19,9 @@ export const revalidate = 120;
 
 const MEDAL = ["text-gold", "text-[#c9c9c9]", "text-[#c08457]"];
 
+/** Conta de staff no ranking, não jogador — mesmo critério de `topPlayers`. */
+const ehAdmin = (nome: string) => /adm/i.test(nome);
+
 interface GuildRow {
   id: string;
   name: string;
@@ -54,7 +57,7 @@ const loadLive = unstable_cache(
       for (const p of live) liveLevel.set(p.playerId, p.level);
 
       for (const p of players) {
-        if (!p.online) continue;
+        if (!p.online || ehAdmin(p.name)) continue;
         online.push({
           name: p.name || "Jogador sem nome",
           guild: p.guildName,
