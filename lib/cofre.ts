@@ -35,6 +35,9 @@ export interface ItemNoCofre {
   itemId: string;
   qty: number;
   desde: string;
+  /** De qual servidor este lote saiu — trava de mercado (migração 014). */
+  serverSlug: string;
+  serverNome: string;
 }
 
 export interface EstadoDoCofre {
@@ -50,6 +53,18 @@ export interface Resultado {
   mensagem: string;
 }
 
+/**
+ * A chave de servidor que a pilha efetivamente usa no cofre (migração 014).
+ *
+ * String vazia = "livre": o item circula entre qualquer servidor que não
+ * seja `mercadoRestrito` — exatamente o pool único que sempre existiu entre
+ * PVE Free e PVE VIP, sem mudança de comportamento para quem já usa o cofre.
+ * Só um servidor `mercadoRestrito` (hoje, só o DOMINATIONS) grava sua
+ * própria chave e trava de verdade a pilha nele.
+ */
+export const chaveDeServidor = (serverSlug: string): string =>
+  serverBySlug(serverSlug)?.mercadoRestrito ? serverSlug : "";
+
 /* ------------------------------------------------------------------ leitura */
 
 export async function meuCofre(
@@ -58,12 +73,12 @@ export async function meuCofre(
 ): Promise<EstadoDoCofre> {
   const [itens, extras] = await Promise.all([
     sql`
-      select item_id, qty, updated_at
+      select item_id, qty, updated_at, server_slug
       from vault_items
       where discord_id = ${discordId} and qty > 0
       order by updated_at desc
     ` as unknown as Promise<
-      { item_id: string; qty: number; updated_at: string }[]
+      { item_id: string; qty: number; updated_at: string; server_slug: string }[]
     >,
     // Os slots comprados vivem no próprio extrato: cada compra é uma linha
     // de origem "slot". Uma fonte da verdade a menos para divergir.
@@ -81,6 +96,10 @@ export async function meuCofre(
       itemId: i.item_id,
       qty: i.qty,
       desde: i.updated_at,
+      serverSlug: i.server_slug,
+      serverNome: i.server_slug
+        ? (serverBySlug(i.server_slug)?.shortName ?? i.server_slug)
+        : "qualquer servidor livre",
     })),
     usados: itens.length,
     total,
@@ -244,12 +263,23 @@ const fecharTransferencia = (id: number, status: string, detail: string) =>
      where id = ${id}
   `;
 
-/** Soma ao cofre, criando a pilha se ainda não existir. */
-const creditarCofre = (discordId: string, itemId: string, qty: number) =>
+/**
+ * Soma ao cofre, criando a pilha se ainda não existir.
+ *
+ * `serverSlug` faz parte da chave (migração 014): a mesma pessoa pode ter
+ * pilhas separadas do mesmo item vindas de servidores diferentes — elas não
+ * se somam, porque não podem trocar de mãos entre si no mercado.
+ */
+const creditarCofre = (
+  discordId: string,
+  itemId: string,
+  qty: number,
+  serverSlug: string,
+) =>
   sql`
-    insert into vault_items (discord_id, item_id, qty)
-    values (${discordId}, ${itemId}, ${qty})
-    on conflict (discord_id, item_id) do update
+    insert into vault_items (discord_id, item_id, qty, server_slug)
+    values (${discordId}, ${itemId}, ${qty}, ${serverSlug})
+    on conflict (discord_id, item_id, server_slug) do update
       set qty = vault_items.qty + excluded.qty,
           updated_at = now()
   `;
@@ -270,11 +300,13 @@ async function debitarCofre(
   discordId: string,
   itemId: string,
   qty: number,
+  serverSlug: string,
 ): Promise<boolean> {
   const rows = (await sql`
     update vault_items
        set qty = qty - ${qty}, updated_at = now()
-     where discord_id = ${discordId} and item_id = ${itemId} and qty >= ${qty}
+     where discord_id = ${discordId} and item_id = ${itemId}
+       and server_slug = ${serverSlug} and qty >= ${qty}
     returning qty
   `) as { qty: number }[];
 
@@ -282,7 +314,8 @@ async function debitarCofre(
   if (rows[0].qty === 0) {
     await sql`
       delete from vault_items
-      where discord_id = ${discordId} and item_id = ${itemId} and qty = 0
+      where discord_id = ${discordId} and item_id = ${itemId}
+        and server_slug = ${serverSlug} and qty = 0
     `;
   }
   return true;
@@ -347,9 +380,16 @@ export async function importarParaCofre(
     };
   }
 
-  // 2. O slot só é cobrado quando a pilha é nova no cofre.
+  // 2. O slot só é cobrado quando a pilha é nova no cofre — pilha aqui já
+  //    quer dizer (item, chave de servidor): só o DOMINATIONS separa pilha
+  //    por servidor (migração 014); os demais continuam no pool "livre"
+  //    (`chaveDeServidor` — comportamento idêntico ao que sempre existiu
+  //    entre PVE Free e PVE VIP).
+  const chave = chaveDeServidor(serverSlug);
   const cofre = await meuCofre(discordId, session.user.roles);
-  const jaTem = cofre.itens.some((i) => i.itemId === itemId);
+  const jaTem = cofre.itens.some(
+    (i) => i.itemId === itemId && i.serverSlug === chave,
+  );
   if (!jaTem && cofre.usados >= cofre.total) {
     return {
       ok: false,
@@ -389,7 +429,7 @@ export async function importarParaCofre(
     };
   }
 
-  await creditarCofre(discordId, itemId, qty);
+  await creditarCofre(discordId, itemId, qty, chave);
   await fecharTransferencia(transferencia, "concluido", resposta.resposta);
   return { ok: true, mensagem: `${qty}× guardado no cofre.` };
 }
@@ -425,8 +465,16 @@ export async function resgatarDoCofre(
     return { ok: false, mensagem: "Esse servidor não move item agora." };
   }
 
-  if (!(await debitarCofre(discordId, itemId, qty))) {
-    return { ok: false, mensagem: "Você não tem essa quantidade no cofre." };
+  // Resgatar num servidor `mercadoRestrito` só tira da pilha travada nele; nos
+  // demais, a pilha é a "livre" — mesmo pool único de sempre entre eles.
+  const chave = chaveDeServidor(serverSlug);
+  if (!(await debitarCofre(discordId, itemId, qty, chave))) {
+    return {
+      ok: false,
+      mensagem: chave
+        ? `Você não tem essa quantidade guardada vinda do ${server.shortName}.`
+        : "Você não tem essa quantidade no cofre.",
+    };
   }
 
   const transferencia = await abrirTransferencia({
@@ -455,7 +503,7 @@ export async function resgatarDoCofre(
   }
 
   if (!resposta.ok) {
-    await creditarCofre(discordId, itemId, qty);
+    await creditarCofre(discordId, itemId, qty, chave);
     await fecharTransferencia(transferencia, "falhou", resposta.resposta);
     return {
       ok: false,
@@ -490,10 +538,12 @@ export async function cofreCheio(
 export async function temPilha(
   discordId: string,
   itemId: string,
+  serverSlug: string,
 ): Promise<boolean> {
   const rows = (await sql`
     select 1 from vault_items
-    where discord_id = ${discordId} and item_id = ${itemId} and qty > 0
+    where discord_id = ${discordId} and item_id = ${itemId}
+      and server_slug = ${serverSlug} and qty > 0
   `) as unknown[];
   return rows.length > 0;
 }

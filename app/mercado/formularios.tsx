@@ -93,13 +93,13 @@ export function Anunciar({ itens }: { itens: ItemNoCofre[] }) {
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {itens.map((i, indice) => (
             <label
-              key={i.itemId}
+              key={`${i.itemId}|${i.serverSlug}`}
               className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 transition-colors hover:border-line-strong has-checked:border-gold has-checked:bg-gold/[0.06]"
             >
               <input
                 type="radio"
-                name="itemId"
-                value={i.itemId}
+                name="pilha"
+                value={`${i.itemId}|${i.serverSlug}`}
                 defaultChecked={indice === 0}
                 required
                 className="size-4 shrink-0 accent-[var(--gold)]"
@@ -111,6 +111,12 @@ export function Anunciar({ itens }: { itens: ItemNoCofre[] }) {
                 </span>
                 <span className="tabular block text-sm text-muted">
                   {i.qty} no cofre
+                  {i.serverSlug && (
+                    <>
+                      {" "}
+                      · <span className="text-gold">só {i.serverNome}</span>
+                    </>
+                  )}
                 </span>
               </span>
             </label>

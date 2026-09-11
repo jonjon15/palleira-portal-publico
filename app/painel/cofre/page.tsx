@@ -148,7 +148,7 @@ function Cabecalho() {
     <PageHeader
       kicker="Cofre"
       title="Seu cofre"
-      description="O que está aqui saiu do jogo e está guardado pelo site. Dá para vender a qualquer hora, com você offline — item resgata em qualquer servidor; Pal só volta para o servidor de onde saiu, depois de algumas horas."
+      description="O que está aqui saiu do jogo e está guardado pelo site. Dá para vender a qualquer hora, com você offline — item do PVE resgata em qualquer servidor PVE; item e Pal do DOMINATIONS só voltam pra lá, e Pal guardado por você também espera algumas horas."
     />
   );
 }

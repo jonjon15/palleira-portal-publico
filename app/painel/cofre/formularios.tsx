@@ -64,10 +64,24 @@ export function NomeDoItem({ itemId }: { itemId: string }) {
   );
 }
 
-/** Um `<select>` só aparece quando a escolha existe de verdade. */
-function CampoServidor({ onde }: { onde: PersonagemOnline[] }) {
-  if (onde.length === 1) {
-    return <input type="hidden" name="servidor" value={onde[0].serverSlug} />;
+/**
+ * Um `<select>` só aparece quando a escolha existe de verdade.
+ *
+ * `travadoEm`, quando presente, restringe a lista ao único servidor de onde
+ * a pilha pode sair (§ trava de mercado do DOMINATIONS) — sem isso a pessoa
+ * escolheria um servidor livre onde está online e o resgate falharia sem
+ * explicar o motivo.
+ */
+function CampoServidor({
+  onde,
+  travadoEm,
+}: {
+  onde: PersonagemOnline[];
+  travadoEm?: string;
+}) {
+  const opcoes = travadoEm ? onde.filter((o) => o.serverSlug === travadoEm) : onde;
+  if (opcoes.length === 1) {
+    return <input type="hidden" name="servidor" value={opcoes[0].serverSlug} />;
   }
   return (
     <select
@@ -75,7 +89,7 @@ function CampoServidor({ onde }: { onde: PersonagemOnline[] }) {
       aria-label="Servidor"
       className="rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1.5 text-sm"
     >
-      {onde.map((o) => (
+      {opcoes.map((o) => (
         <option key={o.serverSlug} value={o.serverSlug}>
           {o.serverName}
         </option>
@@ -158,42 +172,62 @@ export function ItensDoCofre({
   return (
     <>
       <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
-        {itens.map((i) => (
-          <li key={i.itemId} className="flex flex-wrap items-center gap-3 px-4 py-3">
-            <ItemIcon itemId={i.itemId} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">
-                <NomeDoItem itemId={i.itemId} />
-              </p>
-              <p className="tabular text-sm text-muted">{i.qty} guardados</p>
-            </div>
+        {itens.map((i) => {
+          // Pilha travada (§ DOMINATIONS): só pode resgatar estando online
+          // justamente nesse servidor — sem isso o resgate falharia sem
+          // explicar o motivo.
+          const podeResgatar =
+            !i.serverSlug || onde.some((o) => o.serverSlug === i.serverSlug);
+          return (
+            <li
+              key={`${i.itemId}|${i.serverSlug}`}
+              className="flex flex-wrap items-center gap-3 px-4 py-3"
+            >
+              <ItemIcon itemId={i.itemId} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">
+                  <NomeDoItem itemId={i.itemId} />
+                </p>
+                <p className="tabular text-sm text-muted">
+                  {i.qty} guardados
+                  {i.serverSlug && (
+                    <>
+                      {" "}
+                      · <span className="text-gold">só {i.serverNome}</span>
+                    </>
+                  )}
+                </p>
+              </div>
 
-            {onde.length > 0 ? (
-              <form action={acao} className="flex items-center gap-2">
-                <input type="hidden" name="itemId" value={i.itemId} />
-                <CampoServidor onde={onde} />
-                <label className="sr-only" htmlFor={`res-${i.itemId}`}>
-                  Quantidade a resgatar de {nomeDoItem(i.itemId)}
-                </label>
-                <input
-                  id={`res-${i.itemId}`}
-                  name="qty"
-                  type="number"
-                  min={1}
-                  max={i.qty}
-                  defaultValue={i.qty}
-                  required
-                  className="tabular w-20 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1.5 text-right text-sm"
-                />
-                <Enviar>Resgatar</Enviar>
-              </form>
-            ) : (
-              <span className="text-xs text-muted">
-                entre no jogo para resgatar
-              </span>
-            )}
-          </li>
-        ))}
+              {onde.length > 0 && podeResgatar ? (
+                <form action={acao} className="flex items-center gap-2">
+                  <input type="hidden" name="itemId" value={i.itemId} />
+                  <CampoServidor onde={onde} travadoEm={i.serverSlug || undefined} />
+                  <label className="sr-only" htmlFor={`res-${i.itemId}-${i.serverSlug}`}>
+                    Quantidade a resgatar de {nomeDoItem(i.itemId)}
+                  </label>
+                  <input
+                    id={`res-${i.itemId}-${i.serverSlug}`}
+                    name="qty"
+                    type="number"
+                    min={1}
+                    max={i.qty}
+                    defaultValue={i.qty}
+                    required
+                    className="tabular w-20 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1.5 text-right text-sm"
+                  />
+                  <Enviar>Resgatar</Enviar>
+                </form>
+              ) : (
+                <span className="text-xs text-muted">
+                  {i.serverSlug
+                    ? `entre no jogo no ${i.serverNome} para resgatar`
+                    : "entre no jogo para resgatar"}
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ul>
       <Aviso estado={estado} />
     </>

@@ -138,6 +138,30 @@ export async function meusPersonagens(
   }));
 }
 
+/**
+ * Se a conta já tem personagem visto naquele servidor específico.
+ *
+ * Existe para a trava de mercado do DOMINATIONS (§ 11/09/2026,
+ * `PalleiraServer.mercadoRestrito`): o vínculo em si vale a comunidade
+ * inteira (comentário no topo do arquivo), então não dá para usar
+ * `meuVinculo` para saber se a pessoa "está" num servidor — só `players`
+ * sabe onde ela de fato apareceu, porque é populado pelo import do save
+ * daquele mundo.
+ */
+export async function jogouNoServidor(
+  discordId: string,
+  serverSlug: string,
+): Promise<boolean> {
+  const rows = (await sql`
+    select 1
+    from account_links a
+    join players p on p.palworld_uid = a.palworld_uid
+    where a.discord_id = ${discordId} and p.server_slug = ${serverSlug}
+    limit 1
+  `) as unknown[];
+  return rows.length > 0;
+}
+
 /** Código já enviado, esperando confirmação. Expirado conta como inexistente. */
 export async function meuPedido(discordId: string): Promise<Pendente | null> {
   const rows = (await sql`

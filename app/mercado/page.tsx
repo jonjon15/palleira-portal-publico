@@ -242,6 +242,7 @@ function CardAnuncio({
               semIcone
             />
             <p className="tabular mt-3 text-sm text-muted">{anuncio.vendedor}</p>
+            {anuncio.serverNome && <SeloDeOrigem nome={anuncio.serverNome} />}
           </div>
         ) : (
           <div className="pt-4">
@@ -255,6 +256,7 @@ function CardAnuncio({
               {anuncio.qty} unidade{anuncio.qty === 1 ? "" : "s"} ·{" "}
               {anuncio.vendedor}
             </p>
+            {anuncio.serverNome && <SeloDeOrigem nome={anuncio.serverNome} />}
           </div>
         )}
 
@@ -284,6 +286,15 @@ function CardAnuncio({
         </div>
       </div>
     </li>
+  );
+}
+
+/** Aviso de que este anúncio só troca de mão com quem também joga lá. */
+function SeloDeOrigem({ nome }: { nome: string }) {
+  return (
+    <p className="mt-1.5 inline-flex items-center rounded-full border border-gold/30 bg-gold/[0.08] px-2.5 py-0.5 text-xs font-semibold text-gold">
+      Só {nome}
+    </p>
   );
 }
 

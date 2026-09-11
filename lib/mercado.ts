@@ -2,8 +2,10 @@ import { sql } from "@/lib/db";
 import { auth } from "@/auth";
 import { lancar } from "@/lib/economia";
 import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
-import { debitarCofre, devolverAoCofre, temPilha, cofreCheio } from "@/lib/cofre";
+import { debitarCofre, devolverAoCofre, temPilha, cofreCheio, chaveDeServidor } from "@/lib/cofre";
 import { cofreDePalsCheio } from "@/lib/pal-cofre";
+import { serverBySlug } from "@/lib/servers";
+import { jogouNoServidor } from "@/lib/linking";
 import {
   taxaDaVenda,
   PRECO_MINIMO,
@@ -55,6 +57,9 @@ export interface Anuncio {
   /** Nome do personagem no jogo — quem vende tem cara, não só um ID */
   vendedor: string;
   em: string;
+  /** De qual servidor o ativo saiu — trava de mercado (migrações 006 e 014). */
+  serverSlug: string | null;
+  serverNome: string | null;
 }
 
 export interface MeuAnuncio extends Anuncio {
@@ -81,21 +86,28 @@ interface LinhaAnuncio {
   seller_id: string;
   vendedor: string | null;
   created_at: string;
+  item_server_slug: string | null;
+  pal_server_slug: string | null;
 }
 
-const paraAnuncio = (r: LinhaAnuncio): Anuncio => ({
-  id: r.id,
-  kind: r.kind,
-  itemId: r.item_id ?? undefined,
-  qty: r.qty ?? undefined,
-  palId: r.pal_template ? String(r.pal_template.PalID ?? "") : undefined,
-  palTemplate: r.pal_template ?? undefined,
-  preco: r.price,
-  taxa: r.fee,
-  vendedorId: r.seller_id,
-  vendedor: r.vendedor ?? "Palleiro",
-  em: r.created_at,
-});
+const paraAnuncio = (r: LinhaAnuncio): Anuncio => {
+  const serverSlug = r.kind === "pal" ? r.pal_server_slug : r.item_server_slug;
+  return {
+    id: r.id,
+    kind: r.kind,
+    itemId: r.item_id ?? undefined,
+    qty: r.qty ?? undefined,
+    palId: r.pal_template ? String(r.pal_template.PalID ?? "") : undefined,
+    palTemplate: r.pal_template ?? undefined,
+    preco: r.price,
+    taxa: r.fee,
+    vendedorId: r.seller_id,
+    vendedor: r.vendedor ?? "Palleiro",
+    em: r.created_at,
+    serverSlug,
+    serverNome: serverSlug ? (serverBySlug(serverSlug)?.shortName ?? serverSlug) : null,
+  };
+};
 
 /**
  * A vitrine — só anúncio ativo, do mais novo para o mais velho.
@@ -106,7 +118,8 @@ const paraAnuncio = (r: LinhaAnuncio): Anuncio => ({
 export async function vitrine(limite = 60): Promise<Anuncio[]> {
   const rows = (await sql`
     select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
-           l.seller_id, a.player_name as vendedor, l.created_at
+           l.seller_id, a.player_name as vendedor, l.created_at,
+           l.item_server_slug, l.pal_server_slug
     from listings l
     left join account_links a on a.discord_id = l.seller_id
     where l.status = 'ativo'
@@ -119,7 +132,8 @@ export async function vitrine(limite = 60): Promise<Anuncio[]> {
 export async function anuncio(id: number): Promise<Anuncio | null> {
   const rows = (await sql`
     select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
-           l.seller_id, a.player_name as vendedor, l.created_at
+           l.seller_id, a.player_name as vendedor, l.created_at,
+           l.item_server_slug, l.pal_server_slug
     from listings l
     left join account_links a on a.discord_id = l.seller_id
     where l.id = ${id} and l.status = 'ativo'
@@ -131,6 +145,7 @@ export async function meusAnuncios(discordId: string): Promise<MeuAnuncio[]> {
   const rows = (await sql`
     select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
            l.seller_id, a.player_name as vendedor, l.created_at,
+           l.item_server_slug, l.pal_server_slug,
            l.status, l.closed_at,
            c.player_name as comprador
     from listings l
@@ -157,6 +172,7 @@ export async function minhasCompras(discordId: string): Promise<MeuAnuncio[]> {
   const rows = (await sql`
     select l.id, l.kind, l.item_id, l.qty, l.pal_template, l.price, l.fee,
            l.seller_id, a.player_name as vendedor, l.created_at,
+           l.item_server_slug, l.pal_server_slug,
            l.status, l.closed_at, null as comprador
     from listings l
     left join account_links a on a.discord_id = l.seller_id
@@ -198,6 +214,7 @@ export async function anunciar(
   itemId: string,
   qty: number,
   preco: number,
+  serverSlug: string,
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
@@ -229,22 +246,25 @@ export async function anunciar(
   }
 
   // A trava de posse é o próprio débito: se não havia a quantidade, ele não
-  // encontra linha para atualizar e devolve falso.
-  if (!(await debitarCofre(discordId, itemId, qty))) {
-    return { ok: false, mensagem: "Você não tem essa quantidade no cofre." };
+  // encontra linha para atualizar e devolve falso. A chave efetiva decide
+  // QUAL pilha — só o DOMINATIONS separa por servidor (migração 014); os
+  // demais continuam no pool "livre" de sempre.
+  const chave = chaveDeServidor(serverSlug);
+  if (!(await debitarCofre(discordId, itemId, qty, chave))) {
+    return { ok: false, mensagem: "Você não tem essa quantidade guardada vinda desse servidor." };
   }
 
   const taxa = taxaDaVenda(preco);
   try {
     await sql`
-      insert into listings (seller_id, kind, item_id, qty, price, fee)
-      values (${discordId}, 'item', ${itemId}, ${qty}, ${preco}, ${taxa})
+      insert into listings (seller_id, kind, item_id, qty, price, fee, item_server_slug)
+      values (${discordId}, 'item', ${itemId}, ${qty}, ${preco}, ${taxa}, ${chave || null})
     `;
   } catch {
     // O lote já saiu do cofre: devolver vem antes de qualquer outra coisa.
     // Deixar a exceção subir mostraria a tela de erro genérica do Next, e a
     // pessoa não saberia se perdeu o item ou não.
-    await devolverAoCofre(discordId, itemId, qty);
+    await devolverAoCofre(discordId, itemId, qty, chave);
     return {
       ok: false,
       mensagem:
@@ -343,13 +363,14 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
     update listings
        set status = 'cancelado', closed_at = now()
      where id = ${id} and seller_id = ${discordId} and status = 'ativo'
-    returning kind, item_id, qty, pal_template, pal_server_slug
+    returning kind, item_id, qty, pal_template, pal_server_slug, item_server_slug
   `) as {
     kind: TipoAnuncio;
     item_id: string | null;
     qty: number | null;
     pal_template: Record<string, unknown> | null;
     pal_server_slug: string | null;
+    item_server_slug: string | null;
   }[];
 
   if (!rows.length) {
@@ -365,7 +386,12 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
     return { ok: true, mensagem: "Anúncio cancelado e Pal de volta no cofre." };
   }
 
-  await devolverAoCofre(discordId, cancelado.item_id as string, cancelado.qty as number);
+  await devolverAoCofre(
+    discordId,
+    cancelado.item_id as string,
+    cancelado.qty as number,
+    cancelado.item_server_slug as string,
+  );
   return { ok: true, mensagem: "Anúncio cancelado e lote de volta no cofre." };
 }
 
@@ -402,10 +428,25 @@ export async function comprar(id: number): Promise<Resultado> {
     return { ok: false, mensagem: "Esse anúncio é seu." };
   }
 
+  // Trava do DOMINATIONS (§ 11/09/2026): item/Pal vindo de um servidor
+  // `mercadoRestrito` só troca de mão com quem também jogou lá — não basta
+  // ter vínculo, porque o vínculo vale a comunidade inteira. `alvo.serverSlug`
+  // só é não-nulo quando a origem é de fato restrita (`paraAnuncio`
+  // já filtrou os demais para `null`).
+  if (alvo.serverSlug) {
+    const server = serverBySlug(alvo.serverSlug)!;
+    if (!(await jogouNoServidor(discordId, alvo.serverSlug))) {
+      return {
+        ok: false,
+        mensagem: `Esse anúncio veio do ${server.shortName} — só quem também joga lá pode comprar.`,
+      };
+    }
+  }
+
   // Aviso cedo e amigável: o lote precisa caber no cofre de quem compra.
   if (
     alvo.kind === "item" &&
-    !(await temPilha(discordId, alvo.itemId as string)) &&
+    !(await temPilha(discordId, alvo.itemId as string, alvo.serverSlug ?? "")) &&
     (await cofreCheio(discordId, session.user.roles))
   ) {
     return {
@@ -427,7 +468,8 @@ export async function comprar(id: number): Promise<Resultado> {
     update listings
        set status = 'vendido', buyer_id = ${discordId}, closed_at = now()
      where id = ${id} and status = 'ativo' and seller_id <> ${discordId}
-    returning kind, item_id, qty, pal_template, price, fee, seller_id
+    returning kind, item_id, qty, pal_template, price, fee, seller_id,
+              item_server_slug, pal_server_slug
   `) as {
     kind: TipoAnuncio;
     item_id: string | null;
@@ -436,6 +478,8 @@ export async function comprar(id: number): Promise<Resultado> {
     price: number;
     fee: number;
     seller_id: string;
+    item_server_slug: string | null;
+    pal_server_slug: string | null;
   }[];
 
   if (!reservado.length) {
@@ -481,18 +525,26 @@ export async function comprar(id: number): Promise<Resultado> {
   //    ele pagou. Erra a favor de quem comprou, nunca contra.
   if (venda.kind === "pal" && venda.pal_template) {
     // A trava de servidor (§006) é para o próprio dono não usar guardar→
-    // resgatar repetido como um jeito de farmar contador de captura — não
-    // faz sentido contra quem comprou: o comprador pode nunca ter jogado no
-    // servidor de quem vendeu. Por isso `server_slug` nasce nulo aqui — o
-    // comprador resgata em qualquer servidor que estiver online. O cooldown
-    // continua valendo (recomeça do zero em `imported_at = now()`), porque
-    // esse é o pedaço que de fato limita o ciclo repetido, com ou sem venda.
+    // resgatar repetido como um jeito de farmar contador de captura. Fora do
+    // DOMINATIONS ela não faz sentido contra quem comprou — o comprador pode
+    // nunca ter jogado no servidor de quem vendeu — então `pal_server_slug`
+    // já vem nulo do banco e o comprador resgata em qualquer servidor online.
+    // No DOMINATIONS a checagem lá em cima já barrou quem não joga lá, então
+    // aqui o Pal HERDA o servidor de origem — mesma trava do dono.
     await sql`
       insert into vault_pals (discord_id, pal_id, template, server_slug)
-      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)}, null)
+      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)}, ${venda.pal_server_slug})
     `;
   } else {
-    await devolverAoCofre(discordId, venda.item_id as string, venda.qty as number);
+    // Mesma lógica para item: `item_server_slug` só vem preenchido quando a
+    // origem é o DOMINATIONS (§ `chaveDeServidor`) — nos demais casos já é
+    // nulo, e a pilha nasce "livre" para resgatar em qualquer servidor.
+    await devolverAoCofre(
+      discordId,
+      venda.item_id as string,
+      venda.qty as number,
+      venda.item_server_slug ?? "",
+    );
   }
 
   // 4. Pagar o vendedor. A taxa não vai para lugar nenhum: some da economia,

@@ -46,6 +46,15 @@ export interface PalleiraServer {
   mapVisible: boolean;
   mode: "PvE" | "PvP";
   tier: "free" | "vip";
+  /**
+   * Se item/Pal vindo daqui só pode ser comprado, vendido e resgatado por
+   * quem também joga neste servidor (§ trava de mercado, 11/09/2026).
+   *
+   * Pedido específico do dono para o DOMINATIONS: os outros servidores
+   * (PVE Free, PVE VIP) continuam com mercado livre entre si, sem essa
+   * restrição — só este slug fica isolado do resto da economia.
+   */
+  mercadoRestrito: boolean;
 }
 
 const env = (key: string) => process.env[key] ?? "";
@@ -67,6 +76,7 @@ export const SERVERS: PalleiraServer[] = [
     mapVisible: true,
     mode: "PvE",
     tier: "free",
+    mercadoRestrito: false,
   },
   {
     slug: "pve-vip",
@@ -84,6 +94,7 @@ export const SERVERS: PalleiraServer[] = [
     mapVisible: true,
     mode: "PvE",
     tier: "vip",
+    mercadoRestrito: false,
   },
   {
     slug: "pvp-free",
@@ -92,18 +103,20 @@ export const SERVERS: PalleiraServer[] = [
     host: "enx-cirion-16.enx.host",
     gamePort: 11144,
     restPort: 10058,
-    rconPort: 0, // RCONEnabled=False — ver §3.4
+    rconPort: 10056, // ligado em 11/09/2026 — ver alocações no painel
     adminPassword: env("SRV3_ADMIN_PASSWORD"),
     palDefenderPort: 10077,
     palDefenderToken: env("SRV3_PALDEFENDER_TOKEN"),
     panelId: "59ec87fa",
-    // Entra no site para leitura (placar, guilds, estatísticas). O mercado
-    // ainda depende do RCON, que está desligado no .ini deste servidor.
     enabled: true,
     // 🔴 NUNCA no mapa: é PvP, e posição de jogador e base viram alvo.
     mapVisible: false,
     mode: "PvP",
     tier: "free",
+    // Pedido do dono em 11/09/2026: item/Pal vindo daqui só troca com quem
+    // também joga no DOMINATIONS — os outros dois servidores não têm essa
+    // trava.
+    mercadoRestrito: true,
   },
 ];
 

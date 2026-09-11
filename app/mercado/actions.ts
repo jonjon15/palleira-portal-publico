@@ -41,10 +41,15 @@ export async function acaoAnunciar(
   _anterior: Estado,
   form: FormData,
 ): Promise<Estado> {
+  // O rádio manda "itemId|serverSlug" — a chave real da pilha no cofre
+  // (migração 014): o mesmo item pode ter uma pilha "livre" e uma travada no
+  // DOMINATIONS ao mesmo tempo, e só o valor do rádio sabe qual foi marcada.
+  const [itemId, serverSlug] = String(form.get("pilha") ?? "").split("|");
   const r = await anunciar(
-    String(form.get("itemId") ?? ""),
+    itemId ?? "",
     Number(form.get("qty") ?? 0),
     Number(form.get("preco") ?? 0),
+    serverSlug ?? "",
   );
   atualiza();
 
