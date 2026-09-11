@@ -238,21 +238,21 @@ export function LinhaEvento({ evento }: { evento: Evento }) {
           Fotos
         </Link>
 
-        <form action={acao} className="flex shrink-0 gap-2">
-          <input type="hidden" name="id" value={evento.id} />
+        <div className="flex shrink-0 gap-2">
           {acoes.map((a) => (
-            <button
-              key={a.acao}
-              type="submit"
-              name="acao"
-              value={a.acao}
-              disabled={pendente}
-              className={`${botaoLinha} ${a.estilo}`}
-            >
-              {a.rotulo}
-            </button>
+            <form key={a.acao} action={acao}>
+              <input type="hidden" name="id" value={evento.id} />
+              <input type="hidden" name="acao" value={a.acao} />
+              <button
+                type="submit"
+                disabled={pendente}
+                className={`${botaoLinha} ${a.estilo}`}
+              >
+                {a.rotulo}
+              </button>
+            </form>
           ))}
-        </form>
+        </div>
       </div>
       <Aviso {...estado} />
     </li>

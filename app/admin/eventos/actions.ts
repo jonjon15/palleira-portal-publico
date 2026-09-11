@@ -67,7 +67,6 @@ export async function agirSobreEvento(
 
   const id = Number(form.get("id"));
   const acao = String(form.get("acao") ?? "");
-  console.log("[DEBUG agirSobreEvento]", { id, acao, keys: [...form.keys()] });
   if (!Number.isInteger(id)) return { ok: false, mensagem: "Evento inválido." };
 
   const resultado = await (async () => {
