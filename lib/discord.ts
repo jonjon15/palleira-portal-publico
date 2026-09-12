@@ -193,8 +193,11 @@ export async function listarCanais(): Promise<CanalDiscord[]> {
     position?: number;
   }[];
 
+  // 0 = texto comum, 5 = anúncio. O canal de anúncio guarda mensagem igual
+  // ao de texto e é lido pela mesma rota — deixá-lo de fora escondia metade
+  // da Palleira da lista, inclusive os canais de evento e torneio.
   return brutos
-    .filter((c) => c.type === 0) // 0 = canal de texto comum
+    .filter((c) => c.type === 0 || c.type === 5)
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
     .map((c) => ({ id: c.id, nome: c.name }));
 }
