@@ -6,20 +6,21 @@
 # a punição precisa vir de fora. Ver tools/vigia_cheats.py.
 name: vigia de cheats
 
+# 🔴 SEM `schedule` de propósito — só roda na mão.
+#
+# Rodando sozinho ele kickou gente que JÁ TINHA PARADO (12/09/2026): o
+# xNEGANx desligou o Cheat Engine, e mesmo assim levou kick por "30 detecções
+# em 5 minutos" que eram do histórico de antes. A causa é a natureza deste
+# script: ele lê o ARQUIVO DE LOG INTEIRO e conta tudo que está lá, sem saber
+# o que é de agora e o que é de uma hora atrás. O Kaninos, que nem estava no
+# servidor, também foi "kickado" por 43 detecções antigas.
+#
+# Quem faz esse trabalho agora é `app/api/anticheat/route.ts`, alimentado pelo
+# `webhookURL_AntiCheats` do PalDefender: lá cada aviso chega no instante em
+# que acontece, então a janela de 5 minutos é de verdade. Este script fica
+# como ferramenta de AUDITORIA — "quem apareceu no log de hoje" —, e para isso
+# o normal é rodar sem `--aplicar`.
 on:
-  schedule:
-    # De hora em hora, e cada execução fica ~55 min vigiando de perto.
-    #
-    # O GitHub cobra o minuto cheio de runner mesmo quando o script leva 1,2s,
-    # então 48 execuções curtas por dia custam o mesmo que 24 execuções longas
-    # — só que a execução longa checa a cada 30 SEGUNDOS em vez de a cada 30
-    # minutos. Num PvP com alguém batendo 57x, essa diferença é o servidor.
-    #
-    # Conta: 24 × 55 min ≈ 1.320 min/mês por dia… ou seja ~40 h/mês, acima da
-    # cota grátis de 2.000 min. Por isso a vigia cobre a JANELA DE PICO
-    # (17h–02h BRT = 20h–05h UTC), quando há gente no servidor: 9 execuções
-    # por dia × 55 min ≈ 1.485 min/mês, dentro da cota junto com o import.
-    - cron: "0 20-23,0-5 * * *"
   workflow_dispatch:
     inputs:
       servidor:
@@ -37,12 +38,12 @@ on:
         description: "Minutos vigiando (vazio = uma checagem só)"
         required: false
         type: string
-        default: "55"
+        default: ""
       aplicar:
-        description: "Kickar de verdade (desmarcado = só relata)"
+        description: "Kickar de verdade (o padrão é SÓ RELATAR — ver aviso no topo)"
         required: false
         type: boolean
-        default: true
+        default: false
 
 jobs:
   vigiar:
@@ -78,6 +79,5 @@ jobs:
           python tools/vigia_cheats.py \
             --servidor "${{ inputs.servidor || 'pvp-free' }}" \
             --limiar "${{ inputs.limiar || '30' }}" \
-            --vigiar "${{ inputs.vigiar || '55' }}" \
-            --intervalo 30 \
-            ${{ (github.event_name == 'schedule' || inputs.aplicar) && '--aplicar' || '' }}
+            ${{ inputs.vigiar && format('--vigiar {0} --intervalo 30', inputs.vigiar) || '' }} \
+            ${{ inputs.aplicar && '--aplicar' || '' }}
