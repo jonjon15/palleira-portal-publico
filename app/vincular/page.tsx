@@ -194,7 +194,7 @@ function Vinculado({
       </p>
       <h2 className="mt-2 text-2xl font-bold tracking-tight">{nome}</h2>
       <p className="mt-1 text-sm text-muted">
-        provado no {servidor} · desde {data}
+        aprovado no {servidor} · desde {data}
       </p>
       <p className="mt-4 max-w-xl text-sm text-muted">
         Tudo que você fizer no jogo conta para a sua conta aqui: placar,
