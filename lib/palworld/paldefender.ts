@@ -322,6 +322,29 @@ export async function getPals(
   return lista;
 }
 
+/**
+ * Só quantos Pals a pessoa tem, sem baixar os templates.
+ *
+ * O ranking precisa do número, não das fichas — e a resposta completa de
+ * `pals/{uid}` é grande (cada Pal traz IVs, passivas, skills). O `Meta` já
+ * vem com as contagens prontas, então aqui só se lê ele. Base inclusa: no
+ * ranking o que importa é quantos Pals a pessoa tem no mundo, e não a regra
+ * de custódia do cofre (§7.3), que ignora os que estão trabalhando.
+ *
+ * ⚠️ Lança `ForaDoJogo` para quem não está conectado, igual `getPals`.
+ */
+export async function contarPals(
+  server: PalleiraServer,
+  uid: string,
+): Promise<number> {
+  const raw = await call<{
+    Meta?: { TeamCount?: number; PalboxCount?: number; BaseCampCount?: number };
+  }>(server, `pals/${normalizarUid(uid)}`, false);
+
+  const m = raw.Meta ?? {};
+  return (m.TeamCount ?? 0) + (m.PalboxCount ?? 0) + (m.BaseCampCount ?? 0);
+}
+
 /** Um Pal específico, pelo `instanceId` que `getPals` devolveu. */
 export async function getPal(
   server: PalleiraServer,

@@ -4,7 +4,7 @@ import { unstable_cache } from "next/cache";
 import { PageHeader } from "@/components/page-header";
 import { activeServers, SERVERS } from "@/lib/servers";
 import { normalizarUid } from "@/lib/palworld/uid";
-import { getPlayers, getGuilds } from "@/lib/palworld/paldefender";
+import { getPlayers, getGuilds, contarPals } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers } from "@/lib/db";
 
@@ -50,6 +50,9 @@ const loadLive = unstable_cache(
     // level ao vivo; o PalDefender não. Assim o placar mostra o número certo
     // para quem está jogando, em vez do valor do último save.
     const liveLevel = new Map<string, number>();
+    // uid → quantos Pals tem agora. Só de quem está conectado: `contarPals`
+    // lê a memória do servidor, e para quem está offline não há resposta.
+    const livePals = new Map<string, number>();
     let totalPlayers = 0;
     const failed: string[] = [];
 
@@ -69,8 +72,8 @@ const loadLive = unstable_cache(
           }
 
           totalPlayers += players.length;
-          for (const p of players) {
-            if (!p.online || ehAdmin(p.name)) continue;
+          const conectados = players.filter((p) => p.online && !ehAdmin(p.name));
+          for (const p of conectados) {
             online.push({
               name: p.name || "Jogador sem nome",
               guild: p.guildName,
@@ -78,6 +81,18 @@ const loadLive = unstable_cache(
               level: liveLevel.get(p.playerUid) ?? 0,
             });
           }
+
+          // Uma chamada por jogador conectado. Falha individual não derruba
+          // o placar — quem falhar fica com o número do último save.
+          await Promise.all(
+            conectados.map(async (p) => {
+              try {
+                livePals.set(p.playerUid, await contarPals(server, p.playerUid));
+              } catch {
+                // sem contagem ao vivo para este
+              }
+            }),
+          );
 
           for (const g of gs) {
             if (g.memberCount === 0 && g.bases.length === 0) continue;
@@ -107,6 +122,7 @@ const loadLive = unstable_cache(
       totalPlayers,
       failed,
       liveLevel: Object.fromEntries(liveLevel),
+      livePals: Object.fromEntries(livePals),
     };
   },
   ["placar-live"],
@@ -120,6 +136,19 @@ export default async function Ranking() {
   ]);
 
   const onlineNames = new Set(live.online.map((p) => p.name));
+
+  // Mesma lógica do ranking do Dominantes: quem está jogando entra com os
+  // números do momento, quem está offline com os do último import do save.
+  const classificados = players
+    .map((p) => {
+      const uid = normalizarUid(p.palworld_uid);
+      return {
+        ...p,
+        level: live.liveLevel[uid] ?? p.level,
+        pal_count: live.livePals[uid] ?? p.pal_count,
+      };
+    })
+    .sort((a, b) => b.level - a.level || b.pal_count - a.pal_count);
 
   return (
     <>
@@ -165,18 +194,19 @@ export default async function Ranking() {
         <section className="mt-14">
           <h2 className="text-2xl font-bold tracking-tight">Jogadores</h2>
           <p className="mt-1 text-sm text-muted">
-            Por level e Pals capturados. O save é lido de 2 em 2 horas; quem
-            está online mostra o level do momento.
+            Quem está online aparece com o level e os Pals do momento,
+            atualizados a cada 2 minutos. Para quem está offline, os números
+            são os do último save — lido de 2 em 2 horas.
           </p>
 
-          {players.length === 0 ? (
+          {classificados.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
             <Table
               head={["#", "Jogador", "Servidor", "Level", "Pals"]}
               align={["left", "left", "left", "right", "right"]}
             >
-              {players.map((p, i) => (
+              {classificados.map((p, i) => (
                 <tr
                   key={`${p.server_slug}-${p.palworld_uid}`}
                   className="border-b border-line/60 last:border-0 hover:bg-surface/60"
@@ -195,7 +225,7 @@ export default async function Ranking() {
                     {SERVER_NAME[p.server_slug] ?? p.server_slug}
                   </td>
                   <td className="tabular px-4 py-3 text-right font-semibold">
-                    {live.liveLevel[normalizarUid(p.palworld_uid)] ?? p.level}
+                    {p.level}
                   </td>
                   <td className="tabular px-4 py-3 text-right">
                     {p.pal_count.toLocaleString("pt-BR")}
