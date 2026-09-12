@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { serverBySlug, SERVERS } from "@/lib/servers";
 import { kickPlayer, rcon } from "@/lib/palworld/rcon";
+import { sql } from "@/lib/db";
 
 /**
  * Recebe as detecções do anticheat e expulsa em rajada — na hora.
@@ -43,17 +44,55 @@ const SILENCIO_MS = 60 * 60_000;
 const PRAZO_AVISO_MS = 3 * 60_000;
 
 /**
- * Memória do processo, de propósito.
+ * A contagem mora no banco, não na memória do processo.
  *
- * A janela é de 5 minutos e a função fica quente entre chamadas seguidas;
- * um banco aqui acrescentaria latência ao caminho que precisa ser rápido.
- * Se a instância reciclar, a contagem recomeça — o efeito é dar mais uma
- * chance ao suspeito, nunca kickar alguém à toa.
+ * 🔴 Já morou em `Map`, com a justificativa de que a janela é curta e a
+ * função fica quente entre chamadas. Estava errado para como a Vercel
+ * atende de verdade: várias instâncias em paralelo, e cada POST do
+ * PalDefender pode cair numa diferente. Com a rajada dividida, cada
+ * instância vê um pedaço e **nenhuma chega ao limiar**.
+ *
+ * Medido em 12/09/2026: o 'VOID' fez 10 avisos de stamina em 24 segundos no
+ * Dominantes — ritmo de ~25/min, muito acima do limiar de 25 em 5 min — e
+ * não levou aviso nem kick. Ver a migração 015.
+ *
+ * O custo é uma ida ao Postgres no caminho quente. Vale: sem isto o kick
+ * não é ao vivo, é loteria.
  */
-const avisos = new Map<string, number[]>();
-const kickados = new Map<string, number>();
-/** Quem já levou o aviso, e quando. */
-const avisados = new Map<string, number>();
+
+/** Grava a detecção e devolve quantas há na janela, já contando esta. */
+async function registrarEContar(
+  slug: string,
+  det: Deteccao,
+): Promise<number> {
+  const linhas = (await sql`
+    with nova as (
+      insert into anticheat_detections (server_slug, user_id, tipo, nome)
+      values (${slug}, ${det.userId}, ${det.tipo}, ${det.nome})
+      returning 1
+    ),
+    limpeza as (
+      delete from anticheat_detections
+       where created_at < now() - interval '1 hour'
+    )
+    select count(*)::int as total
+      from anticheat_detections
+     where server_slug = ${slug}
+       and user_id = ${det.userId}
+       and tipo = ${det.tipo}
+       and created_at > now() - ${`${JANELA_MS} milliseconds`}::interval
+  `) as { total: number }[];
+
+  // O `select` roda no mesmo comando do `insert`, então a linha nova ainda
+  // não está visível para ele: soma 1 à mão.
+  return (linhas[0]?.total ?? 0) + 1;
+}
+
+/** Zera a janela deste jogador — depois de avisar ou de kickar. */
+const limparJanela = (slug: string, det: Deteccao) => sql`
+  delete from anticheat_detections
+   where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
+`;
 
 type Tipo = "dano" | "stamina";
 
@@ -146,33 +185,48 @@ export async function POST(req: Request) {
     return NextResponse.json({ ignorado: "abaixo do esperado" });
   }
 
-  const agora = Date.now();
   const limiar = LIMIARES[det.tipo];
   // Contagem por tipo: dano e stamina têm ruídos diferentes, e somar os dois
   // faria alguém com lag nos dois detectores passar sem ser cheater em
   // nenhum deles.
-  const chaveJogador = `${slug}:${det.userId}:${det.tipo}`;
+  const naJanela = await registrarEContar(slug, det);
 
-  const recentes = (avisos.get(chaveJogador) ?? []).filter(
-    (t) => agora - t < JANELA_MS,
-  );
-  recentes.push(agora);
-  avisos.set(chaveJogador, recentes);
-
-  if (recentes.length < limiar) {
-    return NextResponse.json({ tipo: det.tipo, contando: recentes.length, limiar });
+  if (naJanela < limiar) {
+    return NextResponse.json({ tipo: det.tipo, contando: naJanela, limiar });
   }
-  if (agora - (kickados.get(chaveJogador) ?? 0) < SILENCIO_MS) {
+
+  // Estado do jogador: quando levou o aviso e quando levou o último kick.
+  // Uma consulta só, para não somar duas idas ao banco no caminho quente.
+  const estado = (await sql`
+    select
+      (select extract(epoch from now() - avisado_em) * 1000
+         from anticheat_warnings
+        where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
+      )::float8 as desde_aviso,
+      (select extract(epoch from now() - kickado_em) * 1000
+         from anticheat_kicks
+        where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
+      )::float8 as desde_kick
+  `) as { desde_aviso: number | null; desde_kick: number | null }[];
+
+  const desdeAviso = estado[0]?.desde_aviso ?? null;
+  const desdeKick = estado[0]?.desde_kick ?? null;
+
+  if (desdeKick !== null && desdeKick < SILENCIO_MS) {
     return NextResponse.json({ ja_kickado: true });
   }
 
   // Primeira rajada: avisa e dá um prazo para desligar o cheat. Quem para
   // não é expulso — foi o que aconteceu na conversa do dono com um jogador
   // em 12/09/2026. Só quem continua depois do prazo cai no kick.
-  const avisadoEm = avisados.get(chaveJogador) ?? 0;
-  if (agora - avisadoEm > PRAZO_AVISO_MS) {
-    avisados.set(chaveJogador, agora);
-    avisos.delete(chaveJogador);
+  if (desdeAviso === null || desdeAviso > PRAZO_AVISO_MS) {
+    await sql`
+      insert into anticheat_warnings (server_slug, user_id, tipo, avisado_em)
+      values (${slug}, ${det.userId}, ${det.tipo}, now())
+      on conflict (server_slug, user_id, tipo)
+      do update set avisado_em = now()
+    `;
+    await limparJanela(slug, det);
 
     // `rcon` direto, e não `sendToPlayer`: aquele converte o UID para o
     // formato 8-8-8-8 do Palworld, e aqui o id vem da plataforma
@@ -191,13 +245,24 @@ export async function POST(req: Request) {
     return NextResponse.json({
       avisado: det.nome,
       tipo: det.tipo,
-      avisos: recentes.length,
+      avisos: naJanela,
     });
   }
 
-  kickados.set(chaveJogador, agora);
-  avisados.delete(chaveJogador);
-  avisos.delete(chaveJogador);
+  // Avisado e continuou: registra o kick ANTES de executar, para que uma
+  // segunda detecção chegando em paralelo (outra instância, mesma rajada)
+  // já encontre o silêncio e não kicke duas vezes.
+  await sql`
+    insert into anticheat_kicks (server_slug, user_id, tipo, nome, kickado_em)
+    values (${slug}, ${det.userId}, ${det.tipo}, ${det.nome}, now())
+    on conflict (server_slug, user_id, tipo)
+    do update set kickado_em = now(), nome = excluded.nome
+  `;
+  await sql`
+    delete from anticheat_warnings
+     where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
+  `;
+  await limparJanela(slug, det);
 
   const ok = await kickPlayer(server, det.userId, [
     `${det.nome} FOI KICKADO`,
@@ -211,7 +276,7 @@ export async function POST(req: Request) {
     kickado: ok,
     jogador: det.nome,
     tipo: det.tipo,
-    avisos: recentes.length,
+    avisos: naJanela,
   });
 }
 
