@@ -231,6 +231,46 @@ def salvar_estado(estado: dict) -> None:
         json.dump(estado, f, indent=2)
 
 
+# -------------------------------------------------------------------- rodada
+
+def uma_rodada(sftp, cfg: dict, slug: str, limiar: int, aplicar: bool,
+               estado: dict, silencioso: bool = False) -> bool:
+    """Lê o log, kicka quem passou e diz se houve kick."""
+    arquivo, texto = log_mais_recente(sftp)
+    if not texto:
+        if not silencioso:
+            print("sem log de cheats — nada a fazer")
+        return False
+
+    achados = rajadas(texto, limiar)
+    if not achados:
+        if not silencioso:
+            print(f"lendo {arquivo}: ninguém passou de {limiar} detecções em 5 min")
+        return False
+
+    agora = time.time()
+    houve = False
+    for nome, (uid, pico) in sorted(achados.items(), key=lambda x: -x[1][1]):
+        chave = f"{slug}:{uid}"
+        if agora - estado.get(chave, 0) < REKICK_APOS_SEGUNDOS:
+            continue  # já kickado por estes mesmos avisos
+
+        print(f"  [CHEAT] {nome} ({uid}): pico de {pico} em 5 min", flush=True)
+        if not aplicar:
+            houve = True
+            continue
+
+        try:
+            for r in kickar(cfg, slug, nome, uid, pico):
+                print(f"     {r}", flush=True)
+            estado[chave] = agora
+            houve = True
+        except OSError as e:
+            print(f"     [ERRO] RCON falhou: {e}", flush=True)
+
+    return houve
+
+
 # --------------------------------------------------------------------- main
 
 def main() -> int:
@@ -238,53 +278,67 @@ def main() -> int:
     ap.add_argument("--servidor", required=True, choices=sorted(RCON_PORTAS))
     ap.add_argument("--limiar", type=int, default=LIMIAR_PADRAO)
     ap.add_argument("--aplicar", action="store_true", help="kicka de verdade")
+    ap.add_argument("--vigiar", type=int, metavar="MINUTOS",
+                    help="fica vigiando por este tempo, checando a cada --intervalo")
+    ap.add_argument("--intervalo", type=int, default=30, metavar="SEGUNDOS",
+                    help="de quanto em quanto tempo checar no modo --vigiar")
     args = ap.parse_args()
 
     cfg = servidores()[args.servidor]
-
-    transporte = paramiko.Transport((cfg["host"], 2022))
-    transporte.connect(username=cfg["user"], password=cfg["password"])
-    try:
-        sftp = paramiko.SFTPClient.from_transport(transporte)
-        arquivo, texto = log_mais_recente(sftp)
-    finally:
-        transporte.close()
-
-    if not texto:
-        print("sem log de cheats — nada a fazer")
-        return 0
-
-    print(f"lendo {arquivo}")
-    achados = rajadas(texto, args.limiar)
-    if not achados:
-        print(f"ninguém passou de {args.limiar} detecções em 5 min")
-        return 0
-
     estado = carregar_estado()
-    agora = time.time()
 
-    for nome, (uid, pico) in sorted(achados.items(), key=lambda x: -x[1][1]):
-        chave = f"{args.servidor}:{uid}"
-        ultimo = estado.get(chave, 0)
-        if agora - ultimo < REKICK_APOS_SEGUNDOS:
-            print(f"  {nome}: {pico} detecções — já kickado há pouco, pulando")
-            continue
+    def abrir_sftp():
+        tr = paramiko.Transport((cfg["host"], 2022))
+        tr.connect(username=cfg["user"], password=cfg["password"])
+        return tr, paramiko.SFTPClient.from_transport(tr)
 
-        print(f"  🔴 {nome} ({uid}): pico de {pico} em 5 min")
-        if not args.aplicar:
-            continue
-
+    # Rodada única: o comportamento de sempre.
+    if not args.vigiar:
+        transporte, sftp = abrir_sftp()
         try:
-            for r in kickar(cfg, args.servidor, nome, uid, pico):
-                print(f"     {r}")
-            estado[chave] = agora
-        except OSError as e:
-            print(f"     ⚠️ RCON falhou: {e}")
+            uma_rodada(sftp, cfg, args.servidor, args.limiar, args.aplicar, estado)
+        finally:
+            transporte.close()
+        if args.aplicar:
+            salvar_estado(estado)
+        else:
+            print("\n(rode com --aplicar para kickar)")
+        return 0
 
-    if args.aplicar:
-        salvar_estado(estado)
-    else:
-        print("\n(rode com --aplicar para kickar)")
+    # Modo vigia: uma execução longa em vez de muitas curtas.
+    #
+    # O GitHub cobra o minuto cheio de runner mesmo quando o script leva 1,2s,
+    # então rodar de 30 em 30 minutos custa o mesmo que ficar vigiando 30
+    # minutos seguidos — e vigiando o kick sai em segundos em vez de meia
+    # hora. A conexão SFTP é reaproveitada entre as checagens; se cair (o
+    # servidor reinicia 5x por dia), reconecta na próxima volta.
+    fim = time.time() + args.vigiar * 60
+    print(f"vigiando {args.servidor} por {args.vigiar} min, "
+          f"checando a cada {args.intervalo}s (limiar {args.limiar})", flush=True)
+
+    transporte = sftp = None
+    checagens = 0
+    try:
+        while time.time() < fim:
+            try:
+                if sftp is None:
+                    transporte, sftp = abrir_sftp()
+                uma_rodada(sftp, cfg, args.servidor, args.limiar, args.aplicar,
+                           estado, silencioso=True)
+                checagens += 1
+            except (OSError, paramiko.SSHException) as e:
+                print(f"  [ERRO] falha na checagem ({e}); reconectando", flush=True)
+                if transporte:
+                    transporte.close()
+                transporte = sftp = None
+            time.sleep(args.intervalo)
+    finally:
+        if transporte:
+            transporte.close()
+        if args.aplicar:
+            salvar_estado(estado)
+
+    print(f"fim da vigia — {checagens} checagens", flush=True)
     return 0
 
 

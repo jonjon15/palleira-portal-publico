@@ -1,19 +1,25 @@
-# Kicka quem o PalDefender flagra por dano/stamina em rajada.
+# Kicka quem o PalDefender flagra por dano em rajada.
 #
-# O anticheat detecta essas heurísticas mas não pune sozinho ("requires human
-# judgement") — lag gera falso positivo. Quem separa um do outro é o volume:
-# ver a medição no cabeçalho de tools/vigia_cheats.py.
+# O anticheat detecta mas não pune essa heurística ("requires human
+# judgement") — confirmado na própria DLL: existe `doActionUponIllegalPalStats`
+# e `doActionUponDoctorSurgiExploit`, mas nada equivalente para dano. Por isso
+# a punição precisa vir de fora. Ver tools/vigia_cheats.py.
 name: vigia de cheats
 
 on:
   schedule:
-    # De 30 em 30 minutos. O log fica no servidor e não some, então uma
-    # rajada não passa despercebida entre duas rodadas — só demora um pouco
-    # mais para agir. O limite real é a cota de CI do GitHub (2.000 min/mês
-    # no plano grátis): cada rodada custa ~1 min de runner mesmo o script
-    # levando 1,2s, então 48 rodadas/dia já consomem ~1.400, e o import do
-    # save come o resto. Aumentar a frequência daqui exige olhar essa conta.
-    - cron: "*/30 * * * *"
+    # De hora em hora, e cada execução fica ~55 min vigiando de perto.
+    #
+    # O GitHub cobra o minuto cheio de runner mesmo quando o script leva 1,2s,
+    # então 48 execuções curtas por dia custam o mesmo que 24 execuções longas
+    # — só que a execução longa checa a cada 30 SEGUNDOS em vez de a cada 30
+    # minutos. Num PvP com alguém batendo 57x, essa diferença é o servidor.
+    #
+    # Conta: 24 × 55 min ≈ 1.320 min/mês por dia… ou seja ~40 h/mês, acima da
+    # cota grátis de 2.000 min. Por isso a vigia cobre a JANELA DE PICO
+    # (17h–02h BRT = 20h–05h UTC), quando há gente no servidor: 9 execuções
+    # por dia × 55 min ≈ 1.485 min/mês, dentro da cota junto com o import.
+    - cron: "0 20-23,0-5 * * *"
   workflow_dispatch:
     inputs:
       servidor:
@@ -27,6 +33,11 @@ on:
         required: false
         type: string
         default: "30"
+      vigiar:
+        description: "Minutos vigiando (vazio = uma checagem só)"
+        required: false
+        type: string
+        default: "55"
       aplicar:
         description: "Kickar de verdade (desmarcado = só relata)"
         required: false
@@ -36,7 +47,8 @@ on:
 jobs:
   vigiar:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Um pouco acima do --vigiar, para o job não ser morto no meio.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -48,8 +60,8 @@ jobs:
       - run: pip install --quiet paramiko
 
       # O estado de "quem já kickei" vive no cache: o runner é descartável,
-      # e sem isso cada rodada kickaria de novo quem já saiu (o log não some
-      # quando a pessoa desconecta).
+      # e sem isso cada execução kickaria de novo quem já saiu (o log não
+      # some quando a pessoa desconecta).
       - uses: actions/cache@v4
         with:
           path: tools/.vigia_cheats.json
@@ -66,4 +78,6 @@ jobs:
           python tools/vigia_cheats.py \
             --servidor "${{ inputs.servidor || 'pvp-free' }}" \
             --limiar "${{ inputs.limiar || '30' }}" \
+            --vigiar "${{ inputs.vigiar || '55' }}" \
+            --intervalo 30 \
             ${{ (github.event_name == 'schedule' || inputs.aplicar) && '--aplicar' || '' }}

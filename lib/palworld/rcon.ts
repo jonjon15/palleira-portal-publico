@@ -132,6 +132,27 @@ export async function sendToPlayer(
   return res.toLowerCase().includes("succeeded");
 }
 
+/**
+ * Expulsa alguém do servidor e anuncia o motivo no chat de todos.
+ *
+ * ⚠️ O `Broadcast` do Palworld corta a mensagem no primeiro espaço — por
+ * isso as linhas vão com underscore. Sem isso só a primeira palavra chega.
+ *
+ * O `userId` aqui é o da plataforma (`steam_…`, `gdk_…`, `ps5_…`), que é o
+ * que `KickPlayer` espera — não o `palworld_uid` canônico do resto do site.
+ */
+export async function kickPlayer(
+  server: PalleiraServer,
+  userId: string,
+  linhasDoAviso: string[],
+): Promise<boolean> {
+  for (const linha of linhasDoAviso) {
+    await rcon(server, `Broadcast ${linha.replace(/\s+/g, "_")}`).catch(() => "");
+  }
+  const res = await rcon(server, `KickPlayer ${userId}`);
+  return res.toLowerCase().includes("kicked");
+}
+
 /* ------------------------------------------------------- itens (o cofre) */
 
 export interface ResultadoComando {
