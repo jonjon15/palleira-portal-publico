@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { serverBySlug, SERVERS } from "@/lib/servers";
-import { kickPlayer } from "@/lib/palworld/rcon";
+import { kickPlayer, rcon } from "@/lib/palworld/rcon";
 
 /**
  * Recebe as detecções do anticheat e expulsa em rajada — na hora.
@@ -34,6 +34,15 @@ const JANELA_MS = 5 * 60_000;
 const SILENCIO_MS = 60 * 60_000;
 
 /**
+ * Quanto tempo a pessoa tem para desligar o cheat depois do aviso.
+ *
+ * O dono pediu esta etapa depois de conversar com um jogador e ele desligar
+ * o que estava usando (12/09/2026): quem para na hora não é expulso. Passado
+ * o prazo, uma nova rajada cai direto no kick — o aviso vale uma vez.
+ */
+const PRAZO_AVISO_MS = 3 * 60_000;
+
+/**
  * Memória do processo, de propósito.
  *
  * A janela é de 5 minutos e a função fica quente entre chamadas seguidas;
@@ -43,6 +52,8 @@ const SILENCIO_MS = 60 * 60_000;
  */
 const avisos = new Map<string, number[]>();
 const kickados = new Map<string, number>();
+/** Quem já levou o aviso, e quando. */
+const avisados = new Map<string, number>();
 
 interface Deteccao {
   userId: string;
@@ -120,13 +131,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ ja_kickado: true });
   }
 
+  // Primeira rajada: avisa e dá um prazo para desligar o cheat. Quem para
+  // não é expulso — foi o que aconteceu na conversa do dono com um jogador
+  // em 12/09/2026. Só quem continua depois do prazo cai no kick.
+  const avisadoEm = avisados.get(chaveJogador) ?? 0;
+  if (agora - avisadoEm > PRAZO_AVISO_MS) {
+    avisados.set(chaveJogador, agora);
+    avisos.delete(chaveJogador);
+
+    // `rcon` direto, e não `sendToPlayer`: aquele converte o UID para o
+    // formato 8-8-8-8 do Palworld, e aqui o id vem da plataforma
+    // (`steam_…`, `gdk_…`, `ps5_…`). O `send msg` aceita os dois — testado
+    // por RCON em 12/09/2026 — mas só se o valor chegar intacto.
+    await rcon(
+      server,
+      `send msg ${det.userId} ANTICHEAT:_desligue_o_cheat_de_dano_ou_sera_expulso`,
+    ).catch(() => "");
+
+    return NextResponse.json({ avisado: det.nome, avisos: recentes.length });
+  }
+
   kickados.set(chaveJogador, agora);
+  avisados.delete(chaveJogador);
   avisos.delete(chaveJogador);
 
   const ok = await kickPlayer(server, det.userId, [
     `${det.nome} FOI KICKADO`,
     "MOTIVO: ANTICHEAT DE DANO",
-    `${recentes.length} DETECCOES EM 5 MINUTOS`,
+    "AVISADO E CONTINUOU",
   ]).catch(() => false);
 
   return NextResponse.json({ kickado: ok, jogador: det.nome, avisos: recentes.length });
