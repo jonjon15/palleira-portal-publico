@@ -232,6 +232,16 @@ export interface MensagemDiscord {
   /** Quem digitou o comando, quando a mensagem é resposta de slash command */
   comandoDe: { id: string; username: string; displayName: string } | null;
   comandoNome: string | null;
+  /** A mensagem marcou @everyone ou @here */
+  chamouTodos: boolean;
+  /**
+   * A primeira imagem da mensagem, se tiver.
+   *
+   * ⚠️ A URL do CDN do Discord **expira em ~24h** — tem `ex`, `is` e `hm` na
+   * query, e sem assinatura válida responde 404. Guardar o link cru em
+   * algum lugar que dure mais que um dia não funciona; ver `renovarImagens`.
+   */
+  imagemUrl: string | null;
   em: string;
 }
 
@@ -240,6 +250,8 @@ interface RawEmbed {
   description?: string;
   fields?: { name?: string; value?: string }[];
   footer?: { text?: string };
+  image?: { url?: string };
+  thumbnail?: { url?: string };
 }
 
 interface RawMessage {
@@ -248,6 +260,8 @@ interface RawMessage {
   embeds?: RawEmbed[];
   timestamp: string;
   author?: { id: string; username: string; global_name?: string | null; bot?: boolean };
+  mention_everyone?: boolean;
+  attachments?: { url: string; content_type?: string; filename?: string }[];
   interaction_metadata?: {
     name?: string;
     user?: { id: string; username: string; global_name?: string | null };
@@ -256,6 +270,20 @@ interface RawMessage {
     name?: string;
     user?: { id: string; username: string; global_name?: string | null };
   };
+}
+
+/** A primeira imagem da mensagem: anexo primeiro, depois imagem de embed. */
+function primeiraImagem(m: RawMessage): string | null {
+  const anexo = (m.attachments ?? []).find((a) =>
+    (a.content_type ?? "").startsWith("image/"),
+  );
+  if (anexo) return anexo.url;
+
+  for (const e of m.embeds ?? []) {
+    const url = e.image?.url ?? e.thumbnail?.url;
+    if (url) return url;
+  }
+  return null;
 }
 
 function achatarEmbeds(embeds: RawEmbed[] = []): string {
@@ -270,6 +298,69 @@ function achatarEmbeds(embeds: RawEmbed[] = []): string {
     if (e.footer?.text) pedacos.push(e.footer.text);
   }
   return pedacos.join("\n");
+}
+
+/**
+ * Uma URL de anexo do Discord ainda é válida?
+ *
+ * O CDN assina o link com `ex` (expiração, epoch em hexadecimal), `is` e
+ * `hm`. Passou de `ex`, ou mexeu na assinatura, o CDN responde 404 —
+ * conferido em 12/09/2026 trocando o `hm` de uma URL boa.
+ *
+ * A folga de uma hora é para o link não vencer entre a checagem e a hora em
+ * que alguém abre a página.
+ */
+export function urlDeAnexoValida(url: string, folgaMs = 60 * 60_000): boolean {
+  try {
+    const ex = new URL(url).searchParams.get("ex");
+    if (!ex) return true; // sem assinatura: não é link de CDN do Discord
+    return Number.parseInt(ex, 16) * 1000 - folgaMs > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Pede ao Discord links novos para anexos cujo link expirou.
+ *
+ * Devolve um mapa `url antiga → url nova`. O que o Discord não conseguir
+ * renovar simplesmente não entra no mapa — anexo de mensagem apagada, por
+ * exemplo.
+ *
+ * Aceita no máximo 50 por chamada, que é o limite da rota.
+ */
+export async function renovarImagens(
+  urls: string[],
+): Promise<Map<string, string>> {
+  const novas = new Map<string, string>();
+  const lista = [...new Set(urls)].filter(Boolean);
+
+  for (let i = 0; i < lista.length; i += 50) {
+    const lote = lista.slice(i, i + 50);
+    try {
+      const res = await fetch(`${API}/attachments/refresh-urls`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bot ${BOT_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ attachment_urls: lote }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) continue;
+
+      const corpo = (await res.json()) as {
+        refreshed_urls?: { original: string; refreshed: string }[];
+      };
+      for (const r of corpo.refreshed_urls ?? []) {
+        if (r.original && r.refreshed) novas.set(r.original, r.refreshed);
+      }
+    } catch {
+      // Discord fora: quem chamou continua com a URL velha, que é o que há.
+    }
+  }
+
+  return novas;
 }
 
 export class SemAcessoAoCanalError extends Error {
@@ -324,6 +415,8 @@ export async function lerCanal(
             }
           : null,
         comandoNome: inter?.name ?? null,
+        chamouTodos: Boolean(m.mention_everyone),
+        imagemUrl: primeiraImagem(m),
         em: m.timestamp,
       });
     }
