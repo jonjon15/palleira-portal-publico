@@ -55,30 +55,54 @@ const kickados = new Map<string, number>();
 /** Quem já levou o aviso, e quando. */
 const avisados = new Map<string, number>();
 
+type Tipo = "dano" | "stamina";
+
 interface Deteccao {
   userId: string;
   nome: string;
   linha: string;
+  tipo: Tipo;
 }
 
 /**
- * Só conta aviso de dano **acima** do que a arma permite.
+ * Limiar por tipo, porque o ruído de cada um é diferente.
  *
- * Metade dos avisos do log é de dano abaixo do esperado
- * (`NativeDamageValue=360 but expected 1200`, desarmado) — dessincronia de
- * rede, e bater mais fraco não beneficia ninguém. Contar esses kickaria
- * jogador honesto: foi o caso de xNEGANx, DankiBase e HordaS Mari.
+ * Medido nos logs do Dominantes em 12/09/2026, pico em 5 minutos:
+ *
+ *   dano     xNEGANx*  46   ← cheat        Santos 12  ← lag
+ *   stamina  xNEGANx   30   ← Cheat Engine Santos 12  ← lag
+ *
+ * (*o de dano foi o Kaninos; o de stamina, o xNEGANx.)
+ *
+ * Stamina quase entrou como ruído puro — 9 jogadores diferentes aparecem
+ * nela, em Steam/Xbox/PS5. O que mostrou que não é só ping foi o relato do
+ * dono: o xNEGANx **não estava usando** stamina hack, mas o Cheat Engine
+ * aberto com a tabela carregada já aplica o valor sozinho; quando ele
+ * fechou tudo e reiniciou, parou de acusar na hora. Bate com o log: os
+ * dele são contínuos (30 min seguidos, picos de 14/min), os dos outros
+ * são pontuais (1 a 5 avisos isolados).
  */
-function bateuMaisForte(linha: string): boolean {
+const LIMIARES: Record<Tipo, number> = { dano: 30, stamina: 25 };
+
+/**
+ * Se o aviso conta para o gatilho.
+ *
+ * Dano: só **acima** do que a arma permite. Metade dos avisos do log é de
+ * dano abaixo do esperado (`NativeDamageValue=360 but expected 1200`,
+ * desarmado) — dessincronia de rede, e bater mais fraco não beneficia
+ * ninguém. Contar esses kickaria jogador honesto.
+ *
+ * Stamina: conta sempre; o volume é que separa, ver `LIMIARES`.
+ */
+function contaParaOGatilho(linha: string, tipo: Tipo): boolean {
+  if (tipo === "stamina") return true;
+
   const acima = /BasePower=(\d+) above [\d.]+x equipped weapon AttackValue=(\d+)/.exec(linha);
   if (acima) return Number(acima[1]) > Number(acima[2]);
 
   const nativo = /reported NativeDamageValue=(\d+) but expected \S+=(\d+)/.exec(linha);
   if (nativo) return Number(nativo[1]) > Number(nativo[2]);
 
-  // Stamina e afins não trazem número para comparar. Ficam de fora do gatilho
-  // automático: medido em 12/09/2026, stamina gera ruído demais — o xNEGANx
-  // teve 6 avisos e o Handoroki BR, que não é suspeito de nada, teve 5.
   return false;
 }
 
@@ -92,7 +116,12 @@ function extrair(corpo: unknown): Deteccao | null {
 
   const m = /'([^']+)' \(UserId=([^,)]+)/.exec(texto);
   if (!m) return null;
-  return { nome: m[1], userId: m[2].trim(), linha: texto };
+  return {
+    nome: m[1],
+    userId: m[2].trim(),
+    linha: texto,
+    tipo: /Stamina cheat suspicion/i.test(texto) ? "stamina" : "dano",
+  };
 }
 
 export async function POST(req: Request) {
@@ -113,10 +142,16 @@ export async function POST(req: Request) {
   const corpo = await req.json().catch(() => null);
   const det = extrair(corpo);
   if (!det) return NextResponse.json({ ignorado: true });
-  if (!bateuMaisForte(det.linha)) return NextResponse.json({ ignorado: "abaixo" });
+  if (!contaParaOGatilho(det.linha, det.tipo)) {
+    return NextResponse.json({ ignorado: "abaixo do esperado" });
+  }
 
   const agora = Date.now();
-  const chaveJogador = `${slug}:${det.userId}`;
+  const limiar = LIMIARES[det.tipo];
+  // Contagem por tipo: dano e stamina têm ruídos diferentes, e somar os dois
+  // faria alguém com lag nos dois detectores passar sem ser cheater em
+  // nenhum deles.
+  const chaveJogador = `${slug}:${det.userId}:${det.tipo}`;
 
   const recentes = (avisos.get(chaveJogador) ?? []).filter(
     (t) => agora - t < JANELA_MS,
@@ -124,8 +159,8 @@ export async function POST(req: Request) {
   recentes.push(agora);
   avisos.set(chaveJogador, recentes);
 
-  if (recentes.length < LIMIAR) {
-    return NextResponse.json({ contando: recentes.length, limiar: LIMIAR });
+  if (recentes.length < limiar) {
+    return NextResponse.json({ tipo: det.tipo, contando: recentes.length, limiar });
   }
   if (agora - (kickados.get(chaveJogador) ?? 0) < SILENCIO_MS) {
     return NextResponse.json({ ja_kickado: true });
@@ -143,12 +178,21 @@ export async function POST(req: Request) {
     // formato 8-8-8-8 do Palworld, e aqui o id vem da plataforma
     // (`steam_…`, `gdk_…`, `ps5_…`). O `send msg` aceita os dois — testado
     // por RCON em 12/09/2026 — mas só se o valor chegar intacto.
-    await rcon(
-      server,
-      `send msg ${det.userId} ANTICHEAT:_desligue_o_cheat_de_dano_ou_sera_expulso`,
-    ).catch(() => "");
+    // Stamina costuma vir de tabela do Cheat Engine ligada por padrão, sem
+    // a pessoa "usar" nada — por isso o aviso manda FECHAR o programa, não
+    // só parar de usar. Relato do dono em 12/09/2026: o jogador fechou tudo,
+    // reiniciou, e as detecções pararam na hora.
+    const recado =
+      det.tipo === "stamina"
+        ? "ANTICHEAT:_feche_o_Cheat_Engine_e_reinicie_o_jogo_ou_sera_expulso"
+        : "ANTICHEAT:_desligue_o_cheat_de_dano_ou_sera_expulso";
+    await rcon(server, `send msg ${det.userId} ${recado}`).catch(() => "");
 
-    return NextResponse.json({ avisado: det.nome, avisos: recentes.length });
+    return NextResponse.json({
+      avisado: det.nome,
+      tipo: det.tipo,
+      avisos: recentes.length,
+    });
   }
 
   kickados.set(chaveJogador, agora);
@@ -157,18 +201,25 @@ export async function POST(req: Request) {
 
   const ok = await kickPlayer(server, det.userId, [
     `${det.nome} FOI KICKADO`,
-    "MOTIVO: ANTICHEAT DE DANO",
+    det.tipo === "stamina"
+      ? "MOTIVO: ANTICHEAT DE STAMINA"
+      : "MOTIVO: ANTICHEAT DE DANO",
     "AVISADO E CONTINUOU",
   ]).catch(() => false);
 
-  return NextResponse.json({ kickado: ok, jogador: det.nome, avisos: recentes.length });
+  return NextResponse.json({
+    kickado: ok,
+    jogador: det.nome,
+    tipo: det.tipo,
+    avisos: recentes.length,
+  });
 }
 
 /** Só para conferir que o endpoint está no ar. */
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    limiar: LIMIAR,
+    limiares: LIMIARES,
     servidores: SERVERS.filter((s) => s.enabled).map((s) => s.slug),
   });
 }
