@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { lancar } from "@/lib/economia";
 import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
 import { debitarCofre, devolverAoCofre, temPilha, cofreCheio, chaveDeServidor } from "@/lib/cofre";
-import { cofreDePalsCheio } from "@/lib/pal-cofre";
+import { cofreDePalsCheio, COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import { serverBySlug } from "@/lib/servers";
 import { jogouNoServidor } from "@/lib/linking";
 import {
@@ -531,9 +531,15 @@ export async function comprar(id: number): Promise<Resultado> {
     // já vem nulo do banco e o comprador resgata em qualquer servidor online.
     // No Dominantes a checagem lá em cima já barrou quem não joga lá, então
     // aqui o Pal HERDA o servidor de origem — mesma trava do dono.
+    //
+    // O cooldown de resgate (§006), ao contrário, NÃO é herdado: ele existe
+    // para o próprio dono não farmar contador de captura com guardar→resgatar
+    // em loop, e numa compra o Pal trocou de dono. Quem pagou resgata na hora,
+    // então `imported_at` já nasce vencido.
     await sql`
-      insert into vault_pals (discord_id, pal_id, template, server_slug)
-      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)}, ${venda.pal_server_slug})
+      insert into vault_pals (discord_id, pal_id, template, server_slug, imported_at)
+      values (${discordId}, ${String(venda.pal_template.PalID ?? "")}, ${JSON.stringify(venda.pal_template)}, ${venda.pal_server_slug},
+              now() - (interval '1 hour' * ${COOLDOWN_RESGATE_HORAS}))
     `;
   } else {
     // Mesma lógica para item: `item_server_slug` só vem preenchido quando a
