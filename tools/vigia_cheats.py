@@ -19,6 +19,15 @@ Medido no mesmo dia, nos logs de três dias do Dominantes:
 Daí o limiar padrão: **30 avisos em 5 minutos**, o dobro do pior caso
 inocente já visto e bem abaixo do cheater real. Escolhido pelo dono.
 
+⚠️ **Estátua de poder e outros buffs.** Quando o servidor amadurecer,
+jogador honesto vai bater acima do valor base da arma. O PalDefender já
+conta com isso — compara contra `BasePower*ShotAttackWithBuff`, que é o
+poder **com** buff, e a heurística só acusa acima de
+`damageCheatDetectionWeaponBasePowerMultiplier` (1.5 no Config.json, ou
+seja 50% de folga). Se mesmo assim aparecer gente honesta no relatório,
+o caminho é subir esse multiplicador no Config.json do PalDefender —
+não afrouxar o limiar daqui, que é o que separa rajada de aviso solto.
+
 Como funciona: lê o log de cheats mais recente por SFTP (o PalDefender abre
 um arquivo novo a cada boot, em `PalDefender/Logs/Cheats/`), conta os avisos
 por jogador numa janela deslizante e, para quem passar, manda `Broadcast` com
