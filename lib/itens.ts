@@ -109,6 +109,29 @@ export function urlDoIconeItem(itemId: string): string | null {
   return icone ? `${BASE_ICONE}/${icone.arquivo}` : null;
 }
 
+/* ------------------------------------------------------------------ selas */
+
+/**
+ * As selas — e tudo que se equipa **num Pal** para montar, planar ou atirar.
+ *
+ * O jogo guarda todas em `KeyItems`, o compartimento da aba "Itens
+ * importantes", e não na mochila. Como o cofre lia só a mochila, sela nunca
+ * aparecia na tela para guardar e ninguém conseguia vender uma (relatado
+ * pelo dono em 12/09/2026, com as selas de Rushoar, Direhowl e Grintale na
+ * mão). Ver `getItems` em `lib/palworld/paldefender.ts`.
+ *
+ * O prefixo `SkillUnlock_` cobre os 143 do catálogo: 112 selas e arreios de
+ * montaria, e mais 31 que são a mesma ideia com outro nome — as Luvas de
+ * Galeclaw, o Lança-mísseis de Jetragon, o Colar de Daedream. Todos são o
+ * item que libera usar aquele Pal de um jeito, todos são fabricáveis, e é
+ * isso que a comunidade troca.
+ *
+ * 🔴 **Só isto sai do `KeyItems`.** Esfera-chave, implante, estátua de
+ * Lifmunk, bolsa de expansão e prova de chefe ficam de fora: são desbloqueio
+ * permanente de conta, não equipamento de Pal.
+ */
+export const ehSela = (itemId: string) => /^SkillUnlock_/.test(itemId);
+
 /* ------------------------------------------------------- o que não se vende */
 
 /**

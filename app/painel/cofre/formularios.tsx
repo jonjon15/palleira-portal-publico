@@ -8,7 +8,7 @@ import {
   acaoComprarSlot,
   type Estado,
 } from "./actions";
-import { nomeDoItem, semTraducao } from "@/lib/itens";
+import { nomeDoItem, semTraducao, ehSela } from "@/lib/itens";
 import type { ItemNoCofre, ItemNoJogo, PersonagemOnline } from "@/lib/cofre";
 import { ItemIcon } from "@/components/item-icon";
 
@@ -126,7 +126,9 @@ export function GuardarNoCofre({
                 <NomeDoItem itemId={i.itemId} />
               </p>
               <p className="tabular text-sm text-muted">
-                {i.negociavel ? `${i.qty} na mochila` : i.motivo}
+                {i.negociavel
+                  ? `${i.qty} ${ehSela(i.itemId) ? "nos itens importantes" : "na mochila"}`
+                  : i.motivo}
               </p>
             </div>
 

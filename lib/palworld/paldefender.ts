@@ -13,6 +13,7 @@
 
 import type { PalleiraServer } from "@/lib/servers";
 import { normalizarUid } from "@/lib/palworld/uid";
+import { ehSela } from "@/lib/itens";
 
 /* ------------------------------------------------------------------- tipos */
 
@@ -230,13 +231,20 @@ interface RawContainer {
 }
 
 /**
- * O que o jogador tem **na mochila**, agora.
+ * O que o jogador tem para levar ao cofre: a **mochila** inteira, mais as
+ * **selas** que estão na aba "Itens importantes".
  *
- * 📌 Só a mochila (`Items`), de propósito. A resposta traz seis
- * compartimentos — `Items`, `KeyItems`, `Weapons`, `Armor`, `Food` e
- * `DropSlot` —, mas equipamento em uso e item-chave não são coisa para
- * vender por engano. A regra fica fácil de explicar para a comunidade:
+ * 📌 A resposta traz seis compartimentos — `Items`, `KeyItems`, `Weapons`,
+ * `Armor`, `Food` e `DropSlot`. Equipamento em uso e comida ficam de fora:
+ * não são coisa para vender por engano, e a regra segue fácil de explicar —
  * **põe na mochila o que você quer levar para o cofre**.
+ *
+ * 🔴 A exceção é a sela. Sela não cabe na mochila: o jogo guarda toda sela
+ * em `KeyItems`, e por isso ninguém conseguia vender uma — ela nunca
+ * chegava a aparecer na tela do cofre. Como sela é justamente o que a
+ * comunidade troca, ela entra aqui; o resto do `KeyItems` (esfera-chave,
+ * implante, estátua, bolsa de expansão) continua fora, que é desbloqueio
+ * permanente de conta. Ver `EH_SELA` em `lib/itens.ts`.
  *
  * ⚠️ Lança `ForaDoJogo` quando a pessoa não está conectada — o inventário só
  * existe na memória do servidor enquanto ela joga. É essa limitação que dá
@@ -260,15 +268,24 @@ export async function getItems(
   // Pilhas do mesmo item em slots diferentes viram uma linha só: para
   // vender, o que importa é quanto a pessoa tem, não onde está guardado.
   const somado = new Map<string, number>();
-  for (const slot of Object.values(mochila.Slots ?? {})) {
-    if (!slot?.ItemID || !slot.Count) continue;
-    somado.set(slot.ItemID, (somado.get(slot.ItemID) ?? 0) + slot.Count);
-  }
+  const junta = (c: RawContainer | undefined, filtro?: (id: string) => boolean) => {
+    if (!c?.Available) return;
+    for (const slot of Object.values(c.Slots ?? {})) {
+      if (!slot?.ItemID || !slot.Count) continue;
+      if (filtro && !filtro(slot.ItemID)) continue;
+      somado.set(slot.ItemID, (somado.get(slot.ItemID) ?? 0) + slot.Count);
+    }
+  };
+
+  junta(mochila);
+  junta(raw.Inventory?.KeyItems, ehSela);
 
   return {
     itens: [...somado]
       .map(([itemId, qty]) => ({ itemId, qty }))
       .sort((a, b) => a.itemId.localeCompare(b.itemId)),
+    // A lotação mostrada na tela continua sendo a da mochila: é ela que
+    // limita o que dá para carregar, e o `KeyItems` tem 230 slots próprios.
     usados: mochila.UsedSlots ?? 0,
     total: mochila.MaxSlots ?? 0,
   };

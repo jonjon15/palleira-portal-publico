@@ -272,8 +272,9 @@ function SecaoItens({
         {cofre.itens.length === 0 ? (
           <p className="mt-3 rounded-[var(--radius-card)] border border-dashed border-line-strong bg-surface p-6 text-sm text-muted">
             Cofre vazio. Entre no jogo, coloque na mochila o que quiser
-            vender e guarde aqui — depois disso você pode anunciar a
-            qualquer hora, mesmo offline.
+            vender e guarde aqui — suas selas aparecem sozinhas, sem
+            precisar tirar da aba de importantes. Depois disso você pode
+            anunciar a qualquer hora, mesmo offline.
           </p>
         ) : (
           <div className="mt-3">
@@ -323,13 +324,14 @@ function SecaoItens({
           </p>
         ) : mochila.itens.length === 0 ? (
           <p className="mt-3 rounded-[var(--radius-card)] border border-dashed border-line-strong bg-surface p-6 text-sm text-muted">
-            Sua mochila está vazia no {escolhido.serverName}.
+            Nada para guardar no {escolhido.serverName}: mochila e selas
+            estão vazias.
           </p>
         ) : (
           <>
             <p className="mt-2 text-sm text-muted">
-              Mochila de <b className="text-text">{escolhido.name}</b> no{" "}
-              {escolhido.serverName}
+              Mochila e selas de <b className="text-text">{escolhido.name}</b>{" "}
+              no {escolhido.serverName}
               {cheio && (
                 <span className="text-warning">
                   {" "}
