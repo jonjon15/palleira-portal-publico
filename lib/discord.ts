@@ -120,10 +120,15 @@ export async function listarMembros(): Promise<MembroDiscord[]> {
  * 16 pedidos em paralelo viraram 11 recusas, e a tela de economia mostrou o
  * ID cru no lugar de 11 nomes sem sinal nenhum de erro.
  *
- * A alternativa óbvia — `listarMembros`, uma chamada só — **não serve
- * aqui**: exige o Server Members Intent, que este bot não tem (403 no mesmo
- * teste). Então vai em fila mesmo, esperando o `retry_after` que o próprio
- * Discord manda quando recusa.
+ * Com o **Server Members Intent** ligado, uma chamada paginada resolve a
+ * comunidade inteira e o custo deixa de crescer com o tamanho da lista:
+ * medido em 12/09/2026, 435 membros em 713ms contra 4,6s para resolver
+ * apenas 16 em fila. É o caminho preferido.
+ *
+ * A fila fica como reserva para quando o intent estiver desligado — foi o
+ * estado deste bot até 12/09/2026, e voltar a ser é questão de alguém
+ * desmarcar a opção no Developer Portal. Sem esse degrau, a tela cairia
+ * direto no ID cru de novo.
  *
  * Quem não for encontrado simplesmente não entra no mapa; cabe a quem
  * chamou decidir o que mostrar no lugar.
@@ -131,9 +136,22 @@ export async function listarMembros(): Promise<MembroDiscord[]> {
 export async function nomesDe(
   discordIds: string[],
 ): Promise<Map<string, string>> {
+  const querida = new Set(discordIds);
+  if (querida.size === 0) return new Map();
+
+  try {
+    const nomes = new Map<string, string>();
+    for (const m of await listarMembros()) {
+      if (querida.has(m.id)) nomes.set(m.id, m.displayName);
+    }
+    return nomes;
+  } catch {
+    // Sem o intent (403) ou Discord fora: cai na fila, abaixo.
+  }
+
   const nomes = new Map<string, string>();
 
-  for (const id of [...new Set(discordIds)]) {
+  for (const id of querida) {
     for (let tentativa = 0; tentativa < 3; tentativa++) {
       let res: Response;
       try {
