@@ -1,0 +1,69 @@
+# Kicka quem o PalDefender flagra por dano/stamina em rajada.
+#
+# O anticheat detecta essas heurísticas mas não pune sozinho ("requires human
+# judgement") — lag gera falso positivo. Quem separa um do outro é o volume:
+# ver a medição no cabeçalho de tools/vigia_cheats.py.
+name: vigia de cheats
+
+on:
+  schedule:
+    # De 30 em 30 minutos. O log fica no servidor e não some, então uma
+    # rajada não passa despercebida entre duas rodadas — só demora um pouco
+    # mais para agir. O limite real é a cota de CI do GitHub (2.000 min/mês
+    # no plano grátis): cada rodada custa ~1 min de runner mesmo o script
+    # levando 1,2s, então 48 rodadas/dia já consomem ~1.400, e o import do
+    # save come o resto. Aumentar a frequência daqui exige olhar essa conta.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pvp-free, pve-free, pve-vip]
+        default: pvp-free
+      limiar:
+        description: "Detecções em 5 min para kickar"
+        required: false
+        type: string
+        default: "30"
+      aplicar:
+        description: "Kickar de verdade (desmarcado = só relata)"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install --quiet paramiko
+
+      # O estado de "quem já kickei" vive no cache: o runner é descartável,
+      # e sem isso cada rodada kickaria de novo quem já saiu (o log não some
+      # quando a pessoa desconecta).
+      - uses: actions/cache@v4
+        with:
+          path: tools/.vigia_cheats.json
+          key: vigia-cheats-${{ github.run_id }}
+          restore-keys: vigia-cheats-
+
+      - name: Vigiar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SRV1_ADMIN_PASSWORD: ${{ secrets.SRV1_ADMIN_PASSWORD }}
+          SRV2_ADMIN_PASSWORD: ${{ secrets.SRV2_ADMIN_PASSWORD }}
+          SRV3_ADMIN_PASSWORD: ${{ secrets.SRV3_ADMIN_PASSWORD }}
+        run: |
+          python tools/vigia_cheats.py \
+            --servidor "${{ inputs.servidor || 'pvp-free' }}" \
+            --limiar "${{ inputs.limiar || '30' }}" \
+            ${{ (github.event_name == 'schedule' || inputs.aplicar) && '--aplicar' || '' }}
