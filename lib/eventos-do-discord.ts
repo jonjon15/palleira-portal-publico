@@ -156,6 +156,47 @@ async function renovarCartazesVencendo(): Promise<number> {
   return trocadas;
 }
 
+/**
+ * Quanto tempo depois do anúncio o cartaz ainda conta como sendo dele.
+ *
+ * 🔴 O dono posta o texto e a imagem em mensagens SEPARADAS. Medido no
+ * canal em 12/09/2026: a Corrida saiu 19:42 e o cartaz 19:55; a Troca dos
+ * Pals, 20:12 e 20:27. Sem juntar as duas, o evento entra no mural sem
+ * imagem — foi o que aconteceu com a Corrida.
+ *
+ * Vinte minutos cobre os dois casos com folga e não é tempo suficiente para
+ * capturar a imagem de um assunto diferente.
+ */
+const JANELA_DO_CARTAZ_MS = 20 * 60_000;
+
+/**
+ * A imagem do anúncio: a da própria mensagem, ou a do cartaz que veio
+ * logo depois.
+ *
+ * Só aceita a seguinte quando ela é do mesmo autor, não tem texto (é
+ * cartaz, não outro assunto) e não é ela mesma um anúncio com `@everyone`.
+ */
+function imagemDoAnuncio(
+  m: MensagemDiscord,
+  todas: MensagemDiscord[],
+): string | null {
+  if (m.imagemUrl) return m.imagemUrl;
+
+  const quando = new Date(m.em).getTime();
+
+  for (const outra of todas) {
+    if (outra.id === m.id || !outra.imagemUrl) continue;
+    if (outra.autorId !== m.autorId) continue;
+    if (outra.chamouTodos) continue; // é outro anúncio, não o cartaz deste
+    if (outra.texto.trim() || outra.textoDosEmbeds.trim()) continue;
+
+    const diferenca = new Date(outra.em).getTime() - quando;
+    if (diferenca > 0 && diferenca <= JANELA_DO_CARTAZ_MS) return outra.imagemUrl;
+  }
+
+  return null;
+}
+
 export interface ResultadoDaSincronia {
   criados: number;
   jaExistiam: number;
@@ -223,19 +264,28 @@ export async function sincronizarEventosDoDiscord(): Promise<ResultadoDaSincroni
     // letra de texto (medido em 12/09/2026). Sem isto, todos entrariam no
     // mural com o mesmo título genérico e ninguém distinguiria um do outro.
     const titulo = tituloDe(m) || `Evento de ${dataCurta(m.em)}`;
+    const imagem = imagemDoAnuncio(m, mensagens);
     const corpo = corpoDe(m, titulo);
     const emoji = emojiDe(titulo) || "📣";
     const slug = await slugUnico(slugify(titulo));
+
+    // O anúncio novo assume o destaque da home (decisão do dono em
+    // 12/09/2026). Sem isto, um evento fixado meses atrás continua na frente
+    // do que acabou de ser anunciado: foi o que aconteceu com a Corrida, que
+    // chegou ao mural mas ficou atrás do cartaz do Dominates.
+    //
+    // Só existe um destaque de cada vez, mesma regra do `criarEvento`.
+    await sql`update events set pinned = false where pinned = true`;
 
     // `on conflict do nothing` no id da mensagem: se outra execução criou
     // este mesmo evento no meio do caminho, esta some sem reclamar.
     const gravado = (await sql`
       insert into events (
         title, slug, body, cover_emoji, cover_image_url,
-        status, created_by, created_by_name, discord_message_id, created_at
+        status, pinned, created_by, created_by_name, discord_message_id, created_at
       ) values (
-        ${titulo}, ${slug}, ${corpo}, ${emoji}, ${m.imagemUrl},
-        'publicado', ${m.autorId}, ${m.autorNome}, ${m.id}, ${m.em}
+        ${titulo}, ${slug}, ${corpo}, ${emoji}, ${imagem},
+        'publicado', true, ${m.autorId}, ${m.autorNome}, ${m.id}, ${m.em}
       )
       on conflict (discord_message_id) where discord_message_id is not null
       do nothing
