@@ -58,6 +58,28 @@ const PRAZO_AVISO_MS = 3 * 60_000;
  *
  * O custo é uma ida ao Postgres no caminho quente. Vale: sem isto o kick
  * não é ao vivo, é loteria.
+ *
+ * 🔴 **A janela conta chegada, nunca o carimbo da linha.** `created_at` é o
+ * `now()` do Postgres no instante em que o POST entra — o `[20:22:46]` que
+ * vem escrito na mensagem do PalDefender é ignorado de propósito. É o que
+ * separa este endpoint do script `vigia`, que lia o arquivo de log inteiro,
+ * somava tudo que estava lá e por isso expulsou quem **já tinha parado**: o
+ * xNEGANx levou kick por 30 detecções de uma hora antes, e o Kaninos, que
+ * nem estava no servidor, por 43 (commit 3e6661d, 12/09/2026).
+ *
+ * Aqui isso não acontece: cada POST é um evento do instante, e a soma só
+ * enxerga os últimos `JANELA_MS`. Detecção de ontem, ou de vinte minutos
+ * atrás, não entra na conta — verificado com 70 linhas antigas plantadas no
+ * banco, que a janela contou como zero. Uma linha de log reenviada com
+ * carimbo velho também vale como agora, e não como o horário que traz.
+ *
+ * ⚠️ E é bom que seja assim: o servidor roda na Europa e carimba o log em
+ * **UTC+1**, quatro horas à frente de São Paulo. Se a janela confiasse no
+ * horário escrito na linha, toda detecção chegaria "do futuro" e a
+ * comparação com `now()` do banco daria errado de um jeito silencioso —
+ * ou contando tudo, ou não contando nada. O carimbo do PalDefender só
+ * presta para medir **intervalos** dentro do próprio arquivo, nunca para
+ * dizer que horas são.
  */
 
 /** Grava a detecção e devolve quantas há na janela, já contando esta. */
