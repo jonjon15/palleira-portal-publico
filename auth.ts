@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
+import { buscarMembro } from "@/lib/discord";
 
 /**
  * Login com Discord — a única porta de entrada do portal (§4.1 do PROMPT.md).
@@ -48,6 +49,18 @@ async function fetchMembership(accessToken: string): Promise<GuildMembership> {
   };
 }
 
+/**
+ * De quanto em quanto tempo os cargos do token são relidos do Discord.
+ *
+ * Cinco minutos é o meio-termo: quem acabou de comprar um plano não fica
+ * esperando o dia seguinte para ver o daily maior, e o Discord não leva uma
+ * chamada por navegação de página.
+ */
+const VALIDADE_DOS_CARGOS = 5 * 60 * 1000;
+
+const precisaRenovar = (em: unknown) =>
+  typeof em !== "number" || Date.now() - em > VALIDADE_DOS_CARGOS;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Discord({
@@ -62,13 +75,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Só na hora do login: guarda o ID do Discord e consulta a associação.
+      // Na hora do login: guarda o ID do Discord e consulta a associação.
       if (account?.access_token) {
         token.discordId = (profile?.id as string) ?? token.sub ?? "";
         const membership = await fetchMembership(account.access_token);
         token.isMember = membership.isMember;
         token.roles = membership.roles;
         token.nick = membership.nick;
+        token.rolesEm = Date.now();
+        return token;
+      }
+
+      // Depois, de tempos em tempos: relê os cargos pelo bot.
+      //
+      // 🔴 Sem isto o JWT congela os cargos do login (30 dias, o padrão do
+      // NextAuth). Quem comprou VIP depois de entrar no site continuava
+      // recebendo 2 Paletas de daily e 1 slot de cofre — medido em
+      // 12/09/2026: xneganxx e bolotaa, ambos com o plano Palleira, tinham
+      // pego daily de 2 em vez de 12. Vale para permissão de staff também:
+      // cargo tirado no Discord só valia no site no próximo login.
+      if (token.discordId && precisaRenovar(token.rolesEm)) {
+        try {
+          const membro = await buscarMembro(token.discordId as string);
+          token.isMember = Boolean(membro);
+          token.roles = membro?.roles ?? [];
+          token.nick = membro?.displayName ?? null;
+          token.rolesEm = Date.now();
+        } catch {
+          // Discord fora do ar não pode deslogar ninguém: segue com o que
+          // já estava no token e tenta de novo no próximo passe.
+        }
       }
       return token;
     },

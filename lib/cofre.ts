@@ -132,7 +132,10 @@ export async function ondeEstouOnline(
     activeServers().map(async (server) => {
       if (!server.rconPort) return; // sem RCON não há como mover item
       try {
-        const eu = (await getPlayers(server)).find(
+        // `true` = sem cache: quem abre esta tela acabou de entrar no jogo,
+        // e um minuto de resposta velha vira "você não está no jogo agora"
+        // com a pessoa olhando o próprio personagem na frente dela.
+        const eu = (await getPlayers(server, true)).find(
           (p) => p.playerUid === vinculo.uid && p.online,
         );
         if (eu) {

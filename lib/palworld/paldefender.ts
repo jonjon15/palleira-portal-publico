@@ -125,8 +125,22 @@ interface RawPlayer {
   WorldLocation?: { x: number; y: number; z: number };
 }
 
-export async function getPlayers(server: PalleiraServer): Promise<PdPlayer[]> {
-  const raw = await call<{ Players: RawPlayer[] }>(server, "players");
+/**
+ * Quem o servidor está vendo agora.
+ *
+ * `agora` pula o cache de 60s. Mapa e ranking podem viver com um minuto de
+ * atraso; já quem abriu o cofre acabou de entrar no jogo e receberia "você
+ * não está no jogo" por até um minuto — ver `ondeEstouOnline`.
+ */
+export async function getPlayers(
+  server: PalleiraServer,
+  agora = false,
+): Promise<PdPlayer[]> {
+  const raw = await call<{ Players: RawPlayer[] }>(
+    server,
+    "players",
+    agora ? false : 60,
+  );
   return (raw.Players ?? []).map((p) => ({
     name: p.Name ?? "",
     // ⚠️ A API devolve com hífen e o save sem. Aqui vira canônico, para o
