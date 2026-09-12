@@ -112,6 +112,58 @@ export async function listarMembros(): Promise<MembroDiscord[]> {
   return todos;
 }
 
+/**
+ * O nome de exibição de várias pessoas, resolvido **em fila**.
+ *
+ * 🔴 Não trocar por `Promise.all` de `buscarMembro`. O Discord aceita umas
+ * cinco chamadas por rajada e responde 429 no resto: medido em 12/09/2026,
+ * 16 pedidos em paralelo viraram 11 recusas, e a tela de economia mostrou o
+ * ID cru no lugar de 11 nomes sem sinal nenhum de erro.
+ *
+ * A alternativa óbvia — `listarMembros`, uma chamada só — **não serve
+ * aqui**: exige o Server Members Intent, que este bot não tem (403 no mesmo
+ * teste). Então vai em fila mesmo, esperando o `retry_after` que o próprio
+ * Discord manda quando recusa.
+ *
+ * Quem não for encontrado simplesmente não entra no mapa; cabe a quem
+ * chamou decidir o que mostrar no lugar.
+ */
+export async function nomesDe(
+  discordIds: string[],
+): Promise<Map<string, string>> {
+  const nomes = new Map<string, string>();
+
+  for (const id of [...new Set(discordIds)]) {
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      let res: Response;
+      try {
+        res = await chamar(`/guilds/${GUILD_ID}/members/${id}`);
+      } catch {
+        break; // rede fora: desiste desta pessoa, segue para a próxima
+      }
+
+      if (res.status === 429) {
+        // O corpo traz `retry_after` em segundos, com fração. A folga de
+        // 100ms é para não bater no limite de novo por arredondamento.
+        const corpo = (await res.json().catch(() => ({}))) as {
+          retry_after?: number;
+        };
+        const espera = Math.ceil((corpo.retry_after ?? 1) * 1000) + 100;
+        await new Promise((r) => setTimeout(r, espera));
+        continue;
+      }
+
+      if (res.ok) {
+        const m = traduz((await res.json()) as RawMember);
+        if (m) nomes.set(id, m.displayName);
+      }
+      break; // 200, 404 ou 403: não adianta repetir
+    }
+  }
+
+  return nomes;
+}
+
 /** Ainda dá para trabalhar sem a lista completa? Serve para avisar na tela. */
 export async function temListaDeMembros(): Promise<boolean> {
   try {

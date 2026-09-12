@@ -7,7 +7,7 @@ import { levelOf, canModerate, canPowerServer } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
 import { getInfo, getMetrics, getPlayers } from "@/lib/palworld/rest";
 import { recentes, ACAO_LABEL } from "@/lib/moderacao";
-import { buscarMembro } from "@/lib/discord";
+import { nomesDe } from "@/lib/discord";
 import { filaAdmin } from "@/lib/resgate-base";
 import {
   SalvarMundo,
@@ -94,25 +94,29 @@ export default async function Moderacao({
     podeEnergia ? filaAdmin().catch(() => []) : Promise.resolve([]),
   ]);
 
-  const logComNome = await Promise.all(
-    log.map(async (l) => ({
-      ...l,
-      nomeAtor:
-        (await buscarMembro(l.actor_id).catch(() => null))?.displayName ??
-        l.actor_id,
-      nomeServidor: serverBySlug(l.server_slug)?.shortName ?? l.server_slug,
-    })),
-  );
+  // Uma fila só para as duas listas: o mesmo admin costuma aparecer no log e
+  // na fila, e `nomesDe` já ignora id repetido.
+  //
+  // 🔴 Era `Promise.all` com uma chamada por pessoa, e o Discord recusa a
+  // partir da quinta da rajada (429). O erro caía no `.catch(() => null)` e
+  // a tela mostrava o ID cru como se fosse o nome — mesmo defeito que a
+  // página de economia tinha, visto pelo dono em 12/09/2026.
+  const nomes = await nomesDe([
+    ...log.map((l) => l.actor_id),
+    ...fila.map((p) => p.discordId),
+  ]);
 
-  // Um nome por discordId só uma vez, mesmo com vários pedidos da mesma
-  // pessoa — evita bater na API do Discord repetido à toa.
+  const logComNome = log.map((l) => ({
+    ...l,
+    nomeAtor: nomes.get(l.actor_id) ?? l.actor_id,
+    nomeServidor: serverBySlug(l.server_slug)?.shortName ?? l.server_slug,
+  }));
+
   const nomesFila = Object.fromEntries(
-    await Promise.all(
-      [...new Set(fila.map((p) => p.discordId))].map(async (id) => [
-        id,
-        (await buscarMembro(id).catch(() => null))?.displayName ?? id,
-      ]),
-    ),
+    [...new Set(fila.map((p) => p.discordId))].map((id) => [
+      id,
+      nomes.get(id) ?? id,
+    ]),
   );
 
   return (

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { levelOf, canManageEconomy } from "@/lib/roles";
-import { temListaDeMembros, buscarMembro, listarCanais } from "@/lib/discord";
+import { temListaDeMembros, nomesDe, listarCanais } from "@/lib/discord";
 import { circulacao, maioresSaldos, ORIGEM_LABEL, type Origem } from "@/lib/economia";
 import {
   MigrarEmLote,
@@ -30,15 +30,23 @@ export default async function Economia() {
     listarCanais().catch(() => []),
   ]);
 
-  // A lista é curta; buscar um a um é mais simples que montar índice.
-  const comNome = await Promise.all(
-    topo.map(async (t) => ({
-      ...t,
-      nome:
-        (await buscarMembro(t.discord_id).catch(() => null))?.displayName ??
-        t.discord_id,
-    })),
-  );
+  // 🔴 Em série, e não 16 chamadas de uma vez.
+  //
+  // Antes era um `Promise.all` com um `buscarMembro` por pessoa, e o Discord
+  // devolvia 429 em quase todas: o limite é de ~5 por rajada. Como o erro
+  // caía num `.catch(() => null)`, a tela não mostrava falha nenhuma — só
+  // trocava o nome pelo ID cru. Foi o que o dono viu em 12/09/2026, com 11
+  // das 16 linhas numeradas. Medido: 16 em paralelo → 11 respostas 429.
+  //
+  // `nomesDe` resolve em fila, respeitando o `retry_after` quando vem. Custa
+  // alguns segundos numa página de administração que já é dinâmica, e é o
+  // caminho que funciona **sem** o Server Members Intent — que este bot não
+  // tem (a lista completa responde 403, conferido no mesmo dia).
+  const nomes = await nomesDe(topo.map((t) => t.discord_id));
+  const comNome = topo.map((t) => ({
+    ...t,
+    nome: nomes.get(t.discord_id) ?? t.discord_id,
+  }));
 
   return (
     <>
