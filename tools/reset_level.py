@@ -148,7 +148,7 @@ def resetar_level(world, uid: str, novo_level: int) -> dict:
             continue
 
         eh_jogador = bool(scalar(param.get("IsPlayer"), False))
-        chave = norm_uid(entrada.get("key", {}).get("PlayerUId"))
+        chave = norm_uid(scalar(entrada.get("key", {}).get("PlayerUId"), ""))
 
         if eh_jogador and chave == uid:
             rel["achado"] = True
