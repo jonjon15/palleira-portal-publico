@@ -1,0 +1,40 @@
+# Puxa o canal de eventos do Discord para o mural do site.
+#
+# 🔴 Já foi um `crons` no `vercel.json`, e não pode voltar a ser: o plano do
+# projeto aceita cron diário, e um agendamento de hora em hora faz a Vercel
+# RECUSAR o deploy inteiro — em 12/09/2026 três commits seguidos deixaram de
+# ser construídos, sem log de build nenhum, porque o deploy nem começou.
+# Aqui o agendamento é do GitHub, que não tem esse limite.
+#
+# O endpoint faz o trabalho; isto só bate na porta. Ver
+# app/api/eventos-do-discord/route.ts e lib/eventos-do-discord.ts.
+name: eventos do Discord
+
+on:
+  schedule:
+    # De hora em hora. O canal recebe poucos posts por semana, e quem quer
+    # ver na hora abre /admin/eventos, que sincroniza ao carregar.
+    - cron: "7 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Chamar o endpoint de sincronia
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Falta o secret CRON_SECRET no repositório."
+            exit 1
+          fi
+          resposta=$(curl -sS -w '\n%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://palleira.com.br/api/eventos-do-discord)
+          corpo=$(echo "$resposta" | head -n -1)
+          codigo=$(echo "$resposta" | tail -n 1)
+          echo "$corpo"
+          [ "$codigo" = "200" ] || { echo "::error::HTTP $codigo"; exit 1; }
