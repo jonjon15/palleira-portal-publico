@@ -129,13 +129,18 @@ def apagar(cfg: Servidor, caminho: str) -> bool:
 
 # -------------------------------------------------------------------- edição
 
-def resetar_level(world, uid: str, novo_level: int) -> dict:
-    """Troca o Level da entrada do jogador. Devolve um relatório do antes e
-    depois — quem chama decide se grava."""
-    rel = {"achado": False, "nome": "", "level_antigo": 0, "level_novo": novo_level}
+def resetar_levels(world, uids: list[str], novo_level: int) -> dict:
+    """Troca o Level de várias entradas de jogador numa passada só pela
+    CharacterSaveParameterMap. Devolve um relatório por UID — quem chama
+    decide se grava."""
+    faltam = set(uids)
+    porUid = {u: {"achado": False, "nome": "", "level_antigo": 0, "level_novo": novo_level}
+              for u in uids}
 
     entradas = world.get("CharacterSaveParameterMap", {}).get("value", []) or []
     for entrada in entradas:
+        if not faltam:
+            break
         param = (
             entrada.get("value", {})
             .get("RawData", {})
@@ -150,7 +155,8 @@ def resetar_level(world, uid: str, novo_level: int) -> dict:
         eh_jogador = bool(scalar(param.get("IsPlayer"), False))
         chave = norm_uid(scalar(entrada.get("key", {}).get("PlayerUId"), ""))
 
-        if eh_jogador and chave == uid:
+        if eh_jogador and chave in faltam:
+            rel = porUid[chave]
             rel["achado"] = True
             rel["nome"] = str(scalar(param.get("NickName"), "") or "")
             nivel_no = param.get("Level")
@@ -173,11 +179,11 @@ def resetar_level(world, uid: str, novo_level: int) -> dict:
                     f"campo Level em formato inesperado ({nivel_no!r}); "
                     "abortando para não inventar estrutura"
                 )
-                break
-            interno["value"] = novo_level
-            break
+            else:
+                interno["value"] = novo_level
+            faltam.discard(chave)
 
-    return rel
+    return porUid
 
 
 def _abortar(motivo: str) -> int:
@@ -191,7 +197,7 @@ def _abortar(motivo: str) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Reseta o Level de um jogador no Level.sav")
     ap.add_argument("--servidor", required=True, help="slug: pve-free, pve-vip, pvp-free")
-    ap.add_argument("--uid", help="UID do jogador (32 hex). Dispensável em --verificar")
+    ap.add_argument("--uid", help="UID(s) do jogador (32 hex), separados por vírgula. Dispensável em --verificar")
     ap.add_argument("--level", type=int, default=1, help="novo Level (padrão: 1)")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--verificar", action="store_true",
@@ -218,7 +224,7 @@ def main() -> int:
     if not cfg:
         sys.exit(f"servidor '{args.servidor}' não está em PALLEIRA_SERVERS")
 
-    uid = norm_uid(args.uid) if args.uid else ""
+    uids = [norm_uid(u) for u in args.uid.split(",") if u.strip()] if args.uid else []
     caminho = SAVE_PATH.format(guid=cfg.guid)
 
     print(f"=== {cfg.slug} ===", flush=True)
@@ -277,18 +283,25 @@ def main() -> int:
         return 1
 
     # ---- resetar ----------------------------------------------------------
-    rel = resetar_level(world, uid, args.level)
+    porUid = resetar_levels(world, uids, args.level)
     print()
-    if not rel["achado"]:
-        print("  ⚠️  Nenhum personagem com esse UID no mundo. Nada a fazer —")
-        print("     confira o UID antes de seguir.")
+    algum_ok = False
+    for u, rel in porUid.items():
+        if not rel["achado"]:
+            print(f"  ⚠️  {u}: nenhum personagem com esse UID no mundo.")
+            continue
+        if rel.get("erro"):
+            print(f"  ❌ {u}: {rel['erro']}")
+            continue
+        print(f"  jogador:  {rel['nome'] or '(sem nome no mundo)'} ({u})")
+        print(f"  level:    {rel['level_antigo']} -> {rel['level_novo']}")
+        algum_ok = True
+
+    if not algum_ok:
+        print()
+        print("  Nenhum UID pôde ser resetado — nada a fazer.")
         return 1
 
-    if rel.get("erro"):
-        return _abortar(rel["erro"])
-
-    print(f"  jogador:  {rel['nome'] or '(sem nome no mundo)'}")
-    print(f"  level:    {rel['level_antigo']} -> {rel['level_novo']}")
     print("  ⚠️  Exp acumulado NÃO foi tocado — o jogo pode recalcular o Level")
     print("     a partir dele assim que a pessoa ganhar experiência de novo.")
 

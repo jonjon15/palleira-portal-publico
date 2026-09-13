@@ -25,7 +25,7 @@ on:
         options: [verificar, simular, aplicar]
         default: verificar
       uid:
-        description: "UID do jogador (32 hex). Dispensável em 'verificar'"
+        description: "UID(s) do jogador (32 hex), separados por vírgula. Dispensável em 'verificar'"
         required: false
         default: ""
       level:
