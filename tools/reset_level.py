@@ -156,13 +156,25 @@ def resetar_level(world, uid: str, novo_level: int) -> dict:
             nivel_no = param.get("Level")
             rel["level_antigo"] = int(scalar(nivel_no, 1) or 1)
 
-            # `Level` costuma vir como {"id": None, "value": N, "type": "IntProperty"}.
-            # Só troca o `value` de dentro — preserva o resto da estrutura,
-            # que é o que o `import_save.py` já ensinou a fazer com Exp.
-            if isinstance(nivel_no, dict) and "value" in nivel_no:
-                nivel_no["value"] = novo_level
-            else:
-                param["Level"] = {"id": None, "value": novo_level, "type": "IntProperty"}
+            # `Level` vem como ByteProperty, não IntProperty: o formato do
+            # `_read_ByteProperty` do palsav é
+            #   {"id": ..., "value": {"type": "None", "value": N}}
+            # — DOIS níveis de "value". Sobrescrever só o primeiro nível
+            # (como a primeira versão deste script fazia) troca o dict
+            # {"type": "None", "value": N} inteiro pelo inteiro puro, e o
+            # `_write_ByteProperty` quebra em `property['value']['type']`
+            # porque 'value' virou um int (TypeError: 'int' object is not
+            # subscriptable — foi o que aconteceu na primeira tentativa
+            # real, sem corromper nada porque o erro é antes de qualquer
+            # upload). Por isso desce mais um nível aqui.
+            interno = nivel_no.get("value") if isinstance(nivel_no, dict) else None
+            if not isinstance(interno, dict) or "value" not in interno or interno.get("type") != "None":
+                rel["erro"] = (
+                    f"campo Level em formato inesperado ({nivel_no!r}); "
+                    "abortando para não inventar estrutura"
+                )
+                break
+            interno["value"] = novo_level
             break
 
     return rel
@@ -271,6 +283,9 @@ def main() -> int:
         print("  ⚠️  Nenhum personagem com esse UID no mundo. Nada a fazer —")
         print("     confira o UID antes de seguir.")
         return 1
+
+    if rel.get("erro"):
+        return _abortar(rel["erro"])
 
     print(f"  jogador:  {rel['nome'] or '(sem nome no mundo)'}")
     print(f"  level:    {rel['level_antigo']} -> {rel['level_novo']}")
