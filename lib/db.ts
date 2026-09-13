@@ -30,7 +30,12 @@ export interface PlayerRow {
    * pode ser lida com o jogador no jogo, então este é o jeito de a tabela
    * mostrar número para quem está offline agora. Ver a migração 017.
    */
-  poder_hp: number | null;
+  /**
+   * ⚠️ `bigint` no Postgres chega como STRING no driver, não como número —
+   * `.toLocaleString()` numa string não formata nada e o placar mostrava
+   * "134644" no lugar de "134.644". Quem lê converte com `Number()`.
+   */
+  poder_hp: string | number | null;
   poder_level: number | null;
   poder_ivs: number | null;
   poder_em: string | null;

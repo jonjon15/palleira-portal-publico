@@ -177,7 +177,9 @@ export default async function Ranking() {
         pal_count: live.livePals[uid] ?? p.pal_count,
         // Quem está no jogo entra com o número do momento; quem não está,
         // com o último que foi visto (migração 017).
-        poderHp: poder?.hp ?? p.poder_hp,
+        // `Number()` porque `poder_hp` é bigint e o driver entrega string:
+        // sem isto o placar mostrava "134644" em vez de "134.644".
+        poderHp: poder?.hp ?? (p.poder_hp === null ? null : Number(p.poder_hp)),
         poderLevel: poder?.level ?? p.poder_level,
         poderIvs: poder?.ivs ?? p.poder_ivs,
         poderAoVivo: Boolean(poder),

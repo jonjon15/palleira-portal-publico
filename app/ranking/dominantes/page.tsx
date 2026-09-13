@@ -159,7 +159,9 @@ export default async function RankingDominantes() {
         // Quem está no jogo entra com o número do momento; quem não está,
         // com o último que foi visto (migração 017). Só fica sem nada quem
         // nunca esteve online desde que isto passou a ser guardado.
-        poderHp: poder?.hp ?? p.poder_hp,
+        // `Number()` porque `poder_hp` é bigint e o driver entrega string:
+        // sem isto o placar mostrava "134644" em vez de "134.644".
+        poderHp: poder?.hp ?? (p.poder_hp === null ? null : Number(p.poder_hp)),
         poderLevel: poder?.level ?? p.poder_level,
         poderIvs: poder?.ivs ?? p.poder_ivs,
         poderAoVivo: Boolean(poder),
@@ -234,6 +236,7 @@ export default async function RankingDominantes() {
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
             <TabelaJogadores
+              mostrarElementos
               linhas={classificados.map((p) => {
                 // Personagem → conta do Discord → registro no fórum. Some
                 // qualquer elo e a linha simplesmente não ganha selo.

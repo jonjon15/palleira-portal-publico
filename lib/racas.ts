@@ -93,9 +93,23 @@ const APELIDOS: Record<string, Elemento> = {
   neutro: "neutral",
 };
 
+/**
+ * Como as pessoas escrevem o nome da raça → a chave oficial.
+ *
+ * 🔴 "Elfin" não é erro de digitação de uma pessoa: três dos cinco que
+ * escolheram essa raça escreveram assim (Santos, Handoroki BR e HordaS
+ * Mari, em 12/09/2026). Sem esta linha os três ficavam sem selo no placar,
+ * como se não tivessem registrado.
+ */
+const RACA_APELIDOS: Record<string, string> = {
+  elfin: "elfien",
+};
+
 /** A raça, quando o que foi digitado é uma das quatro oficiais. */
-export const racaDoTexto = (texto: string): Raca | null =>
-  RACAS[chave(texto)] ?? null;
+export const racaDoTexto = (texto: string): Raca | null => {
+  const k = chave(texto);
+  return RACAS[k] ?? RACAS[RACA_APELIDOS[k] ?? ""] ?? null;
+};
 
 /** O elemento, quando o que foi digitado é reconhecível. */
 export const elementoDoTexto = (texto: string): Elemento | null =>
