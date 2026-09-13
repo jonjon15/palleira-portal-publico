@@ -23,6 +23,17 @@ export interface PlayerRow {
   name: string;
   level: number;
   pal_count: number;
+  /**
+   * O último poder de palbox visto desta pessoa, e quando.
+   *
+   * Nulo para quem nunca foi lido online desde 12/09/2026 — a palbox só
+   * pode ser lida com o jogador no jogo, então este é o jeito de a tabela
+   * mostrar número para quem está offline agora. Ver a migração 017.
+   */
+  poder_hp: number | null;
+  poder_level: number | null;
+  poder_ivs: number | null;
+  poder_em: string | null;
 }
 
 /**
@@ -58,7 +69,8 @@ export async function topPlayers(
   serverSlug?: string,
 ): Promise<PlayerRow[]> {
   return (await sql`
-    select server_slug, palworld_uid, name, level, pal_count
+    select server_slug, palworld_uid, name, level, pal_count,
+           poder_hp, poder_level, poder_ivs, poder_em
     from players
     where name <> ''
       and name !~* 'adm'
@@ -66,6 +78,41 @@ export async function topPlayers(
     order by level desc, pal_count desc
     limit ${limit}
   `) as PlayerRow[];
+}
+
+/**
+ * Guarda o poder de palbox de quem acabou de ser lido no jogo.
+ *
+ * Chamado pelo ranking, que já lê a palbox de todo mundo que está online
+ * para montar a tabela — aqui esse número apenas deixa de ser jogado fora
+ * quando a pessoa desconecta.
+ *
+ * Escreve só em quem já existe na `players` (o import do save é quem cria a
+ * linha), e nunca derruba o placar: falha de escrita é engolida por quem
+ * chama. Uma consulta só para o lote inteiro, em vez de uma por jogador.
+ */
+export async function guardarPoder(
+  serverSlug: string,
+  medidas: { uid: string; hp: number; level: number; ivs: number }[],
+): Promise<void> {
+  if (medidas.length === 0) return;
+
+  await sql`
+    update players as p
+       set poder_hp    = v.hp,
+           poder_level = v.level,
+           poder_ivs   = v.ivs,
+           poder_em    = now()
+      from (
+        select
+          unnest(${medidas.map((m) => m.uid)}::text[])   as uid,
+          unnest(${medidas.map((m) => m.hp)}::bigint[])  as hp,
+          unnest(${medidas.map((m) => m.level)}::int[])  as level,
+          unnest(${medidas.map((m) => m.ivs)}::int[])    as ivs
+      ) as v
+     where p.server_slug = ${serverSlug}
+       and p.palworld_uid = v.uid
+  `;
 }
 
 export interface CommunityStats {

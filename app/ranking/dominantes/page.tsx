@@ -5,7 +5,7 @@ import { serverBySlug } from "@/lib/servers";
 import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
-import { topPlayers } from "@/lib/db";
+import { topPlayers, guardarPoder } from "@/lib/db";
 
 const SLUG = "pvp-free";
 
@@ -90,6 +90,14 @@ const loadLive = unstable_cache(
         }),
       );
 
+      // O poder lido agora fica guardado, senão sumiria quando a pessoa
+      // desconectasse — a palbox só existe na memória do servidor. É o que
+      // permite a tabela mostrar número para quem está offline.
+      await guardarPoder(
+        SLUG,
+        [...livePoder].map(([uid, v]) => ({ uid, ...v })),
+      ).catch(() => {});
+
       guilds = gs
         .filter((g) => g.memberCount > 0 || g.bases.length > 0)
         .map((g) => ({
@@ -142,11 +150,14 @@ export default async function RankingDominantes() {
         ...p,
         level: live.liveLevel?.[uid] ?? p.level,
         pal_count: live.livePals?.[uid] ?? p.pal_count,
-        // Só existe para quem está online: ler a palbox exige o jogador no
-        // jogo, e o save que alimenta o resto da tabela não guarda isto.
-        poderHp: poder?.hp ?? null,
-        poderLevel: poder?.level ?? null,
-        poderIvs: poder?.ivs ?? null,
+        // Quem está no jogo entra com o número do momento; quem não está,
+        // com o último que foi visto (migração 017). Só fica sem nada quem
+        // nunca esteve online desde que isto passou a ser guardado.
+        poderHp: poder?.hp ?? p.poder_hp,
+        poderLevel: poder?.level ?? p.poder_level,
+        poderIvs: poder?.ivs ?? p.poder_ivs,
+        poderAoVivo: Boolean(poder),
+        poderEm: p.poder_em,
       };
     })
     .sort((a, b) => b.level - a.level || b.pal_count - a.pal_count);
@@ -200,9 +211,9 @@ export default async function RankingDominantes() {
           <p className="mt-1 text-sm text-muted">
             <b className="text-gold">Poder</b> é a soma do HP de toda a
             palbox: já embute level, IV de vida e condensação. Ao lado, a
-            soma dos levels e a soma dos IVs de cada Pal — as três só existem
-            para quem está no jogo agora, porque a palbox só pode ser lida
-            com a pessoa conectada.
+            soma dos levels e a soma dos IVs de cada Pal. Em dourado, o número
+            de quem está no jogo agora; em cinza, o último que foi visto —
+            a palbox só pode ser lida com a pessoa conectada.
           </p>
 
           {classificados.length === 0 ? (
@@ -237,7 +248,21 @@ export default async function RankingDominantes() {
                     {p.poderHp === null ? (
                       <span className="text-muted">—</span>
                     ) : (
-                      p.poderHp.toLocaleString("pt-BR")
+                      // Número guardado perde o dourado e ganha a data no
+                      // hover: quem está offline não pode parecer medido
+                      // agora, senão a tabela mente sem dizer nada.
+                      <span
+                        className={p.poderAoVivo ? undefined : "font-normal text-muted"}
+                        title={
+                          p.poderAoVivo
+                            ? "Lido agora, com a pessoa no jogo"
+                            : p.poderEm
+                              ? `Última vez visto em ${new Date(p.poderEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`
+                              : undefined
+                        }
+                      >
+                        {p.poderHp.toLocaleString("pt-BR")}
+                      </span>
                     )}
                   </td>
                   <td className="tabular px-4 py-3 text-right text-muted">
