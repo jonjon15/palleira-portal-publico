@@ -38,6 +38,11 @@ export interface PlayerRow {
   poder_hp: string | number | null;
   poder_level: number | null;
   poder_ivs: number | null;
+  /**
+   * Quantos Pals shiny tinha na última leitura. Medido junto com o poder,
+   * e por isso carimbado pelo mesmo `poder_em`. Ver a migração 019.
+   */
+  poder_shiny: number | null;
   poder_em: string | null;
   /**
    * A conta de Discord dona deste personagem, quando existe vínculo.
@@ -83,7 +88,7 @@ export async function topPlayers(
 ): Promise<PlayerRow[]> {
   return (await sql`
     select p.server_slug, p.palworld_uid, p.name, p.level, p.pal_count,
-           p.poder_hp, p.poder_level, p.poder_ivs, p.poder_em,
+           p.poder_hp, p.poder_level, p.poder_ivs, p.poder_shiny, p.poder_em,
            a.discord_id
     from players p
     left join account_links a on a.palworld_uid = p.palworld_uid
@@ -108,25 +113,54 @@ export async function topPlayers(
  */
 export async function guardarPoder(
   serverSlug: string,
-  medidas: { uid: string; hp: number; level: number; ivs: number }[],
+  medidas: { uid: string; hp: number; level: number; ivs: number; shiny: number }[],
 ): Promise<void> {
   if (medidas.length === 0) return;
 
   await sql`
     update players as p
-       set poder_hp    = v.hp,
-           poder_level = v.level,
-           poder_ivs   = v.ivs,
-           poder_em    = now()
+       set poder_hp      = v.hp,
+           poder_level   = v.level,
+           poder_ivs     = v.ivs,
+           poder_shiny   = v.shiny,
+           -- Só sobe: vender ou abater um shiny derruba poder_shiny, mas
+           -- não apaga que a pessoa já chegou àquele número.
+           shiny_recorde = greatest(coalesce(p.shiny_recorde, 0), v.shiny),
+           poder_em      = now()
       from (
         select
           unnest(${medidas.map((m) => m.uid)}::text[])   as uid,
           unnest(${medidas.map((m) => m.hp)}::bigint[])  as hp,
           unnest(${medidas.map((m) => m.level)}::int[])  as level,
-          unnest(${medidas.map((m) => m.ivs)}::int[])    as ivs
+          unnest(${medidas.map((m) => m.ivs)}::int[])    as ivs,
+          unnest(${medidas.map((m) => m.shiny)}::int[])  as shiny
       ) as v
      where p.server_slug = ${serverSlug}
        and p.palworld_uid = v.uid
+  `;
+
+  // A série histórica (§7.9, migração 019): uma linha por jogador por dia.
+  //
+  // 🔴 `greatest` e não o último valor lido: o ranking relê a cada 2
+  // minutos enquanto a pessoa joga, então gravar o último faria o dia
+  // registrar a queda de quem vendeu um shiny à noite, em vez do pico que
+  // ela realmente alcançou. Mesmo critério que o `level` já usa aqui.
+  //
+  // 📌 Só escreve para quem o import do save já criou na `players` — igual
+  // ao update acima, e por isso nunca inventa linha de jogador fantasma.
+  await sql`
+    insert into player_daily (server_slug, palworld_uid, day, level, pal_count, shiny)
+    select ${serverSlug}, v.uid, current_date, p.level, p.pal_count, v.shiny
+      from (
+        select
+          unnest(${medidas.map((m) => m.uid)}::text[])  as uid,
+          unnest(${medidas.map((m) => m.shiny)}::int[]) as shiny
+      ) as v
+      join players p
+        on p.server_slug = ${serverSlug}
+       and p.palworld_uid = v.uid
+    on conflict (server_slug, palworld_uid, day) do update
+      set shiny = greatest(coalesce(player_daily.shiny, 0), excluded.shiny)
   `;
 }
 

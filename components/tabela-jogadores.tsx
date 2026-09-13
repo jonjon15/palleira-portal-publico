@@ -39,6 +39,13 @@ export interface LinhaDoPlacar {
   poderHp: number | null;
   poderLevel: number | null;
   poderIvs: number | null;
+  /**
+   * Quantos Pals shiny a pessoa **tem** — time, palbox e bases.
+   *
+   * ⚠️ Não é "quantos capturou": shiny abatido ou vendido não deixa rastro
+   * em lugar nenhum, então esse histórico não existe para ser mostrado.
+   */
+  poderShiny: number | null;
   /** Medido agora, com a pessoa no jogo — em vez de vir guardado do banco. */
   poderAoVivo: boolean;
   poderEm: string | null;
@@ -51,6 +58,7 @@ const CRITERIOS = {
   poder: (l: LinhaDoPlacar) => l.poderHp,
   somaLv: (l: LinhaDoPlacar) => l.poderLevel,
   somaIv: (l: LinhaDoPlacar) => l.poderIvs,
+  shiny: (l: LinhaDoPlacar) => l.poderShiny,
 } as const;
 
 type Criterio = keyof typeof CRITERIOS;
@@ -179,6 +187,7 @@ export function TabelaJogadores({
                   ["Poder", "poder"],
                   ["Soma do Level", "somaLv"],
                   ["Soma IV", "somaIv"],
+                  ["✨ Shiny", "shiny"],
                 ] as [string, Criterio][]
               ).map(([rotulo, criterio]) => (
                 <th
@@ -307,6 +316,31 @@ export function TabelaJogadores({
                   {p.poderIvs === null
                     ? "—"
                     : p.poderIvs.toLocaleString("pt-BR")}
+                </td>
+                {/* Zero é "medido, e não tem nenhum"; traço é "nunca foi
+                    medido". Mostrar traço para quem tem zero faria a coluna
+                    mentir sobre quem já entrou no jogo. */}
+                <td className="tabular px-4 py-3 text-right">
+                  {p.poderShiny === null ? (
+                    <span className="text-muted">—</span>
+                  ) : (
+                    <span
+                      className={
+                        p.poderShiny > 0
+                          ? "font-semibold text-gold"
+                          : "text-muted"
+                      }
+                      title={
+                        p.poderAoVivo
+                          ? "Lido agora, com a pessoa no jogo"
+                          : p.poderEm
+                            ? `Última vez visto em ${new Date(p.poderEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`
+                            : undefined
+                      }
+                    >
+                      {p.poderShiny.toLocaleString("pt-BR")}
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

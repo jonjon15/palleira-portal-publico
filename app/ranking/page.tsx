@@ -55,7 +55,10 @@ const loadLive = unstable_cache(
     // vive na memória do servidor, e para quem está offline não há resposta.
     const livePals = new Map<string, number>();
     // Poder da palbox de quem está online: soma de HP, de level e de IV.
-    const livePoder = new Map<string, { hp: number; level: number; ivs: number }>();
+    const livePoder = new Map<
+      string,
+      { hp: number; level: number; ivs: number; shiny: number }
+    >();
     let totalPlayers = 0;
     const failed: string[] = [];
 
@@ -97,6 +100,7 @@ const loadLive = unstable_cache(
                   hp: poder.hp,
                   level: poder.level,
                   ivs: poder.ivs,
+                  shiny: poder.shiny,
                 });
               } catch {
                 // sem número ao vivo para este
@@ -182,6 +186,7 @@ export default async function Ranking() {
         poderHp: poder?.hp ?? (p.poder_hp === null ? null : Number(p.poder_hp)),
         poderLevel: poder?.level ?? p.poder_level,
         poderIvs: poder?.ivs ?? p.poder_ivs,
+        poderShiny: poder?.shiny ?? p.poder_shiny,
         poderAoVivo: Boolean(poder),
         poderEm: p.poder_em,
       };
@@ -239,9 +244,10 @@ export default async function Ranking() {
           <p className="mt-1 text-sm text-muted">
             <b className="text-gold">Poder</b> é a soma do HP de toda a
             palbox: já embute level, IV de vida e condensação. Ao lado, a
-            soma dos levels e a soma dos IVs de cada Pal. Em dourado, o número
-            de quem está no jogo agora; em cinza, o último que foi visto —
-            a palbox só pode ser lida com a pessoa conectada.{" "}
+            soma dos levels e a soma dos IVs de cada Pal, e quantos deles são{" "}
+            <b className="text-gold">✨ shiny</b>. Em dourado, o número de quem
+            está no jogo agora; em cinza, o último que foi visto — a palbox só
+            pode ser lida com a pessoa conectada.{" "}
             <b className="text-text">Clique em qualquer cabeçalho</b> para
             ordenar por ele.
           </p>
@@ -261,6 +267,7 @@ export default async function Ranking() {
                 poderHp: p.poderHp,
                 poderLevel: p.poderLevel,
                 poderIvs: p.poderIvs,
+                poderShiny: p.poderShiny,
                 poderAoVivo: p.poderAoVivo,
                 poderEm: p.poderEm,
               }))}

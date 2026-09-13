@@ -385,6 +385,13 @@ export interface PoderDaPalbox {
   level: number;
   /** Soma dos quatro IVs (vida, ataque corpo a corpo, ataque à distância, defesa). */
   ivs: number;
+  /**
+   * Quantos deles são shiny (o jogo chama de "Lucky").
+   *
+   * ⚠️ Quantos a pessoa **tem**, não quantos capturou: shiny abatido,
+   * vendido ou liberado não deixa rastro no save nem na API.
+   */
+  shiny: number;
 }
 
 /**
@@ -412,7 +419,7 @@ export async function poderDaPalbox(
     Pals?: Record<string, Record<string, PalCru | undefined>>;
   }>(server, `pals/${normalizarUid(uid)}`, false);
 
-  const soma: PoderDaPalbox = { pals: 0, hp: 0, level: 0, ivs: 0 };
+  const soma: PoderDaPalbox = { pals: 0, hp: 0, level: 0, ivs: 0, shiny: 0 };
 
   // `Pals` vem em três gavetas — `Team`, `Palbox` e `BaseCamps` —, e todas
   // contam: o Pal que está trabalhando numa base é tão seu quanto o do time.
@@ -421,6 +428,7 @@ export async function poderDaPalbox(
       if (!pal?.PalID) continue;
       soma.pals++;
       soma.level += Number(pal.Level) || 0;
+      if (pal.Shiny === true) soma.shiny++;
       // Arredondado: um servidor devolveu HP fracionado (43280.732), e
       // número quebrado numa tabela de placar não ajuda ninguém.
       soma.hp += Math.round(Number(pal.HP) || 0);

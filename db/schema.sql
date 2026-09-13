@@ -56,6 +56,10 @@ create table if not exists player_daily (
   day          date    not null,
   level        integer not null,
   pal_count    integer not null default 0,
+  -- Quantos shiny tinha naquele dia (migração 019). Nulo em dia que passou
+  -- sem leitura: a palbox só pode ser lida com a pessoa no jogo, e "não se
+  -- sabe" não é a mesma coisa que "tinha zero".
+  shiny        integer,
   primary key (server_slug, palworld_uid, day)
 );
 

@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-13
 
+- **Quantos shiny cada um tem, no ranking.** Coluna nova na tabela, ordenável por clique como as outras: dá para ver de cara quem tem a coleção mais rara de cada mundo. Conta o time, a palbox e os que estão trabalhando nas bases. Como as colunas de Poder, o número só pode ser lido com a pessoa dentro do jogo — quem ainda não entrou aparece com um traço, e a tabela vai se preenchendo conforme o pessoal joga. O site também começou a guardar esse número dia a dia, o que no futuro permite mostrar quantos você ganhou no mês e o seu recorde.
 - **Nomes em português no menu.** "Store" virou **Mercado** e "Placar" virou **Ranking**, no menu do topo e dentro das próprias páginas. A vitrine, que se chamava "Palleira Store", agora é **Mercado da Palleira**. Na tabela do ranking, a coluna "Soma lv" virou **Soma do Level**.
 - **Placar filtra por elemento.** As colunas Elemento Primário e Elemento Secundário ganharam filtro no próprio cabeçalho, e os dois combinam — dá para pedir "primário Grama e secundário Sombra" e ver só quem bate nos dois.
 - Quem escreveu a raça como "Elfin" (e não "Elfien") passou a aparecer com o selo: era como a maioria daquela raça escrevia.
