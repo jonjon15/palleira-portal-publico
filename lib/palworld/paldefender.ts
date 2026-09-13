@@ -376,6 +376,67 @@ export async function contarPals(
   return (m.TeamCount ?? 0) + (m.PalboxCount ?? 0) + (m.BaseCampCount ?? 0);
 }
 
+export interface PoderDaPalbox {
+  /** Quantos Pals a pessoa tem, somando time, palbox e bases. */
+  pals: number;
+  /** Soma do HP de todos eles — já embute level, IV de vida e condensação. */
+  hp: number;
+  /** Soma dos levels. */
+  level: number;
+  /** Soma dos quatro IVs (vida, ataque corpo a corpo, ataque à distância, defesa). */
+  ivs: number;
+}
+
+/**
+ * O peso da coleção inteira de alguém, numa chamada só.
+ *
+ * Pedido do dono em 12/09/2026 para o ranking: "poder total da palbox".
+ * Três medidas em vez de uma porque elas contam histórias diferentes — a
+ * soma de HP premia quem tem bicho forte, a de level quem tem bicho alto, e
+ * a de IV quem tem bicho *bom*. Quem tem 300 Pals fracos lidera a primeira
+ * e some na última.
+ *
+ * 📌 Vale a mesma leitura de `contarPals`, e por isso substitui aquela onde
+ * as duas seriam chamadas juntas: é a mesma requisição, e pedir duas vezes
+ * o mesmo JSON só para contar de um jeito e somar de outro é desperdício.
+ *
+ * ⚠️ Só responde com o jogador **online** (`ForaDoJogo` quando não está), e
+ * a resposta é grande: para quem tem 341 Pals são ~30ms e alguns MB. Não
+ * chamar para o servidor inteiro — só para quem está conectado.
+ */
+export async function poderDaPalbox(
+  server: PalleiraServer,
+  uid: string,
+): Promise<PoderDaPalbox> {
+  const raw = await call<{
+    Pals?: Record<string, Record<string, PalCru | undefined>>;
+  }>(server, `pals/${normalizarUid(uid)}`, false);
+
+  const soma: PoderDaPalbox = { pals: 0, hp: 0, level: 0, ivs: 0 };
+
+  // `Pals` vem em três gavetas — `Team`, `Palbox` e `BaseCamps` —, e todas
+  // contam: o Pal que está trabalhando numa base é tão seu quanto o do time.
+  for (const gaveta of Object.values(raw.Pals ?? {})) {
+    for (const pal of Object.values(gaveta ?? {})) {
+      if (!pal?.PalID) continue;
+      soma.pals++;
+      soma.level += Number(pal.Level) || 0;
+      // Arredondado: um servidor devolveu HP fracionado (43280.732), e
+      // número quebrado numa tabela de placar não ajuda ninguém.
+      soma.hp += Math.round(Number(pal.HP) || 0);
+
+      const iv = (pal.IVs ?? {}) as Record<string, number>;
+      soma.ivs +=
+        (iv.Health ?? 0) +
+        (iv.AttackMelee ?? 0) +
+        (iv.AttackShot ?? 0) +
+        (iv.Defense ?? 0);
+    }
+  }
+
+  return soma;
+}
+
 /** Um Pal específico, pelo `instanceId` que `getPals` devolveu. */
 export async function getPal(
   server: PalleiraServer,

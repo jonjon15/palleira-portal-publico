@@ -4,7 +4,7 @@ import { unstable_cache } from "next/cache";
 import { PageHeader } from "@/components/page-header";
 import { activeServers, SERVERS } from "@/lib/servers";
 import { normalizarUid } from "@/lib/palworld/uid";
-import { getPlayers, getGuilds, contarPals } from "@/lib/palworld/paldefender";
+import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers } from "@/lib/db";
 
@@ -50,9 +50,11 @@ const loadLive = unstable_cache(
     // level ao vivo; o PalDefender não. Assim o placar mostra o número certo
     // para quem está jogando, em vez do valor do último save.
     const liveLevel = new Map<string, number>();
-    // uid → quantos Pals tem agora. Só de quem está conectado: `contarPals`
-    // lê a memória do servidor, e para quem está offline não há resposta.
+    // uid → quantos Pals tem agora. Só de quem está conectado: a palbox
+    // vive na memória do servidor, e para quem está offline não há resposta.
     const livePals = new Map<string, number>();
+    // Poder da palbox de quem está online: soma de HP, de level e de IV.
+    const livePoder = new Map<string, { hp: number; level: number; ivs: number }>();
     let totalPlayers = 0;
     const failed: string[] = [];
 
@@ -87,9 +89,16 @@ const loadLive = unstable_cache(
           await Promise.all(
             conectados.map(async (p) => {
               try {
-                livePals.set(p.playerUid, await contarPals(server, p.playerUid));
+                // A mesma resposta dá a contagem e o poder da palbox.
+                const poder = await poderDaPalbox(server, p.playerUid);
+                livePals.set(p.playerUid, poder.pals);
+                livePoder.set(p.playerUid, {
+                  hp: poder.hp,
+                  level: poder.level,
+                  ivs: poder.ivs,
+                });
               } catch {
-                // sem contagem ao vivo para este
+                // sem número ao vivo para este
               }
             }),
           );
@@ -123,6 +132,7 @@ const loadLive = unstable_cache(
       failed,
       liveLevel: Object.fromEntries(liveLevel),
       livePals: Object.fromEntries(livePals),
+      livePoder: Object.fromEntries(livePoder),
     };
   },
   ["placar-live"],
@@ -142,10 +152,15 @@ export default async function Ranking() {
   const classificados = players
     .map((p) => {
       const uid = normalizarUid(p.palworld_uid);
+      const poder = live.livePoder?.[uid];
       return {
         ...p,
         level: live.liveLevel[uid] ?? p.level,
         pal_count: live.livePals[uid] ?? p.pal_count,
+        // Só para quem está online: ler a palbox exige o jogador no jogo.
+        poderHp: poder?.hp ?? null,
+        poderLevel: poder?.level ?? null,
+        poderIvs: poder?.ivs ?? null,
       };
     })
     .sort((a, b) => b.level - a.level || b.pal_count - a.pal_count);
@@ -198,13 +213,20 @@ export default async function Ranking() {
             atualizados a cada 2 minutos. Para quem está offline, os números
             são os do último save — lido de 2 em 2 horas.
           </p>
+          <p className="mt-1 text-sm text-muted">
+            <b className="text-gold">Poder</b> é a soma do HP de toda a
+            palbox: já embute level, IV de vida e condensação. Ao lado, a
+            soma dos levels e a soma dos IVs de cada Pal — as três só existem
+            para quem está no jogo agora, porque a palbox só pode ser lida
+            com a pessoa conectada.
+          </p>
 
           {classificados.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
             <Table
-              head={["#", "Jogador", "Servidor", "Level", "Pals"]}
-              align={["left", "left", "left", "right", "right"]}
+              head={["#", "Jogador", "Servidor", "Level", "Pals", "Poder", "Soma lv", "Soma IV"]}
+              align={["left", "left", "left", "right", "right", "right", "right", "right"]}
             >
               {classificados.map((p, i) => (
                 <tr
@@ -229,6 +251,23 @@ export default async function Ranking() {
                   </td>
                   <td className="tabular px-4 py-3 text-right">
                     {p.pal_count.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="tabular px-4 py-3 text-right font-semibold text-gold">
+                    {p.poderHp === null ? (
+                      <span className="text-muted">—</span>
+                    ) : (
+                      p.poderHp.toLocaleString("pt-BR")
+                    )}
+                  </td>
+                  <td className="tabular px-4 py-3 text-right text-muted">
+                    {p.poderLevel === null
+                      ? "—"
+                      : p.poderLevel.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="tabular px-4 py-3 text-right text-muted">
+                    {p.poderIvs === null
+                      ? "—"
+                      : p.poderIvs.toLocaleString("pt-BR")}
                   </td>
                 </tr>
               ))}
