@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-13
 
+- **Número de um mundo aparecia na linha do outro**, no ranking geral. Quem joga em mais de um servidor via o mesmo level, os mesmos Pals e o mesmo poder repetidos nas duas linhas — o da Mari saiu igual no PVE Free e no PVE VIP. Cada mundo volta a mostrar o que é dele. O ranking do Dominantes nunca teve isso, por ser de um servidor só.
 - **Quantos shiny cada um tem, no ranking.** Coluna nova na tabela, ordenável por clique como as outras: dá para ver de cara quem tem a coleção mais rara de cada mundo. Conta o time, a palbox e os que estão trabalhando nas bases. Como as colunas de Poder, o número só pode ser lido com a pessoa dentro do jogo — quem ainda não entrou aparece com um traço, e a tabela vai se preenchendo conforme o pessoal joga. O site também começou a guardar esse número dia a dia, o que no futuro permite mostrar quantos você ganhou no mês e o seu recorde.
 - **Nomes em português no menu.** "Store" virou **Mercado** e "Placar" virou **Ranking**, no menu do topo e dentro das próprias páginas. A vitrine, que se chamava "Palleira Store", agora é **Mercado da Palleira**. Na tabela do ranking, a coluna "Soma lv" virou **Soma do Level**.
 - **Placar filtra por elemento.** As colunas Elemento Primário e Elemento Secundário ganharam filtro no próprio cabeçalho, e os dois combinam — dá para pedir "primário Grama e secundário Sombra" e ver só quem bate nos dois.
