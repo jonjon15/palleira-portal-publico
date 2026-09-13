@@ -26,6 +26,17 @@ const MEDAL = ["text-gold", "text-[#c9c9c9]", "text-[#c08457]"];
 /** Conta de staff no ranking, não jogador — mesmo critério de `topPlayers`. */
 const ehAdmin = (nome: string) => /adm/i.test(nome);
 
+/**
+ * A chave dos mapas de dados ao vivo: o servidor JUNTO do UID.
+ *
+ * 🔴 Nunca o UID sozinho. Ele identifica a conta, não o personagem naquele
+ * mundo (`lib/palworld/uid.ts`), e esta página junta os três servidores no
+ * mesmo mapa — sem o slug, a leitura de um mundo vaza para a linha do
+ * outro.
+ */
+const chaveViva = (slug: string, uid: string) =>
+  `${slug}:${normalizarUid(uid)}`;
+
 interface GuildRow {
   id: string;
   server: string;
@@ -47,12 +58,24 @@ const loadLive = unstable_cache(
   async () => {
     const guilds: GuildRow[] = [];
     const online: { name: string; guild: string; server: string; level: number }[] = [];
-    // uid → level de quem está conectado agora. A REST oficial devolve o
-    // level ao vivo; o PalDefender não. Assim o placar mostra o número certo
-    // para quem está jogando, em vez do valor do último save.
+    // 🔴 A chave destes três mapas é `slug:uid`, NUNCA o uid sozinho.
+    //
+    // O UID é da conta, não do mundo (ver `lib/palworld/uid.ts`): a mesma
+    // pessoa tem o mesmo UID nos três servidores, com personagem, level e
+    // palbox diferentes em cada um. Com o uid puro, o último servidor lido
+    // sobrescrevia os outros e as duas linhas da mesma pessoa apareciam com
+    // números idênticos — a Mari saiu com o mesmo poder no PVE Free e no
+    // PVE VIP em 13/09/2026, que foi como isto apareceu.
+    //
+    // A gravação já se protegia disso (ver o `guardarPoder` mais abaixo); a
+    // leitura é que tinha ficado sem a mesma trava.
+
+    // level de quem está conectado agora. A REST oficial devolve o level ao
+    // vivo; o PalDefender não. Assim o placar mostra o número certo para
+    // quem está jogando, em vez do valor do último save.
     const liveLevel = new Map<string, number>();
-    // uid → quantos Pals tem agora. Só de quem está conectado: a palbox
-    // vive na memória do servidor, e para quem está offline não há resposta.
+    // quantos Pals tem agora. Só de quem está conectado: a palbox vive na
+    // memória do servidor, e para quem está offline não há resposta.
     const livePals = new Map<string, number>();
     // Poder da palbox de quem está online: soma de HP, de level e de IV.
     const livePoder = new Map<
@@ -74,7 +97,7 @@ const loadLive = unstable_cache(
           ]);
 
           for (const p of live) {
-            liveLevel.set(p.playerId, p.level);
+            liveLevel.set(chaveViva(server.slug, p.playerId), p.level);
           }
 
           totalPlayers += players.length;
@@ -84,7 +107,7 @@ const loadLive = unstable_cache(
               name: p.name || "Jogador sem nome",
               guild: p.guildName,
               server: server.shortName,
-              level: liveLevel.get(p.playerUid) ?? 0,
+              level: liveLevel.get(chaveViva(server.slug, p.playerUid)) ?? 0,
             });
           }
 
@@ -95,8 +118,8 @@ const loadLive = unstable_cache(
               try {
                 // A mesma resposta dá a contagem e o poder da palbox.
                 const poder = await poderDaPalbox(server, p.playerUid);
-                livePals.set(p.playerUid, poder.pals);
-                livePoder.set(p.playerUid, {
+                livePals.set(chaveViva(server.slug, p.playerUid), poder.pals);
+                livePoder.set(chaveViva(server.slug, p.playerUid), {
                   hp: poder.hp,
                   level: poder.level,
                   ivs: poder.ivs,
@@ -119,7 +142,7 @@ const loadLive = unstable_cache(
             server.slug,
             conectados
               .map((p) => {
-                const v = livePoder.get(p.playerUid);
+                const v = livePoder.get(chaveViva(server.slug, p.playerUid));
                 return v ? { uid: p.playerUid, ...v } : null;
               })
               .filter((v) => v !== null),
@@ -173,7 +196,8 @@ export default async function Ranking() {
   // números do momento, quem está offline com os do último import do save.
   const classificados = players
     .map((p) => {
-      const uid = normalizarUid(p.palworld_uid);
+      // A mesma chave da gravação: o personagem daquele mundo, não a conta.
+      const uid = chaveViva(p.server_slug, p.palworld_uid);
       const poder = live.livePoder?.[uid];
       return {
         ...p,
