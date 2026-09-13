@@ -317,26 +317,40 @@ export async function anunciarPal(
   const debitado = (await sql`
     delete from vault_pals
     where id = ${vaultPalId} and discord_id = ${discordId}
-    returning pal_id, template, server_slug
-  `) as { pal_id: string; template: Record<string, unknown>; server_slug: string | null }[];
+    returning pal_id, template, server_slug, imported_at
+  `) as {
+    pal_id: string;
+    template: Record<string, unknown>;
+    server_slug: string | null;
+    imported_at: string;
+  }[];
 
   if (!debitado.length) {
     return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
   }
-  const { pal_id: palId, template, server_slug: origemSlug } = debitado[0];
+  const {
+    pal_id: palId,
+    template,
+    server_slug: origemSlug,
+    imported_at: desdeQuando,
+  } = debitado[0];
 
   const taxa = taxaDaVenda(preco);
   try {
+    // 🔴 `pal_imported_at` viaja com o anúncio (migração 018). Anunciar não
+    // é sair do cofre: se esta data se perder aqui, o cancelamento devolve o
+    // Pal com o relógio zerado e a trava da 006 recomeça do nada.
     await sql`
-      insert into listings (seller_id, kind, pal_template, pal_server_slug, price, fee)
-      values (${discordId}, 'pal', ${JSON.stringify(template)}, ${origemSlug}, ${preco}, ${taxa})
+      insert into listings (seller_id, kind, pal_template, pal_server_slug, pal_imported_at, price, fee)
+      values (${discordId}, 'pal', ${JSON.stringify(template)}, ${origemSlug}, ${desdeQuando}, ${preco}, ${taxa})
     `;
   } catch {
     // Mesma disciplina do anúncio de item: o Pal já saiu do cofre, então
-    // devolver vem antes de qualquer outra coisa.
+    // devolver vem antes de qualquer outra coisa — com a data que ele tinha,
+    // porque falha técnica não é motivo para resetar a trava.
     await sql`
-      insert into vault_pals (discord_id, pal_id, template, server_slug)
-      values (${discordId}, ${palId}, ${JSON.stringify(template)}, ${origemSlug})
+      insert into vault_pals (discord_id, pal_id, template, server_slug, imported_at)
+      values (${discordId}, ${palId}, ${JSON.stringify(template)}, ${origemSlug}, ${desdeQuando})
     `;
     return {
       ok: false,
@@ -363,13 +377,15 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
     update listings
        set status = 'cancelado', closed_at = now()
      where id = ${id} and seller_id = ${discordId} and status = 'ativo'
-    returning kind, item_id, qty, pal_template, pal_server_slug, item_server_slug
+    returning kind, item_id, qty, pal_template, pal_server_slug,
+              pal_imported_at, item_server_slug
   `) as {
     kind: TipoAnuncio;
     item_id: string | null;
     qty: number | null;
     pal_template: Record<string, unknown> | null;
     pal_server_slug: string | null;
+    pal_imported_at: string | null;
     item_server_slug: string | null;
   }[];
 
@@ -379,9 +395,18 @@ export async function cancelarAnuncio(id: number): Promise<Resultado> {
   const cancelado = rows[0];
 
   if (cancelado.kind === "pal" && cancelado.pal_template) {
+    // 🔴 Volta com a data que tinha, não com `now()`.
+    //
+    // O tempo mínimo da migração 006 conta desde que o Pal ENTROU no cofre;
+    // anunciar e cancelar é uma ida à vitrine, não uma saída. Sem isto o
+    // relógio zerava a cada cancelamento: o Santos guardou 19:58, cancelou
+    // 01:16 com 5h18 cumpridas e o site ainda pedia mais 3h (12/09/2026).
+    //
+    // `coalesce` para anúncio criado antes da migração 018, que não tem a
+    // data guardada — ali cai no comportamento antigo, nunca pior.
     await sql`
-      insert into vault_pals (discord_id, pal_id, template, server_slug)
-      values (${discordId}, ${String(cancelado.pal_template.PalID ?? "")}, ${JSON.stringify(cancelado.pal_template)}, ${cancelado.pal_server_slug})
+      insert into vault_pals (discord_id, pal_id, template, server_slug, imported_at)
+      values (${discordId}, ${String(cancelado.pal_template.PalID ?? "")}, ${JSON.stringify(cancelado.pal_template)}, ${cancelado.pal_server_slug}, coalesce(${cancelado.pal_imported_at}::timestamptz, now()))
     `;
     return { ok: true, mensagem: "Anúncio cancelado e Pal de volta no cofre." };
   }
