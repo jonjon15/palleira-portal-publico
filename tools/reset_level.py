@@ -293,7 +293,21 @@ def main() -> int:
     print("     a partir dele assim que a pessoa ganhar experiência de novo.")
 
     if args.simular:
+        # Reserializa em memória (sem enviar nada) para provar que a edição
+        # não quebra o gvas.write(). Foi a lacuna que deixou passar o bug
+        # do ByteProperty na primeira vez: --simular só mexia em memória e
+        # nunca chamava write(), então só --aplicar teria pego o erro — e
+        # aplicar é o modo que já parou o servidor.
         print()
+        t0 = time.time()
+        try:
+            compress_gvas_to_sav(gvas.write(PALWORLD_CUSTOM_PROPERTIES), tipo)
+        except Exception as err:  # noqa: BLE001
+            print(f"  ❌ reserializar quebrou: {err!r}")
+            print("     a edição deixou alguma estrutura inválida — não aplicar.")
+            return 1
+        print(f"  ✅ reserializado sem erro em {time.time()-t0:.0f}s "
+              "(prova que o write não quebra)", flush=True)
         print("  (simulação — nada foi gravado)")
         return 0
 
