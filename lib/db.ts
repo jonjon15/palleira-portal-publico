@@ -34,6 +34,14 @@ export interface PlayerRow {
   poder_level: number | null;
   poder_ivs: number | null;
   poder_em: string | null;
+  /**
+   * A conta de Discord dona deste personagem, quando existe vínculo.
+   *
+   * É o elo entre o placar (que mostra personagem do jogo) e tudo que é
+   * declarado no Discord — hoje, a raça registrada no fórum do Dominantes.
+   * Nulo para quem nunca vinculou no site.
+   */
+  discord_id: string | null;
 }
 
 /**
@@ -69,13 +77,15 @@ export async function topPlayers(
   serverSlug?: string,
 ): Promise<PlayerRow[]> {
   return (await sql`
-    select server_slug, palworld_uid, name, level, pal_count,
-           poder_hp, poder_level, poder_ivs, poder_em
-    from players
-    where name <> ''
-      and name !~* 'adm'
-      and (${serverSlug ?? null}::text is null or server_slug = ${serverSlug ?? null})
-    order by level desc, pal_count desc
+    select p.server_slug, p.palworld_uid, p.name, p.level, p.pal_count,
+           p.poder_hp, p.poder_level, p.poder_ivs, p.poder_em,
+           a.discord_id
+    from players p
+    left join account_links a on a.palworld_uid = p.palworld_uid
+    where p.name <> ''
+      and p.name !~* 'adm'
+      and (${serverSlug ?? null}::text is null or p.server_slug = ${serverSlug ?? null})
+    order by p.level desc, p.pal_count desc
     limit ${limit}
   `) as PlayerRow[];
 }

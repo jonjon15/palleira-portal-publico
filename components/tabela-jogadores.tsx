@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { iconeDoElemento, type Elemento } from "@/lib/racas";
 
 /**
  * A tabela de jogadores do placar, ordenável por clique no cabeçalho.
@@ -21,6 +22,14 @@ export interface LinhaDoPlacar {
   nome: string;
   online: boolean;
   servidor?: string;
+  /**
+   * A raça do Dominantes, quando dá para saber: exige vínculo no site (para
+   * ligar o personagem à conta de Discord) e registro no fórum. Quem não
+   * tem os dois vem sem, e a linha fica igual ao que era antes.
+   */
+  raca?: { nome: string; cor: string; elemento: string } | null;
+  /** O elemento escolhido por cima do da raça. */
+  secundario?: { chave: string; nome: string } | null;
   level: number;
   pals: number;
   poderHp: number | null;
@@ -125,6 +134,11 @@ export function TabelaJogadores({
           {ordenadas.map((p, i) => (
             <tr
               key={p.chave}
+              // A faixa da cor da raça entra por `box-shadow` para não mexer
+              // na borda que já separa as linhas.
+              style={
+                p.raca ? { boxShadow: `inset 3px 0 0 ${p.raca.cor}` } : undefined
+              }
               className="border-b border-line/60 last:border-0 hover:bg-surface/60"
             >
               <td
@@ -139,6 +153,29 @@ export function TabelaJogadores({
                     className="ml-2 inline-block size-1.5 rounded-full bg-success align-middle"
                     title="Online agora"
                   />
+                )}
+                {p.raca && (
+                  // Selo ao lado do nome em vez de coluna própria: o placar
+                  // já tem sete colunas e a raça não precisa de uma oitava.
+                  <span
+                    className="ml-2 inline-flex items-center gap-1 align-middle text-xs font-semibold"
+                    style={{ color: p.raca.cor }}
+                    title={`${p.raca.nome}${p.secundario ? ` · ${p.secundario.nome}` : ""}`}
+                  >
+                    <img
+                      src={iconeDoElemento(p.raca.elemento as Elemento)}
+                      alt=""
+                      className="size-3.5"
+                    />
+                    {p.raca.nome}
+                    {p.secundario && (
+                      <img
+                        src={iconeDoElemento(p.secundario.chave as Elemento)}
+                        alt=""
+                        className="size-3.5 opacity-80"
+                      />
+                    )}
+                  </span>
                 )}
               </td>
               {mostrarServidor && (

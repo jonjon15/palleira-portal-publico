@@ -7,6 +7,8 @@ import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers, guardarPoder } from "@/lib/db";
+import { racasRegistradas } from "@/lib/racas-do-discord";
+import { NOME_DO_ELEMENTO } from "@/lib/racas";
 
 const SLUG = "pvp-free";
 
@@ -131,9 +133,12 @@ const loadLive = unstable_cache(
 
 export default async function RankingDominantes() {
   const server = serverBySlug(SLUG);
-  const [live, players] = await Promise.all([
+  const [live, players, racas] = await Promise.all([
     loadLive(),
     topPlayers(25, SLUG).catch(() => []),
+    // O selo de raça é enfeite útil, não conteúdo essencial: se o Discord
+    // não responder, o placar sai igual ao que era, sem selo nenhum.
+    racasRegistradas(),
   ]);
 
   const onlineNames = new Set(live.online.map((p) => p.name));
@@ -218,15 +223,38 @@ export default async function RankingDominantes() {
             <b className="text-text">Clique em qualquer cabeçalho</b> para
             ordenar por ele.
           </p>
+          <p className="mt-1 text-sm text-muted">
+            A <b className="text-text">raça</b> ao lado do nome vem do registro
+            no Discord, com o ícone do elemento primário e do secundário. Só
+            aparece para quem vinculou o personagem no site — é o vínculo que
+            diz de quem é aquele personagem no jogo.
+          </p>
 
           {classificados.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
             <TabelaJogadores
-              linhas={classificados.map((p) => ({
+              linhas={classificados.map((p) => {
+                // Personagem → conta do Discord → registro no fórum. Some
+                // qualquer elo e a linha simplesmente não ganha selo.
+                const reg = p.discord_id ? racas.get(p.discord_id) : undefined;
+                return {
                 chave: p.palworld_uid,
                 nome: p.name,
                 online: onlineNames.has(p.name),
+                raca: reg?.raca
+                  ? {
+                      nome: reg.raca.nome,
+                      cor: reg.raca.cor,
+                      elemento: reg.raca.elemento,
+                    }
+                  : null,
+                secundario: reg?.secundario
+                  ? {
+                      chave: reg.secundario,
+                      nome: NOME_DO_ELEMENTO[reg.secundario],
+                    }
+                  : null,
                 level: p.level,
                 pals: p.pal_count,
                 poderHp: p.poderHp,
@@ -234,7 +262,8 @@ export default async function RankingDominantes() {
                 poderIvs: p.poderIvs,
                 poderAoVivo: p.poderAoVivo,
                 poderEm: p.poderEm,
-              }))}
+                };
+              })}
             />
           )}
         </section>
