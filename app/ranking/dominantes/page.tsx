@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { PageHeader } from "@/components/page-header";
+import { TabelaJogadores } from "@/components/tabela-jogadores";
 import { serverBySlug } from "@/lib/servers";
 import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
@@ -213,71 +214,28 @@ export default async function RankingDominantes() {
             palbox: já embute level, IV de vida e condensação. Ao lado, a
             soma dos levels e a soma dos IVs de cada Pal. Em dourado, o número
             de quem está no jogo agora; em cinza, o último que foi visto —
-            a palbox só pode ser lida com a pessoa conectada.
+            a palbox só pode ser lida com a pessoa conectada.{" "}
+            <b className="text-text">Clique em qualquer cabeçalho</b> para
+            ordenar por ele.
           </p>
 
           {classificados.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
-            <Table
-              head={["#", "Jogador", "Level", "Pals", "Poder", "Soma lv", "Soma IV"]}
-              align={["left", "left", "right", "right", "right", "right", "right"]}
-            >
-              {classificados.map((p, i) => (
-                <tr
-                  key={p.palworld_uid}
-                  className="border-b border-line/60 last:border-0 hover:bg-surface/60"
-                >
-                  <Rank i={i} />
-                  <td className="px-4 py-3 font-semibold">
-                    {p.name}
-                    {onlineNames.has(p.name) && (
-                      <span
-                        className="ml-2 inline-block size-1.5 rounded-full bg-success align-middle"
-                        title="Online agora"
-                      />
-                    )}
-                  </td>
-                  <td className="tabular px-4 py-3 text-right font-semibold">
-                    {p.level}
-                  </td>
-                  <td className="tabular px-4 py-3 text-right">
-                    {p.pal_count.toLocaleString("pt-BR")}
-                  </td>
-                  <td className="tabular px-4 py-3 text-right font-semibold text-gold">
-                    {p.poderHp === null ? (
-                      <span className="text-muted">—</span>
-                    ) : (
-                      // Número guardado perde o dourado e ganha a data no
-                      // hover: quem está offline não pode parecer medido
-                      // agora, senão a tabela mente sem dizer nada.
-                      <span
-                        className={p.poderAoVivo ? undefined : "font-normal text-muted"}
-                        title={
-                          p.poderAoVivo
-                            ? "Lido agora, com a pessoa no jogo"
-                            : p.poderEm
-                              ? `Última vez visto em ${new Date(p.poderEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`
-                              : undefined
-                        }
-                      >
-                        {p.poderHp.toLocaleString("pt-BR")}
-                      </span>
-                    )}
-                  </td>
-                  <td className="tabular px-4 py-3 text-right text-muted">
-                    {p.poderLevel === null
-                      ? "—"
-                      : p.poderLevel.toLocaleString("pt-BR")}
-                  </td>
-                  <td className="tabular px-4 py-3 text-right text-muted">
-                    {p.poderIvs === null
-                      ? "—"
-                      : p.poderIvs.toLocaleString("pt-BR")}
-                  </td>
-                </tr>
-              ))}
-            </Table>
+            <TabelaJogadores
+              linhas={classificados.map((p) => ({
+                chave: p.palworld_uid,
+                nome: p.name,
+                online: onlineNames.has(p.name),
+                level: p.level,
+                pals: p.pal_count,
+                poderHp: p.poderHp,
+                poderLevel: p.poderLevel,
+                poderIvs: p.poderIvs,
+                poderAoVivo: p.poderAoVivo,
+                poderEm: p.poderEm,
+              }))}
+            />
           )}
         </section>
 
