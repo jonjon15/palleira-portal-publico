@@ -8,6 +8,8 @@ import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers, guardarPoder } from "@/lib/db";
+import { racasRegistradas } from "@/lib/racas-do-discord";
+import { NOME_DO_ELEMENTO } from "@/lib/racas";
 
 export const metadata: Metadata = {
   title: "Ranking",
@@ -185,13 +187,19 @@ const loadLive = unstable_cache(
 );
 
 export default async function Ranking() {
-  const [live, players] = await Promise.all([
+  const [live, players, racas] = await Promise.all([
     loadLive(),
-    // 🔴 Bem mais que as 25 linhas que a tabela mostrava antes: o filtro de
-    // servidor do cabeçalho recorta ESTA lista, no navegador. Com 25, filtrar
-    // pelo Dominantes não devolvia ninguém — os PVE têm dois anos de level e
-    // ocupavam o corte inteiro com contas level 80.
+    // Corte generoso: esta lista é dividida por servidor logo abaixo, e cada
+    // metade (Dominantes / PVE) precisa de sobra própria para preencher as
+    // 25 linhas de cada tabela — um corte de 25 no total deixaria o
+    // Dominantes com poucas ou nenhuma linha, já que os PVE têm muito mais
+    // jogadores acumulados em dois anos.
     topPlayers(120).catch(() => []),
+    // A raça só existe para quem registrou no fórum do Dominantes, mas a
+    // busca é a mesma dos três mundos — o dado é por conta de Discord, não
+    // por servidor. Enfeite útil, não essencial: Discord fora do ar não pode
+    // derrubar o ranking inteiro por causa de um selo.
+    racasRegistradas(),
   ]);
 
   const onlineNames = new Set(live.online.map((p) => p.name));
@@ -221,6 +229,41 @@ export default async function Ranking() {
     })
     .sort((a, b) => b.level - a.level || b.pal_count - a.pal_count);
 
+  // Dominantes primeiro, e em tabela própria: o servidor abriu há 3 dias e
+  // é o mais cheio e mais ativo dos três, mas o ranking ordena por level —
+  // numa tabela só, os PVE (dois anos de vantagem) preenchiam o topo
+  // inteiro com contas level 80 e o Dominantes nem aparecia. Cada mundo
+  // com o próprio pódio resolve isso sem inventar desempate artificial.
+  const doDominantes = classificados.filter((p) => p.server_slug === "pvp-free");
+  const doPve = classificados.filter((p) => p.server_slug !== "pvp-free");
+
+  const linhaDe = (p: (typeof classificados)[number]) => {
+    // Personagem → conta do Discord → registro no fórum. Só o Dominantes
+    // exige isso, mas a busca não filtra por servidor — quem não tem os
+    // dois elos simplesmente não ganha selo, em qualquer mundo.
+    const reg = p.discord_id ? racas.get(p.discord_id) : undefined;
+    return {
+      chave: `${p.server_slug}-${p.palworld_uid}`,
+      nome: p.name,
+      online: onlineNames.has(p.name),
+      servidor: SERVER_NAME[p.server_slug] ?? p.server_slug,
+      raca: reg?.raca
+        ? { nome: reg.raca.nome, cor: reg.raca.cor, elemento: reg.raca.elemento }
+        : null,
+      secundario: reg?.secundario
+        ? { chave: reg.secundario, nome: NOME_DO_ELEMENTO[reg.secundario] }
+        : null,
+      level: p.level,
+      pals: p.pal_count,
+      poderHp: p.poderHp,
+      poderLevel: p.poderLevel,
+      poderIvs: p.poderIvs,
+      poderShiny: p.poderShiny,
+      poderAoVivo: p.poderAoVivo,
+      poderEm: p.poderEm,
+    };
+  };
+
   return (
     <>
       <PageHeader
@@ -230,13 +273,6 @@ export default async function Ranking() {
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <Link
-          href="/ranking/dominantes"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold hover:text-gold-hi"
-        >
-          Ver só o ranking do Dominantes →
-        </Link>
-
         {/* ------------------------------------------------ online agora */}
         <section>
           <h2 className="text-2xl font-bold tracking-tight">No mundo agora</h2>
@@ -261,10 +297,9 @@ export default async function Ranking() {
           )}
         </section>
 
-        {/* -------------------------------------------------- jogadores */}
+        {/* ------------------------------------------ jogadores: legenda */}
         <section className="mt-14">
-          <h2 className="text-2xl font-bold tracking-tight">Jogadores</h2>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-sm text-muted">
             Quem está online aparece com o level e os Pals do momento,
             atualizados a cada 2 minutos. Para quem está offline, os números
             são os do último save — lido de 2 em 2 horas.
@@ -277,32 +312,44 @@ export default async function Ranking() {
             está no jogo agora; em cinza, o último que foi visto — a palbox só
             pode ser lida com a pessoa conectada.{" "}
             <b className="text-text">Clique em qualquer cabeçalho</b> para
-            ordenar por ele, e em{" "}
-            <b className="text-text">Servidor</b> para ver um mundo de cada
-            vez — o Dominantes abriu agora e ainda não tem level para competir
-            com os PVE, que já têm dois anos.
+            ordenar por ele.
+          </p>
+        </section>
+
+        {/* ---------------------------------------------- Dominantes */}
+        <section className="mt-8">
+          <h2 className="text-2xl font-bold tracking-tight">
+            ⚔️ Dominantes
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            O mundo mais cheio e mais ativo, aberto há poucos dias — por isso
+            em tabela própria, sem competir por level com os PVE.
           </p>
 
-          {classificados.length === 0 ? (
+          {doDominantes.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
           ) : (
-            <TabelaJogadores
-              mostrarServidor
-              linhas={classificados.map((p) => ({
-                chave: `${p.server_slug}-${p.palworld_uid}`,
-                nome: p.name,
-                online: onlineNames.has(p.name),
-                servidor: SERVER_NAME[p.server_slug] ?? p.server_slug,
-                level: p.level,
-                pals: p.pal_count,
-                poderHp: p.poderHp,
-                poderLevel: p.poderLevel,
-                poderIvs: p.poderIvs,
-                poderShiny: p.poderShiny,
-                poderAoVivo: p.poderAoVivo,
-                poderEm: p.poderEm,
-              }))}
-            />
+            <TabelaJogadores mostrarElementos linhas={doDominantes.map(linhaDe)} />
+          )}
+
+          <Link
+            href="/ranking/dominantes"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gold hover:text-gold-hi"
+          >
+            Ver o ranking completo do Dominantes, com quem está no mundo agora →
+          </Link>
+        </section>
+
+        {/* -------------------------------------------------- PVE Free e VIP */}
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold tracking-tight">
+            🌿 PVE Free e PVE VIP
+          </h2>
+
+          {doPve.length === 0 ? (
+            <Empty text="O ranking aparece assim que o save for lido." />
+          ) : (
+            <TabelaJogadores mostrarServidor linhas={doPve.map(linhaDe)} />
           )}
         </section>
 
