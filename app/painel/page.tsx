@@ -153,7 +153,7 @@ export default async function Painel() {
             href="/painel/anuncios"
           />
           <Card
-            title="Placar"
+            title="Ranking"
             body="Veja onde você está no ranking da comunidade."
             href="/ranking"
           />

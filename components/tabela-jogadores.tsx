@@ -177,7 +177,7 @@ export function TabelaJogadores({
                   ["Level", "level"],
                   ["Pals", "pals"],
                   ["Poder", "poder"],
-                  ["Soma lv", "somaLv"],
+                  ["Soma do Level", "somaLv"],
                   ["Soma IV", "somaIv"],
                 ] as [string, Criterio][]
               ).map(([rotulo, criterio]) => (

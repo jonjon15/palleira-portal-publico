@@ -13,7 +13,7 @@ import { NOME_DO_ELEMENTO } from "@/lib/racas";
 const SLUG = "pvp-free";
 
 export const metadata: Metadata = {
-  title: "Placar — Dominantes",
+  title: "Ranking — Dominantes",
   description:
     "Ranking de jogadores e guilds do Dominantes — quem tem mais level e mais Pals, inclusive offline.",
 };
@@ -173,7 +173,7 @@ export default async function RankingDominantes() {
   return (
     <>
       <PageHeader
-        kicker="Placar"
+        kicker="Ranking"
         title={`Ranking do ${server?.shortName ?? "Dominantes"}`}
         description="Só este servidor — quem tem mais level e mais Pals capturados, inclusive quem está offline agora."
       />

@@ -10,7 +10,7 @@ import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers, guardarPoder } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "Placar",
+  title: "Ranking",
   description:
     "Ranking de jogadores e guilds da Palleira BR — todos os servidores, inclusive quem está offline.",
 };
@@ -191,7 +191,7 @@ export default async function Ranking() {
   return (
     <>
       <PageHeader
-        kicker="Placar"
+        kicker="Ranking"
         title="Ranking da Palleira"
         description={`${live.totalPlayers} jogadores e ${live.guilds.length} guilds nos três mundos — inclusive quem está offline.`}
       />

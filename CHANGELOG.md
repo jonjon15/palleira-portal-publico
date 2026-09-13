@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-13
 
+- **Nomes em português no menu.** "Store" virou **Mercado** e "Placar" virou **Ranking**, no menu do topo e dentro das próprias páginas. A vitrine, que se chamava "Palleira Store", agora é **Mercado da Palleira**. Na tabela do ranking, a coluna "Soma lv" virou **Soma do Level**.
 - **Placar filtra por elemento.** As colunas Elemento Primário e Elemento Secundário ganharam filtro no próprio cabeçalho, e os dois combinam — dá para pedir "primário Grama e secundário Sombra" e ver só quem bate nos dois.
 - Quem escreveu a raça como "Elfin" (e não "Elfien") passou a aparecer com o selo: era como a maioria daquela raça escrevia.
 - O Poder de quem está offline voltou a mostrar o separador de milhar — aparecia "134644" no lugar de "134.644".
