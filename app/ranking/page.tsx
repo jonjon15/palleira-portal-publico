@@ -186,21 +186,30 @@ const loadLive = unstable_cache(
   { revalidate: 120, tags: ["ranking"] },
 );
 
+/** O Dominantes é pequeno e novo — mostra todo mundo, não só um top. */
+const LIMITE_DOMINANTES = 500;
+/** PVE Free e VIP têm dois anos de gente acumulada — só o top 10 de cada. */
+const LIMITE_PVE = 10;
+
 export default async function Ranking() {
-  const [live, players, racas] = await Promise.all([
-    loadLive(),
-    // Corte generoso: esta lista é dividida por servidor logo abaixo, e cada
-    // metade (Dominantes / PVE) precisa de sobra própria para preencher as
-    // 25 linhas de cada tabela — um corte de 25 no total deixaria o
-    // Dominantes com poucas ou nenhuma linha, já que os PVE têm muito mais
-    // jogadores acumulados em dois anos.
-    topPlayers(120).catch(() => []),
-    // A raça só existe para quem registrou no fórum do Dominantes, mas a
-    // busca é a mesma dos três mundos — o dado é por conta de Discord, não
-    // por servidor. Enfeite útil, não essencial: Discord fora do ar não pode
-    // derrubar o ranking inteiro por causa de um selo.
-    racasRegistradas(),
-  ]);
+  const [live, doDominantesRows, doPveFreeRows, doPveVipRows, racas] =
+    await Promise.all([
+      loadLive(),
+      // 🔴 Um `topPlayers` POR SERVIDOR, não um só fatiado depois: a consulta
+      // ordena por level, e as contas level 80 dos PVE (dois anos de jogo)
+      // ocupariam sozinhas um corte único, deixando o Dominantes (aberto há
+      // 3 dias, ninguém passou de 39) com quase nenhuma linha. Buscando
+      // separado, cada mundo compete só com ele mesmo pelo corte.
+      topPlayers(LIMITE_DOMINANTES, "pvp-free").catch(() => []),
+      topPlayers(LIMITE_PVE, "pve-free").catch(() => []),
+      topPlayers(LIMITE_PVE, "pve-vip").catch(() => []),
+      // A raça só existe para quem registrou no fórum do Dominantes, mas a
+      // busca é a mesma dos três mundos — o dado é por conta de Discord, não
+      // por servidor. Enfeite útil, não essencial: Discord fora do ar não pode
+      // derrubar o ranking inteiro por causa de um selo.
+      racasRegistradas(),
+    ]);
+  const players = [...doDominantesRows, ...doPveFreeRows, ...doPveVipRows];
 
   const onlineNames = new Set(live.online.map((p) => p.name));
 
@@ -229,11 +238,9 @@ export default async function Ranking() {
     })
     .sort((a, b) => b.level - a.level || b.pal_count - a.pal_count);
 
-  // Dominantes primeiro, e em tabela própria: o servidor abriu há 3 dias e
-  // é o mais cheio e mais ativo dos três, mas o ranking ordena por level —
-  // numa tabela só, os PVE (dois anos de vantagem) preenchiam o topo
-  // inteiro com contas level 80 e o Dominantes nem aparecia. Cada mundo
-  // com o próprio pódio resolve isso sem inventar desempate artificial.
+  // Dominantes primeiro, e em tabela própria — o corte de cada um já veio
+  // certo do banco (acima), esta divisão só volta a separar o que foi
+  // buscado junto para reordenar com os números ao vivo.
   const doDominantes = classificados.filter((p) => p.server_slug === "pvp-free");
   const doPve = classificados.filter((p) => p.server_slug !== "pvp-free");
 
@@ -321,10 +328,6 @@ export default async function Ranking() {
           <h2 className="text-2xl font-bold tracking-tight">
             ⚔️ Dominantes
           </h2>
-          <p className="mt-1 text-sm text-muted">
-            O mundo mais cheio e mais ativo, aberto há poucos dias — por isso
-            em tabela própria, sem competir por level com os PVE.
-          </p>
 
           {doDominantes.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
@@ -345,6 +348,10 @@ export default async function Ranking() {
           <h2 className="text-2xl font-bold tracking-tight">
             🌿 PVE Free e PVE VIP
           </h2>
+          <p className="mt-1 text-sm text-muted">
+            Top {LIMITE_PVE} de cada — a lista completa é grande demais depois
+            de dois anos de servidor.
+          </p>
 
           {doPve.length === 0 ? (
             <Empty text="O ranking aparece assim que o save for lido." />
