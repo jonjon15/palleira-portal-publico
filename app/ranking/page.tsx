@@ -187,7 +187,11 @@ const loadLive = unstable_cache(
 export default async function Ranking() {
   const [live, players] = await Promise.all([
     loadLive(),
-    topPlayers(25).catch(() => []),
+    // 🔴 Bem mais que as 25 linhas que a tabela mostrava antes: o filtro de
+    // servidor do cabeçalho recorta ESTA lista, no navegador. Com 25, filtrar
+    // pelo Dominantes não devolvia ninguém — os PVE têm dois anos de level e
+    // ocupavam o corte inteiro com contas level 80.
+    topPlayers(120).catch(() => []),
   ]);
 
   const onlineNames = new Set(live.online.map((p) => p.name));
@@ -273,7 +277,10 @@ export default async function Ranking() {
             está no jogo agora; em cinza, o último que foi visto — a palbox só
             pode ser lida com a pessoa conectada.{" "}
             <b className="text-text">Clique em qualquer cabeçalho</b> para
-            ordenar por ele.
+            ordenar por ele, e em{" "}
+            <b className="text-text">Servidor</b> para ver um mundo de cada
+            vez — o Dominantes abriu agora e ainda não tem level para competir
+            com os PVE, que já têm dois anos.
           </p>
 
           {classificados.length === 0 ? (

@@ -89,8 +89,17 @@ export function TabelaJogadores({
     primario: null,
     secundario: null,
   });
-  /** Qual menu de elemento está aberto no cabeçalho. */
-  const [aberto, setAberto] = useState<Coluna | null>(null);
+  /**
+   * O servidor escolhido no cabeçalho, ou null para todos.
+   *
+   * Existe porque o ranking geral ordena por level e os PVE têm dois anos de
+   * vantagem: com o Dominantes recém-aberto, as 25 primeiras linhas eram
+   * todas level 80 dos PVE e nenhum jogador do mundo novo aparecia. Filtrar
+   * por servidor resolve sem precisar inventar cota nem desempate artificial.
+   */
+  const [servidor, setServidor] = useState<string | null>(null);
+  /** Qual menu do cabeçalho está aberto — de elemento ou de servidor. */
+  const [aberto, setAberto] = useState<Coluna | "servidor" | null>(null);
 
   // Só os elementos que alguém realmente tem naquela coluna, e quantos —
   // menu que oferece opção vazia é menu que frustra.
@@ -103,8 +112,20 @@ export function TabelaJogadores({
     return [...conta.entries()].sort((a, b) => b[1] - a[1]);
   }
 
+  // Os servidores que aparecem nestas linhas, e quantos jogadores cada um
+  // trouxe. Sai das próprias linhas em vez de vir de `lib/servers` para o
+  // menu nunca oferecer um mundo que não está na tabela.
+  const servidores = (() => {
+    const conta = new Map<string, number>();
+    for (const l of linhas) {
+      if (l.servidor) conta.set(l.servidor, (conta.get(l.servidor) ?? 0) + 1);
+    }
+    return [...conta.entries()].sort((a, b) => b[1] - a[1]);
+  })();
+
   const visiveis = linhas.filter(
     (l) =>
+      (!servidor || l.servidor === servidor) &&
       (!filtros.primario ||
         elementoDaLinha(l, "primario") === filtros.primario) &&
       (!filtros.secundario ||
@@ -134,8 +155,13 @@ export function TabelaJogadores({
     setAberto(null);
   }
 
-  const limpar = () => setFiltros({ primario: null, secundario: null });
-  const filtrando = Boolean(filtros.primario || filtros.secundario);
+  const limpar = () => {
+    setFiltros({ primario: null, secundario: null });
+    setServidor(null);
+  };
+  const filtrando = Boolean(
+    filtros.primario || filtros.secundario || servidor,
+  );
 
   return (
     <div className="mt-5 rounded-[var(--radius-card)] border border-line">
@@ -150,8 +176,54 @@ export function TabelaJogadores({
                 Jogador
               </th>
               {mostrarServidor && (
-                <th className="px-4 py-3 text-left font-semibold text-muted">
-                  Servidor
+                <th
+                  className={`relative px-4 py-3 text-left font-semibold whitespace-nowrap ${
+                    servidor ? "text-gold" : "text-muted"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAberto(aberto === "servidor" ? null : "servidor")
+                    }
+                    aria-expanded={aberto === "servidor"}
+                    className="inline-flex cursor-pointer items-center gap-1.5 font-semibold transition-colors hover:text-gold"
+                    title="Filtrar por servidor"
+                  >
+                    {servidor ?? "Servidor"}
+                    <span aria-hidden className="text-[10px]">
+                      ▾
+                    </span>
+                  </button>
+
+                  {aberto === "servidor" && (
+                    <div className="absolute top-full left-2 z-20 mt-1 min-w-44 overflow-hidden rounded-[var(--radius-control)] border border-line-strong bg-surface-2 shadow-lg">
+                      <Opcao
+                        ativo={!servidor}
+                        onClick={() => {
+                          setServidor(null);
+                          setAberto(null);
+                        }}
+                      >
+                        Todos
+                      </Opcao>
+                      {servidores.map(([s, n]) => (
+                        <Opcao
+                          key={s}
+                          ativo={servidor === s}
+                          onClick={() => {
+                            setServidor(s);
+                            setAberto(null);
+                          }}
+                        >
+                          {s}
+                          <span className="tabular ml-auto text-muted">
+                            {n}
+                          </span>
+                        </Opcao>
+                      ))}
+                    </div>
+                  )}
                 </th>
               )}
               {mostrarElementos && (
@@ -350,7 +422,7 @@ export function TabelaJogadores({
 
       {ordenadas.length === 0 && (
         <p className="px-4 py-8 text-center text-sm text-muted">
-          Ninguém com esse elemento no placar.{" "}
+          Ninguém no ranking com esse filtro.{" "}
           <button
             type="button"
             onClick={limpar}
