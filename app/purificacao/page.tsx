@@ -103,7 +103,7 @@ export default async function Purificacao() {
 
     return (
       <Wrapper>
-        <p className="mt-3 max-w-2xl text-sm" style={{ color: "#8fa39a" }}>
+        <p className="mt-3 max-w-4xl text-sm" style={{ color: "#8fa39a" }}>
           Escolha o Pal da sua palbox que vai entrar na cápsula. Depois disso
           o staff define quais passivas os doadores precisam ter, e você
           começa a doar Pals para purificá-lo.
