@@ -77,14 +77,14 @@ export function EscolherPalDoRitual({
       <input type="hidden" name="servidor" value={servidor} />
       <input type="hidden" name="instanceId" value={selecionado ?? ""} />
 
-      <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2 sm:auto-rows-fr">
+      <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2">
         {pals.map((p) => {
           const elegivel = elegibilidadeAlvo(p);
           return (
             <label
               key={p.instanceId}
               title={elegivel.ok ? "" : elegivel.motivo}
-              className={`flex cursor-pointer flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
+              className={`cursor-pointer rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
                 elegivel.ok
                   ? "border-line bg-bg hover:border-line-strong"
                   : "border-line bg-bg opacity-45"
@@ -109,7 +109,7 @@ export function EscolherPalDoRitual({
                   passives: p.passives,
                 }}
               />
-              <p className="mt-1.5 text-[0.7rem] text-danger">
+              <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
                 {!elegivel.ok && elegivel.motivo}
               </p>
             </label>
@@ -420,7 +420,7 @@ const CardDeDoador = memo(function CardDeDoador({
   return (
     <label
       title={elegivel.ok ? "" : elegivel.motivo}
-      className={`flex flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
+      className={`rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
         desabilitado ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       } ${elegivel.ok ? "border-line bg-bg hover:border-line-strong" : "border-line bg-bg opacity-45"}`}
     >
@@ -444,7 +444,7 @@ const CardDeDoador = memo(function CardDeDoador({
           passives: pal.passives,
         }}
       />
-      <p className="mt-1.5 text-[0.7rem] text-danger">
+      <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
         {!elegivel.ok && elegivel.motivo}
       </p>
     </label>
@@ -475,7 +475,7 @@ function ListaDeDoadores({
   const { pending } = useFormStatus();
 
   return (
-    <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2 sm:auto-rows-fr">
+    <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2">
       {pals.map((p) => (
         <CardDeDoador
           key={p.instanceId}
