@@ -108,34 +108,6 @@ export default async function Purificacao() {
           o staff define quais passivas os doadores precisam ter, e você
           começa a doar Pals para purificá-lo.
         </p>
-        <div
-          className="mt-3 inline-flex max-w-2xl flex-wrap items-center gap-2 rounded-lg px-4 py-3"
-          style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
-        >
-          <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
-            Só entra quem já é perfeito:
-          </span>
-          <span className="text-sm">IV 100 em Vida, Ataque e Defesa, e Full Condensado (rank 5).</span>
-        </div>
-
-        {passivasReferencia && (
-          <div
-            className="mt-3 max-w-2xl rounded-lg px-4 py-3"
-            style={{ background: "#0d1512", border: "1px solid #1f2e27" }}
-          >
-            <p className="mb-2.5 text-[11.5px]" style={{ color: "#5c6e66" }}>
-              Da última vez, o staff pediu essas passivas dos doadores — cada
-              purificação nova pode pedir outras, é só referência:
-            </p>
-            <PassivasDoRitual
-              ritualId={passivasReferencia.ritualId}
-              passivasAceitas={passivasReferencia.passivasAceitas}
-              staff={staff}
-              catalogo={todasAsPassivas()}
-              action={acaoAtualizarReferencia}
-            />
-          </div>
-        )}
 
         <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
           <div
@@ -148,19 +120,50 @@ export default async function Purificacao() {
             </p>
           </div>
 
-          <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
-            <h2 className="text-sm font-semibold">Escolher Pal da palbox</h2>
-            {!servidor ? (
-              <p className="mt-3 text-sm" style={{ color: "#8fa39a" }}>
-                Entre no jogo com o time ou a palbox aberta para escolher o Pal.
-              </p>
-            ) : disponiveis.erro ? (
-              <p className="mt-3 text-sm text-danger">{disponiveis.erro}</p>
-            ) : (
-              <div className="mt-4">
-                <EscolherPalDoRitual pals={disponiveis.pals} servidor={servidor} />
+          <div className="flex flex-col gap-4">
+            <div
+              className="flex flex-wrap items-center gap-2 rounded-lg px-4 py-3"
+              style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
+            >
+              <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
+                Só entra quem já é perfeito:
+              </span>
+              <span className="text-sm">IV 100 em Vida, Ataque e Defesa, e Full Condensado (rank 5).</span>
+            </div>
+
+            {passivasReferencia && (
+              <div
+                className="rounded-lg px-4 py-3"
+                style={{ background: "#0d1512", border: "1px solid #1f2e27" }}
+              >
+                <p className="mb-2.5 text-[11.5px]" style={{ color: "#5c6e66" }}>
+                  Da última vez, o staff pediu essas passivas dos doadores —
+                  cada purificação nova pode pedir outras, é só referência:
+                </p>
+                <PassivasDoRitual
+                  ritualId={passivasReferencia.ritualId}
+                  passivasAceitas={passivasReferencia.passivasAceitas}
+                  staff={staff}
+                  catalogo={todasAsPassivas()}
+                  action={acaoAtualizarReferencia}
+                />
               </div>
             )}
+
+            <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+              <h2 className="text-sm font-semibold">Escolher Pal da palbox</h2>
+              {!servidor ? (
+                <p className="mt-3 text-sm" style={{ color: "#8fa39a" }}>
+                  Entre no jogo com o time ou a palbox aberta para escolher o Pal.
+                </p>
+              ) : disponiveis.erro ? (
+                <p className="mt-3 text-sm text-danger">{disponiveis.erro}</p>
+              ) : (
+                <div className="mt-4">
+                  <EscolherPalDoRitual pals={disponiveis.pals} servidor={servidor} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Wrapper>
