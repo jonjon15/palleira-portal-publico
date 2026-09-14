@@ -15,7 +15,7 @@ Medido em 14/09/2026, nos 14 logs mais recentes do Dominantes:
     Dante        11 sessões     4 abaixo de 30s    pico de  3 logins/10min    4 IPs
     VOID          8 sessões     2 abaixo de 30s                               1 IP
 
-Daí o limiar escolhido pelo dono: **mais de 5 quedas em 20 minutos**. Não é
+Daí o limiar escolhido pelo dono: **mais de 5 quedas em 10 minutos**. Não é
 zona cinzenta como foi no anticheat de dano — a diferença entre o infrator e o
 resto do servidor é de uma ordem de grandeza.
 
@@ -66,9 +66,14 @@ PALDEFENDER = "Pal/Binaries/Win64/PalDefender"
 LOGS = f"{PALDEFENDER}/Logs"
 WHITELIST = f"{PALDEFENDER}/WhiteList.json"
 
-# Escolhido pelo dono em 14/09/2026: mais de 5 quedas em 20 minutos.
+# Escolhido pelo dono em 14/09/2026: mais de 5 quedas em 10 minutos.
+#
+# Era 20 min até o incidente do Santos na mesma noite: a janela mais curta
+# reduz ainda mais o risco do bug de contagem de histórico (ver o aviso em
+# `Sessoes`) voltar a incomodar, mesmo já corrigido — quanto menor a janela,
+# menos chance de um relog velho ainda estar "dentro" dela.
 LIMIAR_PADRAO = 5
-JANELA_SEGUNDOS = 1200
+JANELA_SEGUNDOS = 600
 # Sessão "curta" — o ciclo de resetar spawn leva segundos, não minutos.
 SESSAO_CURTA_SEGUNDOS = 60
 # Acima disto, são redes diferentes: é queda de conexão, não abuso.
@@ -199,16 +204,36 @@ def _segundos(h: str, m: str, s: str) -> int:
 
 
 class Sessoes:
-    """Sessões fechadas por jogador, e de quantos IPs ele apareceu."""
+    """
+    Sessões fechadas por jogador, e de quantos IPs ele apareceu.
+
+    🔴 **Só o que aconteceu nos últimos `JANELA_SEGUNDOS`, e nada mais.**
+
+    Bug real de 14/09/2026: a versão anterior guardava TODO login do arquivo,
+    desde o boot, e recalculava o "pico" varrendo o histórico inteiro a cada
+    rodada — sem nunca esquecer nada. Isso tem duas consequências ruins, e as
+    duas aconteceram com o Santos na mesma noite:
+    (1) um jogador que fica horas conectado sem incidente ainda carrega os
+    relogs de 40 minutos atrás, então uma reincidência isolada bem depois
+    reabre a contagem antiga e passa do limiar sem ele ter feito nada de novo;
+    (2) o próprio `KickPlayer` da suspensão gera um login+logout de 0-1s no
+    log — e esse par ENTRAVA na contagem de "sessões curtas do jogador",
+    fazendo a punição se realimentar: o kick de agora virava munição para o
+    próximo degrau da escada, mesmo com o jogador jogando normal no meio.
+
+    A correção: a cada leitura, descartar tudo que é mais velho que a janela
+    — medido contra o instante mais recente **do próprio log**, não do
+    relógio local (o servidor carimba em UTC+1, ver gotcha-horario-do-log).
+    E parear duração zero como "efeito do kick", não como sessão do jogador.
+    """
 
     def __init__(self) -> None:
         # uid → (nome, início em segundos)
         self.abertas: dict[str, tuple[str, int]] = {}
-        # uid → lista de (nome, duração)
-        self.fechadas: dict[str, list[tuple[str, int]]] = {}
-        # uid → instantes de login, para a janela deslizante
-        self.logins: dict[str, list[int]] = {}
+        # uid → lista de (nome, duração, instante do login)
+        self.fechadas: dict[str, list[tuple[str, int, int]]] = {}
         self.ips: dict[str, set[str]] = {}
+        self.agora = 0  # carimbo da última linha lida; vira o "agora" do log
 
     def ler(self, texto: str) -> None:
         for linha in texto.splitlines():
@@ -216,34 +241,56 @@ class Sessoes:
             if m:
                 h, mi, s, nome, uid, ip = m.groups()
                 t = _segundos(h, mi, s)
+                self.agora = max(self.agora, t)
                 self.abertas[uid] = (nome, t)
-                self.logins.setdefault(uid, []).append(t)
                 self.ips.setdefault(uid, set()).add(ip.strip())
                 continue
 
             m = SAIU.search(linha)
             if m:
                 h, mi, s, nome, uid, ip = m.groups()
+                t = _segundos(h, mi, s)
+                self.agora = max(self.agora, t)
                 if uid not in self.abertas:
                     continue  # saiu sem login neste arquivo (veio do boot anterior)
                 _, inicio = self.abertas.pop(uid)
-                dur = _segundos(h, mi, s) - inicio
+                dur = t - inicio
                 # Negativo = o log virou a meia-noite. Descartar é mais honesto
                 # que somar 86400 e inventar uma sessão que ninguém viu.
-                if dur >= 0:
-                    self.fechadas.setdefault(uid, []).append((nome, dur))
+                #
+                # Duração 0 é o próprio KickPlayer (login e logout no mesmo
+                # segundo, visto às 20:26:24 no incidente do Santos) — não é
+                # o jogador saindo, é o efeito da punição anterior. Não conta.
+                if dur > 0:
+                    self.fechadas.setdefault(uid, []).append((nome, dur, inicio))
+
+    def janela(self, segundos: int) -> "Sessoes":
+        """Só as sessões cujo login caiu nos últimos `segundos`, a partir do
+        instante mais recente visto no log — não do relógio local."""
+        corte = self.agora - segundos
+        recorte = Sessoes()
+        recorte.agora = self.agora
+        recorte.ips = self.ips
+        recorte.fechadas = {
+            uid: [s for s in lst if s[2] >= corte]
+            for uid, lst in self.fechadas.items()
+        }
+        recorte.fechadas = {uid: lst for uid, lst in recorte.fechadas.items() if lst}
+        return recorte
 
 
 def abusadores(ses: Sessoes, limiar: int, min_ips: int) -> dict[str, tuple[str, int, int]]:
     """
-    Quem passou do limiar. Devolve uid → (nome, pico, sessões curtas).
+    Quem passou do limiar **dentro da janela**. Devolve uid → (nome, pico, sessões curtas).
 
-    A janela é deslizante e não fixa de propósito: quem distribui os relogs
-    entre dois blocos de dez minutos escaparia de um balde fixo.
+    Recebe `ses` já recortado por `Sessoes.janela()` — só o que aconteceu nos
+    últimos `JANELA_SEGUNDOS`, nunca o arquivo inteiro. Ver o aviso em cima da
+    classe `Sessoes`: essa é a diferença entre "pegou o abuso" e "puniu quem
+    já tinha parado", que foi o bug real da noite de 14/09.
     """
     achados = {}
     for uid, lista in ses.fechadas.items():
-        curtas = [d for _, d in lista if d <= SESSAO_CURTA_SEGUNDOS]
+        curtas = [d for _, d, _ in lista if d <= SESSAO_CURTA_SEGUNDOS]
         if len(curtas) < limiar:
             continue
 
@@ -251,14 +298,10 @@ def abusadores(ses: Sessoes, limiar: int, min_ips: int) -> dict[str, tuple[str, 
         if len(ses.ips.get(uid, ())) >= min_ips:
             continue
 
-        instantes = sorted(ses.logins.get(uid, []))
-        pico = 0
-        for i, inicio in enumerate(instantes):
-            j = i
-            while j < len(instantes) and instantes[j] - inicio <= JANELA_SEGUNDOS:
-                j += 1
-            pico = max(pico, j - i)
-
+        # Dentro da janela recortada, o "pico" é simplesmente quantas sessões
+        # curtas existem — não precisa de sub-janela deslizante por cima,
+        # porque a janela já É o limite externo.
+        pico = len(curtas)
         if pico >= limiar:
             achados[uid] = (lista[0][0], pico, len(curtas))
     return achados
@@ -411,8 +454,11 @@ def uma_rodada(sftp, cfg: dict, slug: str, args, estado: dict,
             aplicar_whitelist(sftp, cfg, slug, set(), repor)
         return
 
-    ses = Sessoes()
-    ses.ler(texto)
+    ses_completa = Sessoes()
+    ses_completa.ler(texto)
+    # Só os últimos JANELA_SEGUNDOS contam — nunca o arquivo inteiro. Ver o
+    # aviso em Sessoes sobre o bug real de 14/09/2026.
+    ses = ses_completa.janela(JANELA_SEGUNDOS)
     achados = abusadores(ses, args.limiar, args.min_ips)
 
     # 2) Quem está passando do limiar agora.
