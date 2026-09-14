@@ -8,6 +8,7 @@ import { communityStats, topPlayers } from "@/lib/db";
 import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
 import { ImageCarousel, type CarouselSlide } from "@/components/image-carousel";
+import { Camara3DSobDemanda } from "@/components/camara-3d-sob-demanda";
 
 // Status ao vivo, com cache — os servidores não aguentam uma chamada por
 // visita de página (§3.3).
@@ -71,57 +72,71 @@ export default async function Home() {
               "radial-gradient(50% 40% at 85% 20%, rgb(200 68 46 / 0.10), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-28">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-gold uppercase">
-            <Pick className="size-4" withLetter={false} />
-            Comunidade brasileira de Palworld
-          </p>
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:py-28 lg:grid-cols-[1fr_minmax(0,440px)] lg:items-center">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-gold uppercase">
+              <Pick className="size-4" withLetter={false} />
+              Comunidade brasileira de Palworld
+            </p>
 
-          <Image
-            src="/marca/palleira-logo.png"
-            alt="Palleira"
-            width={2172}
-            height={724}
-            priority
-            className="mt-4 h-24 w-auto sm:h-32"
-          />
+            <Image
+              src="/marca/palleira-logo.png"
+              alt="Palleira"
+              width={2172}
+              height={724}
+              priority
+              className="mt-4 h-24 w-auto sm:h-32"
+            />
 
-          <p className="mt-4 max-w-xl text-lg text-muted">
-            O servidor mais rock and roll de Palworld. Status ao vivo, mercado
-            de Pals e itens em Paletas, ranking de guilds e eventos — tudo num
-            lugar só.
-          </p>
+            <p className="mt-4 max-w-xl text-lg text-muted">
+              O servidor mais rock and roll de Palworld. Status ao vivo, mercado
+              de Pals e itens em Paletas, ranking de guilds e eventos — tudo num
+              lugar só.
+            </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/conectar"
-              className="rounded-[var(--radius-control)] bg-gold px-5 py-2.5 font-semibold text-[#14120f] transition-colors hover:bg-gold-hi"
-            >
-              Como entrar no servidor
-            </Link>
-            <Link
-              href="/mercado"
-              className="rounded-[var(--radius-control)] border border-line-strong px-5 py-2.5 font-semibold transition-colors hover:bg-surface"
-            >
-              Ver o mercado
-            </Link>
-            {/* Quem cai aqui sem conhecer a comunidade não tinha para onde ir
-                entender o que o site faz — os dois botões acima já supõem
-                que a pessoa sabe. */}
-            <Link
-              href="/como-funciona"
-              className="px-1 py-2.5 font-semibold text-muted underline-offset-4 transition-colors hover:text-text hover:underline"
-            >
-              Como funciona
-            </Link>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/conectar"
+                className="rounded-[var(--radius-control)] bg-gold px-5 py-2.5 font-semibold text-[#14120f] transition-colors hover:bg-gold-hi"
+              >
+                Como entrar no servidor
+              </Link>
+              <Link
+                href="/mercado"
+                className="rounded-[var(--radius-control)] border border-line-strong px-5 py-2.5 font-semibold transition-colors hover:bg-surface"
+              >
+                Ver o mercado
+              </Link>
+              {/* Quem cai aqui sem conhecer a comunidade não tinha para onde ir
+                  entender o que o site faz — os dois botões acima já supõem
+                  que a pessoa sabe. */}
+              <Link
+                href="/como-funciona"
+                className="px-1 py-2.5 font-semibold text-muted underline-offset-4 transition-colors hover:text-text hover:underline"
+              >
+                Como funciona
+              </Link>
+            </div>
+
+            {anyUp && (
+              <p className="tabular mt-8 text-sm text-muted">
+                <span className="font-semibold text-text">{online}</span> de{" "}
+                {capacity} vagas ocupadas agora
+              </p>
+            )}
           </div>
 
-          {anyUp && (
-            <p className="tabular mt-8 text-sm text-muted">
-              <span className="font-semibold text-text">{online}</span> de{" "}
-              {capacity} vagas ocupadas agora
+          <Link
+            href="/purificacao"
+            className="group block"
+            style={{ outline: "none" }}
+            title="Câmara de Purificação"
+          >
+            <Camara3DSobDemanda className="aspect-[3/4] rounded-[var(--radius-card)]" />
+            <p className="mt-2 text-center text-xs font-semibold text-gold group-hover:text-gold-hi">
+              Câmara de Purificação →
             </p>
-          )}
+          </Link>
         </div>
       </section>
 
