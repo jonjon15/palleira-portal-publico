@@ -1,0 +1,106 @@
+# Avisa e suspende quem fica saindo e entrando para resetar spawn.
+#
+# O jogador descobriu que sair e voltar recria o spawn da área: quando o último
+# jogador deixa a região, o Palworld descarrega aquele pedaço do mundo e na
+# volta os Pals nascem de novo. Não há opção no jogo nem no PalDefender que
+# desligue isso — é do motor. O que dá é tirar o proveito. Ver
+# tools/vigia_relog.py.
+name: vigia de relog
+
+# 🔴 SEM `schedule` de propósito — igual ao vigia de cheats, e pela mesma
+# razão, mas com um agravante próprio: aqui o estado (quantos avisos cada um
+# levou, em que degrau da escada está) precisa SOBREVIVER entre execuções, e o
+# runner é descartável. O `actions/cache` abaixo cobre o caso normal, mas cache
+# do GitHub não é banco de dados: ele pode ser despejado a qualquer momento, e
+# duas execuções simultâneas não enxergam o estado uma da outra.
+#
+# ⚠️ Consequência prática de perder o estado no meio de uma suspensão: o UID
+# fica FORA da whitelist e ninguém o repõe, porque quem sabia da dívida era o
+# arquivo que sumiu. A pessoa só volta quando um admin devolver na mão.
+#
+# Por isso o modo recomendado é `vigiar` com o job vivo do começo ao fim: uma
+# execução longa segura o estado na memória e devolve o acesso sozinha.
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pvp-free, pve-free, pve-vip]
+        default: pvp-free
+      limiar:
+        description: "Quedas na janela para disparar o aviso"
+        required: false
+        type: string
+        default: "5"
+      vigiar:
+        description: "Minutos vigiando (vazio = uma checagem só)"
+        required: false
+        type: string
+        default: "50"
+      aplicar:
+        description: "Avisar e suspender de verdade (o padrão é SÓ RELATAR)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    # Um pouco acima do --vigiar, para o job não ser morto no meio de uma
+    # suspensão — se ele morrer, ninguém repõe o UID na whitelist.
+    timeout-minutes: 60
+
+    # Duas execuções ao mesmo tempo escreveriam a whitelist uma por cima da
+    # outra e contariam avisos em dobro.
+    concurrency:
+      group: vigia-relog-${{ inputs.servidor || 'pvp-free' }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install --quiet paramiko
+
+      # Quantos avisos cada um levou, em que degrau está e quem ainda cumpre
+      # suspensão. Sem isto cada execução começaria do zero: ninguém chegaria
+      # ao segundo aviso, e quem está suspenso nunca voltaria para a whitelist.
+      - uses: actions/cache@v4
+        with:
+          path: tools/.vigia_relog.json
+          key: vigia-relog-${{ github.run_id }}
+          restore-keys: vigia-relog-
+
+      - name: Vigiar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SRV1_ADMIN_PASSWORD: ${{ secrets.SRV1_ADMIN_PASSWORD }}
+          SRV2_ADMIN_PASSWORD: ${{ secrets.SRV2_ADMIN_PASSWORD }}
+          SRV3_ADMIN_PASSWORD: ${{ secrets.SRV3_ADMIN_PASSWORD }}
+        run: |
+          python tools/vigia_relog.py \
+            --servidor "${{ inputs.servidor || 'pvp-free' }}" \
+            --limiar "${{ inputs.limiar || '5' }}" \
+            ${{ inputs.vigiar && format('--vigiar {0} --intervalo 60', inputs.vigiar) || '' }} \
+            ${{ inputs.aplicar && '--aplicar' || '' }}
+
+      # Se o job cair no meio de uma suspensão, alguém fica fora da whitelist
+      # sem ninguém para repor. Este passo devolve todo mundo que ainda estava
+      # cumprindo castigo, mesmo quando o passo anterior falha ou é cancelado.
+      - name: Repor quem ficou suspenso
+        if: always()
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SRV1_ADMIN_PASSWORD: ${{ secrets.SRV1_ADMIN_PASSWORD }}
+          SRV2_ADMIN_PASSWORD: ${{ secrets.SRV2_ADMIN_PASSWORD }}
+          SRV3_ADMIN_PASSWORD: ${{ secrets.SRV3_ADMIN_PASSWORD }}
+        run: |
+          python tools/vigia_relog.py \
+            --servidor "${{ inputs.servidor || 'pvp-free' }}" \
+            --repor-todos \
+            ${{ inputs.aplicar && '--aplicar' || '' }}

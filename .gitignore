@@ -54,3 +54,6 @@ credencial*.txt
 # dumps de conversa: contem credenciais coladas no chat
 docs/conversa-*.md
 tools/__pycache__/
+
+# estado de runtime dos vigias (quem foi avisado, degrau da escada, suspensoes)
+tools/.vigia_relog.json
