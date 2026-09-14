@@ -281,7 +281,10 @@ def main() -> int:
             if eh_jogador and chave in uids:
                 print(f"\n  {scalar(param.get('NickName'), '')!r} ({chave})")
                 print("  chaves:", sorted(param.keys()))
-                for campo in ("Exp", "EXP", "Experience", "Level"):
+                for campo in (
+                    "Exp", "Level", "UnusedStatusPoint",
+                    "GotStatusPointList", "GotExStatusPointList",
+                ):
                     if campo in param:
                         print(f"  {campo!r} = {param[campo]!r}")
         return 0
