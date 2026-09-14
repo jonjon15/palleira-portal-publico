@@ -51,12 +51,12 @@ export default async function Purificacao() {
   const discordId = session.user.discordId;
   const staff = isStaff(levelOf(session.user.roles, session.user.isMember));
 
-  const [vinculo, ritual, ivMinimoResgate, resgatePendente] = await Promise.all([
+  const [vinculo, ritual, ivMinimoResgate] = await Promise.all([
     meuVinculo(discordId),
     meuRitualAtivo(discordId),
     ivMinimoResgateAtual(),
-    meuResgatePendenteDaCamara(discordId),
   ]);
+  const resgatePendente = ritual ? await meuResgatePendenteDaCamara(discordId, ritual.id) : null;
 
   if (!vinculo) {
     return (

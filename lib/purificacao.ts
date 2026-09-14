@@ -641,6 +641,21 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
   const discordId = session.user.discordId;
   const staff = isStaff(levelOf(session.user.roles, session.user.isMember));
 
+  // Um resgate já pode estar em voo (workflow do GitHub Actions/RCON já
+  // disparado por `resgatarPalPurificado`) quando o cancelamento chega —
+  // não tem como abortar isso a meio caminho, e cancelar por cima faria o
+  // Pal voltar pra palbox de um ritual que devia ter sido perdido.
+  const emVoo = (await sql`
+    select id from pal_transfers
+    where ritual_id = ${ritualId}
+      and direction = 'resgatar'
+      and status in ('aguardando_arquivo', 'arquivo_pronto')
+    limit 1
+  `) as { id: number }[];
+  if (emVoo.length) {
+    return { ok: false, mensagem: "O resgate desse Pal já começou — não é mais possível cancelar." };
+  }
+
   const atualizado = (await sql`
     update purification_rituals
     set status = 'cancelado'
@@ -670,13 +685,22 @@ export interface ResgateDaCamaraPendente {
  * `router.refresh()` do `DoarPal`), antes do polling no navegador terminar.
  * `pal_transfers` não sabe que veio da Câmara — filtra pelas transferências
  * do jogador cujo `direction` é 'resgatar' e que ainda não fecharam.
+ *
+ * Precisa travar por `ritualId` também: sem isso, um resgate de um ritual
+ * já cancelado (o jogador clicou "Resgatar", cancelou o ritual antes do
+ * workflow terminar, e começou outro) ficava "órfão" e era devolvido como
+ * se fosse do ritual novo em exibição — o Pal errado voltando pra palbox.
  */
-export async function meuResgatePendenteDaCamara(discordId: string): Promise<ResgateDaCamaraPendente | null> {
+export async function meuResgatePendenteDaCamara(
+  discordId: string,
+  ritualId: number,
+): Promise<ResgateDaCamaraPendente | null> {
   const rows = (await sql`
     select id, template->>'PalID' as pal_id
     from pal_transfers
     where discord_id = ${discordId}
       and direction = 'resgatar'
+      and ritual_id = ${ritualId}
       and status in ('aguardando_arquivo', 'arquivo_pronto')
     order by created_at desc
     limit 1

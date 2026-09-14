@@ -63,6 +63,14 @@ export function EscolherPalDoRitual({
   const [estado, acao] = useActionState(acaoIniciarRitual, INICIAL);
   const [selecionado, setSelecionado] = useState<string | null>(null);
 
+  // Só quem pode entrar na câmara aparece — a palbox inteira acinzentada com
+  // o motivo em vermelho virava uma lista longa de Pal que não serve.
+  // `iniciarRitual` revalida com a mesma regra no server.
+  const elegiveis = useMemo(
+    () => pals.filter((p) => elegibilidadeAlvo(p).ok),
+    [pals],
+  );
+
   if (pals.length === 0) {
     return (
       <p className="text-sm text-muted">
@@ -72,28 +80,45 @@ export function EscolherPalDoRitual({
     );
   }
 
+  if (elegiveis.length === 0) {
+    return (
+      <p className="text-sm text-muted">
+        Nenhum Pal da sua palbox pode entrar na câmara — precisa de IV 100 em
+        Vida, Ataque e Defesa, e ser Full Condensado (rank 5).
+      </p>
+    );
+  }
+
   return (
     <form action={acao}>
       <input type="hidden" name="servidor" value={servidor} />
       <input type="hidden" name="instanceId" value={selecionado ?? ""} />
 
+      {/*
+        O destaque vem do estado do React (`marcado`), nunca do CSS
+        `has-checked:`. Com `has-checked:`, o dourado dependia do `:checked`
+        real do DOM — e ao cancelar um ritual sem recarregar, o React
+        reaproveitava os `<input>` da grade de doação (mesma estrutura, mesma
+        `key` de `instanceId`, a mesma palbox nas duas). `checked` só é
+        reescrito quando o valor muda, então um rádio já marcado continuava
+        `:checked` e o card ficava aceso para sempre.
+      */}
       <div className="grid max-h-[32rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2">
-        {pals.map((p) => {
-          const elegivel = elegibilidadeAlvo(p);
+        {elegiveis.map((p) => {
+          const marcado = selecionado === p.instanceId;
           return (
             <label
               key={p.instanceId}
-              title={elegivel.ok ? "" : elegivel.motivo}
-              className={`flex h-full cursor-pointer flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
-                elegivel.ok
-                  ? "border-line bg-bg hover:border-line-strong"
-                  : "border-line bg-bg opacity-45"
+              className={`flex h-full cursor-pointer flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors ${
+                marcado
+                  ? "border-gold bg-gold/[0.06]"
+                  : "border-line bg-bg hover:border-line-strong"
               }`}
             >
               <input
                 type="radio"
                 name="_escolha"
-                checked={selecionado === p.instanceId}
+                checked={marcado}
                 onChange={() => setSelecionado(p.instanceId)}
                 className="sr-only"
               />
@@ -109,9 +134,6 @@ export function EscolherPalDoRitual({
                   passives: p.passives,
                 }}
               />
-              <p className="mt-1.5 min-h-[2.1em] text-[0.7rem] text-danger">
-                {!elegivel.ok && elegivel.motivo}
-              </p>
             </label>
           );
         })}
