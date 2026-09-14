@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-14
 
+- **Câmara de Purificação funciona de verdade.** Escolha um Pal da sua palbox para entrar na cápsula, aguarde o staff liberar quais passivas os doadores precisam ter, e vá doando Pals (IV 100 em Vida/Ataque/Defesa + Full Condensado + uma das passivas aceitas) até completar 4 — cada rodada de 4 soma +1 de IV no Pal, até o teto de 150. Por enquanto é registro no site; aplicar o ganho de IV dentro do jogo é o próximo passo.
 - **Mais dois Pals na vitrine da Câmara de Purificação**: Snow Tiger Beastman e Thunder Dragon Man já aparecem em 3D.
 
 ## 2026-09-13

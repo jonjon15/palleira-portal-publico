@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { urlDoModelo } from "@/lib/pals";
 
 /**
  * A cápsula de purificação em 3D — decoração, não uma ficha de Pal.
@@ -13,23 +14,31 @@ import { useEffect, useRef, useState } from "react";
  * Sem `OrbitControls`: ninguém precisa girar a cápsula na mão, ela só gira
  * sozinha devagar, como um objeto de vitrine.
  *
- * O Pal dentro do tubo é fixo (Suzaku) só neste protótipo — em produção
- * isso vem da escolha do jogador (qual Pal da palbox entrou no ritual),
- * ainda sem lógica nenhuma por trás.
+ * O Pal dentro do tubo vem do `palId` do ritual (qual Pal da palbox está em
+ * purificação, ver `lib/purificacao.ts`) — resolvido com a mesma
+ * `urlDoModelo` que o `Pal3D` usa. Sem `palId`, ou espécie sem modelo
+ * mapeado, a cápsula fica vazia.
  */
 
 const MODELO_URL = "/models/camara-purificacao/medicalpalbed_05.glb";
-const MODELO_PAL_URL = "/models/pals/suzaku_water_42582c.glb";
 
 type Estado = "carregando" | "pronto" | "erro";
 
-export function Camara3D({ className = "h-72" }: { className?: string }) {
+export function Camara3D({
+  palId,
+  className = "h-72",
+}: {
+  palId?: string;
+  className?: string;
+}) {
   const caixa = useRef<HTMLDivElement>(null);
   const [estado, setEstado] = useState<Estado>("carregando");
 
   useEffect(() => {
     const alvo = caixa.current;
     if (!alvo) return;
+
+    const modeloPalUrl = palId ? urlDoModelo(palId) : null;
 
     let cancelado = false;
     let limpar = () => {};
@@ -87,7 +96,7 @@ export function Camara3D({ className = "h-72" }: { className?: string }) {
         loader.setMeshoptDecoder(MeshoptDecoder);
         const [gltf, gltfPal] = await Promise.all([
           loader.loadAsync(MODELO_URL),
-          loader.loadAsync(MODELO_PAL_URL).catch(() => null),
+          modeloPalUrl ? loader.loadAsync(modeloPalUrl).catch(() => null) : Promise.resolve(null),
         ]);
         if (cancelado) return;
 
@@ -243,7 +252,7 @@ export function Camara3D({ className = "h-72" }: { className?: string }) {
       cancelado = true;
       limpar();
     };
-  }, []);
+  }, [palId]);
 
   return (
     <div className={`camara-glow relative w-full ${className}`}>

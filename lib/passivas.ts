@@ -73,3 +73,20 @@ export function corDoRank(rank: number): string {
  */
 export const urlDoIconeRank = (rank: number) =>
   `/icons/passivas/rank_${Math.max(0, Math.min(5, rank))}.png`;
+
+export interface PassivaListada {
+  chave: string;
+  nome: string;
+  rank: number | null;
+}
+
+/**
+ * O catálogo inteiro traduzido, ordenado por rank (melhor primeiro) e depois
+ * por nome — para a Câmara de Purificação montar a lista de passivas que
+ * ela vai aceitar num ritual (§020 da migração).
+ */
+export function todasAsPassivas(): PassivaListada[] {
+  return Object.keys(FICHA_DE)
+    .map((chave) => ({ chave, nome: nomeDaPassiva(chave), rank: rankDaPassiva(chave) }))
+    .sort((a, b) => (b.rank ?? -99) - (a.rank ?? -99) || a.nome.localeCompare(b.nome));
+}

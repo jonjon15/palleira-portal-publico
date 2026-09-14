@@ -1,109 +1,175 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { auth } from "@/auth";
 import { Camara3D } from "@/components/camara-3d";
+import { meuVinculo } from "@/lib/linking";
+import { ondeEstouOnline } from "@/lib/cofre";
+import { palsNoJogo } from "@/lib/pal-cofre";
+import {
+  meuRitualAtivo,
+  DOADORES_POR_RODADA,
+  IV_INICIAL_RITUAL,
+  IV_TETO_RITUAL,
+} from "@/lib/purificacao";
+import { nomeDoPal } from "@/lib/pals";
+import { nomeDaPassiva } from "@/lib/passivas";
+import { EscolherPalDoRitual, DoarPal } from "./formularios";
 
 export const metadata: Metadata = { title: "Câmara de Purificação" };
+export const dynamic = "force-dynamic";
 
 /**
- * Vitrine da Câmara de Purificação — protótipo estático, mesmo espírito do
- * `/vip`: aprovar layout e texto antes de existir qualquer banco por trás.
+ * A Câmara de Purificação de verdade — ver `lib/purificacao.ts` para a
+ * regra completa. Até 13/09/2026 esta rota era um protótipo estático
+ * (aprovar layout e texto antes de existir banco, mesmo espírito do que
+ * `/vip` foi); a partir daqui o registro do ritual é real.
  *
- * Nada aqui lê ou escreve o save do jogo. Os números (IV 100 de entrada,
- * +1 por rodada, teto 150) são a regra pretendida da mecânica, não dados
- * de um ritual real — ainda não existe tabela nem lógica de verificação.
- *
- * Visual próprio: fundo dourado do site, mas os cards e o conteúdo em
- * verde de regeneração e fonte monoespaçada — pedido explícito do dono
- * para esta página parecer um painel de laboratório dentro da Palleira,
- * não uma vitrine institucional igual ao resto do site.
+ * ⚠️ O que continua pendente: aplicar o IV de verdade no `Level.sav`. Por
+ * agora a Câmara só registra o progresso no site (ver nota no topo da
+ * migração 020) — quando o ritual "completa", o jogo em si ainda não sabe
+ * disso.
  */
 
-const DOADORES = [
-  { nome: "Tenshi_", data: "01/09/2026" },
-  { nome: "Mari_lua", data: "02/09/2026" },
-  { nome: "Leo_Raposa", data: "03/09/2026" },
-];
+export default async function Purificacao() {
+  const session = await auth();
+  if (!session) redirect("/entrar");
+  const discordId = session.user.discordId;
 
-export default function Purificacao() {
-  return (
-    <div
-      className="font-mono"
-      style={{
-        background: "var(--bg)",
-        color: "#e7f1ea",
-        minHeight: "100%",
-      }}
-    >
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <p
-          className="text-xs font-bold tracking-[0.16em] uppercase"
-          style={{ color: "#3ddc84" }}
-        >
-          Palleira · Câmara de Purificação
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          Perfil da cápsula — MedicalPalBed_05
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm" style={{ color: "#8fa39a" }}>
-          A cápsula de regeneração do jogo: o Pal mais perfeito da sua palbox
-          entra, uma rodada de doadores igualmente perfeitos sai — e ele volta
-          com um pouco mais de IV do que o próprio jogo permite sozinho.
-        </p>
+  const [vinculo, ritual] = await Promise.all([
+    meuVinculo(discordId),
+    meuRitualAtivo(discordId),
+  ]);
 
-        <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
-          {/* CAPSULE PANEL */}
-          <div
-            className="flex flex-col items-center gap-4 rounded-2xl p-6"
-            style={{ background: "#111a16", border: "1px solid #1f2e27" }}
+  if (!vinculo) {
+    return (
+      <Wrapper>
+        <div className="rounded-2xl border border-line p-6" style={{ background: "#111a16" }}>
+          <h2 className="font-semibold">Falta vincular seu personagem</h2>
+          <p className="mt-2 max-w-xl text-sm" style={{ color: "#8fa39a" }}>
+            A Câmara lê sua palbox no jogo — para isso o site precisa saber
+            qual personagem é você.
+          </p>
+          <Link
+            href="/vincular"
+            className="mt-4 inline-flex rounded-lg px-5 py-2.5 text-sm font-semibold"
+            style={{ background: "linear-gradient(180deg,#3ddc84,#2bb56b)", color: "#06140c" }}
           >
-            <span
-              className="self-stretch text-center text-[10.5px] tracking-[0.12em] uppercase"
-              style={{ color: "#5c6e66" }}
-            >
-              Unidade 03 · Setor Leste
-            </span>
+            Vincular personagem
+          </Link>
+        </div>
+      </Wrapper>
+    );
+  }
 
-            <Camara3D className="aspect-[3/4] w-full max-w-[280px]" />
+  const onde = await ondeEstouOnline(discordId);
 
-            <div className="text-center">
-              <p className="text-xl font-bold">Broncha das Marés</p>
-              <p className="text-xs" style={{ color: "#8fa39a" }}>
-                Suzaku · macho · lv. 62
-              </p>
-            </div>
+  const ritualAndando =
+    ritual && (ritual.status === "aguardando_regra" || ritual.status === "ativo" || ritual.status === "completo")
+      ? ritual
+      : null;
 
-            <span
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] tracking-[0.06em] uppercase"
-              style={{
-                background: "rgba(61,220,132,0.14)",
-                border: "1px solid #1f6b45",
-                color: "#3ddc84",
-              }}
-            >
-              <span
-                className="size-1.5 rounded-full"
-                style={{ background: "#3ddc84" }}
-              />
-              Em regeneração
-            </span>
+  // Sem ritual: precisa escolher o servidor onde está online para ver a
+  // palbox e começar.
+  if (!ritualAndando) {
+    const servidor = onde[0]?.serverSlug ?? null;
+    const disponiveis = servidor ? await palsNoJogo(discordId, servidor) : { pals: [], erro: "" };
 
-            <div className="flex w-full justify-between text-[11px]" style={{ color: "#5c6e66" }}>
-              <span>Ritual iniciado</span>
-              <b style={{ color: "#8fa39a", fontWeight: 500 }}>03/09/2026</b>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: "#182420", border: "1px solid #1f2e27" }}>
-              <div
-                className="h-full rounded-full"
-                style={{ width: "68%", background: "linear-gradient(90deg,#1f6b45,#3ddc84)" }}
-              />
-            </div>
-            <div className="flex w-full justify-between text-[11px]" style={{ color: "#5c6e66" }}>
-              <span>Doadores confirmados</span>
-              <b style={{ color: "#8fa39a", fontWeight: 500 }}>3 de 4</b>
-            </div>
+    return (
+      <Wrapper>
+        <p className="mt-3 max-w-2xl text-sm" style={{ color: "#8fa39a" }}>
+          Escolha o Pal da sua palbox que vai entrar na cápsula. Depois disso
+          o staff define quais passivas os doadores precisam ter, e você
+          começa a doar Pals para purificá-lo.
+        </p>
+
+        {!servidor ? (
+          <p className="mt-8 text-sm" style={{ color: "#8fa39a" }}>
+            Entre no jogo com o time ou a palbox aberta para escolher o Pal.
+          </p>
+        ) : disponiveis.erro ? (
+          <p className="mt-8 text-sm text-danger">{disponiveis.erro}</p>
+        ) : (
+          <div className="mt-8">
+            <EscolherPalDoRitual pals={disponiveis.pals} servidor={servidor} />
+          </div>
+        )}
+      </Wrapper>
+    );
+  }
+
+  const doadoresNaRodada = ritualAndando.doadoresDaRodada.length;
+  const progresso = Math.round((doadoresNaRodada / DOADORES_POR_RODADA) * 100);
+  const ivMedio = Math.round((ritualAndando.ivHealth + ritualAndando.ivAttack + ritualAndando.ivDefense) / 3);
+
+  const servidorDoRitual = onde.find((o) => o.serverSlug === ritualAndando.serverSlug);
+  const disponiveis =
+    ritualAndando.status === "ativo" && servidorDoRitual
+      ? await palsNoJogo(discordId, ritualAndando.serverSlug)
+      : { pals: [], erro: "" };
+
+  return (
+    <Wrapper>
+      <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
+        {/* CAPSULE PANEL */}
+        <div
+          className="flex flex-col items-center gap-4 rounded-2xl p-6"
+          style={{ background: "#111a16", border: "1px solid #1f2e27" }}
+        >
+          <Camara3D palId={ritualAndando.palId} className="aspect-[3/4] w-full max-w-[280px]" />
+
+          <div className="text-center">
+            <p className="text-xl font-bold">{nomeDoPal(ritualAndando.palId)}</p>
           </div>
 
-          {/* INFO COLUMN */}
-          <div className="flex flex-col gap-4">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] tracking-[0.06em] uppercase"
+            style={{
+              background: "rgba(61,220,132,0.14)",
+              border: "1px solid #1f6b45",
+              color: "#3ddc84",
+            }}
+          >
+            <span className="size-1.5 rounded-full" style={{ background: "#3ddc84" }} />
+            {ritualAndando.status === "aguardando_regra"
+              ? "Aguardando regra"
+              : ritualAndando.status === "completo"
+                ? "Purificação completa"
+                : "Em regeneração"}
+          </span>
+
+          {ritualAndando.status !== "aguardando_regra" && (
+            <>
+              <div className="flex w-full justify-between text-[11px]" style={{ color: "#5c6e66" }}>
+                <span>Doadores confirmados</span>
+                <b style={{ color: "#8fa39a", fontWeight: 500 }}>
+                  {doadoresNaRodada} de {DOADORES_POR_RODADA}
+                </b>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: "#182420", border: "1px solid #1f2e27" }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${progresso}%`, background: "linear-gradient(90deg,#1f6b45,#3ddc84)" }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* INFO COLUMN */}
+        <div className="flex flex-col gap-4">
+          {ritualAndando.status === "aguardando_regra" && (
+            <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+              <h2 className="text-sm font-semibold">Aguardando o staff</h2>
+              <p className="mt-2 text-sm" style={{ color: "#5c6e66" }}>
+                Seu Pal entrou na câmara. Assim que o staff definir quais
+                passivas os doadores precisam ter, você já pode começar a
+                doar Pals aqui.
+              </p>
+            </div>
+          )}
+
+          {ritualAndando.status !== "aguardando_regra" && (
             <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
               <h2 className="mb-1 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
                 Regra da câmara
@@ -112,22 +178,18 @@ export default function Purificacao() {
                 className="mt-3 flex flex-wrap items-center gap-3 rounded-lg px-4 py-3"
                 style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
               >
-                <span className="text-sm font-semibold">4 doadores perfeitos</span>
+                <span className="text-sm font-semibold">{DOADORES_POR_RODADA} doadores perfeitos</span>
                 <span style={{ color: "#3ddc84" }}>→</span>
                 <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
-                  +1 IV em HP, Ataque <em>e</em> Defesa, juntos
+                  +1 IV em Vida, Ataque <em>e</em> Defesa, juntos
                 </span>
               </div>
-              <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
-                Sempre essa proporção, rodada após rodada — nunca mais que 1
-                ponto por vez em cada status.
-              </p>
 
               <div className="mt-4 grid grid-cols-3 gap-2.5">
                 {[
-                  { label: "HP", valor: 103 },
-                  { label: "Ataque", valor: 103 },
-                  { label: "Defesa", valor: 103 },
+                  { label: "Vida", valor: ritualAndando.ivHealth },
+                  { label: "Ataque", valor: ritualAndando.ivAttack },
+                  { label: "Defesa", valor: ritualAndando.ivDefense },
                 ].map((iv) => (
                   <div
                     key={iv.label}
@@ -139,7 +201,7 @@ export default function Purificacao() {
                     </div>
                     <div className="mt-1.5 text-2xl font-bold tabular">{iv.valor}</div>
                     <div className="mt-1 text-[10.5px]" style={{ color: "#3ddc84" }}>
-                      perfeito era 100
+                      perfeito era {IV_INICIAL_RITUAL}
                     </div>
                   </div>
                 ))}
@@ -149,46 +211,49 @@ export default function Purificacao() {
                 className="mt-4 flex flex-wrap justify-between gap-1.5 pt-3 text-[11.5px]"
                 style={{ borderTop: "1px solid #182420", color: "#5c6e66" }}
               >
-                <span>3 rodadas completas · 12 doadores já consumidos</span>
-                <b style={{ color: "#e8a33d" }}>faltam 47 rodadas até 150</b>
+                <span>{ritualAndando.rodadasCompletas} rodadas completas</span>
+                <b style={{ color: "#e8a33d" }}>
+                  {ivMedio >= IV_TETO_RITUAL ? "teto de IV alcançado" : `faltam ${IV_TETO_RITUAL - ivMedio} de IV até ${IV_TETO_RITUAL}`}
+                </b>
               </div>
             </div>
+          )}
 
+          {ritualAndando.status !== "aguardando_regra" && (
             <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
               <h2 className="mb-3 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
-                Requisito de entrada — alvo e doadores
+                Passivas aceitas neste ritual
               </h2>
               <div className="flex flex-wrap gap-2">
-                <span
-                  className="rounded-lg px-3 py-1.5 text-[11.5px]"
-                  style={{ background: "rgba(232,163,61,0.14)", border: "1px solid #8a6321", color: "#e8a33d" }}
-                >
-                  IV 100 em HP / Ataque / Defesa
-                </span>
-                <span
-                  className="rounded-lg px-3 py-1.5 text-[11.5px]"
-                  style={{ background: "rgba(232,163,61,0.14)", border: "1px solid #8a6321", color: "#e8a33d" }}
-                >
-                  Full Condensado (rank 4)
-                </span>
+                {ritualAndando.passivasAceitas.map((p) => (
+                  <span
+                    key={p}
+                    className="rounded-lg px-3 py-1.5 text-[11.5px]"
+                    style={{ background: "rgba(232,163,61,0.14)", border: "1px solid #8a6321", color: "#e8a33d" }}
+                  >
+                    {nomeDaPassiva(p)}
+                  </span>
+                ))}
               </div>
               <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
-                Vale para o Pal que entra na câmara e para cada um dos 4
-                doadores — nenhum é aceito abaixo disso.
+                Cada doador precisa ter IV 100 em Vida, Ataque e Defesa, ser
+                Full Condensado (rank 4), e pelo menos uma dessas passivas.
               </p>
             </div>
+          )}
 
+          {ritualAndando.status !== "aguardando_regra" && (
             <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
               <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
-                Doadores da rodada nº 4
+                Doadores da rodada nº {ritualAndando.rodadasCompletas + 1}
               </h2>
               <p className="mt-1 mb-3.5 text-[12.5px]" style={{ color: "#5c6e66" }}>
-                Faltando o 4º, HP/Ataque/Defesa sobem +1 cada, todos juntos.
+                Faltando {DOADORES_POR_RODADA - doadoresNaRodada}, Vida/Ataque/Defesa sobem +1 cada, todos juntos.
               </p>
               <div className="flex flex-col gap-2.5">
-                {DOADORES.map((d) => (
+                {ritualAndando.doadoresDaRodada.map((d) => (
                   <div
-                    key={d.nome}
+                    key={d.id}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5"
                     style={{ background: "#0d1512", border: "1px solid #182420" }}
                   >
@@ -198,10 +263,10 @@ export default function Purificacao() {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold">
-                        Suzaku · Full Condensado (rank 4)
+                        {d.nickname || nomeDoPal(d.palId)} · {nomeDaPassiva(d.passivaUsada)}
                       </div>
                       <div className="text-[10.5px]" style={{ color: "#5c6e66" }}>
-                        doado por {d.nome} · {d.data}
+                        doado em {new Date(d.doadoEm).toLocaleDateString("pt-BR")}
                       </div>
                     </div>
                     <div className="shrink-0 text-[11px]" style={{ color: "#3ddc84" }}>
@@ -209,52 +274,49 @@ export default function Purificacao() {
                     </div>
                   </div>
                 ))}
-                <div
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 opacity-45"
-                  style={{ background: "#0d1512", border: "1px solid #182420" }}
-                >
-                  <div className="size-9 shrink-0 rounded-lg" style={{ background: "#0d1512" }} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold">
-                      Suzaku · Full Condensado (rank 4)
-                    </div>
-                    <div className="text-[10.5px]" style={{ color: "#5c6e66" }}>
-                      aguardando 4º doador
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-[11px]" style={{ color: "#5c6e66" }}>
-                    pendente
-                  </div>
-                </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-2.5">
-              <button
-                disabled
-                className="rounded-lg px-5 py-2.5 text-[13.5px] font-semibold"
-                style={{ background: "linear-gradient(180deg,#3ddc84,#2bb56b)", color: "#06140c" }}
-              >
-                Resgatar no jogo
-              </button>
-              <button
-                disabled
-                className="rounded-lg px-5 py-2.5 text-[13.5px] font-semibold"
-                style={{ background: "#0d1512", border: "1px solid #1f2e27", color: "#8fa39a" }}
-              >
-                Ver ritual completo
-              </button>
+              {ritualAndando.status === "ativo" && (
+                <div className="mt-4">
+                  {disponiveis.erro ? (
+                    <p className="text-sm text-danger">{disponiveis.erro}</p>
+                  ) : (
+                    <DoarPal pals={disponiveis.pals} passivasAceitas={ritualAndando.passivasAceitas} />
+                  )}
+                </div>
+              )}
             </div>
+          )}
 
-            <p className="pt-3.5 text-xs leading-relaxed" style={{ borderTop: "1px solid #1f2e27", color: "#5c6e66" }}>
-              Em construção: a verificação de IV/condensação e a ferramenta
-              para indicar o Pal e os doadores direto da sua palbox ainda não
-              existem — esta página só mostra a regra que a câmara vai seguir
-              quando estiver no ar. Gênero travado desde a 1ª rodada — nunca
-              entra em incubadora, é peça única da guilda.
-            </p>
-          </div>
+          <p className="pt-3.5 text-xs leading-relaxed" style={{ borderTop: "1px solid #1f2e27", color: "#5c6e66" }}>
+            O registro do ritual já é real — só falta aplicar o IV de
+            verdade dentro do jogo, que ainda depende de uma etapa futura.
+            Gênero travado desde a 1ª rodada — nunca entra em incubadora, é
+            peça única da guilda.
+          </p>
         </div>
+      </div>
+    </Wrapper>
+  );
+}
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="font-mono"
+      style={{ background: "var(--bg)", color: "#e7f1ea", minHeight: "100%" }}
+    >
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <p
+          className="text-xs font-bold tracking-[0.16em] uppercase"
+          style={{ color: "#3ddc84" }}
+        >
+          Palleira · Câmara de Purificação
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          Perfil da cápsula — MedicalPalBed_05
+        </h1>
+        {children}
       </div>
     </div>
   );
