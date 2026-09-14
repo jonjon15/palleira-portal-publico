@@ -84,7 +84,7 @@ export function EscolherPalDoRitual({
             <label
               key={p.instanceId}
               title={elegivel.ok ? "" : elegivel.motivo}
-              className={`cursor-pointer rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
+              className={`flex h-full cursor-pointer flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
                 elegivel.ok
                   ? "border-line bg-bg hover:border-line-strong"
                   : "border-line bg-bg opacity-45"
@@ -109,7 +109,7 @@ export function EscolherPalDoRitual({
                   passives: p.passives,
                 }}
               />
-              <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
+              <p className="mt-1.5 min-h-[2.1em] text-[0.7rem] text-danger">
                 {!elegivel.ok && elegivel.motivo}
               </p>
             </label>
@@ -420,7 +420,7 @@ const CardDeDoador = memo(function CardDeDoador({
   return (
     <label
       title={elegivel.ok ? "" : elegivel.motivo}
-      className={`rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
+      className={`flex h-full flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors has-checked:border-gold has-checked:bg-gold/[0.06] ${
         desabilitado ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       } ${elegivel.ok ? "border-line bg-bg hover:border-line-strong" : "border-line bg-bg opacity-45"}`}
     >
@@ -444,7 +444,7 @@ const CardDeDoador = memo(function CardDeDoador({
           passives: pal.passives,
         }}
       />
-      <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
+      <p className="mt-1.5 min-h-[2.1em] text-[0.7rem] text-danger">
         {!elegivel.ok && elegivel.motivo}
       </p>
     </label>
