@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-14
+
+- **Mais dois Pals na vitrine da Câmara de Purificação**: Snow Tiger Beastman e Thunder Dragon Man já aparecem em 3D.
+
 ## 2026-09-13
 
 - **Dominantes ganhou tabela própria no ranking geral**, em cima e com raça e elemento — igual à página dedicada. O ranking ordena por level, e como os PVE têm dois anos de vantagem, numa tabela só o Dominantes nem aparecia: as 25 primeiras linhas eram todas level 80 dos mundos antigos. Agora ele tem o próprio pódio, com raça e elemento de quem registrou no fórum, e mostra **todo mundo** — é servidor novo, ninguém corre risco de sumir da lista; PVE Free e PVE VIP continuam juntos na tabela de baixo, agora só com o **top 10 de cada**, que depois de dois anos de servidor é o que faz sentido mostrar de cara.

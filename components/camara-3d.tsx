@@ -100,8 +100,10 @@ export function Camara3D({ className = "h-72" }: { className?: string }) {
         // ordem correta é: vidro sempre depois de tudo, sem escrever no
         // depth buffer (não bloqueia o que está atrás dele).
         capsula.traverse((obj) => {
-          const mesh = obj as THREE.Mesh;
-          const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
+          const mesh = obj as InstanceType<typeof THREE.Mesh>;
+          const mat = mesh.material as
+            | InstanceType<typeof THREE.MeshStandardMaterial>
+            | undefined;
           if (mat?.name === "M_PalProp_Glass_Inst") {
             mat.transparent = true;
             mat.opacity = 0.35;
@@ -163,7 +165,7 @@ export function Camara3D({ className = "h-72" }: { className?: string }) {
             -centroPal.z * escalaPal,
           );
           pal.traverse((obj) => {
-            (obj as THREE.Mesh).renderOrder = 1;
+            (obj as InstanceType<typeof THREE.Mesh>).renderOrder = 1;
           });
           suporte.add(pal);
         }
