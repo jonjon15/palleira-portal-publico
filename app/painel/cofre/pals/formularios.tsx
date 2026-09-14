@@ -109,7 +109,7 @@ export function GuardarPals({
                 level: p.level,
                 gender: p.gender,
                 shiny: p.shiny,
-                condensedPals: p.condensedPals,
+                condensedPals: p.partnerSkillLevel,
                 ivs: p.ivs,
                 passives: p.passives,
               }}

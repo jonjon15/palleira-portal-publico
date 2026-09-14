@@ -6,8 +6,16 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-14
 
-- **Câmara de Purificação funciona de verdade.** Escolha um Pal da sua palbox para entrar na cápsula, aguarde o staff liberar quais passivas os doadores precisam ter, e vá doando Pals (IV 100 em Vida/Ataque/Defesa + Full Condensado + uma das passivas aceitas) até completar 4 — cada rodada de 4 soma +1 de IV no Pal, até o teto de 150. Por enquanto é registro no site; aplicar o ganho de IV dentro do jogo é o próximo passo.
-- **Mais dois Pals na vitrine da Câmara de Purificação**: Snow Tiger Beastman e Thunder Dragon Man já aparecem em 3D.
+- **Câmara de Purificação funciona de verdade, do início ao fim.** Escolha um Pal da sua palbox para entrar na cápsula (ele sai da palbox na hora), aguarde o staff liberar quais passivas os doadores precisam ter, e vá doando Pals (só da mesma espécie do que está na cápsula, IV 100 em Vida/Ataque/Defesa + Full Condensado + uma das passivas aceitas) até completar 4 — cada rodada soma +1 de IV, até o teto de 150. A partir de IV 110 (número que o staff pode mudar a qualquer momento, vale pra Câmara inteira) já dá para **resgatar o Pal purificado de volta pra palbox** — ele volta infértil, nunca entra em incubadora, é peça única da purificação.
+- **Home mostra o Pal que está sendo purificado agora**, na cápsula da vitrine — antes era sempre uma cápsula vazia de exemplo.
+- Staff agora define as passivas aceitas direto na tela da Câmara, sem precisar ir no admin.
+- Corrigido: acessório e troféu apareciam misturados com passiva de Pal de verdade na lista de escolha do staff.
+- Corrigido: o rank de estrelas do Pal (o que faz ele ficar "opaco" ou não na Câmara) usava um campo que o jogo sempre zera na entrega — agora usa o campo certo, que reflete o Full Condensado de verdade.
+- Corrigido: selecionar vários Pals na tela de doação travava a aba por um instante a cada clique, numa palbox cheia.
+- Corrigido: depois de doar um Pal, ele continuava aparecendo selecionável na lista mesmo já tendo saído da palbox — a tela agora atualiza sozinha.
+- Corrigido: se o resgate do Pal purificado ficasse pelo meio do caminho (aba fechada, conexão caiu), ele ficava preso para sempre sem voltar pra palbox — a tela agora retoma o resgate sozinha ao recarregar.
+- **Tela de entregar Pal manual (staff) ganhou campo de quantidade**, para mandar várias cópias de uma vez sem repetir o processo.
+- Mais dois Pals na vitrine da Câmara de Purificação: Snow Tiger Beastman e Thunder Dragon Man já aparecem em 3D.
 
 ## 2026-09-13
 

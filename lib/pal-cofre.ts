@@ -182,7 +182,13 @@ export interface PalDisponivel {
   level: number;
   gender: string;
   shiny: boolean;
-  condensedPals: number;
+  /**
+   * `CondensedPals` nunca é escrito pelo `givepal_j` — sempre volta 0, e não
+   * existe comando de condensar Pal em lugar nenhum do PalDefender. As
+   * estrelas de rank que o jogo mostra na tela vêm de `PartnerSkillLevel`
+   * (teto real 5), achado confirmado em 14/09/2026.
+   */
+  partnerSkillLevel: number;
   ivs: Record<string, number>;
   passives: string[];
 }
@@ -208,7 +214,7 @@ export async function palsNoJogo(
         level: Number(pal.Level ?? 1),
         gender: String(pal.Gender ?? "Male"),
         shiny: pal.Shiny === true,
-        condensedPals: Number(pal.CondensedPals ?? 0),
+        partnerSkillLevel: Number(pal.PartnerSkillLevel ?? 0),
         ivs: (pal.IVs as Record<string, number>) ?? {},
         passives: Array.isArray(pal.Passives) ? (pal.Passives as string[]) : [],
       })),

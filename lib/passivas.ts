@@ -1,5 +1,6 @@
 import NOMES from "@/lib/passivas-nomes.json";
 import RANKS from "@/lib/passivas-rank.json";
+import NAO_E_PASSIVA_DE_PAL_JSON from "@/lib/passivas-nao-e-passiva-de-pal.json";
 
 /**
  * Tradução das passivas de Pal (§7.4 do PROMPT.md).
@@ -81,12 +82,33 @@ export interface PassivaListada {
 }
 
 /**
- * O catálogo inteiro traduzido, ordenado por rank (melhor primeiro) e depois
- * por nome — para a Câmara de Purificação montar a lista de passivas que
- * ela vai aceitar num ritual (§020 da migração).
+ * `passivas-nomes.json` mistura passiva genética de verdade (a que aparece
+ * na ficha de um Pal capturado e se herda por reprodução) com um monte de
+ * outra coisa que usa o mesmo formato de tradução mas nunca gruda num Pal:
+ * troféu de chefe derrotado (`BossDefeatReward_*`), nome de chefe de arena
+ * (`GYM_NAME_*`), bônus de acessório/armadura (`_ACC_`, `_Armor`,
+ * `_Otomo_Only_Equip`, `StonDrop_Boost_*`, `WoodDrop_Boost_*`,
+ * `MaxInventoryWeight_up*`...), resistência de temperatura, mecânica de
+ * montaria (`AirDash_*`, `JumpCount_Increase*`), entre outras.
+ *
+ * `passivas-nao-e-passiva-de-pal.json` é a lista definitiva de exclusão —
+ * gerada comparando nossas 421 chaves contra a DataTable real do jogo
+ * (`PalPassiveSkill`, extraída via FModel/CUE4Parse em 14/09/2026): toda
+ * chave que não existe *nessa* tabela cai aqui. Achar padrão de nome novo
+ * a cada vez que aparece lixo é frágil — comparar contra o dado real do
+ * jogo resolve de uma vez.
+ */
+const NAO_E_PASSIVA_DE_PAL = new Set<string>(NAO_E_PASSIVA_DE_PAL_JSON);
+
+/**
+ * O catálogo traduzido, sem o que não é passiva genética de Pal, ordenado
+ * por rank (melhor primeiro) e depois por nome — para a Câmara de
+ * Purificação montar a lista de passivas que ela vai aceitar num ritual
+ * (§020 da migração).
  */
 export function todasAsPassivas(): PassivaListada[] {
   return Object.keys(FICHA_DE)
+    .filter((chave) => !NAO_E_PASSIVA_DE_PAL.has(chave))
     .map((chave) => ({ chave, nome: nomeDaPassiva(chave), rank: rankDaPassiva(chave) }))
     .sort((a, b) => (b.rank ?? -99) - (a.rank ?? -99) || a.nome.localeCompare(b.nome));
 }

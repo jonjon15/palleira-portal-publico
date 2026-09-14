@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   salvarMundo,
   enviarAnuncio,
@@ -20,13 +20,17 @@ import {
   dispararReversao,
   cancelarPedidoDeFila,
   estornarPedidoDeFila,
+  acaoEntregarPal,
+  acaoConsultarEntregaPal,
   type Estado,
   type EstadoBusca,
   type Achado,
   type EstadoSituacao,
   type Situacao,
+  type EstadoEntrega,
 } from "./actions";
 import type { PedidoAdmin } from "@/lib/resgate-base";
+import type { JogadorOnline } from "@/lib/admin-entregar-pal";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 
@@ -1204,5 +1208,154 @@ export function FilaDeRestauracao({
         <LinhaFila key={p.id} pedido={p} nome={nomes[p.discordId] ?? p.discordId} />
       ))}
     </ul>
+  );
+}
+
+/* --------------------------------------------------------- entregar Pal */
+
+const SEM_ENTREGA: EstadoEntrega = { ok: false, mensagem: "" };
+
+/**
+ * Cola um JSON de `PalTemplate` (ex: do https://paldeck.cc/palcreator) e
+ * entrega para o Discord ID informado — mesmo mecanismo de duas fases do
+ * cofre (`lib/admin-entregar-pal.ts`): abre a transferência, dispara o
+ * GitHub Actions, e faz polling aqui até o `givepal_j` confirmar.
+ *
+ * ⚠️ `CondensedPals` no JSON é ignorado pelo jogo — só `PalSouls` (Almas) é
+ * respeitado. Achado documentado na memória do projeto em 14/09/2026.
+ */
+export function EntregarPal({ online }: { online: JogadorOnline[] }) {
+  const [estado, acao, pendente] = useActionState(acaoEntregarPal, SEM_ENTREGA);
+  const [statusPorId, setStatusPorId] = useState<Record<number, { status: string; detail: string; palId: string }>>({});
+  const [discordId, setDiscordId] = useState("");
+  const ultimosIds = useRef<string>("");
+
+  // Cada lote novo de `transferIds` é uma entrega nova — zera o status do
+  // lote anterior para o polling recomeçar. Sem isso, depois de um lote
+  // "concluído" o guard abaixo nunca mais liga o intervalo, e o próximo
+  // lote fica preso mostrando o resultado do anterior.
+  const idsAtuais = (estado.transferIds ?? []).join(",");
+  if (idsAtuais && idsAtuais !== ultimosIds.current) {
+    ultimosIds.current = idsAtuais;
+    setStatusPorId({});
+  }
+
+  const lista = Object.entries(statusPorId);
+  const concluidos = lista.filter(([, s]) => s.status === "concluido").length;
+  const falhados = lista.filter(([, s]) => s.status === "falhou").length;
+  const finalizados = concluidos + falhados;
+
+  useEffect(() => {
+    const ids = estado.transferIds ?? [];
+    if (ids.length === 0) return;
+    // Já terminou tudo (sucesso ou falha) — não tem mais nada pra perguntar
+    // de novo. Sem essa checagem, o polling rodava para sempre, gerando 20
+    // requisições a cada 3s indefinidamente mesmo horas depois de a entrega
+    // ter acabado.
+    if (finalizados >= ids.length) return;
+
+    const t = setInterval(async () => {
+      const resultados = await Promise.all(ids.map((id) => acaoConsultarEntregaPal(id)));
+      setStatusPorId((atual) => {
+        const novo = { ...atual };
+        ids.forEach((id, i) => {
+          const r = resultados[i];
+          if (r) novo[id] = r;
+        });
+        return novo;
+      });
+    }, 3000);
+    return () => clearInterval(t);
+  }, [idsAtuais, finalizados]);
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted">
+        Só o <code>PalSouls</code> (Almas) é aplicado de verdade — o jogo
+        ignora <code>CondensedPals</code> no template, então o Pal sempre
+        chega com condensação 0.
+      </p>
+      <form action={acao} className="space-y-3">
+        <div>
+          <label htmlFor="entrega-discordId" className="block text-sm text-muted">
+            Quem recebe
+          </label>
+          <input type="hidden" name="discordId" value={discordId} />
+          <select
+            id="entrega-discordId"
+            aria-label="Escolher entre quem está online agora"
+            value={discordId}
+            onChange={(e) => setDiscordId(e.target.value)}
+            required
+            className={`${campo} mt-1.5`}
+          >
+            <option value="" disabled>
+              {online.length > 0 ? `Online agora (${online.length})` : "Ninguém online agora"}
+            </option>
+            {online.map((p) => (
+              <option key={p.discordId} value={p.discordId}>
+                {p.nome} · {p.serverName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="entrega-json" className="block text-sm text-muted">
+            JSON do Pal
+          </label>
+          <textarea
+            id="entrega-json"
+            name="json"
+            required
+            rows={10}
+            placeholder='{"PalID": "BlueberryFairy", "Level": 80, "IVs": {"Health": 100, "AttackMelee": 100, "AttackShot": 100, "Defense": 100}, ...}'
+            className={`${campo} mt-1.5 font-mono text-xs`}
+          />
+        </div>
+        <div>
+          <label htmlFor="entrega-quantidade" className="block text-sm text-muted">
+            Quantidade
+          </label>
+          <input
+            id="entrega-quantidade"
+            name="quantidade"
+            type="number"
+            min={1}
+            max={20}
+            defaultValue={1}
+            required
+            className={`${campo} mt-1.5 w-24`}
+          />
+        </div>
+        <button type="submit" disabled={pendente} className={botao}>
+          {pendente ? "Entregando…" : "Entregar Pal"}
+        </button>
+        <Aviso {...estado} />
+      </form>
+
+      {lista.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted">
+            {concluidos} de {lista.length} entregue{lista.length === 1 ? "" : "s"}
+            {falhados > 0 ? ` · ${falhados} falhou/falharam` : ""}
+          </p>
+          {lista.map(([id, status]) => (
+            <p
+              key={id}
+              className={`rounded-[var(--radius-control)] border px-4 py-2 text-sm ${
+                status.status === "concluido"
+                  ? "border-success/30 bg-success/[0.08] text-success"
+                  : status.status === "falhou"
+                    ? "border-danger/30 bg-danger/[0.08] text-danger"
+                    : "border-line bg-surface-2 text-muted"
+              }`}
+            >
+              {status.palId} — {status.status}
+              {status.detail ? `: ${status.detail}` : ""}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

@@ -3,16 +3,21 @@ import { auth } from "@/auth";
 import { meuVinculo } from "@/lib/linking";
 import { serverBySlug } from "@/lib/servers";
 import { getPal, ForaDoJogo, type PalCru } from "@/lib/palworld/paldefender";
-import { paraTemplate } from "@/lib/pal-template";
+import { delPal } from "@/lib/palworld/rcon";
+import { paraTemplate, candidatosDeFiltro, nomeDoArquivo, type PalTemplate } from "@/lib/pal-template";
+import { dispararWorkflow } from "@/lib/github";
 import { isStaff, levelOf } from "@/lib/roles";
 import {
   IV_MINIMO_DOADOR,
   DOADORES_POR_RODADA,
   IV_TETO_RITUAL,
+  IV_INICIAL_RITUAL,
+  IV_MINIMO_RESGATE_PADRAO,
   ivAtaque,
   ivVida,
   ivDefesa,
   elegibilidadeDoador,
+  elegibilidadeAlvo,
 } from "@/lib/purificacao-regras";
 
 /**
@@ -41,11 +46,12 @@ export interface Resultado {
 
 export {
   IV_MINIMO_DOADOR,
-  CONDENSADO_MINIMO_DOADOR,
+  PARTNER_SKILL_MINIMO_DOADOR,
   DOADORES_POR_RODADA,
   IV_TETO_RITUAL,
   IV_INICIAL_RITUAL,
   elegibilidadeDoador,
+  elegibilidadeAlvo,
   type PalParaValidar,
 } from "@/lib/purificacao-regras";
 
@@ -150,6 +156,94 @@ async function montarRitual(r: LinhaRitual): Promise<RitualDePurificacao> {
   };
 }
 
+/**
+ * O histórico completo de doadores de um ritual — todas as rodadas, não só
+ * a aberta (`montarRitual`/`doadoresDaRodada` mostra só a atual, para o
+ * formulário de doação). Usado pelo "Ver ritual completo" e pelo contador
+ * total de Pals já consumidos.
+ */
+export async function historicoDoRitual(ritualId: number): Promise<DoadorConfirmado[]> {
+  const rows = (await sql`
+    select id, rodada, discord_id, pal_id, nickname, iv_health, iv_attack,
+           iv_defense, condensed_pals, passiva_usada, donated_at
+    from purification_donors
+    where ritual_id = ${ritualId}
+    order by donated_at desc
+  `) as LinhaDoador[];
+  return rows.map(paraDoador);
+}
+
+/**
+ * As passivas que o staff pediu da última vez que definiu uma regra —
+ * mostrada na tela de "escolher Pal" (antes de existir ritual, e portanto
+ * antes de existir regra de verdade) só como referência do que costuma ser
+ * pedido. Não é uma regra fixa: o staff ainda define do zero a cada ritual
+ * novo, em `definirRegraDoRitual`.
+ */
+export interface ReferenciaDeRegra {
+  ritualId: number;
+  passivasAceitas: string[];
+}
+
+export async function passivasDoUltimoRitual(): Promise<ReferenciaDeRegra | null> {
+  const rows = (await sql`
+    select id, passivas_aceitas
+    from purification_rituals
+    where regra_definida_em is not null
+    order by regra_definida_em desc
+    limit 1
+  `) as { id: number; passivas_aceitas: string[] }[];
+  const r = rows[0];
+  return r ? { ritualId: r.id, passivasAceitas: r.passivas_aceitas } : null;
+}
+
+/**
+ * Qual Pal mostrar na vitrine da home — o ritual em andamento mais recente,
+ * de qualquer jogador (a cápsula na home é pública, não pessoal). `null`
+ * quando não há nenhuma purificação rolando agora.
+ */
+export async function ritualEmDestaque(): Promise<{ palId: string } | null> {
+  const rows = (await sql`
+    select pal_id
+    from purification_rituals
+    where status in ('aguardando_regra', 'ativo')
+    order by created_at desc
+    limit 1
+  `) as { pal_id: string }[];
+  return rows[0] ? { palId: rows[0].pal_id } : null;
+}
+
+/**
+ * Atualiza só `passivas_aceitas` de um ritual já finalizado (cancelado ou
+ * completo) — usado para editar a "regra de referência" mostrada na tela de
+ * escolher Pal, sem reviver o ritual (não mexe em `status`). Diferente de
+ * `definirRegraDoRitual`, que é para um ritual em andamento de verdade.
+ */
+export async function atualizarReferenciaDeRegra(
+  ritualId: number,
+  passivas: string[],
+): Promise<Resultado> {
+  const staff = await exigirStaff();
+  if (!("discordId" in staff)) return staff;
+  if (passivas.length === 0) {
+    return { ok: false, mensagem: "Escolha pelo menos uma passiva aceita." };
+  }
+
+  const atualizado = (await sql`
+    update purification_rituals
+    set passivas_aceitas = ${passivas},
+        regra_definida_por = ${staff.discordId},
+        regra_definida_em = now()
+    where id = ${ritualId} and status in ('cancelado', 'completo')
+    returning id
+  `) as { id: number }[];
+
+  if (!atualizado.length) {
+    return { ok: false, mensagem: "Esse ritual não é uma referência editável." };
+  }
+  return { ok: true, mensagem: "Referência atualizada." };
+}
+
 /** O ritual em andamento (ou concluído mais recente) de um jogador. */
 export async function meuRitualAtivo(discordId: string): Promise<RitualDePurificacao | null> {
   const rows = (await sql`
@@ -211,19 +305,75 @@ export async function iniciarRitual(
 
   const template = paraTemplate(pal);
 
+  const elegivel = elegibilidadeAlvo({
+    ivs: template.IVs,
+    partnerSkillLevel: template.PartnerSkillLevel,
+    passives: template.Passives,
+    palId: template.PalID,
+  });
+  if (!elegivel.ok) {
+    return { ok: false, mensagem: elegivel.motivo };
+  }
+
+  // O Pal sai da palbox de verdade — mesma disciplina do cofre
+  // (`importarPalParaCofre`): tenta os filtros candidatos do mais
+  // específico pro mais genérico, para no primeiro que apagar de fato.
+  const candidatos = candidatosDeFiltro(pal);
+  let resposta: { ok: boolean; resposta: string } | undefined;
   try {
-    await sql`
-      insert into purification_rituals
-        (discord_id, server_slug, pal_id, template, instance_id_inicial)
-      values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId})
-    `;
+    for (const candidato of candidatos) {
+      resposta = await delPal(server, vinculo.uid, candidato);
+      if (resposta.ok) break;
+    }
   } catch {
-    return { ok: false, mensagem: "Você já tem um Pal em purificação agora." };
+    return {
+      ok: false,
+      mensagem: "O servidor não respondeu. Confira seus Pals no jogo antes de tentar de novo.",
+    };
+  }
+  if (!resposta?.ok) {
+    return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
+  }
+
+  // Se já existe uma regra de referência (o staff já definiu isso antes,
+  // mesmo que num ritual anterior), o ritual novo nasce direto `ativo` com
+  // ela — não faz sentido esperar o staff repetir um clique que já deu.
+  // "aguardando_regra" só acontece de verdade no primeiro ritual da
+  // história da Câmara, antes de qualquer referência existir.
+  const referencia = await passivasDoUltimoRitual();
+
+  // O jogo já removeu de verdade — se o insert falhar daqui pra frente, o
+  // Pal não pode simplesmente sumir: registrar o erro é o mínimo, mas não
+  // existe caminho de volta automático (mesmo risco documentado no cofre).
+  try {
+    if (referencia) {
+      await sql`
+        insert into purification_rituals
+          (discord_id, server_slug, pal_id, template, instance_id_inicial,
+           status, passivas_aceitas, regra_definida_por, regra_definida_em)
+        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
+                'ativo', ${referencia.passivasAceitas}, ${discordId}, now())
+      `;
+    } else {
+      await sql`
+        insert into purification_rituals
+          (discord_id, server_slug, pal_id, template, instance_id_inicial)
+        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId})
+      `;
+    }
+  } catch {
+    return {
+      ok: false,
+      mensagem:
+        "Seu Pal saiu da palbox mas o registro falhou — fale com o staff, o template ficou salvo.",
+    };
   }
 
   return {
     ok: true,
-    mensagem: `${template.PalID} entrou na câmara. Aguarde o staff definir as passivas aceitas.`,
+    mensagem: referencia
+      ? `${template.PalID} entrou na câmara, já com a regra de sempre. Pode começar a doar.`
+      : `${template.PalID} entrou na câmara. Aguarde o staff definir as passivas aceitas.`,
   };
 }
 
@@ -264,11 +414,30 @@ export async function doarPal(instanceId: string): Promise<Resultado> {
 
   const template = paraTemplate(pal);
   const elegivel = elegibilidadeDoador(
-    { ivs: template.IVs, condensedPals: template.CondensedPals, passives: template.Passives },
+    { ivs: template.IVs, partnerSkillLevel: template.PartnerSkillLevel, passives: template.Passives, palId: template.PalID },
     ritual.passivasAceitas,
+    ritual.palId,
   );
   if (!elegivel.ok) {
     return { ok: false, mensagem: elegivel.motivo };
+  }
+
+  // O doador sai da palbox de verdade — mesmo padrão de `iniciarRitual`.
+  const candidatos = candidatosDeFiltro(pal);
+  let resposta: { ok: boolean; resposta: string } | undefined;
+  try {
+    for (const candidato of candidatos) {
+      resposta = await delPal(server, vinculo.uid, candidato);
+      if (resposta.ok) break;
+    }
+  } catch {
+    return {
+      ok: false,
+      mensagem: "O servidor não respondeu. Confira seus Pals no jogo antes de tentar de novo.",
+    };
+  }
+  if (!resposta?.ok) {
+    return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
   }
 
   try {
@@ -280,11 +449,28 @@ export async function doarPal(instanceId: string): Promise<Resultado> {
         ${ritual.id}, ${ritual.rodadasCompletas}, ${discordId}, ${instanceId},
         ${template.PalID}, ${template.Nickname},
         ${ivVida(template.IVs)}, ${ivAtaque(template.IVs)}, ${ivDefesa(template.IVs)},
-        ${template.CondensedPals}, ${elegivel.passivaUsada}
+        ${template.PartnerSkillLevel}, ${elegivel.passivaUsada}
       )
     `;
-  } catch {
-    return { ok: false, mensagem: "Esse Pal já foi doado neste ritual." };
+  } catch (e) {
+    // `unique (ritual_id, instance_id)` bloqueando um clique duplo/reenvio
+    // do mesmo Pal não é perda de verdade: a primeira tentativa já
+    // registrou a doação, o Pal está seguro no histórico. Qualquer outro
+    // erro de banco é grave — o Pal saiu da palbox sem nenhum registro.
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/duplicate key|unique constraint/i.test(msg)) {
+      return { ok: false, mensagem: "Esse Pal já tinha sido doado nesta rodada." };
+    }
+    console.error("[purificacao] insert de doador falhou depois do delPal:", {
+      ritualId: ritual.id,
+      instanceId,
+      palId: template.PalID,
+      erro: msg,
+    });
+    return {
+      ok: false,
+      mensagem: "Seu Pal saiu da palbox mas o registro falhou — fale com o staff.",
+    };
   }
 
   const doadoresNaRodada = ritual.doadoresDaRodada.length + 1;
@@ -377,7 +563,12 @@ export async function rituaisAguardandoRegra(): Promise<RitualPendente[]> {
   }));
 }
 
-/** Define a lista de passivas aceitas e ativa o ritual. */
+/**
+ * Define a lista de passivas aceitas e ativa o ritual — ou, se o ritual já
+ * estiver `ativo`, redefine a regra no meio do caminho (staff mudou de
+ * ideia). Doadores já confirmados em rodadas anteriores não são afetados:
+ * a nova regra só vale para quem ainda vai doar.
+ */
 export async function definirRegraDoRitual(
   ritualId: number,
   passivas: string[],
@@ -394,25 +585,68 @@ export async function definirRegraDoRitual(
         regra_definida_por = ${staff.discordId},
         regra_definida_em = now(),
         status = 'ativo'
-    where id = ${ritualId} and status = 'aguardando_regra'
+    where id = ${ritualId} and status in ('aguardando_regra', 'ativo')
     returning id
   `) as { id: number }[];
 
   if (!atualizado.length) {
-    return { ok: false, mensagem: "Esse ritual não está mais aguardando regra." };
+    return { ok: false, mensagem: "Esse ritual não pode mais ter a regra alterada." };
   }
-  return { ok: true, mensagem: "Regra definida — o jogador já pode começar a doar." };
+  return { ok: true, mensagem: "Regra atualizada." };
 }
 
-/** Cancela um ritual (staff) — usado para corrigir engano ou abuso. */
-export async function cancelarRitual(ritualId: number): Promise<Resultado> {
+/**
+ * O IV mínimo pra resgatar o Pal purificado — configuração ÚNICA e global
+ * da Câmara inteira (`purification_config`, migração 021), não por ritual:
+ * com vários jogadores ao mesmo tempo, editar ritual por ritual seria
+ * inviável para o staff. Padrão 110 se a linha de config ainda não existir
+ * por algum motivo.
+ */
+export async function ivMinimoResgateAtual(): Promise<number> {
+  const rows = (await sql`
+    select iv_minimo_resgate from purification_config where id = 1
+  `) as { iv_minimo_resgate: number }[];
+  return rows[0]?.iv_minimo_resgate ?? IV_MINIMO_RESGATE_PADRAO;
+}
+
+/** Staff muda o IV mínimo de resgate para TODA a Câmara, de uma vez. */
+export async function atualizarIvMinimoResgate(ivMinimo: number): Promise<Resultado> {
   const staff = await exigirStaff();
   if (!("discordId" in staff)) return staff;
+
+  if (!Number.isInteger(ivMinimo) || ivMinimo < IV_INICIAL_RITUAL || ivMinimo > IV_TETO_RITUAL) {
+    return {
+      ok: false,
+      mensagem: `O IV mínimo precisa estar entre ${IV_INICIAL_RITUAL} e ${IV_TETO_RITUAL}.`,
+    };
+  }
+
+  await sql`
+    insert into purification_config (id, iv_minimo_resgate)
+    values (1, ${ivMinimo})
+    on conflict (id) do update set iv_minimo_resgate = ${ivMinimo}
+  `;
+  return { ok: true, mensagem: `IV mínimo de resgate agora é ${ivMinimo}, pra todo mundo.` };
+}
+
+/**
+ * Cancela um ritual — o próprio dono pode desistir e trocar de Pal a
+ * qualquer momento (mesmo com doadores já confirmados na rodada: o IV
+ * ganho fica perdido, é o risco de quem doou), e staff pode cancelar
+ * qualquer um, para corrigir engano ou abuso.
+ */
+export async function cancelarRitual(ritualId: number): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  const discordId = session.user.discordId;
+  const staff = isStaff(levelOf(session.user.roles, session.user.isMember));
 
   const atualizado = (await sql`
     update purification_rituals
     set status = 'cancelado'
-    where id = ${ritualId} and status in ('aguardando_regra', 'ativo')
+    where id = ${ritualId}
+      and status in ('aguardando_regra', 'ativo')
+      and (${staff} or discord_id = ${discordId})
     returning id
   `) as { id: number }[];
 
@@ -420,4 +654,141 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
     return { ok: false, mensagem: "Esse ritual não pode mais ser cancelado." };
   }
   return { ok: true, mensagem: "Ritual cancelado." };
+}
+
+/* --------------------------------------------------------------- resgatar */
+
+export interface ResgateDaCamaraPendente {
+  transferId: number;
+  palId: string;
+}
+
+/**
+ * Resgate da Câmara que ficou pelo meio do caminho — mesmo motivo de
+ * `pal-cofre.ts::meusResgatesPendentes`: a pessoa fechou a aba, ou o
+ * `useActionState` do formulário perdeu o `transferId` num remount (ex: o
+ * `router.refresh()` do `DoarPal`), antes do polling no navegador terminar.
+ * `pal_transfers` não sabe que veio da Câmara — filtra pelas transferências
+ * do jogador cujo `direction` é 'resgatar' e que ainda não fecharam.
+ */
+export async function meuResgatePendenteDaCamara(discordId: string): Promise<ResgateDaCamaraPendente | null> {
+  const rows = (await sql`
+    select id, template->>'PalID' as pal_id
+    from pal_transfers
+    where discord_id = ${discordId}
+      and direction = 'resgatar'
+      and status in ('aguardando_arquivo', 'arquivo_pronto')
+    order by created_at desc
+    limit 1
+  `) as { id: number; pal_id: string }[];
+  const r = rows[0];
+  return r ? { transferId: r.id, palId: r.pal_id } : null;
+}
+
+/**
+ * Resgata o Pal purificado de volta pra palbox — a partir do IV mínimo
+ * global da Câmara (`ivMinimoResgateAtual`, padrão 110, editável pelo
+ * staff em `atualizarIvMinimoResgate`), não precisa esperar o teto de 150.
+ * Mesmo mecanismo de duas fases do cofre (`pal_transfers` + GitHub Actions
+ * + RCON): não dá pra chamar `givepal_j` direto, o arquivo precisa existir
+ * no servidor primeiro.
+ *
+ * O template preserva TODOS os campos originais do Pal (gênero, nível,
+ * passivas, nickname…) — só os três eixos de IV são elevados ao valor
+ * atual do ritual. Perder `Gender` aqui faria o Pal voltar sem sexo
+ * definido, por isso o template é clonado por inteiro, nunca reconstruído
+ * campo a campo.
+ */
+export async function resgatarPalPurificado(ritualId: number): Promise<Resultado & { transferId?: number }> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  const discordId = session.user.discordId;
+
+  const rows = (await sql`
+    select id, discord_id, server_slug, template, status, iv_health, iv_attack, iv_defense
+    from purification_rituals
+    where id = ${ritualId} and discord_id = ${discordId}
+  `) as {
+    id: number;
+    discord_id: string;
+    server_slug: string;
+    template: PalTemplate;
+    status: string;
+    iv_health: number;
+    iv_attack: number;
+    iv_defense: number;
+  }[];
+  const ritual = rows[0];
+  if (!ritual) return { ok: false, mensagem: "Essa purificação não é sua." };
+  if (ritual.status !== "ativo" && ritual.status !== "completo") {
+    return { ok: false, mensagem: "Essa purificação não está mais em andamento." };
+  }
+
+  const ivMinimo = await ivMinimoResgateAtual();
+  const ivMedio = Math.round((ritual.iv_health + ritual.iv_attack + ritual.iv_defense) / 3);
+  if (ivMedio < ivMinimo) {
+    return {
+      ok: false,
+      mensagem: `Só dá para resgatar a partir de IV ${ivMinimo} — está em ${ivMedio}.`,
+    };
+  }
+
+  const vinculo = await meuVinculo(discordId);
+  const server = serverBySlug(ritual.server_slug);
+  if (!vinculo || !server) {
+    return { ok: false, mensagem: "Vincule seu personagem antes de resgatar." };
+  }
+
+  // Clona o template inteiro — só os IVs mudam, e o Gênero é travado em
+  // "None" de propósito (§pedido do dono, 14/09/2026): um Pal purificado
+  // sai infértil, nunca entra em incubadora — é a peça única que evita
+  // alguém resgatar, escolher o mesmo Pal de novo (voltou pra palbox) e
+  // repetir o ritual pra fabricar cópias purificadas sem limite.
+  const ivsOriginais = ritual.template.IVs;
+  const atacaCorpoACorpo = Number(ivsOriginais.AttackMelee ?? 0) >= Number(ivsOriginais.AttackShot ?? 0);
+  const templateAtualizado: PalTemplate = {
+    ...ritual.template,
+    Gender: "None",
+    IVs: {
+      ...ivsOriginais,
+      Health: ritual.iv_health,
+      Defense: ritual.iv_defense,
+      ...(atacaCorpoACorpo
+        ? { AttackMelee: ritual.iv_attack }
+        : { AttackShot: ritual.iv_attack }),
+    },
+  };
+
+  const [{ id: transferId }] = (await sql`
+    insert into pal_transfers
+      (discord_id, server_slug, palworld_uid, template, direction, status, arquivo)
+    values (${discordId}, ${ritual.server_slug}, ${vinculo.uid},
+            ${JSON.stringify(templateAtualizado)}, 'resgatar', 'aguardando_arquivo', '')
+    returning id
+  `) as { id: number }[];
+
+  const arquivo = nomeDoArquivo(transferId);
+  await sql`update pal_transfers set arquivo = ${arquivo} where id = ${transferId}`;
+
+  try {
+    await dispararWorkflow("deliver-pal-template.yml", {
+      transfer_id: String(transferId),
+      modo: "aplicar",
+    });
+  } catch (e) {
+    await sql`update pal_transfers set status = 'falhou', detail = ${(e instanceof Error ? e.message : String(e)).slice(0, 500)}, finished_at = now() where id = ${transferId}`;
+    return { ok: false, mensagem: "Não consegui iniciar o resgate agora. Tente de novo." };
+  }
+
+  await sql`
+    update purification_rituals
+    set status = 'completo', completed_at = coalesce(completed_at, now())
+    where id = ${ritualId}
+  `;
+
+  return {
+    ok: true,
+    mensagem: "Resgate iniciado — aguarde o Pal chegar na sua palbox.",
+    transferId,
+  };
 }

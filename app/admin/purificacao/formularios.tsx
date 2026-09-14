@@ -64,8 +64,8 @@ export function FormularioRegra({
 
   const filtradas = useMemo(() => {
     const alvo = busca.trim().toLowerCase();
-    if (!alvo) return passivas.slice(0, 60);
-    return passivas.filter((p) => p.nome.toLowerCase().includes(alvo)).slice(0, 60);
+    if (!alvo) return passivas;
+    return passivas.filter((p) => p.nome.toLowerCase().includes(alvo));
   }, [busca, passivas]);
 
   const alternar = (chave: string) => {

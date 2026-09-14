@@ -8,13 +8,27 @@ import { ondeEstouOnline } from "@/lib/cofre";
 import { palsNoJogo } from "@/lib/pal-cofre";
 import {
   meuRitualAtivo,
+  historicoDoRitual,
+  passivasDoUltimoRitual,
+  ivMinimoResgateAtual,
+  meuResgatePendenteDaCamara,
   DOADORES_POR_RODADA,
   IV_INICIAL_RITUAL,
   IV_TETO_RITUAL,
 } from "@/lib/purificacao";
-import { nomeDoPal } from "@/lib/pals";
-import { nomeDaPassiva } from "@/lib/passivas";
-import { EscolherPalDoRitual, DoarPal } from "./formularios";
+import { nomeDoPal, urlDoIcone } from "@/lib/pals";
+import { nomeDaPassiva, todasAsPassivas } from "@/lib/passivas";
+import { isStaff, levelOf } from "@/lib/roles";
+import {
+  EscolherPalDoRitual,
+  DoarPal,
+  EscolherPassivasDoRitual,
+  PassivasDoRitual,
+  CancelarRitual,
+  ResgatarPal,
+  IvMinimoResgateEditor,
+} from "./formularios";
+import { acaoAtualizarReferencia } from "./actions";
 
 export const metadata: Metadata = { title: "Câmara de Purificação" };
 export const dynamic = "force-dynamic";
@@ -35,10 +49,13 @@ export default async function Purificacao() {
   const session = await auth();
   if (!session) redirect("/entrar");
   const discordId = session.user.discordId;
+  const staff = isStaff(levelOf(session.user.roles, session.user.isMember));
 
-  const [vinculo, ritual] = await Promise.all([
+  const [vinculo, ritual, ivMinimoResgate, resgatePendente] = await Promise.all([
     meuVinculo(discordId),
     meuRitualAtivo(discordId),
+    ivMinimoResgateAtual(),
+    meuResgatePendenteDaCamara(discordId),
   ]);
 
   if (!vinculo) {
@@ -69,12 +86,16 @@ export default async function Purificacao() {
       ? ritual
       : null;
 
+  const passivasReferencia = await passivasDoUltimoRitual();
+
   // Sem ritual: a cápsula fica vazia na tela, com um botão que abre a
   // palbox para escolher o Pal — a cápsula nunca some, só o que está dentro
   // dela muda.
   if (!ritualAndando) {
     const servidor = onde[0]?.serverSlug ?? null;
-    const disponiveis = servidor ? await palsNoJogo(discordId, servidor) : { pals: [], erro: "" };
+    const disponiveis = servidor
+      ? await palsNoJogo(discordId, servidor)
+      : { pals: [], erro: "" };
 
     return (
       <Wrapper>
@@ -83,6 +104,34 @@ export default async function Purificacao() {
           o staff define quais passivas os doadores precisam ter, e você
           começa a doar Pals para purificá-lo.
         </p>
+        <div
+          className="mt-3 inline-flex max-w-2xl flex-wrap items-center gap-2 rounded-lg px-4 py-3"
+          style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
+        >
+          <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
+            Só entra quem já é perfeito:
+          </span>
+          <span className="text-sm">IV 100 em Vida, Ataque e Defesa, e Full Condensado (rank 5).</span>
+        </div>
+
+        {passivasReferencia && (
+          <div
+            className="mt-3 max-w-2xl rounded-lg px-4 py-3"
+            style={{ background: "#0d1512", border: "1px solid #1f2e27" }}
+          >
+            <p className="mb-2.5 text-[11.5px]" style={{ color: "#5c6e66" }}>
+              Da última vez, o staff pediu essas passivas dos doadores — cada
+              purificação nova pode pedir outras, é só referência:
+            </p>
+            <PassivasDoRitual
+              ritualId={passivasReferencia.ritualId}
+              passivasAceitas={passivasReferencia.passivasAceitas}
+              staff={staff}
+              catalogo={todasAsPassivas()}
+              action={acaoAtualizarReferencia}
+            />
+          </div>
+        )}
 
         <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
           <div
@@ -124,6 +173,9 @@ export default async function Purificacao() {
       ? await palsNoJogo(discordId, ritualAndando.serverSlug)
       : { pals: [], erro: "" };
 
+  const historico =
+    ritualAndando.status !== "aguardando_regra" ? await historicoDoRitual(ritualAndando.id) : [];
+
   return (
     <Wrapper>
       <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
@@ -132,6 +184,13 @@ export default async function Purificacao() {
           className="flex flex-col items-center gap-4 rounded-2xl p-6"
           style={{ background: "#111a16", border: "1px solid #1f2e27" }}
         >
+          <span
+            className="self-stretch text-center text-[10.5px] tracking-[0.12em] uppercase"
+            style={{ color: "#5c6e66" }}
+          >
+            Câmara 01 · {ritualAndando.serverSlug}
+          </span>
+
           <Camara3D palId={ritualAndando.palId} className="aspect-[3/4] w-full max-w-[280px]" />
 
           <div className="text-center">
@@ -170,6 +229,26 @@ export default async function Purificacao() {
               </div>
             </>
           )}
+
+          {(ritualAndando.status === "ativo" || (ritualAndando.status === "completo" && resgatePendente)) && (
+            <div className="mt-1 w-full">
+              {resgatePendente ? (
+                <ResgatarPal ritualId={ritualAndando.id} pendente={resgatePendente} />
+              ) : ivMedio >= ivMinimoResgate ? (
+                <ResgatarPal ritualId={ritualAndando.id} />
+              ) : (
+                <p className="text-center text-[11px]" style={{ color: "#5c6e66" }}>
+                  Só dá para resgatar o Pal purificado a partir de IV {ivMinimoResgate}.
+                </p>
+              )}
+            </div>
+          )}
+
+          {ritualAndando.status !== "completo" && (
+            <div className="mt-1">
+              <CancelarRitual ritualId={ritualAndando.id} />
+            </div>
+          )}
         </div>
 
         {/* INFO COLUMN */}
@@ -182,127 +261,227 @@ export default async function Purificacao() {
                 passivas os doadores precisam ter, você já pode começar a
                 doar Pals aqui.
               </p>
-            </div>
-          )}
 
-          {ritualAndando.status !== "aguardando_regra" && (
-            <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
-              <h2 className="mb-1 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
-                Regra da câmara
-              </h2>
-              <div
-                className="mt-3 flex flex-wrap items-center gap-3 rounded-lg px-4 py-3"
-                style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
-              >
-                <span className="text-sm font-semibold">{DOADORES_POR_RODADA} doadores perfeitos</span>
-                <span style={{ color: "#3ddc84" }}>→</span>
-                <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
-                  +1 IV em Vida, Ataque <em>e</em> Defesa, juntos
-                </span>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2.5">
-                {[
-                  { label: "Vida", valor: ritualAndando.ivHealth },
-                  { label: "Ataque", valor: ritualAndando.ivAttack },
-                  { label: "Defesa", valor: ritualAndando.ivDefense },
-                ].map((iv) => (
-                  <div
-                    key={iv.label}
-                    className="rounded-lg p-3 text-center"
-                    style={{ background: "#0d1512", border: "1px solid #182420" }}
-                  >
-                    <div className="text-[10px] tracking-[0.08em] uppercase" style={{ color: "#5c6e66" }}>
-                      {iv.label}
-                    </div>
-                    <div className="mt-1.5 text-2xl font-bold tabular">{iv.valor}</div>
-                    <div className="mt-1 text-[10.5px]" style={{ color: "#3ddc84" }}>
-                      perfeito era {IV_INICIAL_RITUAL}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                className="mt-4 flex flex-wrap justify-between gap-1.5 pt-3 text-[11.5px]"
-                style={{ borderTop: "1px solid #182420", color: "#5c6e66" }}
-              >
-                <span>{ritualAndando.rodadasCompletas} rodadas completas</span>
-                <b style={{ color: "#e8a33d" }}>
-                  {ivMedio >= IV_TETO_RITUAL ? "teto de IV alcançado" : `faltam ${IV_TETO_RITUAL - ivMedio} de IV até ${IV_TETO_RITUAL}`}
-                </b>
-              </div>
-            </div>
-          )}
-
-          {ritualAndando.status !== "aguardando_regra" && (
-            <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
-              <h2 className="mb-3 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
-                Passivas aceitas neste ritual
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {ritualAndando.passivasAceitas.map((p) => (
-                  <span
-                    key={p}
-                    className="rounded-lg px-3 py-1.5 text-[11.5px]"
-                    style={{ background: "rgba(232,163,61,0.14)", border: "1px solid #8a6321", color: "#e8a33d" }}
-                  >
-                    {nomeDaPassiva(p)}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
-                Cada doador precisa ter IV 100 em Vida, Ataque e Defesa, ser
-                Full Condensado (rank 4), e pelo menos uma dessas passivas.
-              </p>
-            </div>
-          )}
-
-          {ritualAndando.status !== "aguardando_regra" && (
-            <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
-              <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
-                Doadores da rodada nº {ritualAndando.rodadasCompletas + 1}
-              </h2>
-              <p className="mt-1 mb-3.5 text-[12.5px]" style={{ color: "#5c6e66" }}>
-                Faltando {DOADORES_POR_RODADA - doadoresNaRodada}, Vida/Ataque/Defesa sobem +1 cada, todos juntos.
-              </p>
-              <div className="flex flex-col gap-2.5">
-                {ritualAndando.doadoresDaRodada.map((d) => (
-                  <div
-                    key={d.id}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-                    style={{ background: "#0d1512", border: "1px solid #182420" }}
-                  >
-                    <div
-                      className="size-9 shrink-0 rounded-lg"
-                      style={{ background: "linear-gradient(145deg,#1f6b45,#0d1512)", border: "1px solid #1f2e27" }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold">
-                        {d.nickname || nomeDoPal(d.palId)} · {nomeDaPassiva(d.passivaUsada)}
-                      </div>
-                      <div className="text-[10.5px]" style={{ color: "#5c6e66" }}>
-                        doado em {new Date(d.doadoEm).toLocaleDateString("pt-BR")}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-[11px]" style={{ color: "#3ddc84" }}>
-                      ✓ consumido
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {ritualAndando.status === "ativo" && (
-                <div className="mt-4">
-                  {disponiveis.erro ? (
-                    <p className="text-sm text-danger">{disponiveis.erro}</p>
-                  ) : (
-                    <DoarPal pals={disponiveis.pals} passivasAceitas={ritualAndando.passivasAceitas} />
-                  )}
+              {staff && (
+                <div className="mt-4 border-t pt-4" style={{ borderColor: "#1f2e27" }}>
+                  <h3 className="mb-2 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#e8a33d" }}>
+                    Definir regra (visível só para staff)
+                  </h3>
+                  <EscolherPassivasDoRitual
+                    ritualId={ritualAndando.id}
+                    passivas={todasAsPassivas()}
+                    pontoDePartida={passivasReferencia?.passivasAceitas}
+                  />
                 </div>
               )}
             </div>
           )}
+
+          <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+            <h2 className="mb-1 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
+              Regra da câmara
+            </h2>
+            <div
+              className="mt-3 flex flex-wrap items-center gap-3 rounded-lg px-4 py-3"
+              style={{ background: "#0d1512", border: "1px solid #1f6b45" }}
+            >
+              <span className="text-sm font-semibold">{DOADORES_POR_RODADA} doadores perfeitos</span>
+              <span style={{ color: "#3ddc84" }}>→</span>
+              <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
+                +1 IV em Vida, Ataque <em>e</em> Defesa, juntos
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2.5">
+              {[
+                { label: "Vida", valor: ritualAndando.ivHealth },
+                { label: "Ataque", valor: ritualAndando.ivAttack },
+                { label: "Defesa", valor: ritualAndando.ivDefense },
+              ].map((iv) => {
+                const noTeto = iv.valor >= IV_TETO_RITUAL;
+                const progressoIv = Math.round(
+                  ((iv.valor - IV_INICIAL_RITUAL) / (IV_TETO_RITUAL - IV_INICIAL_RITUAL)) * 100,
+                );
+                return (
+                  <div
+                    key={iv.label}
+                    className="rounded-lg p-3 text-center"
+                    style={
+                      noTeto
+                        ? { background: "rgba(232,163,61,0.14)", border: "1px solid #8a6321" }
+                        : { background: "#0d1512", border: "1px solid #182420" }
+                    }
+                  >
+                    <div className="text-[10px] tracking-[0.08em] uppercase" style={{ color: "#5c6e66" }}>
+                      {iv.label}
+                    </div>
+                    <div
+                      className="mt-1.5 text-2xl font-bold tabular"
+                      style={noTeto ? { color: "#e8a33d" } : undefined}
+                    >
+                      {iv.valor}
+                    </div>
+                    <div className="mt-1 text-[10.5px]" style={{ color: "#3ddc84" }}>
+                      perfeito era {IV_INICIAL_RITUAL}
+                    </div>
+                    <div
+                      className="mt-2 h-1 overflow-hidden rounded-full"
+                      style={{ background: "#182420" }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${progressoIv}%`,
+                          background: "linear-gradient(90deg,#1f6b45,#3ddc84)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div
+              className="mt-4 flex flex-wrap justify-between gap-1.5 pt-3 text-[11.5px]"
+              style={{ borderTop: "1px solid #182420", color: "#5c6e66" }}
+            >
+              <span>{ritualAndando.rodadasCompletas} rodadas completas</span>
+              <b style={{ color: "#e8a33d" }}>
+                {ivMedio >= IV_TETO_RITUAL ? "teto de IV alcançado" : `faltam ${IV_TETO_RITUAL - ivMedio} de IV até ${IV_TETO_RITUAL}`}
+              </b>
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+            <h2 className="mb-3 text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
+              Passivas aceitas nesta purificação
+            </h2>
+            {ritualAndando.status === "aguardando_regra" ? (
+              <p className="text-sm" style={{ color: "#5c6e66" }}>
+                O staff ainda não definiu quais passivas os doadores precisam
+                ter nesta purificação.
+              </p>
+            ) : (
+              <>
+                <PassivasDoRitual
+                  ritualId={ritualAndando.id}
+                  passivasAceitas={ritualAndando.passivasAceitas}
+                  staff={staff}
+                  catalogo={todasAsPassivas()}
+                />
+                {staff && (
+                  <div className="mt-3 border-t pt-3" style={{ borderColor: "#182420" }}>
+                    <IvMinimoResgateEditor ivAtual={ivMinimoResgate} />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+            <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
+              Doadores da rodada nº {ritualAndando.rodadasCompletas + 1}
+            </h2>
+            <p className="mt-1 mb-3.5 text-[12.5px]" style={{ color: "#5c6e66" }}>
+              {ritualAndando.status === "aguardando_regra"
+                ? "A doação abre assim que o staff definir a regra."
+                : `Faltando ${DOADORES_POR_RODADA - doadoresNaRodada}, Vida/Ataque/Defesa sobem +1 cada, todos juntos.`}
+            </p>
+            <div className="flex flex-col gap-2.5">
+              {ritualAndando.doadoresDaRodada.map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                  style={{ background: "#0d1512", border: "1px solid #182420" }}
+                >
+                  <div
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                    style={{ background: "linear-gradient(145deg,#1f6b45,#0d1512)", border: "1px solid #1f2e27" }}
+                  >
+                    {urlDoIcone(d.palId) && (
+                      <img
+                        src={urlDoIcone(d.palId)!}
+                        alt=""
+                        loading="lazy"
+                        className="size-full rounded-lg object-contain"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-semibold">
+                      {d.nickname || nomeDoPal(d.palId)} · {nomeDaPassiva(d.passivaUsada)}
+                    </div>
+                    <div className="text-[10.5px]" style={{ color: "#5c6e66" }}>
+                      doado em {new Date(d.doadoEm).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-[11px]" style={{ color: "#3ddc84" }}>
+                    ✓ consumido
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {ritualAndando.status === "ativo" && (
+              <div className="mt-4">
+                {disponiveis.erro ? (
+                  <p className="text-sm text-danger">{disponiveis.erro}</p>
+                ) : (
+                  <DoarPal
+                    pals={disponiveis.pals}
+                    passivasAceitas={ritualAndando.passivasAceitas}
+                    palIdDoAlvo={ritualAndando.palId}
+                  />
+                )}
+              </div>
+            )}
+
+            {historico.length > 0 && (
+              <details className="mt-4 border-t pt-3.5" style={{ borderColor: "#182420" }}>
+                <summary
+                  className="cursor-pointer text-[11.5px] font-semibold uppercase tracking-[0.04em]"
+                  style={{ color: "#8fa39a" }}
+                >
+                  Ver purificação completa · já consumiu {historico.length} Pal
+                  {historico.length === 1 ? "" : "s"}
+                </summary>
+                <div className="mt-3 flex flex-col gap-2.5">
+                  {historico.map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                      style={{ background: "#0d1512", border: "1px solid #182420" }}
+                    >
+                      <div
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                        style={{ background: "linear-gradient(145deg,#1f6b45,#0d1512)", border: "1px solid #1f2e27" }}
+                      >
+                        {urlDoIcone(d.palId) && (
+                          <img
+                            src={urlDoIcone(d.palId)!}
+                            alt=""
+                            loading="lazy"
+                            className="size-full rounded-lg object-contain"
+                          />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13px] font-semibold">
+                          {d.nickname || nomeDoPal(d.palId)} · {nomeDaPassiva(d.passivaUsada)}
+                        </div>
+                        <div className="text-[10.5px]" style={{ color: "#5c6e66" }}>
+                          rodada {d.rodada + 1} · doado em {new Date(d.doadoEm).toLocaleDateString("pt-BR")}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-[11px]" style={{ color: "#3ddc84" }}>
+                        ✓ consumido
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
 
           <p className="pt-3.5 text-xs leading-relaxed" style={{ borderTop: "1px solid #1f2e27", color: "#5c6e66" }}>
             O registro do ritual já é real — só falta aplicar o IV de

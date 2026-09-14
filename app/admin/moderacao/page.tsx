@@ -9,6 +9,7 @@ import { getInfo, getMetrics, getPlayers } from "@/lib/palworld/rest";
 import { recentes, ACAO_LABEL } from "@/lib/moderacao";
 import { nomesDe } from "@/lib/discord";
 import { filaAdmin } from "@/lib/resgate-base";
+import { jogadoresOnlineParaEntrega } from "@/lib/admin-entregar-pal";
 import {
   SalvarMundo,
   Desligar,
@@ -23,6 +24,7 @@ import {
   UnbanManual,
   LinhaJogador,
   FilaDeRestauracao,
+  EntregarPal,
 } from "./formularios";
 
 export const metadata: Metadata = { title: "Moderação" };
@@ -86,12 +88,13 @@ export default async function Moderacao({
     );
   }
 
-  const [info, metrics, players, log, fila] = await Promise.all([
+  const [info, metrics, players, log, fila, onlineParaEntrega] = await Promise.all([
     getInfo(server).catch(() => null),
     getMetrics(server).catch(() => null),
     getPlayers(server).catch(() => []),
     recentes(20).catch(() => []),
     podeEnergia ? filaAdmin().catch(() => []) : Promise.resolve([]),
+    podeEnergia ? jogadoresOnlineParaEntrega().catch(() => []) : Promise.resolve([]),
   ]);
 
   // Uma fila só para as duas listas: o mesmo admin costuma aparecer no log e
@@ -322,6 +325,28 @@ export default async function Moderacao({
               </p>
               <div className="mt-5">
                 <FilaDeRestauracao pedidos={fila} nomes={nomesFila} />
+              </div>
+            </section>
+
+            {/* -------------------------------------- entregar Pal manual */}
+            <section className="mt-4 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold">Entregar Pal manual</h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Cola o JSON de um Pal (ex: do{" "}
+                <a
+                  href="https://paldeck.cc/palcreator"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gold underline"
+                >
+                  Pal Creator do Paldeck
+                </a>
+                ) e manda direto para quem já vinculou o Discord. Também vai
+                para o servidor de origem do vínculo dele — não dá para
+                escolher outro.
+              </p>
+              <div className="mt-5">
+                <EntregarPal online={onlineParaEntrega} />
               </div>
             </section>
           </div>

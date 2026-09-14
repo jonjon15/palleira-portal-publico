@@ -9,6 +9,7 @@ import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
 import { ImageCarousel, type CarouselSlide } from "@/components/image-carousel";
 import { Camara3DSobDemanda } from "@/components/camara-3d-sob-demanda";
+import { ritualEmDestaque } from "@/lib/purificacao";
 
 // Status ao vivo, com cache — os servidores não aguentam uma chamada por
 // visita de página (§3.3).
@@ -27,11 +28,12 @@ async function loadServers(): Promise<ServerCardData[]> {
 }
 
 export default async function Home() {
-  const [servers, stats, best, evento] = await Promise.all([
+  const [servers, stats, best, evento, purificando] = await Promise.all([
     loadServers(),
     communityStats().catch(() => null),
     topPlayers(5).catch(() => []),
     eventoAtual().catch(() => null),
+    ritualEmDestaque().catch(() => null),
   ]);
 
   // Só busca a galeria se tiver um evento em destaque — a maioria das
@@ -132,7 +134,10 @@ export default async function Home() {
             style={{ outline: "none" }}
             title="Câmara de Purificação"
           >
-            <Camara3DSobDemanda className="aspect-[3/4] rounded-[var(--radius-card)]" />
+            <Camara3DSobDemanda
+              palId={purificando?.palId}
+              className="aspect-[3/4] rounded-[var(--radius-card)]"
+            />
             <p className="mt-2 text-center text-xs font-semibold text-gold group-hover:text-gold-hi">
               Câmara de Purificação →
             </p>

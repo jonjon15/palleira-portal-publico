@@ -21,6 +21,7 @@ import {
   cancelarPedidoAdmin,
   estornarPedidoRecusado,
 } from "@/lib/resgate-base";
+import { entregarPalPorJson, continuarEntregaAdmin } from "@/lib/admin-entregar-pal";
 
 export interface Estado {
   ok: boolean;
@@ -936,4 +937,29 @@ export async function estornarPedidoDeFila(
   }
   revalidatePath("/admin/moderacao");
   return r;
+}
+
+/* --------------------------------------------------------- entregar Pal */
+
+export interface EstadoEntrega extends Estado {
+  transferIds?: number[];
+}
+
+export async function acaoEntregarPal(
+  _anterior: EstadoEntrega,
+  form: FormData,
+): Promise<EstadoEntrega> {
+  const discordIdDestino = String(form.get("discordId") ?? "").trim();
+  const json = String(form.get("json") ?? "");
+  const quantidade = Number(form.get("quantidade") ?? 1);
+  if (!discordIdDestino) {
+    return { ok: false, mensagem: "Informe o Discord ID do jogador." };
+  }
+  return entregarPalPorJson(discordIdDestino, json, quantidade);
+}
+
+export async function acaoConsultarEntregaPal(
+  transferId: number,
+): Promise<{ status: string; detail: string; palId: string } | null> {
+  return continuarEntregaAdmin(transferId);
 }

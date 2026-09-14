@@ -9,31 +9,59 @@
  */
 
 export const IV_MINIMO_DOADOR = 100;
-export const CONDENSADO_MINIMO_DOADOR = 4;
+/**
+ * As "estrelas" de rank que a ficha do Pal mostra vêm de `PartnerSkillLevel`
+ * — teto real do jogo é 5 (confirmado via Pal Creator, modo "Capped").
+ * `CondensedPals` nunca reflete isso: sempre 0 em Pal entregue via
+ * `givepal_j`, e não existe comando de condensar Pal em lugar nenhum do
+ * PalDefender — ver a memória do projeto (achado de 14/09/2026).
+ */
+export const PARTNER_SKILL_MINIMO_DOADOR = 5;
 export const DOADORES_POR_RODADA = 4;
 export const IV_TETO_RITUAL = 150;
 export const IV_INICIAL_RITUAL = 100;
+/**
+ * Valor inicial de `iv_minimo_resgate` para um ritual novo — a partir daí o
+ * staff pode mudar por ritual (não precisa esperar o teto de 150). Ver
+ * migração 021.
+ */
+export const IV_MINIMO_RESGATE_PADRAO = 110;
 
-/** O valor de "Ataque" da API — ver nota no topo da migração 020. */
-export const ivAtaque = (ivs: Record<string, number>) => Number(ivs.AttackMelee ?? 0);
+/**
+ * O IV de "Ataque" de um Pal — na API/save são DOIS eixos separados
+ * (`AttackMelee`, `AttackShot`), e cada Pal usa naturalmente só um deles em
+ * combate (o outro fica 0, não é imperfeição — ver PROMPT.md §14.3). Pega
+ * o maior dos dois: é o eixo que o Pal de fato usa.
+ */
+export const ivAtaque = (ivs: Record<string, number>) =>
+  Math.max(Number(ivs.AttackMelee ?? 0), Number(ivs.AttackShot ?? 0));
 export const ivVida = (ivs: Record<string, number>) => Number(ivs.Health ?? 0);
 export const ivDefesa = (ivs: Record<string, number>) => Number(ivs.Defense ?? 0);
 
 export interface PalParaValidar {
   ivs: Record<string, number>;
-  condensedPals: number;
+  partnerSkillLevel: number;
   passives: string[];
+  palId: string;
 }
 
 /**
  * Se este Pal serve como doador para as passivas aceitas do ritual. Usada
  * tanto para realce visual no formulário quanto — a que vale de fato —
  * revalidada dentro de `doarPal`.
+ *
+ * `palIdDoAlvo` trava o doador na mesma espécie do Pal que está sendo
+ * purificado — pedido do dono em 14/09/2026, para que só um Pal
+ * genuinamente igual ao alvo possa alimentar o ritual.
  */
 export function elegibilidadeDoador(
   pal: PalParaValidar,
   passivasAceitas: string[],
+  palIdDoAlvo: string,
 ): { ok: boolean; motivo: string; passivaUsada: string } {
+  if (pal.palId !== palIdDoAlvo) {
+    return { ok: false, motivo: "Precisa ser da mesma espécie do Pal em purificação.", passivaUsada: "" };
+  }
   if (
     ivVida(pal.ivs) < IV_MINIMO_DOADOR ||
     ivAtaque(pal.ivs) < IV_MINIMO_DOADOR ||
@@ -41,12 +69,33 @@ export function elegibilidadeDoador(
   ) {
     return { ok: false, motivo: "Precisa de IV 100 em Vida, Ataque e Defesa.", passivaUsada: "" };
   }
-  if (pal.condensedPals < CONDENSADO_MINIMO_DOADOR) {
-    return { ok: false, motivo: "Precisa ser Full Condensado (rank 4).", passivaUsada: "" };
+  if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
+    return { ok: false, motivo: "Precisa ser Full Condensado (rank 5).", passivaUsada: "" };
   }
   const passivaUsada = pal.passives.find((p) => passivasAceitas.includes(p));
   if (!passivaUsada) {
     return { ok: false, motivo: "Não tem nenhuma das passivas aceitas neste ritual.", passivaUsada: "" };
   }
   return { ok: true, motivo: "", passivaUsada };
+}
+
+/**
+ * Se este Pal pode ser o alvo — o que entra na câmara. Mesma barra de
+ * entrada dos doadores (IV 100 + Full Condensado), sem a exigência de
+ * passiva, que só faz sentido para quem é consumido no ritual.
+ */
+export function elegibilidadeAlvo(
+  pal: PalParaValidar,
+): { ok: boolean; motivo: string } {
+  if (
+    ivVida(pal.ivs) < IV_MINIMO_DOADOR ||
+    ivAtaque(pal.ivs) < IV_MINIMO_DOADOR ||
+    ivDefesa(pal.ivs) < IV_MINIMO_DOADOR
+  ) {
+    return { ok: false, motivo: "Precisa de IV 100 em Vida, Ataque e Defesa." };
+  }
+  if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
+    return { ok: false, motivo: "Precisa ser Full Condensado (rank 5)." };
+  }
+  return { ok: true, motivo: "" };
 }
