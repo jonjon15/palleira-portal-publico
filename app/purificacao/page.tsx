@@ -109,12 +109,12 @@ export default async function Purificacao() {
           começa a doar Pals para purificá-lo.
         </p>
 
-        <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
+        <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,480px)_1fr] md:items-start">
           <div
             className="flex flex-col items-center gap-4 rounded-2xl p-6"
             style={{ background: "#111a16", border: "1px solid #1f2e27" }}
           >
-            <Camara3D className="aspect-[3/4] w-full max-w-[280px]" />
+            <Camara3D className="aspect-[3/4] w-full max-w-[420px]" />
             <p className="text-sm" style={{ color: "#5c6e66" }}>
               Cápsula vazia
             </p>
@@ -185,7 +185,7 @@ export default async function Purificacao() {
 
   return (
     <Wrapper>
-      <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
+      <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,480px)_1fr] md:items-start">
         {/* CAPSULE PANEL */}
         <div
           className="flex flex-col items-center gap-4 rounded-2xl p-6"
@@ -198,7 +198,7 @@ export default async function Purificacao() {
             Câmara 01 · {ritualAndando.serverSlug}
           </span>
 
-          <Camara3D palId={ritualAndando.palId} className="aspect-[3/4] w-full max-w-[280px]" />
+          <Camara3D palId={ritualAndando.palId} className="aspect-[3/4] w-full max-w-[420px]" />
 
           <div className="text-center">
             <p className="text-xl font-bold">{nomeDoPal(ritualAndando.palId)}</p>
