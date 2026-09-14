@@ -206,10 +206,12 @@ def main() -> int:
                       help="faz a troca em memória e relata. Não escreve.")
     modo.add_argument("--aplicar", action="store_true",
                       help="grava de verdade. Servidor tem que estar PARADO.")
+    modo.add_argument("--sondar", action="store_true",
+                      help="lista as chaves do SaveParameter de um UID. Não escreve.")
     args = ap.parse_args()
 
     if not args.verificar and not args.uid:
-        sys.exit("--uid é obrigatório em --simular e --aplicar")
+        sys.exit("--uid é obrigatório em --simular, --aplicar e --sondar")
     if args.level < 1:
         sys.exit("--level tem que ser 1 ou mais")
 
@@ -259,6 +261,30 @@ def main() -> int:
     print(f"  parse:         {time.time()-t0:.0f}s "
           f"({len(custom)} de {len(PALWORLD_CUSTOM_PROPERTIES)} seções)", flush=True)
     world = gvas.properties["worldSaveData"]["value"]
+
+    # ---- modo sondar: só olhar, sem tocar em nada -------------------------
+    if args.sondar:
+        entradas = world.get("CharacterSaveParameterMap", {}).get("value", []) or []
+        for entrada in entradas:
+            param = (
+                entrada.get("value", {})
+                .get("RawData", {})
+                .get("value", {})
+                .get("object", {})
+                .get("SaveParameter", {})
+                .get("value")
+            )
+            if not isinstance(param, dict):
+                continue
+            eh_jogador = bool(scalar(param.get("IsPlayer"), False))
+            chave = norm_uid(scalar(entrada.get("key", {}).get("PlayerUId"), ""))
+            if eh_jogador and chave in uids:
+                print(f"\n  {scalar(param.get('NickName'), '')!r} ({chave})")
+                print("  chaves:", sorted(param.keys()))
+                for campo in ("Exp", "EXP", "Experience", "Level"):
+                    if campo in param:
+                        print(f"  {campo!r} = {param[campo]!r}")
+        return 0
 
     # ---- modo verificar: o ciclo é fiel? ---------------------------------
     if args.verificar:

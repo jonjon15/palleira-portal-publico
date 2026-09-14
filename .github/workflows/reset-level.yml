@@ -19,10 +19,10 @@ on:
         options: [pve-vip, pve-free, pvp-free]
         default: pve-vip
       modo:
-        description: "verificar = só testa o ciclo | simular = mostra o que mudaria | aplicar = grava"
+        description: "verificar = só testa o ciclo | simular = mostra o que mudaria | aplicar = grava | sondar = lista as chaves do UID"
         required: true
         type: choice
-        options: [verificar, simular, aplicar]
+        options: [verificar, simular, aplicar, sondar]
         default: verificar
       uid:
         description: "UID(s) do jogador (32 hex), separados por vírgula. Dispensável em 'verificar'"
