@@ -69,8 +69,9 @@ export default async function Purificacao() {
       ? ritual
       : null;
 
-  // Sem ritual: precisa escolher o servidor onde está online para ver a
-  // palbox e começar.
+  // Sem ritual: a cápsula fica vazia na tela, com um botão que abre a
+  // palbox para escolher o Pal — a cápsula nunca some, só o que está dentro
+  // dela muda.
   if (!ritualAndando) {
     const servidor = onde[0]?.serverSlug ?? null;
     const disponiveis = servidor ? await palsNoJogo(discordId, servidor) : { pals: [], erro: "" };
@@ -83,17 +84,32 @@ export default async function Purificacao() {
           começa a doar Pals para purificá-lo.
         </p>
 
-        {!servidor ? (
-          <p className="mt-8 text-sm" style={{ color: "#8fa39a" }}>
-            Entre no jogo com o time ou a palbox aberta para escolher o Pal.
-          </p>
-        ) : disponiveis.erro ? (
-          <p className="mt-8 text-sm text-danger">{disponiveis.erro}</p>
-        ) : (
-          <div className="mt-8">
-            <EscolherPalDoRitual pals={disponiveis.pals} servidor={servidor} />
+        <div className="mt-10 grid gap-7 md:grid-cols-[minmax(0,380px)_1fr] md:items-start">
+          <div
+            className="flex flex-col items-center gap-4 rounded-2xl p-6"
+            style={{ background: "#111a16", border: "1px solid #1f2e27" }}
+          >
+            <Camara3D className="aspect-[3/4] w-full max-w-[280px]" />
+            <p className="text-sm" style={{ color: "#5c6e66" }}>
+              Cápsula vazia
+            </p>
           </div>
-        )}
+
+          <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+            <h2 className="text-sm font-semibold">Escolher Pal da palbox</h2>
+            {!servidor ? (
+              <p className="mt-3 text-sm" style={{ color: "#8fa39a" }}>
+                Entre no jogo com o time ou a palbox aberta para escolher o Pal.
+              </p>
+            ) : disponiveis.erro ? (
+              <p className="mt-3 text-sm text-danger">{disponiveis.erro}</p>
+            ) : (
+              <div className="mt-4">
+                <EscolherPalDoRitual pals={disponiveis.pals} servidor={servidor} />
+              </div>
+            )}
+          </div>
+        </div>
       </Wrapper>
     );
   }
@@ -314,7 +330,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
           Palleira · Câmara de Purificação
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          Perfil da cápsula — MedicalPalBed_05
+          Perfil da cápsula
         </h1>
         {children}
       </div>
