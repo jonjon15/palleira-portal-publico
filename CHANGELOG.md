@@ -14,6 +14,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 - Corrigido: selecionar vários Pals na tela de doação travava a aba por um instante a cada clique, numa palbox cheia.
 - Corrigido: depois de doar um Pal, ele continuava aparecendo selecionável na lista mesmo já tendo saído da palbox — a tela agora atualiza sozinha.
 - Corrigido: se o resgate do Pal purificado ficasse pelo meio do caminho (aba fechada, conexão caiu), ele ficava preso para sempre sem voltar pra palbox — a tela agora retoma o resgate sozinha ao recarregar.
+- Corrigido: depois de resgatar o Pal de volta pra palbox, a cápsula continuava presa mostrando ele para sempre, sem opção de começar uma purificação nova.
 - **Tela de entregar Pal manual (staff) ganhou campo de quantidade**, para mandar várias cópias de uma vez sem repetir o processo.
 - Mais dois Pals na vitrine da Câmara de Purificação: Snow Tiger Beastman e Thunder Dragon Man já aparecem em 3D.
 
