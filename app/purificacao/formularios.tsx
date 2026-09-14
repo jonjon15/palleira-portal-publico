@@ -109,9 +109,9 @@ export function EscolherPalDoRitual({
                   passives: p.passives,
                 }}
               />
-              {!elegivel.ok && (
-                <p className="mt-1.5 text-[0.7rem] text-danger">{elegivel.motivo}</p>
-              )}
+              <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
+                {!elegivel.ok && elegivel.motivo}
+              </p>
             </label>
           );
         })}
@@ -444,9 +444,9 @@ const CardDeDoador = memo(function CardDeDoador({
           passives: pal.passives,
         }}
       />
-      {!elegivel.ok && (
-        <p className="mt-1.5 text-[0.7rem] text-danger">{elegivel.motivo}</p>
-      )}
+      <p className="mt-1.5 min-h-[2.1em] leading-[1.05rem] text-[0.7rem] text-danger">
+        {!elegivel.ok && elegivel.motivo}
+      </p>
     </label>
   );
 });
