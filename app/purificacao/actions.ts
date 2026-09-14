@@ -9,6 +9,7 @@ import {
   cancelarRitual,
   resgatarPalPurificado,
   atualizarIvMinimoResgate,
+  marcarRitualResgatadoSeConcluido,
   type Resultado,
 } from "@/lib/purificacao";
 import { consultarResgate } from "@/app/painel/cofre/pals/actions";
@@ -104,7 +105,12 @@ export async function acaoResgatarPal(
 
 /** Polling do resgate — mesma função que o cofre de Pals usa, já confirma dono antes de chamar `givepal_j`. */
 export async function acaoConsultarResgate(transferId: number) {
-  return consultarResgate(transferId);
+  const r = await consultarResgate(transferId);
+  if (r?.status === "concluido") {
+    await marcarRitualResgatadoSeConcluido(transferId);
+    atualiza();
+  }
+  return r;
 }
 
 /** Staff muda o IV mínimo pra resgatar o Pal purificado — configuração global, vale pra Câmara inteira. */

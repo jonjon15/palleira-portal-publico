@@ -77,7 +77,7 @@ export interface RitualDePurificacao {
   serverSlug: string;
   palId: string;
   template: Record<string, unknown>;
-  status: "aguardando_regra" | "ativo" | "completo" | "cancelado";
+  status: "aguardando_regra" | "ativo" | "completo" | "resgatado" | "cancelado";
   passivasAceitas: string[];
   rodadasCompletas: number;
   ivHealth: number;
@@ -761,9 +761,9 @@ export async function resgatarPalPurificado(ritualId: number): Promise<Resultado
 
   const [{ id: transferId }] = (await sql`
     insert into pal_transfers
-      (discord_id, server_slug, palworld_uid, template, direction, status, arquivo)
+      (discord_id, server_slug, palworld_uid, template, direction, status, arquivo, ritual_id)
     values (${discordId}, ${ritual.server_slug}, ${vinculo.uid},
-            ${JSON.stringify(templateAtualizado)}, 'resgatar', 'aguardando_arquivo', '')
+            ${JSON.stringify(templateAtualizado)}, 'resgatar', 'aguardando_arquivo', '', ${ritualId})
     returning id
   `) as { id: number }[];
 
@@ -791,4 +791,22 @@ export async function resgatarPalPurificado(ritualId: number): Promise<Resultado
     mensagem: "Resgate iniciado — aguarde o Pal chegar na sua palbox.",
     transferId,
   };
+}
+
+/**
+ * Promove o ritual de `completo` para `resgatado` assim que o `givepal_j`
+ * confirma de verdade — chamado pelo polling da Câmara (`acaoConsultarResgate`)
+ * a cada `"concluido"` recebido. Sem isso, `status = 'completo'` marcava só
+ * "o resgate começou", e a tela continuava mostrando a cápsula com o Pal já
+ * de volta na palbox, sem opção de começar uma purificação nova — porque
+ * `meuRitualAtivo` sempre pega o ritual mais recente, e nada distinguia
+ * "resgate em andamento" de "resgate concluído, cápsula livre".
+ */
+export async function marcarRitualResgatadoSeConcluido(transferId: number): Promise<void> {
+  await sql`
+    update purification_rituals
+    set status = 'resgatado'
+    where id = (select ritual_id from pal_transfers where id = ${transferId})
+      and status = 'completo'
+  `;
 }

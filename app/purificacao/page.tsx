@@ -86,6 +86,10 @@ export default async function Purificacao() {
       ? ritual
       : null;
 
+  // `resgatado` significa que o Pal já voltou pra palbox de verdade — a
+  // cápsula fica livre para uma purificação nova, mesmo comportamento de não
+  // ter ritual nenhum ainda.
+
   const passivasReferencia = await passivasDoUltimoRitual();
 
   // Sem ritual: a cápsula fica vazia na tela, com um botão que abre a
