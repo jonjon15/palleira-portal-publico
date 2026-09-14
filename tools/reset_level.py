@@ -1,18 +1,28 @@
 #!/usr/bin/env python3
 """
-Reseta só o Level de um jogador dentro do Level.sav, sem tocar em nada mais
-— Pals, itens, posição, guild ficam como estavam.
+Reseta o Level (e tudo que vem junto dele) de um jogador dentro do
+Level.sav, sem tocar em Pals, itens, posição ou guild.
 
 Mesma família do `reset_player.py` (que apaga o jogador inteiro): aqui é
-cirúrgico, mexe só no campo `Level` da entrada dele em
-`CharacterSaveParameterMap`. O `Exp` acumulado não é tocado — por pedido
-explícito —, o que significa que o jogo pode recalcular o Level a partir do
-Exp assim que a pessoa ganhar experiência de novo. Se isso acontecer na
-prática, `Exp` também precisa zerar.
+cirúrgico, mexe só na entrada do jogador em `CharacterSaveParameterMap`.
+
+🔴 Primeira versão só trocava o `Level`, e o Bolota e o Dante voltaram ao
+level antigo assim que ganharam XP em jogo: o `Exp` acumulado ainda
+correspondia ao level velho, e o jogo recalcula o Level a partir dele. Por
+isso este script também zera:
+  - `Exp` (Int64Property, um nível de "value" — diferente do Level, que é
+    ByteProperty com dois níveis)
+  - `UnusedStatusPoint` (pontos de atributo ainda não gastos)
+  - `GotStatusPointList` e `GotExStatusPointList` (pontos JÁ investidos em
+    atributos como HP máximo, peso, ataque etc. — sem isso o personagem
+    fica "level 1" mas com os bônus de um level mais alto)
 
 Roda no GitHub Actions, não na Vercel, pelo mesmo motivo do reset_player.py:
 o mundo descomprimido não cabe numa função serverless.
 
+    --sondar      lista as chaves e os campos ligados ao level de um UID.
+                  Não escreve nada — usado para descobrir formato antes de
+                  editar.
     --verificar   lê, reserializa e compara byte a byte. Não escreve nada.
     --simular     faz a troca em memória e diz o que mudaria. Não escreve.
     --aplicar     grava de verdade. Exige backup feito e servidor parado.
@@ -129,13 +139,63 @@ def apagar(cfg: Servidor, caminho: str) -> bool:
 
 # -------------------------------------------------------------------- edição
 
+def _zerar_lista_de_status(param: dict, campo: str) -> int | None:
+    """Zera o `StatusPoint` de cada item de GotStatusPointList ou
+    GotExStatusPointList. Formato (visto pelo --sondar):
+
+        param[campo] = {
+            "array_type": "StructProperty", "id": ..., "type": "ArrayProperty",
+            "value": {
+                "prop_name": ..., "prop_type": "StructProperty",
+                "values": [
+                    {"StatusName": {...}, "StatusPoint": {"id":.., "value": N, ...}},
+                    ...
+                ],
+                "type_name": ..., "id": ...,
+            },
+        }
+
+    Só troca o `value` de dentro de cada `StatusPoint` — StatusName e o
+    resto da estrutura ficam intactos. Devolve quantos itens foram zerados,
+    ou None se o campo não existir ou tiver formato inesperado.
+    """
+    campo_no = param.get(campo)
+    if not isinstance(campo_no, dict):
+        return None
+    valores = campo_no.get("value", {}).get("values")
+    if not isinstance(valores, list):
+        return None
+
+    zerados = 0
+    for item in valores:
+        if not isinstance(item, dict):
+            return None
+        sp = item.get("StatusPoint")
+        if not isinstance(sp, dict) or "value" not in sp:
+            return None
+        sp["value"] = 0
+        zerados += 1
+    return zerados
+
+
 def resetar_levels(world, uids: list[str], novo_level: int) -> dict:
-    """Troca o Level de várias entradas de jogador numa passada só pela
-    CharacterSaveParameterMap. Devolve um relatório por UID — quem chama
-    decide se grava."""
+    """Zera Level, Exp e os pontos de status (gastos e não gastos) de vários
+    jogadores numa passada só pela CharacterSaveParameterMap. Devolve um
+    relatório por UID — quem chama decide se grava.
+
+    Reset completo por pedido do dono, depois que o Bolota e o Dante
+    voltaram ao level antigo assim que ganharam XP em jogo: só trocar o
+    Level não basta enquanto o Exp acumulado ainda corresponde ao level
+    velho, e os pontos de atributo já investidos (força, peso, HP máximo
+    etc.) continuariam batendo com o personagem antigo mesmo com o level
+    marcando 1.
+    """
     faltam = set(uids)
-    porUid = {u: {"achado": False, "nome": "", "level_antigo": 0, "level_novo": novo_level}
-              for u in uids}
+    porUid = {
+        u: {"achado": False, "nome": "", "level_antigo": 0, "level_novo": novo_level,
+            "exp_antigo": 0, "pontos_zerados": 0}
+        for u in uids
+    }
 
     entradas = world.get("CharacterSaveParameterMap", {}).get("value", []) or []
     for entrada in entradas:
@@ -179,8 +239,42 @@ def resetar_levels(world, uids: list[str], novo_level: int) -> dict:
                     f"campo Level em formato inesperado ({nivel_no!r}); "
                     "abortando para não inventar estrutura"
                 )
-            else:
-                interno["value"] = novo_level
+                faltam.discard(chave)
+                continue
+            interno["value"] = novo_level
+
+            # `Exp` é Int64Property — um nível só de "value" (visto pelo
+            # --sondar), diferente do Level. Zerar aqui é o que impede o
+            # jogo de recalcular o Level de volta na próxima vez que a
+            # pessoa ganhar experiência.
+            exp_no = param.get("Exp")
+            if not isinstance(exp_no, dict) or "value" not in exp_no:
+                rel["erro"] = f"campo Exp em formato inesperado ({exp_no!r})"
+                faltam.discard(chave)
+                continue
+            rel["exp_antigo"] = int(exp_no["value"])
+            exp_no["value"] = 0
+
+            # UnusedStatusPoint é UInt16Property — um nível só, igual Exp.
+            pontos_no = param.get("UnusedStatusPoint")
+            if isinstance(pontos_no, dict) and "value" in pontos_no:
+                pontos_no["value"] = 0
+
+            # Pontos já investidos em atributos (força, peso, HP máximo
+            # etc.) — sem zerar isso, o personagem fica "level 1" mas com
+            # os bônus de atributo que só um level mais alto dá.
+            total_zerado = 0
+            formato_ruim = False
+            for campo_lista in ("GotStatusPointList", "GotExStatusPointList"):
+                n = _zerar_lista_de_status(param, campo_lista)
+                if n is None and campo_lista in param:
+                    rel["erro"] = f"campo {campo_lista} em formato inesperado"
+                    formato_ruim = True
+                    break
+                total_zerado += n or 0
+
+            if not formato_ruim:
+                rel["pontos_zerados"] = total_zerado
             faltam.discard(chave)
 
     return porUid
@@ -324,15 +418,14 @@ def main() -> int:
             continue
         print(f"  jogador:  {rel['nome'] or '(sem nome no mundo)'} ({u})")
         print(f"  level:    {rel['level_antigo']} -> {rel['level_novo']}")
+        print(f"  exp:      {rel['exp_antigo']:,} -> 0")
+        print(f"  pontos de status zerados: {rel['pontos_zerados']}")
         algum_ok = True
 
     if not algum_ok:
         print()
         print("  Nenhum UID pôde ser resetado — nada a fazer.")
         return 1
-
-    print("  ⚠️  Exp acumulado NÃO foi tocado — o jogo pode recalcular o Level")
-    print("     a partir dele assim que a pessoa ganhar experiência de novo.")
 
     if args.simular:
         # Reserializa em memória (sem enviar nada) para provar que a edição
