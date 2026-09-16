@@ -60,6 +60,12 @@ jobs:
   vigiar:
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    # actions:write é o que a API de cache (gh cache list/delete) exige — sem
+    # isso o passo de limpeza toma 403 "Resource not accessible by
+    # integration" e nunca apaga o cache velho (visto na prática em 16/09).
+    permissions:
+      actions: write
+      contents: read
     strategy:
       # Um servidor de cada vez não bloqueia os outros: se o pve-vip travar,
       # o pvp-free (onde o abuso foi visto) continua sendo checado. No cron
