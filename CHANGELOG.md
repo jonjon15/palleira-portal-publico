@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-16
+
+- **Quem fica saindo e entrando pra resetar o spawn agora é pego sozinho, o tempo todo.** Antes alguém da staff precisava disparar a checagem na mão; agora ela roda por conta própria a cada 5 minutos, nos três servidores.
+
 ## 2026-09-14
 
 - **Câmara de Purificação funciona de verdade, do início ao fim.** Escolha um Pal da sua palbox para entrar na cápsula (ele sai da palbox na hora), aguarde o staff liberar quais passivas os doadores precisam ter, e vá doando Pals (só da mesma espécie do que está na cápsula, IV 100 em Vida/Ataque/Defesa + Full Condensado + uma das passivas aceitas) até completar 4 — cada rodada soma +1 de IV, até o teto de 150. A partir de IV 110 (número que o staff pode mudar a qualquer momento, vale pra Câmara inteira) já dá para **resgatar o Pal purificado de volta pra palbox** — ele volta infértil, nunca entra em incubadora, é peça única da purificação.

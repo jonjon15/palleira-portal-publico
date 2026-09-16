@@ -7,20 +7,31 @@
 # tools/vigia_relog.py.
 name: vigia de relog
 
-# 🔴 SEM `schedule` de propósito — igual ao vigia de cheats, e pela mesma
-# razão, mas com um agravante próprio: aqui o estado (quantos avisos cada um
-# levou, em que degrau da escada está) precisa SOBREVIVER entre execuções, e o
-# runner é descartável. O `actions/cache` abaixo cobre o caso normal, mas cache
-# do GitHub não é banco de dados: ele pode ser despejado a qualquer momento, e
-# duas execuções simultâneas não enxergam o estado uma da outra.
+# 🔴 Ao contrário do vigia de cheats, este TEM `schedule`, de propósito.
 #
-# ⚠️ Consequência prática de perder o estado no meio de uma suspensão: o UID
-# fica FORA da whitelist e ninguém o repõe, porque quem sabia da dívida era o
-# arquivo que sumiu. A pessoa só volta quando um admin devolver na mão.
+# O vigia de cheats ficou manual porque lia o LOG INTEIRO sem distinguir
+# "agora" de "uma hora atrás" (kickou o xNEGANx por detecções de quando ele já
+# tinha parado — 12/09/2026). Este script não tem esse defeito desde
+# cca1030 (14/09/2026): toda leitura já descarta o que é mais velho que
+# `JANELA_SEGUNDOS`, medido contra o carimbo mais recente do próprio log, não
+# do relógio do runner. Uma execução curta a cada 5 minutos é tão correta
+# quanto o modo `--vigiar` contínuo — só troca "um processo vigiando sem
+# parar" por "várias fotos de 10 min em sequência", e a janela de checagem
+# (10 min) é maior que o intervalo entre fotos (5 min), então não sobra buraco.
 #
-# Por isso o modo recomendado é `vigiar` com o job vivo do começo ao fim: uma
-# execução longa segura o estado na memória e devolve o acesso sozinha.
+# O estado (avisos, degrau da escada, quem está suspenso) sobrevive entre
+# execuções por `actions/cache/restore` + `.../save` (não o `cache@v4`
+# completo: uma chave de cache é imutável, então uma chave fixa nunca se
+# atualizaria de uma rodada para a outra). Cada rodada grava sob uma chave com
+# o `run_id` e a próxima acha essa "foto" pelo prefixo em `restore-keys` — ver
+# o comentário junto do passo. Cache do GitHub não é banco: pode ser
+# despejado, e duas execuções do mesmo servidor ao mesmo tempo pisariam uma na
+# outra — por isso o `concurrency` abaixo enfileira em vez de rodar em
+# paralelo, e o `cancel-in-progress: false` garante que uma rodada não é
+# abortada no meio de uma suspensão.
 on:
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       servidor:
@@ -38,24 +49,34 @@ on:
         description: "Minutos vigiando (vazio = uma checagem só)"
         required: false
         type: string
-        default: "50"
+        default: ""
       aplicar:
-        description: "Avisar e suspender de verdade (o padrão é SÓ RELATAR)"
+        description: "Avisar e suspender de verdade"
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   vigiar:
     runs-on: ubuntu-latest
-    # Um pouco acima do --vigiar, para o job não ser morto no meio de uma
-    # suspensão — se ele morrer, ninguém repõe o UID na whitelist.
-    timeout-minutes: 60
+    timeout-minutes: 4
+    strategy:
+      # Um servidor de cada vez não bloqueia os outros: se o pve-vip travar,
+      # o pvp-free (onde o abuso foi visto) continua sendo checado. No cron
+      # roda sempre os três; no disparo manual, só o escolhido em `servidor`.
+      fail-fast: false
+      matrix:
+        servidor: >-
+          ${{ github.event_name == 'schedule'
+              && fromJSON('["pvp-free", "pve-free", "pve-vip"]')
+              || fromJSON(format('["{0}"]', inputs.servidor)) }}
 
-    # Duas execuções ao mesmo tempo escreveriam a whitelist uma por cima da
-    # outra e contariam avisos em dobro.
+    # Duas execuções do MESMO servidor ao mesmo tempo escreveriam a whitelist
+    # uma por cima da outra e contariam avisos em dobro. Cron de 5 em 5 min
+    # não deveria sobrepor um job de ~4 min, mas um disparo manual no meio
+    # pode — daí o enfileiramento em vez de cancelar.
     concurrency:
-      group: vigia-relog-${{ inputs.servidor || 'pvp-free' }}
+      group: vigia-relog-${{ matrix.servidor }}
       cancel-in-progress: false
 
     steps:
@@ -67,16 +88,13 @@ jobs:
 
       - run: pip install --quiet paramiko
 
-      # Quantos avisos cada um levou, em que degrau está e quem ainda cumpre
-      # suspensão. Sem isto cada execução começaria do zero: ninguém chegaria
-      # ao segundo aviso, e quem está suspenso nunca voltaria para a whitelist.
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: tools/.vigia_relog.json
-          key: vigia-relog-${{ github.run_id }}
-          restore-keys: vigia-relog-
+          key: vigia-relog-${{ matrix.servidor }}-${{ github.run_id }}
+          restore-keys: vigia-relog-${{ matrix.servidor }}-
 
-      - name: Vigiar
+      - name: Checar
         env:
           PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
           SRV1_ADMIN_PASSWORD: ${{ secrets.SRV1_ADMIN_PASSWORD }}
@@ -84,10 +102,10 @@ jobs:
           SRV3_ADMIN_PASSWORD: ${{ secrets.SRV3_ADMIN_PASSWORD }}
         run: |
           python tools/vigia_relog.py \
-            --servidor "${{ inputs.servidor || 'pvp-free' }}" \
+            --servidor "${{ matrix.servidor }}" \
             --limiar "${{ inputs.limiar || '5' }}" \
             ${{ inputs.vigiar && format('--vigiar {0} --intervalo 60', inputs.vigiar) || '' }} \
-            ${{ inputs.aplicar && '--aplicar' || '' }}
+            ${{ (inputs.aplicar == '' || inputs.aplicar) && '--aplicar' || '' }}
 
       # Se o job cair no meio de uma suspensão, alguém fica fora da whitelist
       # sem ninguém para repor. Este passo devolve todo mundo que ainda estava
@@ -101,6 +119,35 @@ jobs:
           SRV3_ADMIN_PASSWORD: ${{ secrets.SRV3_ADMIN_PASSWORD }}
         run: |
           python tools/vigia_relog.py \
-            --servidor "${{ inputs.servidor || 'pvp-free' }}" \
+            --servidor "${{ matrix.servidor }}" \
             --repor-todos \
-            ${{ inputs.aplicar && '--aplicar' || '' }}
+            ${{ (inputs.aplicar == '' || inputs.aplicar) && '--aplicar' || '' }}
+
+      # Grava sempre, mesmo se "Checar" ou "Repor" falharem (`if: always()`),
+      # para não perder avisos/suspensões já aplicados por causa de um erro
+      # de rede no passo seguinte. A chave leva o run_id, então esta execução
+      # nunca colide com o cache que ela mesma restaurou — vira a "foto mais
+      # recente" que a próxima rodada vai achar pelo `restore-keys`.
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: tools/.vigia_relog.json
+          key: vigia-relog-${{ matrix.servidor }}-${{ github.run_id }}
+
+      # A cada 5 min, 24/7, isto criaria uma entrada de cache nova PARA
+      # SEMPRE (288/dia só deste servidor) se nada apagasse as velhas — até
+      # despejar cache de outros workflows do repo. Apaga tudo que casa com o
+      # prefixo deste servidor, exceto a que acabou de ser salva.
+      - name: Limpar cache velho deste servidor
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh cache list --repo "${{ github.repository }}" \
+            --key "vigia-relog-${{ matrix.servidor }}-" \
+            --limit 100 \
+            --json id,key \
+            --jq ".[] | select(.key != \"vigia-relog-${{ matrix.servidor }}-${{ github.run_id }}\") | .id" |
+          while read -r id; do
+            gh cache delete "$id" --repo "${{ github.repository }}" || true
+          done
