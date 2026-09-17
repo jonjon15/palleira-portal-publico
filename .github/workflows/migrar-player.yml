@@ -1,0 +1,97 @@
+# Exporta um jogador (com Pals, itens e containers) de um mundo e importa em
+# outro, usando o `palsav backup` -- que remapeia os GUIDs, ao contrario de
+# recortar o JSON na mao (ponteiro solto = crash 0x88).
+#
+# Etapa "exportar" so le. A etapa "importar" grava, e exige servidor parado.
+name: migrar-player
+
+on:
+  workflow_dispatch:
+    inputs:
+      uid:
+        description: "UID do jogador (ex: 75C37070000000000000000000000000)"
+        required: true
+        type: string
+      mundo_origem:
+        description: "GUID do mundo de origem"
+        required: true
+        type: string
+        default: "E99CD9CFE959478C865A90EF645786B7"
+      mundo_destino:
+        description: "GUID do mundo de destino"
+        required: true
+        type: string
+        default: "D110D16F449B4B7174589A9439E26D13"
+      aplicar:
+        description: "Gravar no destino? (sem isso, so exporta e mostra)"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  migrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Baixar os dois mundos
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ORIGEM: ${{ inputs.mundo_origem }}
+          DESTINO: ${{ inputs.mundo_destino }}
+        run: |
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, "tools")
+          from restaurar_base import servidores, baixar
+          cfg = servidores()["pve-free"]
+          for rot, guid in (("origem", os.environ["ORIGEM"]), ("destino", os.environ["DESTINO"])):
+              d = baixar(cfg, f"Pal/Saved/SaveGames/0/{guid}/Level.sav")
+              open(f"{rot}.sav", "wb").write(d)
+              print(f"{rot}: {len(d):,} bytes")
+          PY
+
+      - name: Exportar jogador
+        run: |
+          palsav backup export-player origem.sav "${{ inputs.uid }}" -o jogador.player.pstz -f
+          ls -la jogador.player.pstz
+
+      - name: Importar no destino
+        if: ${{ inputs.aplicar }}
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          DESTINO: ${{ inputs.mundo_destino }}
+          UID: ${{ inputs.uid }}
+        run: |
+          mkdir -p PlayersDestino
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, "tools")
+          from restaurar_base import servidores, baixar
+          cfg = servidores()["pve-free"]
+          guid = os.environ["DESTINO"]
+          import paramiko, io
+          from restaurar_base import _sftp
+          t, s = _sftp(cfg)
+          try:
+              base = f"Pal/Saved/SaveGames/0/{guid}/Players"
+              for f in s.listdir(base):
+                  buf = io.BytesIO(); s.getfo(f"{base}/{f}", buf)
+                  open(f"PlayersDestino/{f}", "wb").write(buf.getvalue())
+              print("players do destino baixados:", len(os.listdir("PlayersDestino")))
+          finally:
+              t.close()
+          PY
+          palsav backup import-player jogador.player.pstz destino.sav PlayersDestino
+          echo "--- import feito, conferindo ---"
+          ls -la destino.sav PlayersDestino/ | head
