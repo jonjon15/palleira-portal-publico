@@ -107,7 +107,12 @@ def main() -> int:
         nome = scalar(dig(obj, "MapObjectId"), "") or scalar(dig(obj, "key", "MapObjectId"), "") or "?"
         for campo in CAMPOS_ITEM:
             for guid in coletar_guids(obj, campo):
-                if guid not in itens:
+                # 🔴 `target_container_id` aponta para QUALQUER um dos dois
+                # tipos de container: um baú guarda itens, um PalBooth ou uma
+                # esteira guardam Pals. Checar só ItemContainerSaveData dava
+                # 5 falsos positivos (2 PalBooth, 3 DismantlingConveyor) na
+                # primeira versão desta sonda, em 16/09/2026.
+                if guid not in itens and guid not in chars:
                     quebradas.append((f"MapObject[{nome}]", campo, guid))
                     contagem[f"MapObject.{campo}"] += 1
 
@@ -118,7 +123,9 @@ def main() -> int:
         bid = norm_uid(scalar(dig(base, "key"), "")) or "?"
         for campo in CAMPOS_ITEM:
             for guid in coletar_guids(base, campo):
-                if guid not in itens:
+                # Mesmo motivo do MapObject: o container pode ser de item ou
+                # de personagem.
+                if guid not in itens and guid not in chars:
                     quebradas.append((f"BaseCamp[{bid[:8]}]", campo, guid))
                     contagem[f"BaseCamp.{campo}"] += 1
         for campo in CAMPOS_CHAR:
