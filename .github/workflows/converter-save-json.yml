@@ -1,0 +1,49 @@
+# Converte o Level.sav em JSON e aponta a seção exata que tem dado inválido.
+# Ver tools/converter_save_json.py. Só leitura.
+#
+# Criado durante o crash-loop do pve-free (16/09/2026): o crash não deixa
+# rastro no log, então a única forma de achar dado ruim é forçar um parser a
+# percorrer o arquivo inteiro, seção por seção.
+name: converter-save-json
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-free, pve-vip, pvp-free]
+        default: pve-free
+      arquivo:
+        description: "Arquivo (Level.sav ou um Level.sav.bak-*)"
+        required: false
+        type: string
+        default: "Level.sav"
+
+jobs:
+  converter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Converter
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/converter_save_json.py \
+            --servidor "${{ inputs.servidor }}" \
+            --arquivo "${{ inputs.arquivo }}"
