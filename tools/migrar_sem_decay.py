@@ -35,7 +35,7 @@ from restaurar_base import (  # noqa: E402
 )
 
 SAVE = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
-LIMITE_H = 72.0
+LIMITE_H = 72.0  # default; pode ser sobrescrito por --limite-horas
 
 
 def uid_com_hifens(valor) -> str:
@@ -131,9 +131,14 @@ def main() -> int:
     ap.add_argument("--origem-guid", required=True)
     ap.add_argument("--destino-guid", required=True)
     ap.add_argument("--origem-arquivo", default="Level.sav")
+    ap.add_argument("--limite-horas", type=float, default=LIMITE_H,
+                    help="considera decay quem passou disso sem logar (default 72h)")
     ap.add_argument("--aplicar", action="store_true",
                     help="sem isso, só exporta e lista")
     args = ap.parse_args()
+
+    global LIMITE_H
+    LIMITE_H = args.limite_horas
 
     # 🔴 o backup_manager procura a CharacterSaveParameterMap na raiz do GVAS,
     # onde ela não está — ver tools/patch_backup_manager.py. Sem isto, todo

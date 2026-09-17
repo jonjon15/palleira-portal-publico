@@ -23,6 +23,11 @@ on:
         required: true
         type: string
         default: "D110D16F449B4B7174589A9439E26D13"
+      limite_horas:
+        description: "Considera sem decay quem logou há menos disso (horas)"
+        required: true
+        type: string
+        default: "72"
       aplicar:
         description: "Gravar no destino? (sem isso, so exporta e lista)"
         required: true
@@ -62,4 +67,5 @@ jobs:
             --origem-guid "${{ inputs.origem_guid }}" \
             --origem-arquivo "${{ inputs.origem_arquivo }}" \
             --destino-guid "${{ inputs.destino_guid }}" \
+            --limite-horas "${{ inputs.limite_horas }}" \
             $EXTRA
