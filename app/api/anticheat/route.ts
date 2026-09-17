@@ -154,9 +154,19 @@ const LIMIARES: Record<Tipo, number> = { dano: 30, stamina: 25 };
  * ninguém. Contar esses kickaria jogador honesto.
  *
  * Stamina: conta sempre; o volume é que separa, ver `LIMIARES`.
+ *
+ * ⚠️ `FishingRod` ignorada por completo: o Santos ficou preso lutando contra
+ * o Ginásio (17/09/2026) com `BasePower=220 above 1.50x AttackValue=25` —
+ * sempre o mesmo valor fixo, mesmo trocando de arma na tela para um fuzil de
+ * verdade. O servidor lia a vara de pesca do inventário como se fosse a arma
+ * equipada; assim que ele a removeu, as detecções pararam por completo. Vara
+ * de pesca não é arma de combate — não há cenário de PvP em que valha contar.
  */
+const ARMA_IGNORADA = /FishingRod/i;
+
 function contaParaOGatilho(linha: string, tipo: Tipo): boolean {
   if (tipo === "stamina") return true;
+  if (ARMA_IGNORADA.test(linha)) return false;
 
   const acima = /BasePower=(\d+) above [\d.]+x equipped weapon AttackValue=(\d+)/.exec(linha);
   if (acima) return Number(acima[1]) > Number(acima[2]);
