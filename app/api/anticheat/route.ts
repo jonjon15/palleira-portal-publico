@@ -185,6 +185,15 @@ function extrair(corpo: unknown): Deteccao | null {
     typeof corpo === "string" ? corpo : JSON.stringify(corpo ?? "");
   if (!texto.includes("may be") || !texto.includes("cheater")) return null;
 
+  // ⚠️ "Ammo cheat suspicion" (ex: PalSphere com MagazineSize=0) cai aqui
+  // classificada como "dano" por exclusão, mas nunca bate nos regex de
+  // `contaParaOGatilho` (nem BasePower, nem NativeDamageValue) — então nunca
+  // conta para o gatilho e nunca kicka. Isso é intencional, não um regex
+  // esquecido: medido em 17/09/2026, 13 ocorrências de 4 jogadores diferentes
+  // (Bolota, Leo_Raposa, BIEL, hsYoungD), sempre com esfera de captura comum
+  // e remaining=0 — é o evento normal de tentar arremessar sem ter esfera no
+  // bolso, não munição infinita de verdade.
+
   const m = /'([^']+)' \(UserId=([^,)]+)/.exec(texto);
   if (!m) return null;
   return {
