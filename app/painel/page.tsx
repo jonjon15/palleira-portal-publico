@@ -171,6 +171,13 @@ export default async function Painel() {
               href="/admin/moderacao"
             />
           )}
+          {isStaff(level) && (
+            <Card
+              title="Resgates de Pal"
+              body="Acompanhar ao vivo a fila do cofre — arquivo e entrega por RCON."
+              href="/admin/resgates"
+            />
+          )}
           {canManageEvents(level, user.roles) && (
             <Card
               title="Eventos"

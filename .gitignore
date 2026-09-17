@@ -57,3 +57,6 @@ tools/__pycache__/
 
 # estado de runtime dos vigias (quem foi avisado, degrau da escada, suspensoes)
 tools/.vigia_relog.json
+
+# log do vigia local de resgate de Pal (tools/entregar_pals_local.py)
+tools/entregar_pals_local.log
