@@ -38,6 +38,21 @@ SAVE = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
 LIMITE_H = 72.0
 
 
+def uid_com_hifens(valor) -> str:
+    """O GUID no formato que a CharacterSaveParameterMap usa.
+
+    Aceita as duas formas que aparecem no save — `0edc41b1-0000-…` e o
+    `0EDC41B10000…` sem hífens que o `norm_uid` devolve — e sempre retorna a
+    primeira, que é a que o `palworld_aio` procura.
+    """
+    cru = norm_uid(str(valor or "")).lower()
+    if not cru:
+        return ""
+    if "-" in cru:
+        return cru
+    return f"{cru[0:8]}-{cru[8:12]}-{cru[12:16]}-{cru[16:20]}-{cru[20:32]}"
+
+
 def guildas_com_base(level_path: str) -> list[dict]:
     """As guildas que ainda têm base e cujo membro mais recente esteve online
     há menos de LIMITE_H — as que o decay ainda não comeu."""
@@ -72,7 +87,12 @@ def guildas_com_base(level_path: str) -> list[dict]:
             "nome": g.get("guild_name") or "?",
             "horas": horas,
             "bases": len(g.get("base_ids") or []),
-            "membros": [(norm_uid(str(dig(m, "player_uid", default=""))).upper(),
+            # 🔴 o `palworld_aio` procura o jogador pelo `PlayerUId` como ele
+            # está na CharacterSaveParameterMap: GUID com hífens, minúsculo
+            # (`0edc41b1-0000-…`). O `norm_uid` do repo tira os hífens e a
+            # busca não acha ninguém — foi o que fez os 21 exports falharem
+            # com "Could not find player … in CharacterSaveParameterMap".
+            "membros": [(uid_com_hifens(dig(m, "player_uid", default="")),
                          dig(m, "player_info", "player_name", default="?"))
                         for m in membros],
         })
