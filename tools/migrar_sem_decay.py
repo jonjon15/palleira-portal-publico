@@ -53,6 +53,31 @@ def uid_com_hifens(valor) -> str:
     return f"{cru[0:8]}-{cru[8:12]}-{cru[12:16]}-{cru[16:20]}-{cru[20:32]}"
 
 
+def baixar_players(cfg, guid: str, destino: str) -> int:
+    """Traz a pasta `Players/` inteira do mundo. O backup_manager lê o
+    `Players/<uid>.sav` de cada jogador ao lado do Level.sav."""
+    import io as _io
+
+    from restaurar_base import _sftp
+
+    transporte, sftp = _sftp(cfg)
+    try:
+        base = f"Pal/Saved/SaveGames/0/{guid}/Players"
+        nomes = sftp.listdir(base)
+        for nome in nomes:
+            buf = _io.BytesIO()
+            sftp.getfo(f"{base}/{nome}", buf)
+            # 🔴 no servidor o arquivo é `75C37070….sav` (maiúsculo), mas o
+            # backup_manager monta o nome com o uid minúsculo. No Windows dava
+            # na mesma; no runner Linux não casa e vira "Player save file not
+            # found". Grava-se em minúsculo, que é o que ele procura.
+            dest = os.path.join(destino, nome.lower())
+            open(dest, "wb").write(buf.getvalue())
+        return len(nomes)
+    finally:
+        transporte.close()
+
+
 def guildas_com_base(level_path: str) -> list[dict]:
     """As guildas que ainda têm base e cujo membro mais recente esteve online
     há menos de LIMITE_H — as que o decay ainda não comeu."""
@@ -123,15 +148,28 @@ def main() -> int:
     cfg = servidores()[args.servidor]
 
     print("baixando os dois mundos...", flush=True)
+    # 🔴 o backup_manager procura `Players/<uid>.sav` ao lado do Level.sav
+    # (uid em maiúsculas, sem hífens). Sem a pasta, todo export morre com
+    # "Player save file not found" — por isso cada mundo vai para o seu
+    # próprio diretório, com a pasta Players junto.
+    os.makedirs("mundo_origem/Players", exist_ok=True)
+    os.makedirs("mundo_destino/Players", exist_ok=True)
+
     caminho_origem = f"Pal/Saved/SaveGames/0/{args.origem_guid}/{args.origem_arquivo}"
     org = baixar(cfg, caminho_origem)
-    open("origem.sav", "wb").write(org)
+    open("mundo_origem/Level.sav", "wb").write(org)
     dst = baixar(cfg, SAVE.format(guid=args.destino_guid))
-    open("destino.sav", "wb").write(dst)
+    open("mundo_destino/Level.sav", "wb").write(dst)
     print(f"  origem  ({args.origem_arquivo}): {len(org):,} bytes")
-    print(f"  destino (Level.sav):             {len(dst):,} bytes\n", flush=True)
+    print(f"  destino (Level.sav):             {len(dst):,} bytes", flush=True)
 
-    guildas = guildas_com_base("origem.sav")
+    for guid, pasta in ((args.origem_guid, "mundo_origem"),
+                        (args.destino_guid, "mundo_destino")):
+        n = baixar_players(cfg, guid, os.path.join(pasta, "Players"))
+        print(f"  {pasta}/Players: {n} arquivos", flush=True)
+    print(flush=True)
+
+    guildas = guildas_com_base("mundo_origem/Level.sav")
     alvos = [(uid, nome) for g in guildas for uid, nome in g["membros"]]
 
     print("=" * 70)
@@ -150,7 +188,7 @@ def main() -> int:
     for uid, nome in alvos:
         saida = os.path.join("exports", f"{uid}.player.pstz")
         try:
-            export_player_backup("origem.sav", uid, saida)
+            export_player_backup("mundo_origem/Level.sav", uid, saida)
             print(f"  ✅ {nome:<26} {os.path.getsize(saida):>10,} bytes", flush=True)
             exportados.append((uid, nome, saida))
         except Exception as exc:  # noqa: BLE001
@@ -171,7 +209,7 @@ def main() -> int:
     importados: list[str] = []
     for uid, nome, caminho in exportados:
         try:
-            import_player_backup(caminho, "destino.sav")
+            import_player_backup(caminho, "mundo_destino/Level.sav")
             print(f"  ✅ {nome}", flush=True)
             importados.append(nome)
         except Exception as exc:  # noqa: BLE001
@@ -182,7 +220,7 @@ def main() -> int:
         print("nada importado — não vou gravar.")
         return 1
 
-    novo = open("destino.sav", "rb").read()
+    novo = open("mundo_destino/Level.sav", "rb").read()
     destino = SAVE.format(guid=args.destino_guid)
 
     seguranca = destino + time.strftime(".bak-%Y%m%d-%H%M%S")
