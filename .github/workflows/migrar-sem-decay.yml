@@ -1,0 +1,65 @@
+# Leva para o mundo novo so os jogadores cujas guildas ainda tem base viva.
+# Ver tools/migrar_sem_decay.py.
+#
+# Subir o backup inteiro ja foi tentado e o servidor nao sobe (os
+# Level.sav.naosobe-* no diretorio do mundo sao dessas tentativas).
+name: migrar-sem-decay
+
+on:
+  workflow_dispatch:
+    inputs:
+      origem_guid:
+        description: "GUID do mundo de origem"
+        required: true
+        type: string
+        default: "E99CD9CFE959478C865A90EF645786B7"
+      origem_arquivo:
+        description: "Arquivo de origem (Level.sav ou Level.sav.bak-*)"
+        required: true
+        type: string
+        default: "Level.sav.bak-20260916-013401"
+      destino_guid:
+        description: "GUID do mundo de destino"
+        required: true
+        type: string
+        default: "D110D16F449B4B7174589A9439E26D13"
+      aplicar:
+        description: "Gravar no destino? (sem isso, so exporta e lista)"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  migrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko brotli cbor2 zstandard
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+          git clone --depth 1 --quiet "$REPO" /tmp/pst
+
+      - name: Migrar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          PYTHONPATH: /tmp/pst/src
+          PYTHONHASHSEED: "0"
+          APLICAR: ${{ inputs.aplicar }}
+        run: |
+          EXTRA=""
+          if [ "$APLICAR" = "true" ]; then EXTRA="--aplicar"; fi
+          python tools/migrar_sem_decay.py \
+            --origem-guid "${{ inputs.origem_guid }}" \
+            --origem-arquivo "${{ inputs.origem_arquivo }}" \
+            --destino-guid "${{ inputs.destino_guid }}" \
+            $EXTRA
