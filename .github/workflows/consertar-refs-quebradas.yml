@@ -1,0 +1,68 @@
+# Cria containers vazios para os objetos que apontam para o nada — a correção
+# do crash-loop achado em 16/09/2026. Ver tools/consertar_refs_quebradas.py.
+#
+# ⚠️ `aplicar` REESCREVE O MUNDO DE TODOS. Comece sempre por `simular`.
+name: consertar-refs-quebradas
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-free, pve-vip, pvp-free]
+        default: pve-free
+      modo:
+        description: "simular = mostra o que faria | aplicar = grava"
+        required: true
+        type: choice
+        options: [simular, aplicar]
+        default: simular
+      parar_servidor:
+        description: "Parar o servidor antes de gravar (obrigatório em 'aplicar')"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  consertar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Consertar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: |
+          python tools/consertar_refs_quebradas.py \
+            --servidor "${{ inputs.servidor }}" \
+            --${{ inputs.modo }}
+
+      - name: Religar o servidor
+        # always() de propósito: se a gravação falhar no meio, o pior desfecho
+        # é o servidor ficar parado sem ninguém saber.
+        if: always() && inputs.modo == 'aplicar' && inputs.parar_servidor
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running --limite 600
