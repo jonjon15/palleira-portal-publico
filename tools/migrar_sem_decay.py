@@ -110,9 +110,15 @@ def main() -> int:
                     help="sem isso, só exporta e lista")
     args = ap.parse_args()
 
-    from palworld_aio.managers.backup_manager import (
-        export_player_backup, import_player_backup,
-    )
+    # 🔴 o backup_manager procura a CharacterSaveParameterMap na raiz do GVAS,
+    # onde ela não está — ver tools/patch_backup_manager.py. Sem isto, todo
+    # export falha com "Could not find player".
+    from patch_backup_manager import aplicar as corrigir_backup_manager
+    corrigir_backup_manager()
+
+    import palworld_aio.managers.backup_manager as bm
+    export_player_backup = bm.export_player_backup
+    import_player_backup = bm.import_player_backup
 
     cfg = servidores()[args.servidor]
 
