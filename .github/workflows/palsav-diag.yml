@@ -1,0 +1,60 @@
+# Roda o `palsav diag` (diagnostico oficial, so leitura) num save do servidor.
+# Existe porque o crash 0x88 do pve-free nao saiu com as sondas caseiras --
+# esta e a ferramenta propria do palsav, com os modos summary/players/
+# containers/pals.
+name: palsav-diag
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-free, pve-vip, pvp-free]
+        default: pve-free
+      arquivo:
+        description: "Arquivo (Level.sav ou Level.sav.bak-*)"
+        required: false
+        type: string
+        default: "Level.sav"
+      modo:
+        description: "Modo do diag"
+        required: true
+        type: choice
+        options: [summary, players, containers, pals]
+        default: summary
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+      - name: Baixar save
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          SLUG: ${{ inputs.servidor }}
+          ARQUIVO: ${{ inputs.arquivo }}
+        run: |
+          python - <<'PY'
+          import io, json, os, sys
+          sys.path.insert(0, "tools")
+          from restaurar_base import servidores, baixar
+          cfg = servidores()[os.environ["SLUG"]]
+          caminho = f"Pal/Saved/SaveGames/0/{cfg.guid}/{os.environ['ARQUIVO']}"
+          dados = baixar(cfg, caminho)
+          open("alvo.sav", "wb").write(dados)
+          print(f"baixado: {len(dados):,} bytes de {caminho}")
+          PY
+      - name: Diag
+        run: palsav diag alvo.sav --mode "${{ inputs.modo }}"
