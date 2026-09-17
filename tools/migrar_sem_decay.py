@@ -126,6 +126,7 @@ def guildas_com_base(level_path: str) -> list[dict]:
 
 
 def main() -> int:
+    global LIMITE_H
     ap = argparse.ArgumentParser(description="Migra quem tem base viva para o mundo novo")
     ap.add_argument("--servidor", default="pve-free")
     ap.add_argument("--origem-guid", required=True)
@@ -136,8 +137,6 @@ def main() -> int:
     ap.add_argument("--aplicar", action="store_true",
                     help="sem isso, só exporta e lista")
     args = ap.parse_args()
-
-    global LIMITE_H
     LIMITE_H = args.limite_horas
 
     # 🔴 o backup_manager procura a CharacterSaveParameterMap na raiz do GVAS,
