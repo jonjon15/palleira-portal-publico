@@ -1,0 +1,50 @@
+# Varre o Level.sav inteiro atrás de referência quebrada — objeto que aponta
+# para um container que não existe. Ver tools/sondar_refs_quebradas.py.
+#
+# Criado durante o crash-loop do pve-free de 16/09/2026: o
+# EXCEPTION_ACCESS_VIOLATION em 0x88 é leitura de ponteiro nulo, e o Save Pal
+# documenta que uma estrutura sem o container dela faz o jogo crashar ao
+# desreferenciar. Só leitura.
+name: sondar-refs-quebradas
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-free, pve-vip, pvp-free]
+        default: pve-free
+      arquivo:
+        description: "Arquivo a checar (Level.sav, ou um Level.sav.bak-* para comparar)"
+        required: false
+        type: string
+        default: "Level.sav"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Sondar
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+        run: |
+          python tools/sondar_refs_quebradas.py \
+            --servidor "${{ inputs.servidor }}" \
+            --arquivo "${{ inputs.arquivo }}"
