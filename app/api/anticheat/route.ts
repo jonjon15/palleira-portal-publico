@@ -177,12 +177,24 @@ const LIMIARES: Record<Tipo, number> = { dano: 16, stamina: 16 };
  * verdade. O servidor lia a vara de pesca do inventário como se fosse a arma
  * equipada; assim que ele a removeu, as detecções pararam por completo. Vara
  * de pesca não é arma de combate — não há cenário de PvP em que valha contar.
+ *
+ * 🔴 Dano só conta contra Boss/Ginásio ou outro jogador, nunca contra Pal
+ * selvagem comum — achado em 18/09/2026: o `Kaninos` disparou ~164 avisos de
+ * dano em 90 segundos (quase 2/s) só de **pegar ovos na incubadora**, contra
+ * alvos como `BP_BlackPuppy_C_…` e `BP_BlueberryFairy_C_…` — nome de espécie
+ * crua, sem `_Gym_`/`BOSS_`. Confirmado ao vivo pelo dono: não tinha cheat
+ * nenhum rodando. Todo cheat de dano confirmado até aqui (King, GOMES) bateu
+ * em `_Gym_` (Ginásio). Restringir a Boss/jogador elimina esse falso
+ * positivo — que também é candidato a ter contribuído para o servidor cair
+ * pouco depois de cada boot, por volume de webhook.
  */
 const ARMA_IGNORADA = /FishingRod/i;
+const ALVO_VALIDO = /_Gym_|BOSS_|\(ToPlayer\)/i;
 
 function contaParaOGatilho(linha: string, tipo: Tipo): boolean {
   if (tipo === "stamina") return true;
   if (ARMA_IGNORADA.test(linha)) return false;
+  if (!ALVO_VALIDO.test(linha)) return false;
 
   const acima = /BasePower=(\d+) above [\d.]+x equipped weapon AttackValue=(\d+)/.exec(linha);
   if (acima) return Number(acima[1]) > Number(acima[2]);
