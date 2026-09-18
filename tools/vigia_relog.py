@@ -758,9 +758,13 @@ def main() -> int:
     # 30 minutos custa o mesmo que rodar de 30 em 30 — e aqui a reposição
     # automática precisa de alguém acordado para devolver o acesso na hora.
     fim = time.time() + args.vigiar * 60
+    # A escada é quem decide o castigo (ver ESCADA_MINUTOS); o `--minutos`
+    # sobrou de quando a punição era de tempo fixo. Imprimir ele aqui dizia
+    # "castigo 5 min" mesmo depois da escada mudar para [15, 60, 180, 720] —
+    # o que me fez achar que o processo estava com o código velho.
     print(f"vigiando {args.servidor} por {args.vigiar} min, "
           f"checando a cada {args.intervalo}s (limiar {args.limiar}, "
-          f"castigo {args.minutos} min)", flush=True)
+          f"escada {'/'.join(str(m) for m in ESCADA_MINUTOS)} min)", flush=True)
 
     transporte = sftp = None
     try:
