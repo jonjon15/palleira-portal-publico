@@ -46,7 +46,6 @@ SERVIDORES = {
     },
 }
 
-SENHA = "***SENHA-REMOVIDA-DO-HISTORICO***"
 BASE = "Pal/Binaries/Win64/PalDefender/RESTAPI"
 
 # As mesmas permissões que os outros dois servidores já usam. `Items.Give` e
@@ -59,6 +58,22 @@ PERMISSOES = [
     "REST.Pals.Give",
     "REST.Guilds.Read",
 ]
+
+
+def ler_senha_sftp() -> str:
+    """A senha do SFTP vem do ambiente, nunca do código.
+
+    Este repositório é público: qualquer coisa escrita aqui fica legível
+    para todo mundo, e no histórico do Git para sempre.
+    """
+    senha = os.environ.get("PALLEIRA_SFTP_PASSWORD", "")
+    if not senha:
+        raise SystemExit(
+            "PALLEIRA_SFTP_PASSWORD ausente.\n"
+            "  PowerShell: $env:PALLEIRA_SFTP_PASSWORD='...'\n"
+            "  bash:       export PALLEIRA_SFTP_PASSWORD='...'"
+        )
+    return senha
 
 
 def ler_token_do_env(chave: str) -> str:
@@ -111,7 +126,7 @@ def main() -> None:
         return
 
     t = paramiko.Transport((cfg["host"], 2022))
-    t.connect(username=cfg["user"], password=SENHA)
+    t.connect(username=cfg["user"], password=ler_senha_sftp())
     sf = paramiko.SFTPClient.from_transport(t)
     try:
         try:

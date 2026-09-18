@@ -175,6 +175,54 @@ def rcon(host: str, porta: int, senha: str, comandos: list[str]) -> list[str]:
     return respostas
 
 
+# --------------------------------------------------- disco local (--local)
+
+class _EntradaLocal:
+    """Imita o `SFTPAttributes` do paramiko: só `filename` e `st_mtime`."""
+
+    __slots__ = ("filename", "st_mtime")
+
+    def __init__(self, filename: str, st_mtime: float):
+        self.filename = filename
+        self.st_mtime = st_mtime
+
+
+class DiscoLocal:
+    """Mesma interface do `SFTPClient`, servindo o disco da própria máquina.
+
+    Existe para o vigia rodar **dentro do container do servidor**, onde o log
+    do PalDefender e a whitelist são arquivos locais. O GitHub Actions cobra o
+    minuto cheio de runner por execução, então as ~8.640 fotos mensais de 5 em
+    5 minutos consumiam sozinhas quase toda a cota do plano — rodando junto do
+    jogo, o modo `--vigiar` contínuo custa zero e ainda dispensa a rede.
+
+    Só os quatro métodos que o script usa: `listdir_attr`, `open` para ler,
+    `open(..., "w")` para gravar, e `close` (que aqui não faz nada). O resto do
+    código não sabe a diferença.
+    """
+
+    def __init__(self, raiz: str):
+        self.raiz = raiz
+
+    def _caminho(self, caminho: str) -> str:
+        return os.path.join(self.raiz, caminho)
+
+    def listdir_attr(self, caminho: str) -> list[_EntradaLocal]:
+        alvo = self._caminho(caminho)
+        return [
+            _EntradaLocal(nome, os.stat(os.path.join(alvo, nome)).st_mtime)
+            for nome in os.listdir(alvo)
+        ]
+
+    def open(self, caminho: str, modo: str = "r"):
+        # O chamador faz `.read().decode()` e `.write(bytes)`, então é binário
+        # dos dois lados — como o paramiko entrega.
+        return open(self._caminho(caminho), "wb" if "w" in modo else "rb")
+
+    def close(self) -> None:
+        pass
+
+
 # ------------------------------------------------------------------ leitura
 
 def log_mais_recente(sftp) -> tuple[str, str]:
@@ -558,12 +606,22 @@ def main() -> int:
     ap.add_argument("--vigiar", type=int, metavar="MINUTOS",
                     help="fica vigiando por este tempo, checando a cada --intervalo")
     ap.add_argument("--intervalo", type=int, default=60, metavar="SEGUNDOS")
+    ap.add_argument("--local", metavar="RAIZ", nargs="?", const="/home/container",
+                    help="lê o log e a whitelist do disco, não por SFTP — para "
+                         "rodar dentro do container do servidor")
     args = ap.parse_args()
 
     cfg = servidores()[args.servidor]
     estado = carregar_estado()
 
     def abrir_sftp():
+        # Dentro do container não há rede a atravessar: o log e a whitelist
+        # estão no disco, e o RCON responde em 127.0.0.1. O `transporte`
+        # devolvido é o próprio adaptador só para o `.close()` do chamador
+        # continuar valendo.
+        if args.local:
+            disco = DiscoLocal(args.local)
+            return disco, disco
         tr = paramiko.Transport((cfg["host"], 2022))
         tr.connect(username=cfg["user"], password=cfg["password"])
         return tr, paramiko.SFTPClient.from_transport(tr)

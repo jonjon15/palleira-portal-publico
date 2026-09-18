@@ -29,9 +29,25 @@ name: vigia de relog
 # outra — por isso o `concurrency` abaixo enfileira em vez de rodar em
 # paralelo, e o `cancel-in-progress: false` garante que uma rodada não é
 # abortada no meio de uma suspensão.
+# 🔴 `schedule` DESLIGADO em 18/09/2026 — o vigia agora mora no container.
+#
+# A cada 5 minutos são ~8.640 execuções por mês, e o GitHub cobra o minuto
+# cheio de runner mesmo quando o script leva 20 segundos: este workflow
+# sozinho respondia por 88% das ~9.780 execuções agendadas do projeto e
+# esgotou a cota (o import do save, de 2 em 2h, são só 360). Ver a conta em
+# `import-save.yml`, que foi dimensionado para caber nos 2.000 min/mês.
+#
+# Onde ele roda agora: dentro do próprio container do jogo, pelo comando de
+# startup do painel, em modo `--vigiar` contínuo com `--local` (lê o log e a
+# whitelist do disco, sem SFTP). Sai mais barato — de graça — e mais preciso,
+# porque troca as fotos de 5 em 5 minutos por vigilância ininterrupta.
+#
+# O `workflow_dispatch` continua: serve de rede de segurança para rodar na
+# mão se o container estiver fora do ar. Para religar o agendamento, basta
+# devolver o `schedule` abaixo.
 on:
-  schedule:
-    - cron: "*/5 * * * *"
+  # schedule:
+  #   - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       servidor:
