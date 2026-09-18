@@ -19,14 +19,15 @@ Daí o limiar escolhido pelo dono: **mais de 5 quedas em 10 minutos**. Não é
 zona cinzenta como foi no anticheat de dano — a diferença entre o infrator e o
 resto do servidor é de uma ordem de grandeza.
 
-A punição é gradual, e sempre por mensagem privada:
+A punição é gradual, e cresce a cada reincidência:
 
-    1ª vez   aviso  ("verifique sua conexão")
-    2ª vez   aviso  ("este é o último aviso")
-    3ª vez   suspensão de  5 min
-    4ª vez   suspensão de 15 min
-    5ª vez   suspensão de 30 min
-    6ª+      suspensão de 60 min
+    1ª vez   suspensão de  15 min
+    2ª vez   suspensão de  60 min
+    3ª vez   suspensão de 180 min
+    4ª+      suspensão de 720 min (12h)
+
+Não há mais aviso antes da primeira suspensão (ver `AVISOS_ANTES_DE_PUNIR`):
+ele ia por chat do jogo, e quem acabou de deslogar não recebe nada.
 
 Quem ficar `ESQUECER_APOS_MIN` sem reincidir volta à estaca zero — avisos e
 escada. Quem tem internet ruim de verdade costuma parar no primeiro recado e
@@ -92,25 +93,38 @@ COOLDOWN_PADRAO_MIN = 5
 # nenhuma de fazer isso — seria incoerente com o próprio texto.
 PRAZO_AVISO_MIN = 3
 
-# Quantos avisos antes da primeira suspensão. Escolhido pelo dono em
-# 14/09/2026: **a terceira vez já é a punição** — dois recados, e na terceira
-# aparição o acesso é suspenso. Quem tem internet ruim de verdade costuma
-# parar no primeiro ou no segundo e nunca chega lá.
-AVISOS_ANTES_DE_PUNIR = 2
+# Quantos avisos antes da primeira suspensão.
+#
+# 🔴 **Zero desde 18/09/2026.** Era 2, e não funcionava: o aviso vai por
+# `send msg` no chat do jogo, e a detecção acontece logo depois de um relog —
+# ou seja, quase sempre com a pessoa **fora do jogo**. A mensagem não fica
+# guardada, então ela simplesmente se perde. O dEIDARA acumulou 12 sessões
+# curtas levando avisos que nunca leu.
+#
+# Pior: a escada zera após `ESQUECER_APOS_MIN`, então quem desse uma pausa
+# ganhava dois avisos novos — também não lidos — e podia nunca ser suspenso.
+#
+# Quem é punido descobre pela única via que atravessa: tenta entrar e não
+# consegue, vendo o `whitelistMessage` do Config.json na tela de conexão.
+AVISOS_ANTES_DE_PUNIR = 0
 
 # Depois de tanto tempo sem reincidir, avisos e escada voltam à estaca zero.
 # Sem isso uma queda de hoje somaria com outra da semana passada, e a escada
 # subiria sozinha para quem só tem internet ruim de vez em quando.
 ESQUECER_APOS_MIN = 6 * 60
 
-# A suspensão cresce a cada reincidência — 5 min, 15, 30, 60, e daí para cima
-# fica no último valor.
+# A suspensão cresce a cada reincidência, e daí para cima fica no último valor.
 #
-# Sem isto o castigo de 5 minutos não muda o cálculo de quem está farmando: no
-# backtest de 13/09 o ESCONDE levaria ~14 suspensões seguidas de 5 min e
-# continuaria, porque voltar e recomeçar saía barato. A escada resolve isso sem
-# punir quem só tem conexão instável, que nunca passa do primeiro degrau.
-ESCADA_MINUTOS = [5, 15, 30, 60]
+# Endurecida em 18/09/2026, com o custo do abuso medido: o dEIDARA chegou ao
+# **level 50 em 1 dia**, contra 5 a 8 dias de todo mundo — 5x o ritmo do melhor
+# jogador honesto do servidor. E a assinatura do roubo está nos Pals: ele tinha
+# **48** no level 50, enquanto o Dante chegou ao mesmo level com **517**, e a
+# média do servidor naquela faixa é 276. Quem sobe caçando acumula Pals; quem
+# sobe resetando spawn mata os mesmos bichos de novo e não guarda nada.
+#
+# Contra isso, 5 minutos era pedágio, não punição. A escada antiga era
+# [5, 15, 30, 60].
+ESCADA_MINUTOS = [15, 60, 180, 720]
 
 # Quem está de castigo e até quando, e quem já foi avisado. Sem isto o script
 # não saberia repor ninguém — e a reposição automática é metade do combinado.
@@ -124,6 +138,35 @@ def servidores() -> dict:
     if not bruto:
         sys.exit("PALLEIRA_SERVERS ausente (JSON com a lista de servidores)")
     return {s["slug"]: s for s in json.loads(bruto)}
+
+
+def rcon_host(cfg: dict) -> str:
+    """Para onde mandar o RCON: 127.0.0.1 no container, host público fora.
+
+    🔴 **O PalDefender só atende o RCON vindo de dentro do container.** De
+    fora, a conexão é aceita e autenticada (o pacote de AUTH volta com
+    `tipo=2`), mas todo comando responde com corpo vazio **e não executa** —
+    medido em 18/09/2026 banindo um UID falso e conferindo o `Banlist.json`,
+    que não mudou. Vale para os comandos do mod (`reloadcfg`, `ban`,
+    `whitelist_add`) e para os nativos do jogo (`Info`, `ShowPlayers`).
+
+    O sintoma disso é traiçoeiro: o vigia tirava a pessoa do `WhiteList.json`
+    e mandava `reloadcfg`, que morria no caminho. O arquivo dizia banido, a
+    memória do mod dizia liberado, e o jogador continuava entrando. Foi o que
+    deixou o dEIDARA fazer relog por uma hora "suspenso" — o log daquele dia
+    tem só duas recargas de whitelist, a do boot e uma feita à mão pelo
+    console do painel.
+
+    O `palcon` que a ENX põe na raiz do container faz exatamente isto:
+    `rcon -a "127.0.0.1:${RCON_PORT}"`. É por isso que pelo console funciona.
+    """
+    return "127.0.0.1" if MODO_LOCAL else cfg["host"]
+
+
+# Ligado pelo `--local`, no `main`. Global porque as funções de punição são
+# chamadas de vários pontos e passar isso por parâmetro em todas elas só
+# aumentaria o ruído — o valor não muda durante a execução.
+MODO_LOCAL = False
 
 
 def rcon_senha(slug: str) -> str:
@@ -392,7 +435,7 @@ def aplicar_whitelist(sftp, cfg: dict, slug: str, remover: set[str],
     escrever_whitelist(sftp, nova)
     # Sem isto a mudança só valeria no próximo boot. Resposta esperada:
     # "PalDefender WhiteList and Configuration reloaded!"
-    resposta = rcon(cfg["host"], RCON_PORTAS[slug], rcon_senha(slug), ["reloadcfg"])
+    resposta = rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug), ["reloadcfg"])
     print(f"     reloadcfg: {resposta[0] if resposta else '(sem resposta)'}", flush=True)
 
 
@@ -425,7 +468,7 @@ def avisar_e_expulsar(cfg: dict, slug: str, nome: str, uid: str, minutos: int) -
         f"send msg {uid} {recado}",
         f"KickPlayer {uid}",
     ]
-    for r in rcon(cfg["host"], RCON_PORTAS[slug], rcon_senha(slug), comandos):
+    for r in rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug), comandos):
         if r:
             print(f"     {r}", flush=True)
 
@@ -456,7 +499,7 @@ def so_avisar(cfg: dict, slug: str, uid: str, prazo: int,
         "AVISO:_estamos_detectando_muitas_quedas_de_conexao_sua_em_pouco_tempo._"
         f"Isso_causa_instabilidade_no_servidor._{fim}"
     )
-    for r in rcon(cfg["host"], RCON_PORTAS[slug], rcon_senha(slug),
+    for r in rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug),
                   [f"send msg {uid} {recado}"]):
         if r:
             print(f"     {r}", flush=True)
@@ -652,6 +695,11 @@ def main() -> int:
     args = ap.parse_args()
 
     cfg = servidores()[args.servidor]
+
+    # Dentro do container o RCON só atende em 127.0.0.1 — ver `rcon_host`.
+    global MODO_LOCAL
+    MODO_LOCAL = bool(args.local)
+
     estado = carregar_estado()
 
     def abrir_sftp():
