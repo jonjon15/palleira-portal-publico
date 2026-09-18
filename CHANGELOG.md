@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-18
 
+- Corrigido: no PVE Free, a lista de personagens da página de vincular aparecia vazia, e não dava pra vincular a conta. O servidor estava normal — o que tinha caído era a ponte que conta pro site quem está no jogo, desde a manutenção do dia 16. Ranking ao vivo e cofre do PVE Free também voltaram junto.
 - **Anticheat do Dominantes fica mais rápido pra expulsar quem trapaceia.** Quem batia mais forte ou corria sem cansar em rajadas curtas, com pausas entre elas, conseguia ficar bastante tempo sem ser pego. Agora o aviso dispara bem mais cedo, e quem continuar depois dele é expulso em segundos, não minutos.
 - Corrigido: pegar vários ovos seguidos na incubadora podia disparar aviso falso de "cheat de dano" — o anticheat agora só considera dano contra chefe/Ginásio ou outro jogador.
 
