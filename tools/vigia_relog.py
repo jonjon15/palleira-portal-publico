@@ -59,6 +59,7 @@ import socket
 import struct
 import sys
 import time
+import urllib.request
 
 import paramiko
 
@@ -476,6 +477,45 @@ def salvar_estado(estado: dict) -> None:
         json.dump(estado, f, indent=2)
 
 
+def bater_ponto(slug: str, detalhe: dict | None = None) -> None:
+    """Avisa o site que o vigia está vivo (tabela `heartbeats`).
+
+    Sem isto, um vigia que morre é indistinguível de um vigia num servidor
+    calmo: nos dois casos ninguém é punido e nada aparece em lugar nenhum. Foi
+    assim que a REST do PalDefender ficou dois dias fora sem ninguém notar.
+
+    Vai por HTTP e não direto no banco de propósito: este script roda **dentro
+    do container do jogo**, e mandar a `DATABASE_URL` para lá daria a quem
+    tiver acesso ao servidor a chave de escrita do site inteiro. O
+    `CRON_SECRET` que este endpoint exige só serve para dizer "estou vivo".
+
+    Falha de rede aqui **nunca** pode derrubar o vigia: o trabalho dele é
+    punir relog, e continuar punindo sem reportar é melhor que parar.
+    """
+    segredo = os.environ.get("CRON_SECRET", "")
+    base = os.environ.get("PALLEIRA_URL", "https://palleira.com.br")
+    if not segredo:
+        return  # sem segredo configurado, o ponto é opcional
+
+    corpo = json.dumps({
+        "nome": f"vigia-relog:{slug}",
+        "server_slug": slug,
+        "detalhe": detalhe or {},
+    }).encode()
+    req = urllib.request.Request(
+        f"{base}/api/heartbeat",
+        data=corpo,
+        headers={
+            "Authorization": f"Bearer {segredo}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        urllib.request.urlopen(req, timeout=15).close()
+    except Exception:
+        pass  # ver o docstring: reportar é secundário, punir é o trabalho
+
+
 # -------------------------------------------------------------------- rodada
 
 def uma_rodada(sftp, cfg: dict, slug: str, args, estado: dict,
@@ -681,6 +721,10 @@ def main() -> int:
                 if sftp is None:
                     transporte, sftp = abrir_sftp()
                 uma_rodada(sftp, cfg, args.servidor, args, estado, silencioso=True)
+                # Só depois de uma checagem que deu certo: um ponto batido
+                # mesmo com a rodada falhando diria "estou bem" justamente
+                # quando não está.
+                bater_ponto(args.servidor, {"intervalo": args.intervalo})
             except (OSError, paramiko.SSHException) as e:
                 print(f"  [ERRO] falha na checagem ({e}); reconectando", flush=True)
                 if transporte:
