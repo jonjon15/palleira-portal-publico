@@ -42,8 +42,12 @@ de IPs distintos o jogador não é punido, por mais curtas que sejam as sessões
 Como funciona: lê o log do PalDefender por SFTP (ele abre um arquivo novo a cada
 boot, em `PalDefender/Logs/`), casa cada `has logged in` com o `has logged out`
 seguinte do mesmo UserId, conta as sessões curtas numa janela deslizante e, para
-quem passar, remove o UserId do `WhiteList.json` e manda `reloadcfg` por RCON.
+quem passar, remove o UserId do `WhiteList.json` e manda `reloadcfg` **pelo
+console do painel** (nunca por RCON — ver `comando_console`).
 A reposição é automática: quem cumpriu o tempo volta na execução seguinte.
+
+⚠️ Por isso o `ENX_API_KEY` é obrigatório para punir: sem ele o script lê e
+detecta normalmente, mas nenhuma suspensão chega a valer.
 
 Uso:
     python tools/vigia_relog.py --servidor pvp-free            # só relata
@@ -60,6 +64,7 @@ import socket
 import struct
 import sys
 import time
+import urllib.error
 import urllib.request
 
 import paramiko
@@ -140,33 +145,7 @@ def servidores() -> dict:
     return {s["slug"]: s for s in json.loads(bruto)}
 
 
-def rcon_host(cfg: dict) -> str:
-    """Para onde mandar o RCON: 127.0.0.1 no container, host público fora.
-
-    🔴 **O PalDefender só atende o RCON vindo de dentro do container.** De
-    fora, a conexão é aceita e autenticada (o pacote de AUTH volta com
-    `tipo=2`), mas todo comando responde com corpo vazio **e não executa** —
-    medido em 18/09/2026 banindo um UID falso e conferindo o `Banlist.json`,
-    que não mudou. Vale para os comandos do mod (`reloadcfg`, `ban`,
-    `whitelist_add`) e para os nativos do jogo (`Info`, `ShowPlayers`).
-
-    O sintoma disso é traiçoeiro: o vigia tirava a pessoa do `WhiteList.json`
-    e mandava `reloadcfg`, que morria no caminho. O arquivo dizia banido, a
-    memória do mod dizia liberado, e o jogador continuava entrando. Foi o que
-    deixou o dEIDARA fazer relog por uma hora "suspenso" — o log daquele dia
-    tem só duas recargas de whitelist, a do boot e uma feita à mão pelo
-    console do painel.
-
-    O `palcon` que a ENX põe na raiz do container faz exatamente isto:
-    `rcon -a "127.0.0.1:${RCON_PORT}"`. É por isso que pelo console funciona.
-    """
-    return "127.0.0.1" if MODO_LOCAL else cfg["host"]
-
-
-# Ligado pelo `--local`, no `main`. Global porque as funções de punição são
-# chamadas de vários pontos e passar isso por parâmetro em todas elas só
-# aumentaria o ruído — o valor não muda durante a execução.
-MODO_LOCAL = False
+MODO_LOCAL = False  # ligado pelo `--local`; hoje só afeta a leitura por disco
 
 
 def rcon_senha(slug: str) -> str:
@@ -187,6 +166,71 @@ RCON_PORTAS = {"pve-free": 10055, "pve-vip": 10055, "pvp-free": 10056}
 
 
 # --------------------------------------------------------------------- rcon
+
+PANEL_IDS = {
+    "pve-free": "0c079595",
+    "pve-vip": "6eb8d521",
+    "pvp-free": "59ec87fa",
+}
+
+# Sem isto o Cloudflare do painel devolve 403 — ver tools/energia_painel.py.
+NAVEGADOR = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+)
+
+
+def comando_console(slug: str, comandos: list[str]) -> list[str]:
+    """Manda comandos pelo **console do painel**, não por RCON.
+
+    🔴 **O RCON não executa nada neste servidor.** O `PalWorldSettings.ini`
+    tem `RCONEnabled=False`: quem atende a porta 10056 é o PalDefender, que
+    aceita a conexão e autentica (o AUTH volta com `tipo=2`) mas repassa o
+    comando para um RCON do jogo que não existe. Todo comando responde com
+    corpo vazio **e não roda** — medido em 18/09/2026 banindo um UID falso e
+    conferindo o `Banlist.json`, que não mudou.
+
+    O efeito era silencioso e caro: o vigia tirava a pessoa do
+    `WhiteList.json` e mandava `reloadcfg`, que morria no caminho. O arquivo
+    dizia banido, a memória do mod dizia liberado, e o jogador continuava
+    entrando. O dEIDARA ficou "suspenso por 720 min" e seguiu jogando por
+    1h40 — o log do dia tem só duas recargas de whitelist, ambas feitas à mão.
+
+    O console do painel funciona porque escreve no stdin do processo, onde o
+    `palcon` da ENX fala com `127.0.0.1`. A API do Pterodactyl expõe esse
+    mesmo console em `/api/client/servers/<id>/command`.
+
+    ⚠️ A API devolve **204 sem corpo**: não há resposta para ler. A lista
+    retornada é de strings vazias, só para manter a assinatura de `rcon()`.
+    Para saber se um comando rodou, olhe o **efeito** (linha nova em
+    `PalDefender/Logs/`, arquivo que deveria mudar), nunca o retorno.
+    """
+    chave = os.environ.get("ENX_API_KEY", "")
+    if not chave:
+        raise OSError("ENX_API_KEY ausente: sem ela não dá para punir ninguém")
+
+    pid = PANEL_IDS[slug]
+    saidas = []
+    for cmd in comandos:
+        req = urllib.request.Request(
+            f"https://painel.enxadahost.com/api/client/servers/{pid}/command",
+            data=json.dumps({"command": cmd}).encode(),
+            headers={
+                "Authorization": f"Bearer {chave}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": NAVEGADOR,
+            },
+        )
+        try:
+            urllib.request.urlopen(req, timeout=30).close()
+        except urllib.error.HTTPError as e:
+            if e.code != 204:  # 204 é o sucesso do Pterodactyl
+                raise OSError(f"painel recusou {cmd!r}: HTTP {e.code}") from e
+        saidas.append("")
+        time.sleep(0.5)  # o console é uma fila; não atropelar
+    return saidas
+
 
 def rcon(host: str, porta: int, senha: str, comandos: list[str]) -> list[str]:
     """Autentica e roda os comandos em sequência, na mesma conexão."""
@@ -435,7 +479,7 @@ def aplicar_whitelist(sftp, cfg: dict, slug: str, remover: set[str],
     escrever_whitelist(sftp, nova)
     # Sem isto a mudança só valeria no próximo boot. Resposta esperada:
     # "PalDefender WhiteList and Configuration reloaded!"
-    resposta = rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug), ["reloadcfg"])
+    resposta = comando_console(slug, ["reloadcfg"])
     print(f"     reloadcfg: {resposta[0] if resposta else '(sem resposta)'}", flush=True)
 
 
@@ -468,7 +512,7 @@ def avisar_e_expulsar(cfg: dict, slug: str, nome: str, uid: str, minutos: int) -
         f"send msg {uid} {recado}",
         f"KickPlayer {uid}",
     ]
-    for r in rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug), comandos):
+    for r in comando_console(slug, comandos):
         if r:
             print(f"     {r}", flush=True)
 
@@ -499,7 +543,7 @@ def so_avisar(cfg: dict, slug: str, uid: str, prazo: int,
         "AVISO:_estamos_detectando_muitas_quedas_de_conexao_sua_em_pouco_tempo._"
         f"Isso_causa_instabilidade_no_servidor._{fim}"
     )
-    for r in rcon(rcon_host(cfg), RCON_PORTAS[slug], rcon_senha(slug),
+    for r in comando_console(slug,
                   [f"send msg {uid} {recado}"]):
         if r:
             print(f"     {r}", flush=True)
@@ -696,7 +740,7 @@ def main() -> int:
 
     cfg = servidores()[args.servidor]
 
-    # Dentro do container o RCON só atende em 127.0.0.1 — ver `rcon_host`.
+    # No container o log e a whitelist são lidos do disco, sem SFTP.
     global MODO_LOCAL
     MODO_LOCAL = bool(args.local)
 
