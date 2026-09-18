@@ -51,15 +51,38 @@ function traduz(m: RawMember): MembroDiscord | null {
   };
 }
 
+/**
+ * Uma chamada à API do Discord, respeitando o rate limit.
+ *
+ * 🔴 **O Discord limita a 5 requisições por segundo por rota**, e devolve 429
+ * com um `retry-after` em segundos. Sem esperar e tentar de novo, um pico de
+ * navegação simultânea vira erro — e quem chama costuma tratar erro como
+ * "não é membro", rebaixando gente que é staff (ver `fetchMembership` em
+ * `auth.ts`, e a memória gotcha-discord-429-em-promise-all).
+ *
+ * Uma tentativa extra basta: o `retry-after` do Discord é quase sempre menos
+ * de 1 segundo, e insistir mais seguraria a renderização da página.
+ */
 async function chamar(caminho: string): Promise<Response> {
   if (!BOT_TOKEN || !GUILD_ID) {
     throw new Error("DISCORD_BOT_TOKEN ou DISCORD_GUILD_ID não configurado");
   }
-  return fetch(`${API}${caminho}`, {
-    headers: { Authorization: `Bot ${BOT_TOKEN}` },
-    signal: AbortSignal.timeout(15_000),
-    cache: "no-store",
-  });
+
+  const pedir = () =>
+    fetch(`${API}${caminho}`, {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    });
+
+  const res = await pedir();
+  if (res.status !== 429) return res;
+
+  // Teto de 2s: acima disso é melhor devolver o 429 e deixar quem chamou
+  // decidir, do que travar a página esperando.
+  const espera = Math.min(Number(res.headers.get("retry-after") ?? 1) || 1, 2);
+  await new Promise((r) => setTimeout(r, espera * 1000));
+  return pedir();
 }
 
 export class SemIntentError extends Error {

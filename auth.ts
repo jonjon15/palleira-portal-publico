@@ -25,7 +25,26 @@ export interface GuildMembership {
   nick: string | null;
 }
 
-/** Busca cargos do usuário dentro da Palleira, usando o token dele. */
+/** O Discord não respondeu — diferente de "respondeu que não é membro". */
+class DiscordIndisponivel extends Error {}
+
+/**
+ * Busca cargos do usuário dentro da Palleira, usando o token dele.
+ *
+ * 🔴 **Só o 404 significa "não é membro".** Qualquer outra falha (429 do rate
+ * limit, 5xx, timeout) tem de estourar, nunca virar `isMember: false` — ver o
+ * tratamento em `jwt`.
+ *
+ * O motivo: `levelOf` devolve `visitante` quando `isMember` é falso, e
+ * **descarta todos os cargos**. Um erro de rede de um segundo rebaixava o dono
+ * do servidor a visitante, e a página de moderação sumia com 404 — sem erro na
+ * tela, sem nada no log. Aconteceu com o dono em 18/09/2026, inclusive pelo
+ * celular, o que descartou cache e JWT velho.
+ *
+ * O Discord limita a **5 requisições por segundo** por rota, e o site consulta
+ * a cada 5 min por sessão: com várias pessoas navegando junto, o 429 é questão
+ * de tempo.
+ */
 async function fetchMembership(accessToken: string): Promise<GuildMembership> {
   if (!GUILD_ID) return { isMember: false, roles: [], nick: null };
 
@@ -37,9 +56,12 @@ async function fetchMembership(accessToken: string): Promise<GuildMembership> {
     },
   );
 
-  // 404 = não é membro. Qualquer outro erro também não deve derrubar o login:
-  // a pessoa entra como visitante e vê a tela de convite.
-  if (!res.ok) return { isMember: false, roles: [], nick: null };
+  // A única resposta que significa mesmo "essa pessoa não está no Discord".
+  if (res.status === 404) return { isMember: false, roles: [], nick: null };
+
+  if (!res.ok) {
+    throw new DiscordIndisponivel(`Discord respondeu ${res.status}`);
+  }
 
   const data = (await res.json()) as { roles?: string[]; nick?: string | null };
   return {
@@ -78,11 +100,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Na hora do login: guarda o ID do Discord e consulta a associação.
       if (account?.access_token) {
         token.discordId = (profile?.id as string) ?? token.sub ?? "";
-        const membership = await fetchMembership(account.access_token);
-        token.isMember = membership.isMember;
-        token.roles = membership.roles;
-        token.nick = membership.nick;
-        token.rolesEm = Date.now();
+        try {
+          const membership = await fetchMembership(account.access_token);
+          token.isMember = membership.isMember;
+          token.roles = membership.roles;
+          token.nick = membership.nick;
+          token.rolesEm = Date.now();
+        } catch {
+          // Discord fora do ar na hora do login: entra como visitante, mas
+          // **sem** carimbar `rolesEm`. Assim `precisaRenovar` devolve true
+          // na primeira navegação e os cargos chegam em segundos, em vez de
+          // a pessoa ficar 5 minutos rebaixada.
+          token.isMember = false;
+          token.roles = [];
+          token.nick = null;
+        }
         return token;
       }
 
