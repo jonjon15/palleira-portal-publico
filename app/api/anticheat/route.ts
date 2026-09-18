@@ -29,7 +29,6 @@ import { sql } from "@/lib/db";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const LIMIAR = 30;
 const JANELA_MS = 5 * 60_000;
 /** Não repetir o kick pelos mesmos avisos enquanto a pessoa não volta. */
 const SILENCIO_MS = 60 * 60_000;
@@ -40,8 +39,16 @@ const SILENCIO_MS = 60 * 60_000;
  * O dono pediu esta etapa depois de conversar com um jogador e ele desligar
  * o que estava usando (12/09/2026): quem para na hora não é expulso. Passado
  * o prazo, uma nova rajada cai direto no kick — o aviso vale uma vez.
+ *
+ * 🔴 Baixado de 3 minutos para 10 segundos em 17/09/2026, a pedido do dono:
+ * `GOMES` e `King` (Dominantes) já tinham sido avisados e kickados antes
+ * (14 e 15/09) e voltaram a fazer o mesmo — "estão acabando com o servidor".
+ * 3 minutos de prazo dava tempo demais pra continuar jogando sujo depois de
+ * já saber que seria pego. 10 segundos ainda dá para quem reage na hora (ex:
+ * fechar o Cheat Engine) evitar o kick, mas não sobra tempo para mais uma
+ * rajada de dano.
  */
-const PRAZO_AVISO_MS = 3 * 60_000;
+const PRAZO_AVISO_MS = 10_000;
 
 /**
  * A contagem mora no banco, não na memória do processo.
@@ -142,8 +149,17 @@ interface Deteccao {
  * fechou tudo e reiniciou, parou de acusar na hora. Bate com o log: os
  * dele são contínuos (30 min seguidos, picos de 14/min), os dos outros
  * são pontuais (1 a 5 avisos isolados).
+ *
+ * 🔴 Baixado de 30/25 para 16 em 17/09/2026: `GOMES` e `King` (mesma guild,
+ * Dominantes) ficavam meia hora inteira cheatando — um boot chegou a 288
+ * detecções de dano num minuto só — mas em rajadas de 3 a 6 tiros com ~1
+ * minuto de pausa entre elas, que nunca fechavam 30 em 5 minutos. O pedido
+ * do dono foi punir na hora, não esperar um padrão sustentado por mais
+ * tempo. 16 é o menor valor que ainda fica acima do pior caso honesto
+ * medido (Santos, 12 nos dois tipos) com folga de ~33%, e o King/GOMES
+ * fecham em 2–4 rajadas do próprio padrão deles — minutos, não meia hora.
  */
-const LIMIARES: Record<Tipo, number> = { dano: 30, stamina: 25 };
+const LIMIARES: Record<Tipo, number> = { dano: 16, stamina: 16 };
 
 /**
  * Se o aviso conta para o gatilho.

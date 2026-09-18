@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-18
+
+- **Anticheat do Dominantes fica mais rápido pra expulsar quem trapaceia.** Quem batia mais forte ou corria sem cansar em rajadas curtas, com pausas entre elas, conseguia ficar bastante tempo sem ser pego. Agora o aviso dispara bem mais cedo, e quem continuar depois dele é expulso em segundos, não minutos.
+
 ## 2026-09-16
 
 - **Quem fica saindo e entrando pra resetar o spawn agora é pego sozinho, o tempo todo.** Antes alguém da staff precisava disparar a checagem na mão; agora ela roda por conta própria a cada 5 minutos, nos três servidores.
