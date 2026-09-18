@@ -314,7 +314,24 @@ class DiscoLocal:
 # ------------------------------------------------------------------ leitura
 
 def log_mais_recente(sftp) -> tuple[str, str]:
-    """O arquivo aberto no boot atual, com o conteúdo."""
+    """O log do boot atual — e o anterior junto, quando ele é curto demais.
+
+    🔴 **O PalDefender abre um arquivo novo a cada boot**, e o servidor
+    reinicia 5x por dia. No instante do restart o log novo tem zero linhas, e
+    ler só ele **zera a contagem de todo mundo**: quem estava a um relog de
+    ser punido recomeça do nada. Um abusador atento usaria os restarts para
+    nunca fechar 6 relogs na mesma janela.
+
+    Medido em 18/09/2026: o `18.09 07.54.36.log` cobre **6 minutos**, menos
+    que os 10 da janela de detecção. O dEIDARA foi flagrado com "5 sessões
+    curtas" logo após um restart, tendo feito muito mais antes dele.
+
+    Por isso, quando o arquivo atual cobre menos que a janela, o anterior vem
+    junto. Concatenar é seguro: `Sessoes.janela()` descarta tudo que é mais
+    velho que `JANELA_SEGUNDOS` medido contra a última linha lida, então
+    nada antigo entra na conta — o que o anterior acrescenta são só os
+    minutos que faltavam para fechar a janela.
+    """
     try:
         arquivos = [a for a in sftp.listdir_attr(LOGS) if a.filename.endswith(".log")]
     except FileNotFoundError:
@@ -322,9 +339,24 @@ def log_mais_recente(sftp) -> tuple[str, str]:
     if not arquivos:
         return "", ""
 
-    alvo = max(arquivos, key=lambda a: a.st_mtime)
+    recentes = sorted(arquivos, key=lambda a: a.st_mtime, reverse=True)
+    alvo = recentes[0]
     with sftp.open(f"{LOGS}/{alvo.filename}") as f:
-        return alvo.filename, f.read().decode(errors="replace")
+        texto = f.read().decode(errors="replace")
+
+    # Quanto tempo o arquivo atual cobre, pelos próprios carimbos.
+    marcas = re.findall(r"^\[(\d\d):(\d\d):(\d\d)\]", texto, re.M)
+    if marcas and len(recentes) > 1:
+        cobre = _segundos(*marcas[-1]) - _segundos(*marcas[0])
+        # Negativo = o arquivo atravessou a meia-noite. Nesse caso ele cobre
+        # bastante tempo, não pouco: não é o caso que esta função trata.
+        if 0 <= cobre < JANELA_SEGUNDOS:
+            anterior = recentes[1]
+            with sftp.open(f"{LOGS}/{anterior.filename}") as f:
+                texto = f.read().decode(errors="replace") + "\n" + texto
+            return f"{anterior.filename}+{alvo.filename}", texto
+
+    return alvo.filename, texto
 
 
 ENTROU = re.compile(
