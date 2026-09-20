@@ -1374,6 +1374,94 @@ interface LinhaDeItem {
   chave: number;
   itemId: string;
   quantidade: string;
+  /** O que está digitado na busca — separado de `itemId` porque nem toda tecla escolhe um item. */
+  busca: string;
+}
+
+/**
+ * Uma linha de busca com dropdown — como o seletor de item do Creative
+ * Menu (mod do jogo): digita parte do nome, aparece uma lista clicável com
+ * ícone, escolhe um. Nada de `<datalist>` do navegador: o visual varia por
+ * navegador e não mostra ícone nenhum — o pedido aqui foi por algo com a
+ * mesma cara do seletor do mod.
+ */
+function BuscaDeItem({
+  linha,
+  nomeAtual,
+  catalogo,
+  onEscolher,
+  onDigitar,
+}: {
+  linha: LinhaDeItem;
+  nomeAtual: string | undefined;
+  catalogo: ItemDoCatalogo[];
+  onEscolher: (item: ItemDoCatalogo) => void;
+  onDigitar: (texto: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const caixaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function aoClicarFora(e: MouseEvent) {
+      if (caixaRef.current && !caixaRef.current.contains(e.target as Node)) {
+        setAberto(false);
+      }
+    }
+    document.addEventListener("mousedown", aoClicarFora);
+    return () => document.removeEventListener("mousedown", aoClicarFora);
+  }, []);
+
+  const termo = linha.busca.trim().toLowerCase();
+  const resultados = termo
+    ? catalogo.filter((c) => c.nome.toLowerCase().includes(termo)).slice(0, 40)
+    : [];
+
+  return (
+    <div ref={caixaRef} className="relative min-w-0 flex-1">
+      <input
+        value={linha.busca}
+        onChange={(e) => {
+          onDigitar(e.target.value);
+          setAberto(true);
+        }}
+        onFocus={() => setAberto(true)}
+        placeholder="Buscar por nome — Esfera Ancestral, Metal Refinado…"
+        autoComplete="off"
+        className={`${campo} text-sm`}
+      />
+      {linha.itemId && !nomeAtual && (
+        <p className="mt-1 truncate text-xs text-muted">
+          Sem tradução cadastrada — vai como ID cru:{" "}
+          <code className="text-[0.7rem]">{linha.itemId}</code>
+        </p>
+      )}
+      {aberto && termo.length >= 2 && (
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-[var(--radius-card)] border border-line-strong bg-surface shadow-lg">
+          {resultados.length === 0 ? (
+            <li className="px-4 py-3 text-sm text-muted">
+              Nenhum item com &ldquo;{linha.busca.trim()}&rdquo;.
+            </li>
+          ) : (
+            resultados.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEscolher(c);
+                    setAberto(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-surface-2"
+                >
+                  <ItemIcon itemId={c.id} className="size-8 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">{c.nome}</span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -1396,7 +1484,9 @@ export function EntregarItens({
 }) {
   const [estado, acao, pendente] = useActionState(acaoEntregarItens, SEM_ENTREGA_ITENS);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
-  const [itens, setItens] = useState<LinhaDeItem[]>([{ chave: 0, itemId: "", quantidade: "1" }]);
+  const [itens, setItens] = useState<LinhaDeItem[]>([
+    { chave: 0, itemId: "", quantidade: "1", busca: "" },
+  ]);
   const proximaChave = useRef(1);
 
   const nomeDeCatalogo = useMemo(() => {
@@ -1417,7 +1507,7 @@ export function EntregarItens({
   function adicionarLinha() {
     setItens((atual) => [
       ...atual,
-      { chave: proximaChave.current++, itemId: "", quantidade: "1" },
+      { chave: proximaChave.current++, itemId: "", quantidade: "1", busca: "" },
     ]);
   }
 
@@ -1425,8 +1515,14 @@ export function EntregarItens({
     setItens((atual) => (atual.length > 1 ? atual.filter((l) => l.chave !== chave) : atual));
   }
 
-  function atualizarLinha(chave: number, campo: "itemId" | "quantidade", valor: string) {
+  function atualizarLinha(chave: number, campo: "itemId" | "quantidade" | "busca", valor: string) {
     setItens((atual) => atual.map((l) => (l.chave === chave ? { ...l, [campo]: valor } : l)));
+  }
+
+  function escolherItem(chave: number, item: ItemDoCatalogo) {
+    setItens((atual) =>
+      atual.map((l) => (l.chave === chave ? { ...l, itemId: item.id, busca: item.nome } : l)),
+    );
   }
 
   const alvos = online
@@ -1490,31 +1586,22 @@ export function EntregarItens({
           {itens.map((linha) => {
             const nome = nomeDeCatalogo.get(linha.itemId);
             return (
-              <div key={linha.chave} className="flex items-center gap-2">
-                <ItemIcon itemId={linha.itemId} className="size-9" />
-                <div className="min-w-0 flex-1">
-                  <input
-                    list="catalogo-itens"
-                    value={nome ? nome : linha.itemId}
-                    onChange={(e) => {
-                      const digitado = e.target.value;
-                      // Se o texto bate com um nome do catálogo, guarda o
-                      // ItemID de verdade; senão guarda o que foi digitado
-                      // (permite colar o ID cru direto, para item sem
-                      // tradução ainda).
-                      const encontrado = catalogo.find((c) => c.nome === digitado);
-                      atualizarLinha(linha.chave, "itemId", encontrado ? encontrado.id : digitado);
-                    }}
-                    placeholder="Buscar por nome — Esfera Ancestral, Metal Refinado…"
-                    className={`${campo} text-sm`}
-                  />
-                  {linha.itemId && !nome && (
-                    <p className="mt-1 truncate text-xs text-muted">
-                      Sem tradução cadastrada — vai como ID cru:{" "}
-                      <code className="text-[0.7rem]">{linha.itemId}</code>
-                    </p>
-                  )}
-                </div>
+              <div key={linha.chave} className="flex items-start gap-2">
+                <ItemIcon itemId={linha.itemId} className="size-9 shrink-0" />
+                <BuscaDeItem
+                  linha={linha}
+                  nomeAtual={nome}
+                  catalogo={catalogo}
+                  onEscolher={(item) => escolherItem(linha.chave, item)}
+                  onDigitar={(texto) => {
+                    // Digitar de novo invalida a escolha anterior — só um
+                    // clique na lista (via `onEscolher`) grava um `itemId`
+                    // válido. Sem isso, editar o texto depois de escolher
+                    // mantém o ItemID velho colado a um nome diferente.
+                    atualizarLinha(linha.chave, "busca", texto);
+                    atualizarLinha(linha.chave, "itemId", "");
+                  }}
+                />
                 <input
                   type="number"
                   min={1}
@@ -1537,11 +1624,6 @@ export function EntregarItens({
             );
           })}
         </div>
-        <datalist id="catalogo-itens">
-          {catalogo.map((c) => (
-            <option key={c.id} value={c.nome} />
-          ))}
-        </datalist>
         <button type="button" onClick={adicionarLinha} className={`${botaoFantasma} mt-3 text-sm`}>
           + Adicionar item
         </button>
