@@ -14,7 +14,12 @@
  * Server Action, e nunca chega perto do navegador.
  */
 
-const REPO = process.env.GITHUB_REPO ?? "jonjon15/palleira-portal";
+// O repositório migrou para `-publico` em 18/09/2026 (o privado estourava a
+// cota de Actions; público tem minuto de graça). O fallback ficou apontando
+// para o nome antigo por quase dois dias, e o resultado é que o site
+// disparava resgate no repositório errado — onde o billing continuava
+// bloqueado — enquanto o novo rodava os workflows agendados normalmente.
+const REPO = process.env.GITHUB_REPO ?? "jonjon15/palleira-portal-publico";
 const token = () => process.env.GITHUB_TOKEN ?? "";
 
 export class GitHubError extends Error {}

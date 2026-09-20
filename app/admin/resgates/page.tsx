@@ -58,26 +58,18 @@ export default async function Resgates() {
         description="Acompanhamento ao vivo do resgate do cofre — da retirada do banco até o givepal_j confirmar no jogo."
       />
 
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="rounded-[var(--radius-card)] border border-warning/30 bg-warning/[0.07] p-5">
-          <h2 className="font-semibold">
-            GitHub Actions bloqueado por billing (desde 17/09/2026)
-          </h2>
-          <p className="mt-1.5 text-sm text-muted">
-            Enquanto isso não é resolvido em{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-              github.com/settings/billing
-            </code>
-            , quem escreve o arquivo e chama o RCON é{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-              tools/entregar_pals_local.py
-            </code>{" "}
-            rodando na máquina local — precisa dela ligada para os resgates
-            saírem de &ldquo;Aguardando arquivo&rdquo;.
-          </p>
-        </div>
+      {/*
+        O aviso de "Actions bloqueado por billing" morava aqui, fixo no HTML.
+        Ele sobreviveu à própria causa: a migração para o repositório público
+        (18/09/2026) devolveu o minuto de Actions, mas o texto continuou na
+        tela dizendo que a entrega dependia da máquina local ligada.
 
-        <section className="mt-8">
+        Um aviso escrito à mão não sabe quando parar de ser verdade. Se algum
+        dia a fila voltar a travar, o lugar de dizer isso é a própria linha do
+        resgate, que lê o estado de verdade — não um bloco fixo no topo.
+      */}
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <section>
           <h2 className="text-lg font-semibold">
             Em andamento
             {emAndamento.length > 0 && (
