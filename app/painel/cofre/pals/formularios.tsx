@@ -15,6 +15,7 @@ import {
 import { nomeDoPal } from "@/lib/pals";
 import { PalCard } from "@/components/pal-card";
 import { PRECO_MINIMO, PRECO_MAXIMO } from "@/lib/mercado-regras";
+import { BotaoComprarSlot } from "@/components/botao-comprar-slot";
 import type { PalDisponivel, ResgatePendente } from "@/lib/pal-cofre";
 import type { PersonagemOnline } from "@/lib/cofre";
 
@@ -53,22 +54,12 @@ function Enviar({ children }: { children: React.ReactNode }) {
 /* ----------------------------------------------------------------- slots */
 
 export function BotaoSlotDePal({ preco }: { preco: number }) {
-  const [estado, acao, pendente] = useActionState(
-    async () => acaoComprarSlotDePal(),
-    INICIAL,
-  );
-
   return (
-    <form action={acao}>
-      <button
-        type="submit"
-        disabled={pendente}
-        className="rounded-[var(--radius-control)] bg-gold px-4 py-2 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {pendente ? "Comprando…" : `Comprar slot por ${preco} Paletas`}
-      </button>
-      <Aviso estado={estado} />
-    </form>
+    <BotaoComprarSlot
+      preco={preco}
+      acao={acaoComprarSlotDePal}
+      oQue="slot de Pal"
+    />
   );
 }
 

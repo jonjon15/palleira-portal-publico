@@ -11,6 +11,7 @@ import {
 import { nomeDoItem, semTraducao, ehSela } from "@/lib/itens";
 import type { ItemNoCofre, ItemNoJogo, PersonagemOnline } from "@/lib/cofre";
 import { ItemIcon } from "@/components/item-icon";
+import { BotaoComprarSlot } from "@/components/botao-comprar-slot";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
 
@@ -239,21 +240,7 @@ export function ItensDoCofre({
 /* ----------------------------------------------------------------- slots */
 
 export function BotaoSlot({ preco }: { preco: number }) {
-  const [estado, acao, pendente] = useActionState(
-    async () => acaoComprarSlot(),
-    INICIAL,
-  );
-
   return (
-    <form action={acao}>
-      <button
-        type="submit"
-        disabled={pendente}
-        className="rounded-[var(--radius-control)] bg-gold px-4 py-2 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {pendente ? "Comprando…" : `Comprar slot por ${preco} Paletas`}
-      </button>
-      <Aviso estado={estado} />
-    </form>
+    <BotaoComprarSlot preco={preco} acao={acaoComprarSlot} oQue="slot" />
   );
 }
