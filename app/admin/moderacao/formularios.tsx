@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   salvarMundo,
   enviarAnuncio,
@@ -22,15 +22,21 @@ import {
   estornarPedidoDeFila,
   acaoEntregarPal,
   acaoConsultarEntregaPal,
+  acaoEntregarItens,
   type Estado,
   type EstadoBusca,
   type Achado,
   type EstadoSituacao,
   type Situacao,
   type EstadoEntrega,
+  type EstadoEntregaItens,
 } from "./actions";
 import type { PedidoAdmin } from "@/lib/resgate-base";
 import type { JogadorOnline } from "@/lib/admin-entregar-pal";
+import type { JogadorOnlineParaItens } from "@/lib/admin-entregar-itens";
+import type { ItemDoCatalogo } from "@/lib/itens";
+import { nomeDoItem } from "@/lib/itens";
+import { ItemIcon } from "@/components/item-icon";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 
@@ -1352,6 +1358,223 @@ export function EntregarPal({ online }: { online: JogadorOnline[] }) {
             >
               {status.palId} — {status.status}
               {status.detail ? `: ${status.detail}` : ""}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- entregar itens */
+
+const SEM_ENTREGA_ITENS: EstadoEntregaItens = { ok: false, mensagem: "" };
+
+interface LinhaDeItem {
+  chave: number;
+  itemId: string;
+  quantidade: string;
+}
+
+/**
+ * A versão mascarada do `/giveitems <UserId> <ItemId>[:<Amount>] ...` do
+ * jogo: escolhe um ou mais jogadores online por checkbox, monta um lote de
+ * itens com busca por nome (o catálogo de `lib/itens.ts`, ~2300 entradas
+ * traduzidas), e entrega tudo de uma vez — o mesmo lote para cada jogador
+ * marcado.
+ *
+ * Sem fila nem GitHub Actions: diferente de "Entregar Pal manual", `giveitems`
+ * é RCON direto (ver `lib/admin-entregar-itens.ts`), então não há polling
+ * aqui — a resposta já vem pronta, item a item, jogador a jogador.
+ */
+export function EntregarItens({
+  online,
+  catalogo,
+}: {
+  online: JogadorOnlineParaItens[];
+  catalogo: ItemDoCatalogo[];
+}) {
+  const [estado, acao, pendente] = useActionState(acaoEntregarItens, SEM_ENTREGA_ITENS);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [itens, setItens] = useState<LinhaDeItem[]>([{ chave: 0, itemId: "", quantidade: "1" }]);
+  const proximaChave = useRef(1);
+
+  const nomeDeCatalogo = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of catalogo) m.set(c.id, c.nome);
+    return m;
+  }, [catalogo]);
+
+  function alternar(discordId: string) {
+    setSelecionados((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(discordId)) novo.delete(discordId);
+      else novo.add(discordId);
+      return novo;
+    });
+  }
+
+  function adicionarLinha() {
+    setItens((atual) => [
+      ...atual,
+      { chave: proximaChave.current++, itemId: "", quantidade: "1" },
+    ]);
+  }
+
+  function removerLinha(chave: number) {
+    setItens((atual) => (atual.length > 1 ? atual.filter((l) => l.chave !== chave) : atual));
+  }
+
+  function atualizarLinha(chave: number, campo: "itemId" | "quantidade", valor: string) {
+    setItens((atual) => atual.map((l) => (l.chave === chave ? { ...l, [campo]: valor } : l)));
+  }
+
+  const alvos = online
+    .filter((p) => selecionados.has(p.discordId))
+    .map((p) => ({ discordId: p.discordId, nome: p.nome, uid: p.uid, serverSlug: p.serverSlug }));
+
+  const itensValidos = itens
+    .filter((l) => l.itemId.trim())
+    .map((l) => ({ itemId: l.itemId.trim(), quantidade: Math.max(1, Math.floor(Number(l.quantidade) || 1)) }));
+
+  const prontoParaEnviar = alvos.length > 0 && itensValidos.length > 0;
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-muted">
+        A versão mascarada do <code>/giveitems</code>: escolha um ou mais
+        jogadores online e o mesmo lote de itens chega para todos eles.
+      </p>
+
+      {/* ------------------------------------------------------- jogadores */}
+      <div>
+        <p className="mb-2 text-sm text-muted">
+          Quem recebe — só quem está no jogo agora aparece aqui, porque{" "}
+          <code>giveitems</code> só funciona com o jogador online
+        </p>
+        {online.length === 0 ? (
+          <p className="text-sm text-muted">Ninguém online em nenhum servidor agora.</p>
+        ) : (
+          <ul className="max-h-64 divide-y divide-[var(--line)] overflow-y-auto rounded-[var(--radius-card)] border border-line">
+            {online.map((p) => {
+              const marcado = selecionados.has(p.discordId);
+              return (
+                <li key={p.discordId}>
+                  <label className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2 has-checked:bg-gold/[0.06]">
+                    <input
+                      type="checkbox"
+                      checked={marcado}
+                      onChange={() => alternar(p.discordId)}
+                      className="size-4 shrink-0 accent-[var(--gold)]"
+                    />
+                    <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                    <span className="shrink-0 text-xs text-muted">{p.serverName}</span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {selecionados.size > 0 && (
+          <p className="mt-2 text-xs text-muted">
+            {selecionados.size} jogador{selecionados.size === 1 ? "" : "es"} selecionado
+            {selecionados.size === 1 ? "" : "s"}.
+          </p>
+        )}
+      </div>
+
+      {/* ----------------------------------------------------------- itens */}
+      <div>
+        <p className="mb-2 text-sm text-muted">O que entregar</p>
+        <div className="space-y-2">
+          {itens.map((linha) => {
+            const nome = nomeDeCatalogo.get(linha.itemId);
+            return (
+              <div key={linha.chave} className="flex items-center gap-2">
+                <ItemIcon itemId={linha.itemId} className="size-9" />
+                <div className="min-w-0 flex-1">
+                  <input
+                    list="catalogo-itens"
+                    value={nome ? nome : linha.itemId}
+                    onChange={(e) => {
+                      const digitado = e.target.value;
+                      // Se o texto bate com um nome do catálogo, guarda o
+                      // ItemID de verdade; senão guarda o que foi digitado
+                      // (permite colar o ID cru direto, para item sem
+                      // tradução ainda).
+                      const encontrado = catalogo.find((c) => c.nome === digitado);
+                      atualizarLinha(linha.chave, "itemId", encontrado ? encontrado.id : digitado);
+                    }}
+                    placeholder="Buscar por nome — Esfera Ancestral, Metal Refinado…"
+                    className={`${campo} text-sm`}
+                  />
+                  {linha.itemId && !nome && (
+                    <p className="mt-1 truncate text-xs text-muted">
+                      Sem tradução cadastrada — vai como ID cru:{" "}
+                      <code className="text-[0.7rem]">{linha.itemId}</code>
+                    </p>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={99_999}
+                  value={linha.quantidade}
+                  onChange={(e) => atualizarLinha(linha.chave, "quantidade", e.target.value)}
+                  className={`${campo} w-24 shrink-0 text-sm`}
+                  aria-label="Quantidade"
+                />
+                <button
+                  type="button"
+                  onClick={() => removerLinha(linha.chave)}
+                  disabled={itens.length === 1}
+                  className="shrink-0 rounded-[var(--radius-control)] border border-line-strong px-2.5 py-2 text-xs text-muted transition-colors hover:border-danger/40 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Remover item"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <datalist id="catalogo-itens">
+          {catalogo.map((c) => (
+            <option key={c.id} value={c.nome} />
+          ))}
+        </datalist>
+        <button type="button" onClick={adicionarLinha} className={`${botaoFantasma} mt-3 text-sm`}>
+          + Adicionar item
+        </button>
+      </div>
+
+      {/* ---------------------------------------------------------- envio */}
+      <form action={acao} className="space-y-3 border-t border-line pt-4">
+        <input type="hidden" name="alvos" value={JSON.stringify(alvos)} />
+        <input type="hidden" name="itens" value={JSON.stringify(itensValidos)} />
+        <button type="submit" disabled={pendente || !prontoParaEnviar} className={botao}>
+          {pendente ? "Entregando…" : "Entregar itens"}
+        </button>
+        {!prontoParaEnviar && (
+          <p className="text-xs text-muted">
+            Escolha ao menos um jogador e preencha ao menos um item para liberar o botão.
+          </p>
+        )}
+        <Aviso {...estado} />
+      </form>
+
+      {estado.resultados && estado.resultados.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted">Resultado, item a item:</p>
+          {estado.resultados.map((r, i) => (
+            <p
+              key={i}
+              className={`rounded-[var(--radius-control)] border px-4 py-2 text-sm ${
+                r.ok
+                  ? "border-success/30 bg-success/[0.08] text-success"
+                  : "border-danger/30 bg-danger/[0.08] text-danger"
+              }`}
+            >
+              {nomeDoItem(r.itemId)} ×{r.quantidade} → {r.nome}: {r.resposta || (r.ok ? "entregue" : "falhou")}
             </p>
           ))}
         </div>

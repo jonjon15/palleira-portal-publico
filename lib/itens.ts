@@ -161,3 +161,27 @@ export function motivoDoBloqueio(itemId: string): string {
   }
   return "Item de uso individual: não pode ser repassado nem vendido.";
 }
+
+/* --------------------------------------------------------- catálogo para busca */
+
+export interface ItemDoCatalogo {
+  id: string;
+  nome: string;
+}
+
+/**
+ * Todo o catálogo — id e nome, nada mais — para o admin buscar por nome na
+ * tela de "Entregar itens manual".
+ *
+ * Diferente do cofre e do mercado, aqui não há `podeNegociar`: é o admin
+ * dando item de graça, não um jogador vendendo o que já tem — não existe
+ * "Ouro não pode ser negociado" quando não há negociação nenhuma.
+ *
+ * Ordenado por nome (itens sem tradução, que mostram o próprio ID, caem
+ * juntos no fim do alfabeto por acidente — aceitável, é o caso raro).
+ */
+export function catalogoDeItens(): ItemDoCatalogo[] {
+  return Object.keys(NOME_DE)
+    .map((id) => ({ id, nome: NOME_DE[id] }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}

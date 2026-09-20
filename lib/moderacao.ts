@@ -22,7 +22,8 @@ export type AcaoModeracao =
   | "revert"
   | "probe"
   | "restore_queue"
-  | "deliver_pal";
+  | "deliver_pal"
+  | "deliver_items";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -39,6 +40,7 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   probe: "Conferir bags",
   restore_queue: "Fila de restauração",
   deliver_pal: "Entrega de Pal manual",
+  deliver_items: "Entrega de itens manual",
 };
 
 export interface AcaoRow {
