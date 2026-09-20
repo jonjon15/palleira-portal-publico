@@ -48,6 +48,13 @@ export interface JogadorOnlineParaItens {
  * `jogadoresOnlineParaEntrega`, mas carregando também o `playerId` (uid): a
  * entrega de item é direta por RCON, sem passar pelo vínculo/`account_links`
  * de novo depois.
+ *
+ * ⚠️ O servidor que vale é ONDE A PESSOA ESTÁ, não onde ela vinculou. O
+ * vínculo guarda um servidor só, mas o UID é da conta e vale nos três
+ * (`lib/palworld/uid.ts`) — exigir que os dois batessem sumia com quem
+ * vinculou no PVE Free e hoje joga no Dominantes, que é justamente para
+ * quem o `giveitems` precisa ir. Medido em 20/09/2026: o xNEGANx estava
+ * online no Dominantes, com vínculo, e não aparecia na tela.
  */
 export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens[]> {
   const staff = await exigirStaff();
@@ -68,10 +75,12 @@ export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens
         const online = await getPlayers(server);
         for (const p of online) {
           const vinculo = porUid.get(p.playerId);
-          if (!vinculo || vinculo.server_slug !== server.slug) continue;
+          if (!vinculo) continue;
           achados.push({
             discordId: vinculo.discord_id,
             nome: p.name,
+            // O slug é o do servidor em que ela está AGORA: é para ele que o
+            // RCON vai mandar o comando, e é onde o jogo vai achar a pessoa.
             uid: p.playerId,
             serverSlug: server.slug,
             serverName: server.shortName,
@@ -83,8 +92,16 @@ export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens
     }),
   );
 
-  const nomes = await nomesDe(achados.map((a) => a.discordId)).catch(() => new Map<string, string>());
-  return achados.map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }));
+  // Uma linha por pessoa. O mesmo UID pode estar conectado em dois
+  // servidores ao mesmo tempo (o jogo não impede), e como a tela usa o
+  // `discordId` de chave e de seleção, duas linhas iguais quebrariam o
+  // checkbox — marcar uma marcaria as duas. Fica a primeira que respondeu.
+  const unicos = new Map<string, JogadorOnlineParaItens>();
+  for (const a of achados) if (!unicos.has(a.discordId)) unicos.set(a.discordId, a);
+  const lista = [...unicos.values()];
+
+  const nomes = await nomesDe(lista.map((a) => a.discordId)).catch(() => new Map<string, string>());
+  return lista.map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }));
 }
 
 export interface ItemPedido {
