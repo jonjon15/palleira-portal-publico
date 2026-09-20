@@ -949,13 +949,45 @@ export async function acaoEntregarPal(
   _anterior: EstadoEntrega,
   form: FormData,
 ): Promise<EstadoEntrega> {
+  const actorId = await exigirEnergia();
   const discordIdDestino = String(form.get("discordId") ?? "").trim();
   const json = String(form.get("json") ?? "");
   const quantidade = Number(form.get("quantidade") ?? 1);
   if (!discordIdDestino) {
     return { ok: false, mensagem: "Informe o Discord ID do jogador." };
   }
-  return entregarPalPorJson(discordIdDestino, json, quantidade);
+
+  let palId = "";
+  try {
+    palId = String((JSON.parse(json) as { PalID?: unknown }).PalID ?? "");
+  } catch {
+    // JSON inválido — `entregarPalPorJson` recusa e explica; o log só perde o PalID.
+  }
+
+  const r = await entregarPalPorJson(discordIdDestino, json, quantidade);
+
+  // Sem `server` fixo aqui (a entrega vai para o servidor do vínculo do
+  // destino, não do seletor do topo) — mesmo motivo de `cancelarPedidoDeFila`
+  // não passar por `executar()`. É a única ação econômica "de graça" do
+  // painel (cria valor do nada; resgates só devolvem o que já existia) e
+  // ficava sem log e sem eco no Discord, ao contrário de todo o resto da
+  // página — corrigido aqui.
+  await registrar({
+    actorId,
+    serverSlug: "-",
+    action: "deliver_pal",
+    target: discordIdDestino,
+    detail: `${palId || "PalID desconhecido"} × ${quantidade}`,
+    ok: r.ok,
+    error: r.ok ? undefined : r.mensagem,
+  });
+  if (r.ok) {
+    await logarNoDiscord(
+      `🛠️ Entrega de Pal manual · \`${palId || "?"}\` × ${quantidade} — <@${actorId}> → <@${discordIdDestino}>\n> ${r.mensagem}`,
+    );
+  }
+  revalidatePath("/admin/moderacao");
+  return r;
 }
 
 export async function acaoConsultarEntregaPal(
