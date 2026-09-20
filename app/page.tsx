@@ -3,7 +3,8 @@ import Image from "next/image";
 import { Pick } from "@/components/pick";
 import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
-import { getMetrics, getRates } from "@/lib/palworld/rest";
+import { getRates } from "@/lib/palworld/rest";
+import { servidoresVisiveis } from "@/lib/presenca-de-servidor";
 import { communityStats, topPlayers } from "@/lib/db";
 import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
@@ -15,15 +16,21 @@ import { ritualEmDestaque } from "@/lib/purificacao";
 // visita de página (§3.3).
 export const revalidate = 60;
 
+/**
+ * Os cards dos servidores.
+ *
+ * Passa por `servidoresVisiveis` e não por `activeServers` para que um
+ * servidor desligado no painel suma da home sozinho depois de 30 min — e
+ * volte sozinho quando religar, sem deploy (`lib/presenca-de-servidor.ts`).
+ */
 async function loadServers(): Promise<ServerCardData[]> {
+  const presentes = await servidoresVisiveis();
   return Promise.all(
-    activeServers().map(async (server) => {
-      const [metrics, rates] = await Promise.all([
-        getMetrics(server).catch(() => null),
-        getRates(server).catch(() => null),
-      ]);
-      return { server, metrics, rates };
-    }),
+    presentes.map(async ({ server, metrics }) => ({
+      server,
+      metrics,
+      rates: await getRates(server).catch(() => null),
+    })),
   );
 }
 

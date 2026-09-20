@@ -1,5 +1,6 @@
-import { activeServers, type PalleiraServer } from "@/lib/servers";
-import { getMetrics, type ServerMetrics } from "@/lib/palworld/rest";
+import { type PalleiraServer } from "@/lib/servers";
+import { type ServerMetrics } from "@/lib/palworld/rest";
+import { servidoresVisiveis } from "@/lib/presenca-de-servidor";
 import { healthOf } from "@/components/server-card";
 
 /**
@@ -9,6 +10,9 @@ import { healthOf } from "@/components/server-card";
  * `getMetrics` já cacheia por 60s (§3.4 do PROMPT.md), e o cache é da URL,
  * não da página: renderizar isto no layout raiz não soma chamada nenhuma
  * além do que a home já fazia sozinha.
+ *
+ * Servidor desligado há mais de 30 min some daqui sozinho e volta sozinho
+ * quando religa — ver `lib/presenca-de-servidor.ts`.
  */
 
 interface Item {
@@ -16,17 +20,8 @@ interface Item {
   metrics: ServerMetrics | null;
 }
 
-async function carregarStatus(): Promise<Item[]> {
-  return Promise.all(
-    activeServers().map(async (server) => ({
-      server,
-      metrics: await getMetrics(server).catch(() => null),
-    })),
-  );
-}
-
 export async function ServerTicker() {
-  const status = await carregarStatus();
+  const status = await servidoresVisiveis();
   if (status.length === 0) return null;
 
   // Duplicado de propósito: a animação anda -50% e recomeça exatamente onde

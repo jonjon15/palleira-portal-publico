@@ -3,8 +3,14 @@
  *
  * Host e portas não são segredo e ficam aqui; senhas vêm SEMPRE de env.
  *
- * `enabled: false` tira o servidor do site inteiro sem deploy — é assim que
- * o PVP fica em standby até o RCON ser ligado.
+ * `enabled: false` tira o servidor do site inteiro — é a chave mestra, para
+ * quando um servidor não deve existir para o site de jeito nenhum.
+ *
+ * ⚠️ **Não é aqui que se esconde servidor desligado no painel.** Isso é
+ * automático desde 19/09/2026: quem para de responder por mais de 30 min some
+ * da vitrine sozinho e volta sozinho ao religar, sem deploy nenhum — ver
+ * `lib/presenca-de-servidor.ts`. Mexer em `enabled` para isso só cria trabalho
+ * manual dos dois lados.
  *
  * ⚠️ Taxas (XP, drop, peso…) NÃO ficam aqui. São lidas ao vivo de
  * `/v1/api/settings` via `getRates()` — ver §7.13.
@@ -90,10 +96,7 @@ export const SERVERS: PalleiraServer[] = [
     palDefenderPort: 10064,
     palDefenderToken: env("SRV2_PALDEFENDER_TOKEN"),
     panelId: "6eb8d521",
-    // Desligado pelo dono em 19/09/2026. Enquanto estiver assim, some do site
-    // inteiro — senão o ticker fica com bolinha vermelha e "sem resposta"
-    // apontando para um servidor que não deveria estar lá.
-    enabled: false,
+    enabled: true,
     mapVisible: true,
     mode: "PvE",
     tier: "vip",
