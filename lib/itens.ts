@@ -162,26 +162,69 @@ export function motivoDoBloqueio(itemId: string): string {
   return "Item de uso individual: não pode ser repassado nem vendido.";
 }
 
+/* ------------------------------------------------------------- raridade */
+
+/**
+ * O grau do item, de 1 (o mais simples) a 5 (o melhor) — ou `null` para o
+ * que não tem grau nenhum.
+ *
+ * **Sai do próprio `ItemID`, não de tabela do jogo.** O Palworld nomeia as
+ * versões de uma mesma peça com sufixo numérico: `Accessory_AT_1`,
+ * `Accessory_AT_2`, `Accessory_AT_3` são o mesmo Pingente de Ataque em três
+ * graus, e todos os três compartilham o nome traduzido — na tela viram três
+ * linhas idênticas, e só a cor os distingue. Vale para 1197 dos 2320 itens
+ * do catálogo, com 237 famílias chegando ao grau 5.
+ *
+ * 🔴 **Sem sufixo não é "comum", é sem grau.** Madeira, Pedra e Ouro não
+ * participam dessa escala: pintá-los de cinza-comum afirmaria uma posição
+ * numa régua em que eles nem entram. Por isso `null`, e a UI não pinta.
+ *
+ * A raridade "de verdade" mora no campo `Rarity` da `DT_ItemDataTable`, que
+ * só se lê extraindo o `.pak` do jogo com o `.usmap`. O sufixo é a mesma
+ * informação de graça — se algum dia divergir, é a DataTable que manda.
+ */
+export type GrauDoItem = 1 | 2 | 3 | 4 | 5;
+
+export function grauDoItem(itemId: string): GrauDoItem | null {
+  const m = /_([1-5])$/.exec(itemId);
+  return m ? (Number(m[1]) as GrauDoItem) : null;
+}
+
 /* --------------------------------------------------------- catálogo para busca */
 
 export interface ItemDoCatalogo {
   id: string;
   nome: string;
+  categoria: Categoria;
+  /** URL do ícone, ou `null` para os poucos que não têm um. */
+  icone: string | null;
+  /** 1 a 5, ou `null` quando o item não participa da escala de graus. */
+  grau: GrauDoItem | null;
 }
 
 /**
- * Todo o catálogo — id e nome, nada mais — para o admin buscar por nome na
- * tela de "Entregar itens manual".
+ * Todo o catálogo — o que a grade de ícones de "Entregar itens manual"
+ * precisa para desenhar e filtrar sem voltar ao servidor.
  *
  * Diferente do cofre e do mercado, aqui não há `podeNegociar`: é o admin
  * dando item de graça, não um jogador vendendo o que já tem — não existe
  * "Ouro não pode ser negociado" quando não há negociação nenhuma.
+ *
+ * São ~2300 itens, mas só três campos curtos cada: o custo de mandar isso
+ * ao navegador é menor do que o de uma rota de busca que ida-e-volta a cada
+ * tecla digitada.
  *
  * Ordenado por nome (itens sem tradução, que mostram o próprio ID, caem
  * juntos no fim do alfabeto por acidente — aceitável, é o caso raro).
  */
 export function catalogoDeItens(): ItemDoCatalogo[] {
   return Object.keys(NOME_DE)
-    .map((id) => ({ id, nome: NOME_DE[id] }))
+    .map((id) => ({
+      id,
+      nome: NOME_DE[id],
+      categoria: categoriaDoItem(id),
+      icone: urlDoIconeItem(id),
+      grau: grauDoItem(id),
+    }))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }

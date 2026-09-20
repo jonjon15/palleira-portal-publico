@@ -1374,102 +1374,194 @@ interface LinhaDeItem {
   chave: number;
   itemId: string;
   quantidade: string;
-  /** O que está digitado na busca — separado de `itemId` porque nem toda tecla escolhe um item. */
-  busca: string;
 }
 
+/** As abas do painel, na ordem em que aparecem. `null` = todas. */
+const ABAS: { chave: string | null; rotulo: string }[] = [
+  { chave: null, rotulo: "Todos" },
+  { chave: "esfera", rotulo: "Esferas" },
+  { chave: "municao", rotulo: "Munição" },
+  { chave: "recurso", rotulo: "Recursos" },
+  { chave: "equipamento", rotulo: "Equipamento" },
+  { chave: "comida", rotulo: "Comida" },
+  { chave: "consumo", rotulo: "Consumíveis" },
+  { chave: "esquema", rotulo: "Esquemas" },
+  { chave: "moeda", rotulo: "Moedas" },
+  { chave: "outro", rotulo: "Outros" },
+];
+
+/** Quantos ícones a grade desenha antes de pedir para refinar o filtro. */
+const TETO_DA_GRADE = 300;
+
 /**
- * Uma linha de busca com dropdown — como o seletor de item do Creative
- * Menu (mod do jogo): digita parte do nome, aparece uma lista clicável com
- * ícone, escolhe um. Nada de `<datalist>` do navegador: o visual varia por
- * navegador e não mostra ícone nenhum — o pedido aqui foi por algo com a
- * mesma cara do seletor do mod.
+ * O fundo de cada célula por grau do item (`grauDoItem` em `lib/itens.ts`).
+ *
+ * Escala clássica de raridade, porque é a que o jogador já lê sem legenda:
+ * cinza → verde → azul → roxo → dourado. Bem apagado de propósito — a
+ * grade tem centenas de células, e cor forte em todas viraria vitral.
+ *
+ * Item sem grau (Madeira, Pedra, Ouro) fica sem cor: não é "comum", é fora
+ * da escala.
  */
-function BuscaDeItem({
-  linha,
-  nomeAtual,
+const FUNDO_POR_GRAU: Record<number, string> = {
+  1: "border-line bg-surface",
+  2: "border-success/30 bg-success/[0.07]",
+  3: "border-[#4a9eff]/30 bg-[#4a9eff]/[0.07]",
+  4: "border-[#a855f7]/30 bg-[#a855f7]/[0.07]",
+  5: "border-gold/35 bg-gold/[0.09]",
+};
+
+const SEM_GRAU = "border-line bg-surface";
+
+const ROTULO_DO_GRAU: Record<number, string> = {
+  1: "Comum",
+  2: "Incomum",
+  3: "Raro",
+  4: "Épico",
+  5: "Lendário",
+};
+
+/**
+ * O seletor visual de item — a grade de ícones clicáveis do Creative Menu
+ * (mod do jogo) trazida para o site: abas por categoria, busca opcional por
+ * nome, e clique no ícone para escolher.
+ *
+ * O nome vai embaixo de cada ícone, e não numa faixa no topo como o mod faz,
+ * a pedido do dono: aqui dá para bater o olho e ler a grade inteira sem
+ * passar o mouse item por item.
+ *
+ * Fica num painel que abre por botão, e não fixo na página, porque o
+ * catálogo tem ~2300 itens: deixar a grade sempre aberta empurraria o resto
+ * da tela de moderação para baixo sem necessidade.
+ *
+ * Dá para clicar em vários antes de fechar — cada clique vira uma linha com
+ * quantidade própria, como o `WBP_ItemMultiSelect` do mod.
+ */
+function PainelDeItens({
   catalogo,
+  jaEscolhidos,
   onEscolher,
-  onDigitar,
+  onFechar,
 }: {
-  linha: LinhaDeItem;
-  nomeAtual: string | undefined;
   catalogo: ItemDoCatalogo[];
+  jaEscolhidos: Set<string>;
   onEscolher: (item: ItemDoCatalogo) => void;
-  onDigitar: (texto: string) => void;
+  onFechar: () => void;
 }) {
-  const [aberto, setAberto] = useState(false);
-  const caixaRef = useRef<HTMLDivElement>(null);
+  const [aba, setAba] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
-  useEffect(() => {
-    function aoClicarFora(e: MouseEvent) {
-      if (caixaRef.current && !caixaRef.current.contains(e.target as Node)) {
-        setAberto(false);
-      }
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, []);
+  const termo = busca.trim().toLowerCase();
+  const filtrados = useMemo(() => {
+    const base = aba ? catalogo.filter((c) => c.categoria === aba) : catalogo;
+    return termo ? base.filter((c) => c.nome.toLowerCase().includes(termo)) : base;
+  }, [catalogo, aba, termo]);
 
-  const termo = linha.busca.trim().toLowerCase();
-  const resultados = termo
-    ? catalogo.filter((c) => c.nome.toLowerCase().includes(termo)).slice(0, 40)
-    : [];
+  const mostrados = filtrados.slice(0, TETO_DA_GRADE);
 
   return (
-    <div ref={caixaRef} className="relative min-w-0 flex-1">
-      <input
-        value={linha.busca}
-        onChange={(e) => {
-          onDigitar(e.target.value);
-          setAberto(true);
-        }}
-        onFocus={() => setAberto(true)}
-        placeholder="Buscar por nome — Esfera Ancestral, Metal Refinado…"
-        autoComplete="off"
-        className={`${campo} text-sm`}
-      />
-      {linha.itemId && !nomeAtual && (
-        <p className="mt-1 truncate text-xs text-muted">
-          Sem tradução cadastrada — vai como ID cru:{" "}
-          <code className="text-[0.7rem]">{linha.itemId}</code>
+    <div className="rounded-[var(--radius-card)] border border-line-strong bg-surface-2/40 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold">
+          Escolher itens
         </p>
+        <button
+          type="button"
+          onClick={onFechar}
+          className="shrink-0 rounded-[var(--radius-control)] border border-line-strong px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-surface"
+        >
+          Fechar
+        </button>
+      </div>
+
+      {/* ------------------------------------------------------- categorias */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {ABAS.map((a) => {
+          const ativa = a.chave === aba;
+          return (
+            <button
+              key={a.rotulo}
+              type="button"
+              onClick={() => setAba(a.chave)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                ativa
+                  ? "border-gold/40 bg-gold/10 text-gold"
+                  : "border-line text-muted hover:border-line-strong hover:text-text"
+              }`}
+            >
+              {a.rotulo}
+            </button>
+          );
+        })}
+      </div>
+
+      <input
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder="Filtrar por nome dentro da categoria…"
+        autoComplete="off"
+        className={`${campo} mt-3 text-sm`}
+      />
+
+      {/* ------------------------------------------------------------ grade */}
+      {mostrados.length === 0 ? (
+        <p className="mt-4 text-sm text-muted">
+          Nenhum item{termo && ` com “${busca.trim()}”`} nesta categoria.
+        </p>
+      ) : (
+        <div className="mt-3 grid max-h-96 grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2 overflow-y-auto pr-1">
+          {mostrados.map((c) => {
+            const escolhido = jaEscolhidos.has(c.id);
+            const fundo = c.grau ? FUNDO_POR_GRAU[c.grau] : SEM_GRAU;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onEscolher(c)}
+                title={c.grau ? `${c.nome} · ${ROTULO_DO_GRAU[c.grau]}` : c.nome}
+                className={`flex flex-col items-center gap-1 rounded-[var(--radius-control)] border p-2 transition-colors ${
+                  escolhido
+                    ? "border-gold/70 bg-gold/20 ring-1 ring-gold/40"
+                    : `${fundo} hover:border-gold/40`
+                }`}
+              >
+                <ItemIcon itemId={c.id} className="size-14" bare />
+                <span className="line-clamp-2 text-center text-[0.7rem] leading-tight text-muted">
+                  {c.nome}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       )}
-      {aberto && termo.length >= 2 && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-[var(--radius-card)] border border-line-strong bg-surface shadow-lg">
-          {resultados.length === 0 ? (
-            <li className="px-4 py-3 text-sm text-muted">
-              Nenhum item com &ldquo;{linha.busca.trim()}&rdquo;.
-            </li>
-          ) : (
-            resultados.map((c) => (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onEscolher(c);
-                    setAberto(false);
-                  }}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-surface-2"
-                >
-                  <ItemIcon itemId={c.id} className="size-8 shrink-0" />
-                  <span className="min-w-0 flex-1 truncate">{c.nome}</span>
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
-      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
+        <span>
+          {filtrados.length > TETO_DA_GRADE
+            ? `Mostrando ${TETO_DA_GRADE} de ${filtrados.length} — use a busca ou uma categoria para afinar.`
+            : `${filtrados.length} item(ns). Clique em quantos quiser.`}
+        </span>
+        <span className="flex flex-wrap items-center gap-2">
+          {([1, 2, 3, 4, 5] as const).map((g) => (
+            <span key={g} className="flex items-center gap-1">
+              <span
+                className={`size-2.5 rounded-sm border ${FUNDO_POR_GRAU[g]}`}
+                aria-hidden
+              />
+              {ROTULO_DO_GRAU[g]}
+            </span>
+          ))}
+        </span>
+      </div>
     </div>
   );
 }
 
 /**
  * A versão mascarada do `/giveitems <UserId> <ItemId>[:<Amount>] ...` do
- * jogo: escolhe um ou mais jogadores online por checkbox, monta um lote de
- * itens com busca por nome (o catálogo de `lib/itens.ts`, ~2300 entradas
- * traduzidas), e entrega tudo de uma vez — o mesmo lote para cada jogador
- * marcado.
+ * jogo: escolhe um ou mais jogadores online por checkbox, monta o lote
+ * clicando nos ícones de uma grade por categoria, e entrega tudo de uma vez
+ * — o mesmo lote para cada jogador marcado.
  *
  * Sem fila nem GitHub Actions: diferente de "Entregar Pal manual", `giveitems`
  * é RCON direto (ver `lib/admin-entregar-itens.ts`), então não há polling
@@ -1484,14 +1576,13 @@ export function EntregarItens({
 }) {
   const [estado, acao, pendente] = useActionState(acaoEntregarItens, SEM_ENTREGA_ITENS);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
-  const [itens, setItens] = useState<LinhaDeItem[]>([
-    { chave: 0, itemId: "", quantidade: "1", busca: "" },
-  ]);
+  const [itens, setItens] = useState<LinhaDeItem[]>([]);
+  const [painelAberto, setPainelAberto] = useState(false);
   const proximaChave = useRef(1);
 
-  const nomeDeCatalogo = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const c of catalogo) m.set(c.id, c.nome);
+  const porId = useMemo(() => {
+    const m = new Map<string, ItemDoCatalogo>();
+    for (const c of catalogo) m.set(c.id, c);
     return m;
   }, [catalogo]);
 
@@ -1504,26 +1595,33 @@ export function EntregarItens({
     });
   }
 
-  function adicionarLinha() {
-    setItens((atual) => [
-      ...atual,
-      { chave: proximaChave.current++, itemId: "", quantidade: "1", busca: "" },
-    ]);
-  }
-
   function removerLinha(chave: number) {
-    setItens((atual) => (atual.length > 1 ? atual.filter((l) => l.chave !== chave) : atual));
+    setItens((atual) => atual.filter((l) => l.chave !== chave));
   }
 
-  function atualizarLinha(chave: number, campo: "itemId" | "quantidade" | "busca", valor: string) {
-    setItens((atual) => atual.map((l) => (l.chave === chave ? { ...l, [campo]: valor } : l)));
-  }
-
-  function escolherItem(chave: number, item: ItemDoCatalogo) {
+  function atualizarQuantidade(chave: number, valor: string) {
     setItens((atual) =>
-      atual.map((l) => (l.chave === chave ? { ...l, itemId: item.id, busca: item.nome } : l)),
+      atual.map((l) => (l.chave === chave ? { ...l, quantidade: valor } : l)),
     );
   }
+
+  /**
+   * Clique no ícone da grade. Item que já está no lote não entra de novo:
+   * vira uma alteração de quantidade, não uma linha duplicada — duas linhas
+   * do mesmo `ItemID` virariam dois `giveitems` seguidos, e o jogador
+   * receberia em duas levas sem entender por quê.
+   */
+  function escolherDaGrade(item: ItemDoCatalogo) {
+    setItens((atual) => {
+      if (atual.some((l) => l.itemId === item.id)) return atual;
+      return [...atual, { chave: proximaChave.current++, itemId: item.id, quantidade: "1" }];
+    });
+  }
+
+  const idsEscolhidos = useMemo(
+    () => new Set(itens.map((l) => l.itemId)),
+    [itens],
+  );
 
   const alvos = online
     .filter((p) => selecionados.has(p.discordId))
@@ -1582,51 +1680,80 @@ export function EntregarItens({
       {/* ----------------------------------------------------------- itens */}
       <div>
         <p className="mb-2 text-sm text-muted">O que entregar</p>
-        <div className="space-y-2">
-          {itens.map((linha) => {
-            const nome = nomeDeCatalogo.get(linha.itemId);
-            return (
-              <div key={linha.chave} className="flex items-start gap-2">
-                <ItemIcon itemId={linha.itemId} className="size-9 shrink-0" />
-                <BuscaDeItem
-                  linha={linha}
-                  nomeAtual={nome}
-                  catalogo={catalogo}
-                  onEscolher={(item) => escolherItem(linha.chave, item)}
-                  onDigitar={(texto) => {
-                    // Digitar de novo invalida a escolha anterior — só um
-                    // clique na lista (via `onEscolher`) grava um `itemId`
-                    // válido. Sem isso, editar o texto depois de escolher
-                    // mantém o ItemID velho colado a um nome diferente.
-                    atualizarLinha(linha.chave, "busca", texto);
-                    atualizarLinha(linha.chave, "itemId", "");
-                  }}
-                />
-                <input
-                  type="number"
-                  min={1}
-                  max={99_999}
-                  value={linha.quantidade}
-                  onChange={(e) => atualizarLinha(linha.chave, "quantidade", e.target.value)}
-                  className={`${campo} w-24 shrink-0 text-sm`}
-                  aria-label="Quantidade"
-                />
-                <button
-                  type="button"
-                  onClick={() => removerLinha(linha.chave)}
-                  disabled={itens.length === 1}
-                  className="shrink-0 rounded-[var(--radius-control)] border border-line-strong px-2.5 py-2 text-xs text-muted transition-colors hover:border-danger/40 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label="Remover item"
+
+        {itens.length === 0 ? (
+          <p className="text-sm text-muted">
+            Nenhum item escolhido ainda — abra a grade abaixo e clique nos
+            ícones.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {itens.map((linha) => {
+              const item = porId.get(linha.itemId);
+              const nome = item?.nome ?? linha.itemId;
+              return (
+                <div
+                  key={linha.chave}
+                  className={`flex items-center gap-2 rounded-[var(--radius-control)] border px-2 py-1.5 ${
+                    item?.grau ? FUNDO_POR_GRAU[item.grau] : SEM_GRAU
+                  }`}
                 >
-                  ✕
-                </button>
-              </div>
-            );
-          })}
+                  <ItemIcon itemId={linha.itemId} className="size-9 shrink-0" bare />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {nome}
+                    {item?.grau && (
+                      <span className="ml-2 text-xs font-normal text-muted">
+                        {ROTULO_DO_GRAU[item.grau]}
+                      </span>
+                    )}
+                  </span>
+                  {/*
+                    Sem `campo` aqui: ele traz `w-full`, que é a mesma
+                    propriedade CSS do `w-24` e ganha dela na folha gerada
+                    pelo Tailwind — o campo de quantidade esticava e espremia
+                    o resto da linha até sumir da tela.
+                  */}
+                  <input
+                    type="number"
+                    min={1}
+                    max={99_999}
+                    value={linha.quantidade}
+                    onChange={(e) => atualizarQuantidade(linha.chave, e.target.value)}
+                    className="w-24 shrink-0 rounded-[var(--radius-control)] border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-gold"
+                    aria-label={`Quantidade de ${nome}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removerLinha(linha.chave)}
+                    className="shrink-0 rounded-[var(--radius-control)] border border-line-strong px-2.5 py-2 text-xs text-muted transition-colors hover:border-danger/40 hover:text-danger"
+                    aria-label="Tirar do lote"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-3">
+          {painelAberto ? (
+            <PainelDeItens
+              catalogo={catalogo}
+              jaEscolhidos={idsEscolhidos}
+              onEscolher={escolherDaGrade}
+              onFechar={() => setPainelAberto(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPainelAberto(true)}
+              className={`${botaoFantasma} text-sm`}
+            >
+              {itens.length === 0 ? "Escolher itens" : "Escolher mais itens"}
+            </button>
+          )}
         </div>
-        <button type="button" onClick={adicionarLinha} className={`${botaoFantasma} mt-3 text-sm`}>
-          + Adicionar item
-        </button>
       </div>
 
       {/* ---------------------------------------------------------- envio */}
