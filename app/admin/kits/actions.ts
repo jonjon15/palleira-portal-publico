@@ -10,6 +10,7 @@ import {
   criarKit,
   editarKit,
   alternarKit,
+  excluirKit,
   type ItemDoKit,
 } from "@/lib/kits";
 
@@ -127,6 +128,43 @@ export async function acaoAlternarKit(
     ok: r.ok,
     error: r.ok ? undefined : r.mensagem,
   });
+  revalidatePath("/admin/kits");
+  revalidatePath("/mercado");
+  return r;
+}
+
+/**
+ * Apagar de vez. Só passa se o kit nunca foi comprado — a trava mora em
+ * `excluirKit`, perto do banco, e não aqui.
+ */
+export async function acaoExcluirKit(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirCupula();
+  const id = Number(form.get("id"));
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, mensagem: "Kit inválido." };
+  }
+
+  const r = await excluirKit(id);
+
+  // Auditado mesmo dando certo: apagar é a única ação daqui que não deixa
+  // rastro na própria tabela, então o log é o único lugar onde o kit
+  // apagado continua existindo.
+  await registrar({
+    actorId,
+    serverSlug: "-",
+    action: "kit",
+    target: String(id),
+    detail: r.ok ? `apagou o kit — ${r.mensagem}` : "tentou apagar",
+    ok: r.ok,
+    error: r.ok ? undefined : r.mensagem,
+  });
+  if (r.ok) {
+    await logarNoDiscord(`🗑️ Kit apagado · ${r.mensagem} — <@${actorId}>`);
+  }
   revalidatePath("/admin/kits");
   revalidatePath("/mercado");
   return r;

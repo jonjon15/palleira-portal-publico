@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { acaoCriarKit, acaoEditarKit, acaoAlternarKit, type Estado } from "./actions";
+import {
+  acaoCriarKit,
+  acaoEditarKit,
+  acaoAlternarKit,
+  acaoExcluirKit,
+  type Estado,
+} from "./actions";
 import type { ItemDoCatalogo } from "@/lib/itens";
 import type { Kit } from "@/lib/kits";
 import { GradeDeItens, LinhaDoLote } from "@/components/seletor-de-itens";
@@ -14,6 +20,9 @@ const botao =
 
 const botaoFantasma =
   "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+const botaoPerigo =
+  "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-danger bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 const campo =
   "w-full rounded-[var(--radius-control)] border border-line bg-bg px-4 py-2.5 outline-none focus:border-gold";
@@ -242,7 +251,15 @@ export function LinhaDeKit({
   catalogo: ItemDoCatalogo[];
 }) {
   const [estado, acao, pendente] = useActionState(acaoAlternarKit, SEM_ESTADO);
+  const [apagar, acaoApagar, apagando] = useActionState(
+    acaoExcluirKit,
+    SEM_ESTADO,
+  );
   const [editando, setEditando] = useState(false);
+  // Apagar é o único botão sem volta desta tela, então ele pede confirmação
+  // no lugar — um segundo clique no mesmo canto, sem `confirm()` do
+  // navegador, que a pessoa aperta no reflexo.
+  const [confirmando, setConfirmando] = useState(false);
 
   return (
     <li className="rounded-[var(--radius-card)] border border-line bg-surface p-5">
@@ -305,8 +322,37 @@ export function LinhaDeKit({
                     : "Pôr na vitrine"}
               </button>
             </form>
+
+            {confirmando ? (
+              <form action={acaoApagar} className="flex flex-wrap gap-2">
+                <input type="hidden" name="id" value={kit.id} />
+                <button
+                  type="submit"
+                  disabled={apagando}
+                  className={botaoPerigo}
+                >
+                  {apagando ? "Apagando…" : "Apagar de vez"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmando(false)}
+                  className={botaoFantasma}
+                >
+                  Não
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmando(true)}
+                className={`${botaoFantasma} text-muted hover:border-danger hover:text-danger`}
+              >
+                Apagar
+              </button>
+            )}
           </div>
           <Aviso {...estado} />
+          <Aviso {...apagar} />
         </>
       )}
     </li>

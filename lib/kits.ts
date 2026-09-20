@@ -213,6 +213,44 @@ export async function alternarKit(id: number, ativo: boolean): Promise<Resultado
   };
 }
 
+/**
+ * Apaga de vez — só serve para kit que ninguém comprou.
+ *
+ * É a saída para o kit de teste, que nasce errado e não deveria virar
+ * histórico. Assim que alguém compra, `alternarKit` passa a ser o caminho:
+ * `kit_purchases` aponta para cá e o extrato do comprador precisa continuar
+ * dizendo o que foi comprado.
+ *
+ * A contagem vem antes do `delete` para a mensagem poder explicar o motivo.
+ * A FK sozinha já barraria (é `references kits (id)` sem `on delete`), mas o
+ * erro do Postgres que chegaria à tela seria um texto técnico sobre violação
+ * de constraint — e quem está na tela quer saber que o kit já foi vendido.
+ */
+export async function excluirKit(id: number): Promise<Resultado> {
+  const staff = await exigirCupula();
+  if (!("discordId" in staff)) return staff;
+
+  const [{ n }] = (await sql`
+    select count(*)::int as n from kit_purchases where kit_id = ${id}
+  `) as { n: number }[];
+
+  if (n > 0) {
+    return {
+      ok: false,
+      mensagem:
+        `Esse kit já foi comprado ${n} ${n === 1 ? "vez" : "vezes"} — ` +
+        `apagar apagaria o histórico de quem pagou. Use "Tirar da vitrine".`,
+    };
+  }
+
+  const r = (await sql`
+    delete from kits where id = ${id} returning nome
+  `) as { nome: string }[];
+
+  if (!r.length) return { ok: false, mensagem: "Kit não encontrado." };
+  return { ok: true, mensagem: `"${r[0].nome}" foi apagado.` };
+}
+
 /* ---------------------------------------------------------------- comprar */
 
 /**
