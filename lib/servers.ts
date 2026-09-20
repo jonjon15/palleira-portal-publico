@@ -90,7 +90,10 @@ export const SERVERS: PalleiraServer[] = [
     palDefenderPort: 10064,
     palDefenderToken: env("SRV2_PALDEFENDER_TOKEN"),
     panelId: "6eb8d521",
-    enabled: true,
+    // Desligado pelo dono em 19/09/2026. Enquanto estiver assim, some do site
+    // inteiro — senão o ticker fica com bolinha vermelha e "sem resposta"
+    // apontando para um servidor que não deveria estar lá.
+    enabled: false,
     mapVisible: true,
     mode: "PvE",
     tier: "vip",
