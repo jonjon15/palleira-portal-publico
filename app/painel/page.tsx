@@ -13,6 +13,7 @@ import {
   isStaff,
   canManageEconomy,
   canManageEvents,
+  canPowerServer,
 } from "@/lib/roles";
 import { meuVinculo, meusPersonagens } from "@/lib/linking";
 import { saldo, jaPegouODaily, dailyPaletas } from "@/lib/economia";
@@ -176,6 +177,13 @@ export default async function Painel() {
               title="Resgates de Pal"
               body="Acompanhar ao vivo a fila do cofre — arquivo e entrega por RCON."
               href="/admin/resgates"
+            />
+          )}
+          {canPowerServer(level) && (
+            <Card
+              title="Kits da loja"
+              body="Montar lotes de itens para vender no mercado por Paletas."
+              href="/admin/kits"
             />
           )}
           {canManageEvents(level, user.roles) && (

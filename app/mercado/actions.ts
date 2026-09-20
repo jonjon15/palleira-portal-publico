@@ -8,6 +8,7 @@ import {
   cancelarAnuncio,
   type Resultado,
 } from "@/lib/mercado";
+import { comprarKit } from "@/lib/kits";
 
 /**
  * Ponte entre as telas do mercado e o `lib/mercado`.
@@ -33,6 +34,19 @@ export async function acaoComprar(
   form: FormData,
 ): Promise<Estado> {
   const r = await comprar(Number(form.get("id") ?? 0));
+  atualiza();
+  return r;
+}
+
+/**
+ * Compra de kit da loja — cobra, queima a Paleta e entrega por RCON na
+ * hora. Não passa pelo cofre nem por `listings`; ver `lib/kits.ts`.
+ */
+export async function acaoComprarKit(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const r = await comprarKit(Number(form.get("id") ?? 0));
   atualiza();
   return r;
 }

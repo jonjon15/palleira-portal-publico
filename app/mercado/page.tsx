@@ -6,7 +6,8 @@ import { Pick } from "@/components/pick";
 import { vitrine, type Anuncio, type TipoAnuncio } from "@/lib/mercado";
 import { nomeDoItem, categoriaDoItem, CATEGORIA_LABEL } from "@/lib/itens";
 import { nomeDoPal } from "@/lib/pals";
-import { Comprar, NomeDoItem } from "./formularios";
+import { kitsAtivos, type Kit } from "@/lib/kits";
+import { Comprar, ComprarKit, NomeDoItem } from "./formularios";
 import { ItemIcon } from "@/components/item-icon";
 import { PalCard } from "@/components/pal-card";
 import { Pal3DSobDemanda } from "@/components/pal-3d-sob-demanda";
@@ -20,10 +21,18 @@ export const metadata: Metadata = {
 // Vitrine com preço e disponibilidade: cache aqui é anúncio fantasma na tela.
 export const dynamic = "force-dynamic";
 
-const FILTROS: { valor: TipoAnuncio | undefined; rotulo: string }[] = [
+/**
+ * "kit" não é um `TipoAnuncio`: kit vem de `kits`, não de `listings` — é
+ * produto de loja, com estoque infinito e entrega direta no jogo, enquanto
+ * anúncio é peça única que passa pelo cofre (ver `lib/kits.ts`).
+ */
+type Filtro = TipoAnuncio | "kit" | undefined;
+
+const FILTROS: { valor: Filtro; rotulo: string }[] = [
   { valor: undefined, rotulo: "Todos" },
   { valor: "item", rotulo: "Itens" },
   { valor: "pal", rotulo: "Pals" },
+  { valor: "kit", rotulo: "Kits" },
 ];
 
 export default async function Mercado({
@@ -31,16 +40,20 @@ export default async function Mercado({
 }: {
   searchParams: Promise<{ q?: string; tipo?: string }>;
 }) {
-  const [{ q, tipo: tipoCru }, session, anuncios] = await Promise.all([
+  const [{ q, tipo: tipoCru }, session, anuncios, kits] = await Promise.all([
     searchParams,
     auth(),
     vitrine(),
+    kitsAtivos(),
   ]);
 
-  const tipo = tipoCru === "item" || tipoCru === "pal" ? tipoCru : undefined;
+  const tipo: Filtro =
+    tipoCru === "item" || tipoCru === "pal" || tipoCru === "kit" ? tipoCru : undefined;
   const busca = (q ?? "").trim().toLowerCase();
 
   const lista = anuncios.filter((a) => {
+    // Na aba Kits nenhum anúncio de `listings` entra — só a seção de kits.
+    if (tipo === "kit") return false;
     if (tipo && a.kind !== tipo) return false;
     if (!busca) return true;
     // Busca pelo nome traduzido E pela chave crua: quem só conhece o item ou
@@ -62,12 +75,33 @@ export default async function Mercado({
   const pals = lista.filter((a) => a.kind === "pal");
   const itens = lista.filter((a) => a.kind === "item");
 
+  // Kit casa com a busca pelo nome, pela descrição e pelo nome de qualquer
+  // item de dentro: quem procura "esfera" quer achar o kit que tem esferas,
+  // não só o anúncio avulso.
+  const kitsVisiveis =
+    tipo !== undefined && tipo !== "kit"
+      ? []
+      : kits.filter((k) => {
+          if (!busca) return true;
+          return (
+            k.nome.toLowerCase().includes(busca) ||
+            k.descricao.toLowerCase().includes(busca) ||
+            k.itens.some(
+              (i) =>
+                nomeDoItem(i.itemId).toLowerCase().includes(busca) ||
+                i.itemId.toLowerCase().includes(busca),
+            )
+          );
+        });
+
+  const vazio = lista.length === 0 && kitsVisiveis.length === 0;
+
   return (
     <>
       <PageHeader
         kicker="Mercado"
         title="Mercado da Palleira"
-        description="Comprado aqui, o item ou Pal cai no seu cofre na hora — e você resgata no jogo quando entrar. Ninguém precisa estar online ao mesmo tempo."
+        description="Item e Pal de outro jogador caem no seu cofre, e você resgata quando entrar — ninguém precisa estar online ao mesmo tempo. Kit da loja é o contrário: chega direto na mochila, com você dentro do jogo."
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -142,12 +176,31 @@ export default async function Mercado({
           alto — sobra espaço vazio esquisito do lado dos itens (23/08/2026,
           reparo do dono). Duas seções, cada uma com cards de altura parecida.
         */}
-        {lista.length === 0 ? (
+        {vazio ? (
           <Vazio temBusca={Boolean(busca)} logado={Boolean(session)} />
         ) : (
           <>
+            {/*
+              Kits primeiro: são da loja, sempre disponíveis, e servem de
+              porta de entrada para quem chegou sem saber o que procurar.
+            */}
+            {kitsVisiveis.length > 0 && (
+              <section>
+                {tipo === undefined && lista.length > 0 && (
+                  <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
+                    Kits da loja
+                  </h2>
+                )}
+                <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {kitsVisiveis.map((k) => (
+                    <CardDeKit key={k.id} kit={k} logado={Boolean(session)} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {pals.length > 0 && (
-              <section className={itens.length > 0 ? "mt-8" : ""}>
+              <section className={kitsVisiveis.length > 0 ? "mt-10" : "mt-8"}>
                 {tipo === undefined && itens.length > 0 && (
                   <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
                     Pals
@@ -166,7 +219,9 @@ export default async function Mercado({
             )}
 
             {itens.length > 0 && (
-              <section className={pals.length > 0 ? "mt-10" : "mt-8"}>
+              <section
+                className={pals.length > 0 || kitsVisiveis.length > 0 ? "mt-10" : "mt-8"}
+              >
                 {tipo === undefined && pals.length > 0 && (
                   <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
                     Itens
@@ -196,6 +251,64 @@ export default async function Mercado({
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * O card de um kit da loja.
+ *
+ * Diferente do card de anúncio em três coisas que a tela precisa deixar
+ * claras: não tem vendedor (é da loja), não acaba (estoque infinito), e
+ * chega direto na mochila em vez de cair no cofre.
+ */
+function CardDeKit({ kit, logado }: { kit: Kit; logado: boolean }) {
+  return (
+    <li className="flex flex-col rounded-[var(--radius-card)] border border-gold/25 bg-surface p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold">{kit.nome}</h3>
+          <p className="mt-0.5 text-xs font-bold tracking-wider text-gold uppercase">
+            Kit da loja
+          </p>
+        </div>
+        <span className="tabular shrink-0 font-semibold text-gold">
+          {kit.preco}
+        </span>
+      </div>
+
+      {kit.descricao && (
+        <p className="mt-2 text-sm text-muted">{kit.descricao}</p>
+      )}
+
+      <ul className="mt-3 space-y-1.5">
+        {kit.itens.map((i) => (
+          <li key={i.itemId} className="flex items-center gap-2 text-sm">
+            <ItemIcon itemId={i.itemId} className="size-7 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">
+              <NomeDoItem itemId={i.itemId} />
+            </span>
+            <span className="tabular shrink-0 text-muted">×{i.quantidade}</span>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-3 text-xs text-muted">
+        Entregue na hora, dentro do jogo — você precisa estar online.
+      </p>
+
+      <div className="mt-auto pt-3">
+        {logado ? (
+          <ComprarKit id={kit.id} preco={kit.preco} />
+        ) : (
+          <Link
+            href="/entrar"
+            className="block w-full rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
+          >
+            Entrar para comprar
+          </Link>
+        )}
+      </div>
+    </li>
   );
 }
 

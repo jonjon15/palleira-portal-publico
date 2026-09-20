@@ -4,6 +4,11 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-20
+
+- **Kits no Mercado.** Aba nova ao lado de Itens e Pals, com lotes montados pela cúpula — um pacote de itens por um preço em Paletas. Comprou, os itens caem na sua mochila **na hora**, dentro do jogo: não passa pelo cofre e não tem fila. Para isso você precisa estar conectado no servidor no momento da compra, porque o jogo entrega o item na mão do personagem. Kit não acaba: o mesmo pode ser comprado quantas vezes você quiser, por quantas pessoas quiserem. As Paletas pagas são queimadas, então o kit tira moeda de circulação em vez de passá-la para alguém. A busca do Mercado também acha kit pelo nome dos itens que tem dentro.
+- **Staff pode entregar item direto para quem está no jogo**, escolhendo em uma grade com o ícone de cada item — sem digitar nome nenhum. Dá para mandar o mesmo lote para várias pessoas de uma vez, e o fundo de cada ícone mostra o grau do item (comum, incomum, raro, épico, lendário). Toda entrega fica registrada no log de auditoria.
+
 ## 2026-09-18
 
 - Corrigido: o ranking do PVE Free mostrava os jogadores de antes do wipe, com os levels e a quantidade de Pals do mundo antigo. Agora mostra só quem está no mundo novo.

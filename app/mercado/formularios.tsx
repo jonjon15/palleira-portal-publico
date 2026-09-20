@@ -2,7 +2,13 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { acaoComprar, acaoAnunciar, acaoCancelar, type Estado } from "./actions";
+import {
+  acaoComprar,
+  acaoComprarKit,
+  acaoAnunciar,
+  acaoCancelar,
+  type Estado,
+} from "./actions";
 import { nomeDoItem, semTraducao } from "@/lib/itens";
 import { taxaDaVenda, PRECO_MINIMO, PRECO_MAXIMO } from "@/lib/mercado-regras";
 import type { ItemNoCofre } from "@/lib/cofre";
@@ -67,6 +73,23 @@ export function Comprar({ id, preco }: { id: number; preco: number }) {
 
   return (
     <form action={acao} className="mt-3">
+      <input type="hidden" name="id" value={id} />
+      <BotaoComprar preco={preco} />
+      <Aviso estado={estado} />
+    </form>
+  );
+}
+
+/**
+ * Compra de kit — mesmo desenho do botão de anúncio, ação diferente: aqui a
+ * entrega é RCON na hora, e a mensagem de volta já diz se chegou ou por que
+ * não chegou (`lib/kits.ts`).
+ */
+export function ComprarKit({ id, preco }: { id: number; preco: number }) {
+  const [estado, acao] = useActionState(acaoComprarKit, INICIAL);
+
+  return (
+    <form action={acao}>
       <input type="hidden" name="id" value={id} />
       <BotaoComprar preco={preco} />
       <Aviso estado={estado} />
