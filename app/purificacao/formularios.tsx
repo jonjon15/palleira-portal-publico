@@ -478,11 +478,30 @@ export function EscolherPassivasDoRitual({
 
 /* ------------------------------------------------------------- cancelar */
 
-export function CancelarRitual({ ritualId }: { ritualId: number }) {
+/**
+ * `cooldownHoras`: quanto tempo o Pal fica preso no cofre depois de
+ * cancelar — vem do server (`COOLDOWN_RESGATE_HORAS`, `lib/pal-cofre.ts`),
+ * que não pode ser importado aqui direto (puxa `@/lib/db`/`@/auth`).
+ * Avisado no popup de confirmação: cancelar não devolve o Pal na hora, ele
+ * some da tela até esse prazo passar — pedido do dono em 21/09/2026, depois
+ * do Felbat do SantØs ter sumido ao cancelar sem nenhum aviso disso.
+ */
+export function CancelarRitual({
+  ritualId,
+  cooldownHoras,
+}: {
+  ritualId: number;
+  cooldownHoras: number;
+}) {
   const [estado, acao] = useActionState(acaoCancelarRitual, INICIAL);
 
   const confirmar = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!confirm("Tem certeza? O Pal sai da câmara e o progresso desta purificação se perde.")) {
+    if (
+      !confirm(
+        `Tem certeza? O progresso desta purificação se perde, e o Pal vai para o seu cofre — ` +
+          `só pode ser resgatado de lá depois de ${cooldownHoras}h.`,
+      )
+    ) {
       e.preventDefault();
     }
   };

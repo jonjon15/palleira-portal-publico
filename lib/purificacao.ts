@@ -7,6 +7,7 @@ import { delPal } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo, type PalTemplate } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
 import { isStaff, levelOf } from "@/lib/roles";
+import { COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import {
   IV_MINIMO_DOADOR,
   DOADORES_POR_RODADA,
@@ -708,9 +709,26 @@ export async function atualizarIvMinimoResgate(ivMinimo: number): Promise<Result
 
 /**
  * Cancela um ritual — o próprio dono pode desistir e trocar de Pal a
- * qualquer momento (mesmo com doadores já confirmados na rodada: o IV
- * ganho fica perdido, é o risco de quem doou), e staff pode cancelar
- * qualquer um, para corrigir engano ou abuso.
+ * qualquer momento, e staff pode cancelar qualquer um, para corrigir engano
+ * ou abuso.
+ *
+ * 🔴 Corrigido em 21/09/2026: até então, cancelar só mudava `status` no
+ * banco e NUNCA devolvia o Pal — mas o Pal já tinha saído da palbox de
+ * verdade em `iniciarRitual` (`delPal`), e nada no cancelamento chamava um
+ * resgate de volta. Resultado: o Pal ficava perdido para sempre, sem nenhum
+ * aviso disso na tela — foi assim que o Felbat do SantØs sumiu ao cancelar,
+ * e teve que ser devolvido na mão.
+ *
+ * Agora cancelar guarda o Pal no cofre (`vault_pals`) — mesmo lugar e mesma
+ * trava de `COOLDOWN_RESGATE_HORAS` que qualquer outro Pal guardado, em vez
+ * de devolver direto pra palbox (pedido do dono, 21/09/2026: cancelar não
+ * deveria ser um "givepal" instantâneo). Sem RCON nem GitHub Actions: o Pal
+ * já não está mais no jogo desde `iniciarRitual`, então "guardar no cofre"
+ * aqui é só a mesma linha que `resgatarDoCofre` grava depois do `delPal` —
+ * ver `lib/pal-cofre.ts`. Sai com o IV que o ritual já tinha alcançado até
+ * aquele momento (não o original de entrada): perder progresso de IV ao
+ * cancelar continua sendo o risco de quem doou, perder o Pal em si nunca
+ * deveria ter sido possível.
  */
 export async function cancelarRitual(ritualId: number): Promise<Resultado> {
   const session = await auth();
@@ -718,10 +736,32 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
   const discordId = session.user.discordId;
   const staff = isStaff(levelOf(session.user.roles, session.user.isMember));
 
+  const rows = (await sql`
+    select id, discord_id, server_slug, template, status, iv_health, iv_attack, iv_defense
+    from purification_rituals
+    where id = ${ritualId}
+  `) as {
+    id: number;
+    discord_id: string;
+    server_slug: string;
+    template: PalTemplate;
+    status: string;
+    iv_health: number;
+    iv_attack: number;
+    iv_defense: number;
+  }[];
+  const ritual = rows[0];
+  if (!ritual) return { ok: false, mensagem: "Ritual não encontrado." };
+  if (!staff && ritual.discord_id !== discordId) {
+    return { ok: false, mensagem: "Essa purificação não é sua." };
+  }
+  if (ritual.status !== "aguardando_regra" && ritual.status !== "ativo") {
+    return { ok: false, mensagem: "Esse ritual não pode mais ser cancelado." };
+  }
+
   // Um resgate já pode estar em voo (workflow do GitHub Actions/RCON já
-  // disparado por `resgatarPalPurificado`) quando o cancelamento chega —
-  // não tem como abortar isso a meio caminho, e cancelar por cima faria o
-  // Pal voltar pra palbox de um ritual que devia ter sido perdido.
+  // disparado por `resgatarPalPurificado`) — não tem como abortar isso a
+  // meio caminho, e cancelar por cima guardaria o Pal duas vezes.
   const emVoo = (await sql`
     select id from pal_transfers
     where ritual_id = ${ritualId}
@@ -733,19 +773,49 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
     return { ok: false, mensagem: "O resgate desse Pal já começou — não é mais possível cancelar." };
   }
 
+  // Mesmo clone de `resgatarPalPurificado`: só os IVs atuais mudam, Gênero
+  // travado em "None" (peça única da purificação, não entra em incubadora).
+  const ivsOriginais = ritual.template.IVs;
+  const atacaCorpoACorpo = Number(ivsOriginais.AttackMelee ?? 0) >= Number(ivsOriginais.AttackShot ?? 0);
+  const templateAtualizado: PalTemplate = {
+    ...ritual.template,
+    Gender: "None",
+    IVs: {
+      ...ivsOriginais,
+      Health: ritual.iv_health,
+      Defense: ritual.iv_defense,
+      ...(atacaCorpoACorpo
+        ? { AttackMelee: ritual.iv_attack }
+        : { AttackShot: ritual.iv_attack }),
+    },
+  };
+
+  try {
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template, server_slug)
+      values (${ritual.discord_id}, ${templateAtualizado.PalID}, ${JSON.stringify(templateAtualizado)}, ${ritual.server_slug})
+    `;
+  } catch {
+    return {
+      ok: false,
+      mensagem: "Não consegui guardar o Pal no cofre agora — o ritual continua ativo. Tente cancelar de novo em instantes.",
+    };
+  }
+
   const atualizado = (await sql`
     update purification_rituals
     set status = 'cancelado'
-    where id = ${ritualId}
-      and status in ('aguardando_regra', 'ativo')
-      and (${staff} or discord_id = ${discordId})
+    where id = ${ritualId} and status in ('aguardando_regra', 'ativo')
     returning id
   `) as { id: number }[];
 
   if (!atualizado.length) {
     return { ok: false, mensagem: "Esse ritual não pode mais ser cancelado." };
   }
-  return { ok: true, mensagem: "Ritual cancelado." };
+  return {
+    ok: true,
+    mensagem: `Ritual cancelado — o Pal foi para o seu cofre (libera em ${COOLDOWN_RESGATE_HORAS}h).`,
+  };
 }
 
 /* --------------------------------------------------------------- resgatar */

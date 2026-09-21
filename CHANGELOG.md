@@ -12,6 +12,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 - A Câmara de Purificação ficou em manutenção por algumas horas hoje enquanto essas mudanças eram testadas — já está de volta ao normal.
 - Painel de Economia (staff) juntou "migrar saldo" e "ajustar saldo" numa tela só, com a lista de jogadores vinculados pra escolher em vez de colar o ID na mão.
 - Nova tela **Entregar itens** (staff), separada da Moderação: dá pra entregar item avulso pra quem está online, ou montar um **kit de prêmio** salvo (ex: prêmio de evento) e reusar sempre que precisar, sem remontar a lista toda vez.
+- **Corrigido — grave: cancelar a purificação podia perder o Pal de vez.** Cancelar só mudava o status na tela, mas o Pal já tinha saído da palbox desde que o ritual começou — sem nenhum caminho de volta, cancelar simplesmente o perdia, sem aviso nenhum disso. Foi assim que o Felbat do SantØs sumiu ao cancelar (já devolvido na mão). Agora cancelar manda o Pal para o seu cofre, com a mesma trava de tempo antes de poder resgatar — e o aviso, antes de confirmar o cancelamento, já diz quanto tempo é essa espera.
 
 ## 2026-09-20
 

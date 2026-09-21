@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { Camara3D } from "@/components/camara-3d";
 import { meuVinculo } from "@/lib/linking";
 import { ondeEstouOnline } from "@/lib/cofre";
-import { palsNoJogo } from "@/lib/pal-cofre";
+import { palsNoJogo, COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import {
   meuRitualAtivo,
   historicoDoRitual,
@@ -267,7 +267,7 @@ export default async function Purificacao() {
 
               {ritualAndando.status !== "completo" && (
                 <div className="mt-1">
-                  <CancelarRitual ritualId={ritualAndando.id} />
+                  <CancelarRitual ritualId={ritualAndando.id} cooldownHoras={COOLDOWN_RESGATE_HORAS} />
                 </div>
               )}
             </>
