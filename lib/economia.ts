@@ -181,38 +181,6 @@ export async function lancar(opcoes: {
   return { status: "sem-saldo", saldo: await saldo(discordId) };
 }
 
-/* ---------------------------------------------------------------- migração */
-
-/**
- * Traz o saldo que a pessoa já tinha no Palbot (§7.1, decisão C).
- *
- * A chave é o próprio ID da pessoa: rodar a migração duas vezes não credita
- * duas vezes. Se alguém foi migrado com valor errado, a correção é um
- * **ajuste** com motivo — nunca uma segunda migração escondendo a primeira.
- */
-export async function migrarDoPalbot(
-  discordId: string,
-  quanto: number,
-  actorId: string,
-): Promise<ResultadoLancamento> {
-  if (quanto < 0) throw new Error("Migração não aceita valor negativo");
-  return lancar({
-    discordId,
-    delta: quanto,
-    origem: "migracao",
-    descricao: "Saldo que você já tinha no Palbot",
-    chave: `migracao:${discordId}`,
-    actorId,
-  });
-}
-
-export async function jaFoiMigrado(discordId: string): Promise<boolean> {
-  const rows = (await sql`
-    select 1 from ledger where idempotency_key = ${`migracao:${discordId}`}
-  `) as unknown[];
-  return rows.length > 0;
-}
-
 /**
  * Ajuste manual da administração.
  *
@@ -234,6 +202,31 @@ export async function ajustar(opcoes: {
     origem: "ajuste",
     descricao: motivo,
     chave: `ajuste:${crypto.randomUUID()}`,
+    actorId: opcoes.actorId,
+  });
+}
+
+/**
+ * Mesmo ajuste manual, mas em vez de somar/subtrair, define o saldo FINAL
+ * da pessoa — calcula o delta necessário (`alvo - saldo atual`) e lança
+ * pela mesma `ajustar`, então continua registrado no extrato com motivo.
+ *
+ * Substitui a antiga "migração em lote" (que definia o saldo trazido do
+ * Palbot) depois que o servidor deixou de usar o Palbot — o admin único de
+ * economia (§020, 21/09/2026) cobre os dois jeitos de mexer no saldo: somar
+ * um valor, ou dizer direto "agora essa pessoa tem X".
+ */
+export async function definirSaldo(opcoes: {
+  discordId: string;
+  alvo: number;
+  motivo: string;
+  actorId: string;
+}): Promise<ResultadoLancamento> {
+  const atual = await saldo(opcoes.discordId);
+  return ajustar({
+    discordId: opcoes.discordId,
+    delta: opcoes.alvo - atual,
+    motivo: opcoes.motivo,
     actorId: opcoes.actorId,
   });
 }

@@ -19,7 +19,6 @@ import { PalCard } from "@/components/pal-card";
 import {
   elegibilidadeDoador,
   elegibilidadeAlvo,
-  DIAS_REFERENCIA_MINIMO,
   DIAS_REFERENCIA_MAXIMO,
 } from "@/lib/purificacao-regras";
 import type { PalDisponivel } from "@/lib/pal-cofre";
@@ -342,6 +341,8 @@ export function EscolherPassivasDoRitual({
   const [busca, setBusca] = useState("");
   const [escolhidas, setEscolhidas] = useState<Set<string>>(() => new Set(pontoDePartida));
   const [dias, setDias] = useState(2);
+  const [horas, setHoras] = useState(0);
+  const [minutos, setMinutos] = useState(0);
 
   useEffect(() => {
     if (estado.ok) onSucesso?.();
@@ -426,22 +427,44 @@ export function EscolherPassivasDoRitual({
       </p>
 
       {ehReferencia && (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <label htmlFor="dias-validade" className="text-xs text-muted">
-            Vale por quantos dias
+        <div className="mt-2 flex flex-wrap items-end gap-3">
+          <span className="w-full text-xs text-muted">Vale por quanto tempo</span>
+          <input type="hidden" name="dias" value={dias} />
+          <input type="hidden" name="horas" value={horas} />
+          <input type="hidden" name="minutos" value={minutos} />
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            dias
+            <input
+              type="number"
+              min={0}
+              max={DIAS_REFERENCIA_MAXIMO}
+              value={dias}
+              onChange={(e) => setDias(Number(e.target.value))}
+              className="w-16 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1 text-sm outline-none focus:border-gold"
+            />
           </label>
-          <input
-            id="dias-validade"
-            name="diasValidade"
-            type="number"
-            min={DIAS_REFERENCIA_MINIMO}
-            max={DIAS_REFERENCIA_MAXIMO}
-            step={0.5}
-            value={dias}
-            onChange={(e) => setDias(Number(e.target.value))}
-            required
-            className="w-20 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1 text-sm outline-none focus:border-gold"
-          />
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            horas
+            <input
+              type="number"
+              min={0}
+              max={23}
+              value={horas}
+              onChange={(e) => setHoras(Number(e.target.value))}
+              className="w-16 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1 text-sm outline-none focus:border-gold"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            min
+            <input
+              type="number"
+              min={0}
+              max={59}
+              value={minutos}
+              onChange={(e) => setMinutos(Number(e.target.value))}
+              className="w-16 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1 text-sm outline-none focus:border-gold"
+            />
+          </label>
         </div>
       )}
 
@@ -735,21 +758,37 @@ export function ResgatarPal({
 /**
  * Quanto tempo falta para a "sugestão de passivas" (`ReferenciaDeRegra`)
  * expirar — client component porque precisa recalcular sozinho enquanto o
- * tempo passa, sem esperar o jogador recarregar a página. Passado o prazo,
- * `passivasDoUltimoRitual` já para de devolver a referência no próximo
- * carregamento do server; aqui é só o aviso visual chegando primeiro.
+ * tempo passa, sem esperar o jogador recarregar a página.
+ *
+ * Ao chegar a zero, chama `router.refresh()` — sem isso a tela ficava presa
+ * em "expirando…" para sempre, porque só um F5 de verdade reexecutava o
+ * Server Component e buscava a sugestão nova (`passivasDoUltimoRitual`
+ * sorteia uma automaticamente quando a atual expirou). Pedido do dono em
+ * 21/09/2026: o sorteio precisa acontecer sozinho, sem depender de alguém
+ * recarregar a página na mão.
  */
 export function ContagemRegressiva({ expiraEm }: { expiraEm: string }) {
+  const router = useRouter();
   const alvo = useMemo(() => new Date(expiraEm).getTime(), [expiraEm]);
   const [restanteMs, setRestanteMs] = useState(() => alvo - Date.now());
+  const [jaAtualizou, setJaAtualizou] = useState(false);
 
   useEffect(() => {
+    setRestanteMs(alvo - Date.now());
+    setJaAtualizou(false);
     const t = setInterval(() => setRestanteMs(alvo - Date.now()), 1000);
     return () => clearInterval(t);
   }, [alvo]);
 
+  useEffect(() => {
+    if (restanteMs <= 0 && !jaAtualizou) {
+      setJaAtualizou(true);
+      router.refresh();
+    }
+  }, [restanteMs, jaAtualizou, router]);
+
   if (restanteMs <= 0) {
-    return <span style={{ color: "#5c6e66" }}>expirando…</span>;
+    return <span style={{ color: "#5c6e66" }}>atualizando…</span>;
   }
 
   const horas = Math.floor(restanteMs / 3_600_000);

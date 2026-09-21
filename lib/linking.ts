@@ -108,6 +108,23 @@ export async function temVinculo(discordId: string): Promise<boolean> {
 }
 
 /**
+ * Uma linha por conta do Discord vinculada — para o seletor de jogador do
+ * ajuste manual de Paletas (`/admin/economia`), no lugar de digitar o ID na
+ * mão. `distinct on` porque a mesma conta pode ter linhas em mais de um
+ * servidor (§017 acima); mostra o vínculo mais recente de cada um.
+ */
+export async function todosOsVinculos(): Promise<
+  { discordId: string; playerName: string }[]
+> {
+  const rows = (await sql`
+    select distinct on (discord_id) discord_id, player_name
+    from account_links
+    order by discord_id, linked_at desc
+  `) as { discord_id: string; player_name: string }[];
+  return rows.map((r) => ({ discordId: r.discord_id, playerName: r.player_name }));
+}
+
+/**
  * Os personagens da pessoa, um por servidor onde ela jogou.
  *
  * Um vínculo só, vários personagens: é o UID que os liga. Quem joga no Free

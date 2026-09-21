@@ -7,9 +7,11 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 ## 2026-09-21
 
 - **Câmara de Purificação ganhou uma explicação no topo da tela.** Agora dá pra ler o que é o sistema, como ele funciona e quais são os 4 requisitos pra doar um Pal, antes de mexer em qualquer coisa.
-- **Câmara de Purificação entrou em manutenção.** Iniciar, doar, resgatar e cancelar ficam fora do ar por enquanto — volta assim que estiver pronta.
-- **Passivas sugeridas da Câmara agora têm prazo de validade.** O staff escolhe por quantos dias a sugestão vale (com contagem regressiva na tela) — passado o prazo, ela some sozinha em vez de continuar valendo pra sempre. O texto também ficou mais direto: "Passivas sugeridas para essa rodada" no lugar de "da última vez".
+- **Passivas sugeridas da Câmara agora têm prazo de validade.** O staff escolhe por quanto tempo a sugestão vale (com contagem regressiva na tela) — passado o prazo, ela some sozinha em vez de continuar valendo pra sempre. O texto também ficou mais direto: "Passivas sugeridas para essa rodada" no lugar de "da última vez".
 - Corrigido: depois de salvar a sugestão de passivas ou o IV mínimo de resgate (staff), o formulário ficava aberto — agora fecha sozinho.
+- A Câmara de Purificação ficou em manutenção por algumas horas hoje enquanto essas mudanças eram testadas — já está de volta ao normal.
+- Painel de Economia (staff) juntou "migrar saldo" e "ajustar saldo" numa tela só, com a lista de jogadores vinculados pra escolher em vez de colar o ID na mão.
+- Nova tela **Entregar itens** (staff), separada da Moderação: dá pra entregar item avulso pra quem está online, ou montar um **kit de prêmio** salvo (ex: prêmio de evento) e reusar sempre que precisar, sem remontar a lista toda vez.
 
 ## 2026-09-20
 

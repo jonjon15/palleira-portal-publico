@@ -186,6 +186,13 @@ export default async function Painel() {
               href="/admin/kits"
             />
           )}
+          {canPowerServer(level) && (
+            <Card
+              title="Entregar itens"
+              body="Dar item de graça pra quem está online — avulso ou por kit de prêmio salvo."
+              href="/admin/entregar-itens"
+            />
+          )}
           {canManageEvents(level, user.roles) && (
             <Card
               title="Eventos"

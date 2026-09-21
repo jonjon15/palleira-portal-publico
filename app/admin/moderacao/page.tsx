@@ -10,8 +10,6 @@ import { recentes, ACAO_LABEL } from "@/lib/moderacao";
 import { nomesDe } from "@/lib/discord";
 import { filaAdmin } from "@/lib/resgate-base";
 import { jogadoresOnlineParaEntrega } from "@/lib/admin-entregar-pal";
-import { jogadoresOnlineParaItens } from "@/lib/admin-entregar-itens";
-import { catalogoDeItens } from "@/lib/itens";
 import {
   SalvarMundo,
   Desligar,
@@ -27,7 +25,6 @@ import {
   LinhaJogador,
   FilaDeRestauracao,
   EntregarPal,
-  EntregarItens,
 } from "./formularios";
 
 export const metadata: Metadata = { title: "Moderação" };
@@ -91,16 +88,14 @@ export default async function Moderacao({
     );
   }
 
-  const [info, metrics, players, log, fila, onlineParaEntrega, onlineParaItens] = await Promise.all([
+  const [info, metrics, players, log, fila, onlineParaEntrega] = await Promise.all([
     getInfo(server).catch(() => null),
     getMetrics(server).catch(() => null),
     getPlayers(server).catch(() => []),
     recentes(20).catch(() => []),
     podeEnergia ? filaAdmin().catch(() => []) : Promise.resolve([]),
     podeEnergia ? jogadoresOnlineParaEntrega().catch(() => []) : Promise.resolve([]),
-    podeEnergia ? jogadoresOnlineParaItens().catch(() => []) : Promise.resolve([]),
   ]);
-  const catalogoItens = podeEnergia ? catalogoDeItens() : [];
 
   // Uma fila só para as duas listas: o mesmo admin costuma aparecer no log e
   // na fila, e `nomesDe` já ignora id repetido.
@@ -352,26 +347,6 @@ export default async function Moderacao({
               </p>
               <div className="mt-5">
                 <EntregarPal online={onlineParaEntrega} />
-              </div>
-            </section>
-
-            {/* ------------------------------------------ entregar itens manual */}
-            <section className="mt-4 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-              <h2 className="text-lg font-semibold">Entregar itens manual</h2>
-              <p className="mt-1.5 max-w-3xl text-sm text-muted">
-                A versão mascarada do{" "}
-                <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-                  /giveitems
-                </code>{" "}
-                do jogo: escolha jogadores pelo nome, monte o lote de itens
-                buscando por nome, e entrega tudo de uma vez.
-              </p>
-              <p className="mt-2 max-w-3xl text-xs text-muted">
-                Só aparece quem está online agora — o comando do jogo precisa
-                achar o jogador no mundo antes de entregar.
-              </p>
-              <div className="mt-5">
-                <EntregarItens online={onlineParaItens} catalogo={catalogoItens} />
               </div>
             </section>
           </div>

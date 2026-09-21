@@ -91,8 +91,11 @@ export async function acaoAtualizarReferencia(
   form: FormData,
 ): Promise<Estado> {
   const passivas = form.getAll("passivas").map(String);
-  const diasValidade = Number(form.get("diasValidade") ?? 0);
-  const r = await atualizarReferenciaDeRegra(passivas, diasValidade);
+  const dias = Number(form.get("dias") ?? 0);
+  const horas = Number(form.get("horas") ?? 0);
+  const minutos = Number(form.get("minutos") ?? 0);
+  const minutosValidade = dias * 24 * 60 + horas * 60 + minutos;
+  const r = await atualizarReferenciaDeRegra(passivas, minutosValidade);
   atualiza();
   return r;
 }

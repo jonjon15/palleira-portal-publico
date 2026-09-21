@@ -24,7 +24,9 @@ export type AcaoModeracao =
   | "restore_queue"
   | "deliver_pal"
   | "deliver_items"
-  | "kit";
+  | "kit"
+  | "kit_premio"
+  | "deliver_kit_premio";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -43,6 +45,8 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   deliver_pal: "Entrega de Pal manual",
   deliver_items: "Entrega de itens manual",
   kit: "Kit da loja",
+  kit_premio: "Kit de prêmio",
+  deliver_kit_premio: "Entrega de kit de prêmio",
 };
 
 export interface AcaoRow {

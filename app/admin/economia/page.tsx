@@ -3,13 +3,10 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { levelOf, canManageEconomy } from "@/lib/roles";
-import { temListaDeMembros, nomesDe, listarCanais } from "@/lib/discord";
+import { nomesDe } from "@/lib/discord";
+import { todosOsVinculos } from "@/lib/linking";
 import { circulacao, maioresSaldos, ORIGEM_LABEL, type Origem } from "@/lib/economia";
-import {
-  MigrarEmLote,
-  AjustarSaldo,
-  ImportarDoCanal,
-} from "./formularios";
+import { AjustarSaldo } from "./formularios";
 
 export const metadata: Metadata = { title: "Economia" };
 export const dynamic = "force-dynamic";
@@ -23,37 +20,33 @@ export default async function Economia() {
     notFound();
   }
 
-  const [geral, topo, podeNome, canais] = await Promise.all([
+  const [geral, topo, vinculos] = await Promise.all([
     circulacao(),
     maioresSaldos(),
-    temListaDeMembros(),
-    listarCanais().catch(() => []),
+    todosOsVinculos(),
   ]);
 
-  // 🔴 Em série, e não 16 chamadas de uma vez.
-  //
-  // Antes era um `Promise.all` com um `buscarMembro` por pessoa, e o Discord
-  // devolvia 429 em quase todas: o limite é de ~5 por rajada. Como o erro
-  // caía num `.catch(() => null)`, a tela não mostrava falha nenhuma — só
-  // trocava o nome pelo ID cru. Foi o que o dono viu em 12/09/2026, com 11
-  // das 16 linhas numeradas. Medido: 16 em paralelo → 11 respostas 429.
-  //
-  // `nomesDe` resolve em fila, respeitando o `retry_after` quando vem. Custa
-  // alguns segundos numa página de administração que já é dinâmica, e é o
-  // caminho que funciona **sem** o Server Members Intent — que este bot não
-  // tem (a lista completa responde 403, conferido no mesmo dia).
-  const nomes = await nomesDe(topo.map((t) => t.discord_id));
+  // 🔴 Em série, e não uma chamada por pessoa de uma vez — o Discord dá 429
+  // em rajada (ver o comentário maior de `nomesDe`, chamada em lote aqui
+  // resolve os dois usos da página numa passada só).
+  const idsParaNome = [...new Set([...topo.map((t) => t.discord_id), ...vinculos.map((v) => v.discordId)])];
+  const nomes = await nomesDe(idsParaNome);
+
   const comNome = topo.map((t) => ({
     ...t,
     nome: nomes.get(t.discord_id) ?? t.discord_id,
   }));
+
+  const jogadores = vinculos
+    .map((v) => ({ discordId: v.discordId, nome: nomes.get(v.discordId) ?? v.playerName }))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
     <>
       <PageHeader
         kicker="Administração"
         title="Economia"
-        description="Quanta Paleta existe, de onde veio, e as duas ferramentas que mexem nisso: migração e ajuste."
+        description="Quanta Paleta existe, de onde veio, e o ajuste que mexe nisso."
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -70,73 +63,18 @@ export default async function Economia() {
           ))}
         </div>
 
-        {!podeNome && (
-          <div className="mt-6 rounded-[var(--radius-card)] border border-warning/30 bg-warning/[0.07] p-5">
-            <h2 className="font-semibold">
-              Falta um interruptor para migrar por nome
-            </h2>
-            <p className="mt-1.5 text-sm text-muted">
-              O bot está no servidor, mas o Discord não deixa ele ver a lista de
-              membros. Em{" "}
-              <b className="text-text">
-                Developer Portal → seu app → Bot → Privileged Gateway Intents
-              </b>
-              , ligue o <b className="text-text">Server Members Intent</b> e
-              salve. Sem isso a migração só aceita ID numérico.
-            </p>
-          </div>
-        )}
-
-        {/* ------------------------------------------------ importador */}
-        <section className="mt-8 rounded-[var(--radius-card)] border border-gold/30 bg-gold/[0.04] p-6">
-          <p className="text-xs font-bold tracking-[0.18em] text-gold uppercase">
-            O jeito fácil
-          </p>
-          <h2 className="mt-2 text-lg font-semibold">
-            Ler os saldos direto do Discord
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            O Palbot não exporta nada, mas ele responde em público. Peça para a
-            comunidade rodar{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-              /balance
-            </code>{" "}
-            num canal, e o site lê as respostas dele aqui. Quem digitou o
-            comando vem carimbado pelo próprio Discord — o saldo cai na conta
-            certa, sem ninguém transcrever nome nenhum.
-          </p>
-          <div className="mt-6 max-w-2xl">
-            <ImportarDoCanal canais={canais} />
-          </div>
-        </section>
-
-        {/* -------------------------------------------------- migração */}
-        <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
-          <h2 className="text-lg font-semibold">Ou na mão, colando a lista</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            Para quem não apareceu no canal. Rode{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-              /checkpoints
-            </code>{" "}
-            no Discord, anote o número e cole aqui. Rodar duas vezes não credita
-            duas vezes — quem já foi migrado é ignorado.
-          </p>
-          <div className="mt-6 max-w-2xl">
-            <MigrarEmLote podeNome={podeNome} />
-          </div>
-        </section>
-
         {/* ---------------------------------------------------- ajuste */}
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <section className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
             <h2 className="text-lg font-semibold">Ajuste manual</h2>
             <p className="mt-2 text-sm text-muted">
-              Prêmio de evento, correção de erro, devolução. O motivo é
-              obrigatório e fica visível no extrato da pessoa — é o que
-              diferencia administração de mágica.
+              Prêmio de evento, correção de erro, devolução, ou saldo que a
+              pessoa já tinha de algum outro lugar. O motivo é obrigatório e
+              fica visível no extrato da pessoa — é o que diferencia
+              administração de mágica.
             </p>
             <div className="mt-6">
-              <AjustarSaldo />
+              <AjustarSaldo jogadores={jogadores} />
             </div>
           </section>
 

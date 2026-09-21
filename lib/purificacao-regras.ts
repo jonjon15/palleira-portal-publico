@@ -28,10 +28,13 @@ export const IV_INICIAL_RITUAL = 100;
 export const IV_MINIMO_RESGATE_PADRAO = 110;
 
 /**
- * Prazo mínimo e máximo (em dias) que a staff pode dar para a "sugestão de
- * passivas" da rodada valer — ver migração 025 e `atualizarReferenciaDeRegra`.
+ * Prazo mínimo e máximo (em minutos) que a staff pode dar para a "sugestão
+ * de passivas" da rodada valer — ver migração 025 e
+ * `atualizarReferenciaDeRegra`. O formulário pede dias + horas + minutos
+ * separados (mais fácil de preencher) e soma tudo nisto antes de enviar.
  */
-export const DIAS_REFERENCIA_MINIMO = 1;
+export const MINUTOS_REFERENCIA_MINIMO = 1;
+export const MINUTOS_REFERENCIA_MAXIMO = 30 * 24 * 60; // 30 dias
 export const DIAS_REFERENCIA_MAXIMO = 30;
 
 /**

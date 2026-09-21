@@ -22,12 +22,6 @@ import {
   estornarPedidoRecusado,
 } from "@/lib/resgate-base";
 import { entregarPalPorJson, continuarEntregaAdmin } from "@/lib/admin-entregar-pal";
-import {
-  entregarItensParaJogadores,
-  type ItemPedido,
-  type ResultadoEntrega,
-} from "@/lib/admin-entregar-itens";
-import { nomeDoItem } from "@/lib/itens";
 
 export interface Estado {
   ok: boolean;
@@ -1002,61 +996,6 @@ export async function acaoConsultarEntregaPal(
   return continuarEntregaAdmin(transferId);
 }
 
-/* ------------------------------------------------------------- entregar itens */
-
-export interface EstadoEntregaItens extends Estado {
-  resultados?: ResultadoEntrega[];
-}
-
-/**
- * A versão mascarada do `/giveitems` do jogo: um lote de itens para uma
- * lista de jogadores online, escolhidos por dropdown em vez de UserId cru.
- *
- * Sem fila nem GitHub Actions — `giveitems` é RCON direto, então a entrega
- * inteira acontece dentro de `entregarItensParaJogadores` e já volta pronta,
- * ao contrário de "Entregar Pal manual" (que precisa de um arquivo escrito
- * no servidor antes do RCON).
- */
-export async function acaoEntregarItens(
-  _anterior: EstadoEntregaItens,
-  form: FormData,
-): Promise<EstadoEntregaItens> {
-  const actorId = await exigirEnergia();
-
-  let alvos: { discordId: string; nome: string; uid: string; serverSlug: string }[] = [];
-  let itens: ItemPedido[] = [];
-  try {
-    alvos = JSON.parse(String(form.get("alvos") ?? "[]"));
-    itens = JSON.parse(String(form.get("itens") ?? "[]"));
-  } catch {
-    return { ok: false, mensagem: "Formulário corrompido — recarregue a página e tente de novo." };
-  }
-
-  const r = await entregarItensParaJogadores(alvos, itens);
-
-  const resumoItens = itens.map((i) => `${nomeDoItem(i.itemId)} ×${i.quantidade}`).join(", ");
-  const resumoAlvos = alvos.map((a) => a.nome).join(", ");
-
-  // Sem `server` fixo aqui — cada alvo pode estar num servidor diferente, e
-  // a página não tem um seletor único que faça sentido para o log. Mesmo
-  // padrão de `acaoEntregarPal`: ação econômica "de graça", auditada por
-  // fora do `executar()` genérico.
-  await registrar({
-    actorId,
-    serverSlug: "-",
-    action: "deliver_items",
-    target: alvos.map((a) => a.discordId).join(","),
-    detail: `${resumoItens || "nenhum item"} → ${resumoAlvos || "ninguém"}`,
-    ok: r.ok,
-    error: r.ok ? undefined : r.mensagem,
-  });
-  if (r.resultados.length > 0) {
-    await logarNoDiscord(
-      `🛠️ Entrega de itens manual · ${resumoItens} — <@${actorId}> → ${alvos
-        .map((a) => `<@${a.discordId}>`)
-        .join(", ")}\n> ${r.mensagem}`,
-    );
-  }
-  revalidatePath("/admin/moderacao");
-  return r;
-}
+// "Entregar itens manual" mudou de casa em 21/09/2026 — agora mora em
+// app/admin/entregar-itens (página própria, pedido do dono), ao lado dos
+// kits de prêmio que reusam o mesmo motor (`lib/admin-entregar-itens.ts`).
