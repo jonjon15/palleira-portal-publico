@@ -66,6 +66,23 @@ const CRITERIOS = {
 
 type Criterio = keyof typeof CRITERIOS;
 
+/**
+ * Desempate padrão de todo critério: Level → Poder → Qtd de Pals → nome.
+ *
+ * É o que a página abre mostrando (clique em "Level" reproduz isto do
+ * zero) e o que decide empate de qualquer outra coluna escolhida — sem
+ * isso a lista dançaria entre um clique e outro para quem tem o mesmo
+ * número na coluna ordenada.
+ */
+function desempate(a: LinhaDoPlacar, b: LinhaDoPlacar): number {
+  return (
+    b.level - a.level ||
+    (b.poderHp ?? -1) - (a.poderHp ?? -1) ||
+    b.pals - a.pals ||
+    a.nome.localeCompare(b.nome, "pt-BR")
+  );
+}
+
 /** Qual das duas colunas de elemento está sendo filtrada. */
 type Coluna = "primario" | "secundario";
 
@@ -123,14 +140,14 @@ export function TabelaJogadores({
     // 🔴 Quem não tem o número vai para o fim, nunca para o topo. Sem isto,
     // ordenar por Poder colocaria na frente justamente quem está com traço
     // — a palbox de quem nunca entrou no jogo desde a migração 017.
-    if (va === null && vb === null) return b.level - a.level;
+    if (va === null && vb === null) return desempate(a, b);
     if (va === null) return 1;
     if (vb === null) return -1;
     if (vb !== va) return vb - va;
 
-    // Empate desfeito sempre igual, senão a lista dança entre um clique e
-    // outro em quem tem o mesmo número.
-    return b.level - a.level || a.nome.localeCompare(b.nome, "pt-BR");
+    // Empate desfeito sempre em cascata, senão a lista dança entre um
+    // clique e outro em quem tem o mesmo número.
+    return desempate(a, b);
   });
 
   function trocarFiltro(c: Coluna, e: Elemento | null) {
