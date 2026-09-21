@@ -18,6 +18,11 @@ export const metadata: Metadata = {
  * lidos pelo bot em 12/09/2026. Só a formatação mudou — a redação, a ordem e
  * o peso de cada regra são os do dono.
  *
+ * A seção Dominantes foi atualizada em 21/09/2026 a partir de
+ * `REGRAS DOMINANTE.txt` (fornecido pelo dono fora do Discord), que é mais
+ * completo que o canal: acrescenta o reset de personagem (1×/mês) e a regra
+ * de Pal voador (locomoção em modo pacífico ok, ataque é infração).
+ *
  * Quando a regra mudar no Discord, ela precisa mudar aqui à mão: a página é
  * estática de propósito. Regra que depende da API do Discord estar de pé é
  * regra que some da tela no pior momento.
@@ -152,12 +157,17 @@ const DOMINANTES: Secao[] = [
       { texto: "O elemento Neutro pode ser usado por todos." },
       {
         texto:
-          "Registro obrigatório no canal de registro de player ANTES de jogar.",
+          "Registro obrigatório no canal #📋registro-player ANTES de começar a jogar.",
       },
-      { texto: "A primeira disputa de arena é só no nível 40." },
       {
         texto:
-          "Proibido trocar a cor da pele depois do registro para mudar de elemento.",
+          "É obrigatório manter a aparência correspondente à raça escolhida no registro.",
+      },
+      { texto: "É permitido 1 reset de personagem por mês." },
+      { texto: "A primeira disputa de arena é só a partir do nível 40." },
+      {
+        texto:
+          "Proibido trocar a cor da pele depois do registro para mudar ou burlar o elemento escolhido.",
         proibido: true,
       },
     ],
@@ -166,20 +176,25 @@ const DOMINANTES: Secao[] = [
     emoji: "🏰",
     titulo: "Território e bases",
     intro:
-      "Cada guilda constrói dentro do seu bioma — mas você não nasce nele.",
+      "Cada guilda constrói sua base definitiva dentro do bioma da sua raça/elemento — mas você não nasce nele.",
     regras: [
       {
         texto:
-          "Até o nível 30 você pode fazer base temporária em qualquer lugar, para conseguir chegar ao seu bioma.",
+          "Até o nível 30 você pode fazer base temporária em qualquer lugar do mapa, para conseguir chegar ao seu bioma.",
       },
       {
         texto:
-          "Depois do nível 30 é obrigatório estar no bioma. Base fora dele é irregular.",
+          "A partir do nível 30 é obrigatório estar estabelecido dentro do seu bioma. Base permanente fora dele é irregular.",
       },
       { texto: "Limite de 2 bases por guilda." },
       {
         texto:
-          "Proibido usar guilda fake ou conta secundária para ter mais bases.",
+          "Proibido usar guilda falsa, conta secundária ou qualquer outro método para ter bases adicionais.",
+        proibido: true,
+      },
+      {
+        texto:
+          "Proibido atacar jogadores dentro de suas bases, e também atacar de dentro da base alguém que está do lado de fora.",
         proibido: true,
       },
     ],
@@ -190,11 +205,20 @@ const DOMINANTES: Secao[] = [
     regras: [
       {
         texto:
-          "Dentro da base: livre. Pode usar qualquer Pal para trabalhar.",
+          "Dentro da base: livre. Pode usar qualquer Pal para trabalhar, independente do elemento.",
       },
       {
         texto:
           "No mundo aberto e nas arenas: proibido usar Pal fora dos elementos que você registrou.",
+        proibido: true,
+      },
+      {
+        texto:
+          "Pal voador é liberado para locomoção pelo mapa, desde que em modo pacífico.",
+      },
+      {
+        texto:
+          "Se o Pal voador for usado para atacar outro jogador, isso é infração e está sujeito a punição.",
         proibido: true,
       },
     ],

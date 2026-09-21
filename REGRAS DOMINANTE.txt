@@ -1,0 +1,100 @@
+📜 **1. LINHAGEM E REGISTRO OBRIGATÓRIO**
+═══════════════════════════════════════
+
+🧬 **ESCOLHA DA RAÇA E DOS ELEMENTOS**
+
+🔥 **Elemento Primário:** escolha **1** entre:
+
+> 🔥 Fogo • ❄️ Gelo • 🌿 Grama • 🪨 Terra
+
+⚡ **Elemento Secundário:** escolha **1** entre:
+
+> ⚡ Elétrico • 💧 Água • 🐉 Dragão • 🌑 Sombra
+
+⚪ **Elemento Neutro:**
+
+> O elemento **Neutro** poderá ser utilizado por todos os jogadores.
+
+📋 **REGISTRO OBRIGATÓRIO**
+
+> O registro do personagem deve ser realizado no canal **#📋registro-player ANTES de começar a jogar**.
+
+👤 **APARÊNCIA DA RAÇA**
+
+> É **obrigatório manter a aparência correspondente à raça escolhida** no registro.
+
+🚫 **PROIBIDO**
+
+> ❌ Alterar a cor da pele após o registro com o objetivo de mudar ou burlar o elemento escolhido.
+
+🔄 **RESET DO PERSONAGEM**
+
+> ✅ É permitido realizar **1 reset de personagem por mês**.
+
+🏟️ **PRIMEIRA DISPUTA DE ARENA**
+
+> ⚔️ A primeira disputa de arena só poderá ser realizada a partir do **LEVEL 40**.
+
+═══════════════════════════════════════
+🏰 **2. TERRITÓRIO E BASES**
+═══════════════════════════════════════
+
+🌎 **REGRA DE TERRITÓRIO**
+
+> Cada Guilda deverá construir sua **base definitiva dentro do bioma correspondente à sua raça/elemento**.
+
+🛡️ **PROTEÇÃO DE BASE**
+
+> ❌ É **PROIBIDO atacar jogadores dentro de suas bases**.
+>
+> ❌ Também é **PROIBIDO atacar de dentro da base um jogador que esteja do lado de fora**.
+
+⏳ **PERÍODO DE TOLERÂNCIA — ATÉ O LEVEL 30**
+
+> Como o jogador não nasce diretamente em seu bioma, ele terá até o **LEVEL 30** para chegar ao território escolhido e estabelecer sua base definitiva.
+
+🏕️ **BASE TEMPORÁRIA**
+
+> Durante esse período, é permitido construir uma **base temporária em qualquer local do mapa**.
+
+🚨 **APÓS O LEVEL 30**
+
+> A partir do **LEVEL 30**, a Guilda deverá obrigatoriamente estar estabelecida dentro do seu bioma.
+>
+> ❌ Bases permanentes fora do território correspondente serão consideradas **IRREGULARES**.
+
+🏠 **LIMITE DE BASES**
+
+> Cada Guilda poderá possuir no máximo **2 bases**.
+
+🚫 **PROIBIDO BURLAR O LIMITE**
+
+> ❌ É proibido utilizar **Guilda falsa, conta secundária ou qualquer outro método** para obter bases adicionais.
+
+═══════════════════════════════════════
+🐾 **3. USO DE PALS**
+═══════════════════════════════════════
+
+🏠 **DENTRO DA BASE**
+
+> ✅ Dentro da própria base, é permitido utilizar **qualquer Pal para trabalho e atividades da base**, independentemente de seu elemento.
+
+🌎 **MUNDO ABERTO E ARENAS**
+
+> ❌ No mundo aberto e nas arenas, é **PROIBIDO utilizar Pals que não pertençam aos elementos registrados pelo jogador**.
+
+🪽 **EXCEÇÃO — PALS VOADORES**
+
+> 🪽 Pals voadores poderão ser utilizados para **locomoção pelo mapa**, desde que estejam em **modo pacífico**.
+
+⚠️ **ATENÇÃO**
+
+> ❌ Se um Pal voador for utilizado para **atacar outro jogador**, a utilização será considerada **infração e estará sujeita a punição**.
+
+📌 **RESUMO**
+
+> 🏠 **Base:** qualquer Pal para trabalho.
+> 🌎 **Mundo aberto:** somente Pals permitidos pelos seus elementos.
+> 🪽 **Pal voador:** permitido para locomoção em modo pacífico.
+> ⚔️ **Ataque com Pal voador:** proibido e sujeito a punição.
+> ═══════════════════════════════════════
