@@ -88,7 +88,8 @@ export function EscolherPalDoRitual({
     return (
       <p className="text-sm text-muted">
         Nenhum Pal da sua palbox pode entrar na câmara — precisa de IV 100 em
-        Vida, Ataque e Defesa, e ser Full Condensado (rank 5).
+        Vida, Ataque e Defesa, ser Full Condensado (rank 5), e não pode ter
+        usado o Cristal do Despertar.
       </p>
     );
   }

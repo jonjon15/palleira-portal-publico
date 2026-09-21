@@ -130,7 +130,12 @@ export default async function Purificacao() {
               <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
                 Só entra quem já é perfeito:
               </span>
-              <span className="text-sm">IV 100 em Vida, Ataque e Defesa, e Full Condensado (rank 5).</span>
+              <span className="text-sm">
+                IV 100 em Vida, Ataque e Defesa, Full Condensado (rank 5), e
+                sem ter usado o Cristal do Despertar — o jogo não devolve o
+                despertar de um Pal que passa pela Câmara, então ela nem
+                deixa entrar quem já despertou.
+              </span>
             </div>
 
             <div

@@ -191,6 +191,12 @@ export interface PalDisponivel {
   partnerSkillLevel: number;
   ivs: Record<string, number>;
   passives: string[];
+  /**
+   * Se o Pal já usou o Cristal do Despertar. `givepal_j` não preserva isso
+   * (confirmado 21/09/2026, ver `lib/pal-template.ts`) — usado só para
+   * barrar entrada na Câmara de Purificação, nunca entra no template salvo.
+   */
+  isAwakening: boolean;
 }
 
 /** Os Pals do time e da palbox, prontos para escolher qual guardar. */
@@ -217,6 +223,7 @@ export async function palsNoJogo(
         partnerSkillLevel: Number(pal.PartnerSkillLevel ?? 0),
         ivs: (pal.IVs as Record<string, number>) ?? {},
         passives: Array.isArray(pal.Passives) ? (pal.Passives as string[]) : [],
+        isAwakening: pal.IsAwakening === true,
       })),
       erro: "",
     };

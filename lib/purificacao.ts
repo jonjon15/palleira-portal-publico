@@ -388,6 +388,9 @@ export async function iniciarRitual(
     partnerSkillLevel: template.PartnerSkillLevel,
     passives: template.Passives,
     palId: template.PalID,
+    // `IsAwakening` não faz parte do `PalTemplate` (ver `lib/pal-template.ts`),
+    // mas está na resposta crua da API — é só daqui que dá pra checar.
+    isAwakening: pal.IsAwakening === true,
   });
   if (!elegivel.ok) {
     return { ok: false, mensagem: elegivel.motivo };

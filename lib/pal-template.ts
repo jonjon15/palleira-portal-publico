@@ -16,6 +16,19 @@ import type { PalCru } from "@/lib/palworld/paldefender";
  * devolve campos que não fazem parte do template (`ImportedCharacter`,
  * `WorkerSick`, `team_slot_index`…) — mandar isso no arquivo é chute sobre o
  * que o parser do PalDefender aceita. Só o que a doc lista entra aqui.
+ *
+ * ⚠️ **`IsAwakening` (o Despertar) fica de fora igual a `Rank`, e por
+ * motivo parecido — mas pior: aqui é confirmado, não hipótese.** Testado ao
+ * vivo em 21/09/2026: um Anubis foi entregue com `IsAwakening: true` no
+ * JSON, e chegou com `IsAwakening: false` — o campo aparece na LEITURA
+ * (`PalCru`, o que a API devolve), mas `givepal_j` ignora silenciosamente
+ * na ESCRITA (nem a doc lista `IsAwakening` como campo aceito). Foi assim
+ * que o Felbat despertado do dono do SantØs voltou sem despertar depois de
+ * cancelar uma purificação — mesma classe de perda que `CondensedPals`
+ * (que também nunca é 0 → chega 0 sempre), só que sem alternativa: dá para
+ * condensar de novo pelo jogo, e dá para despertar de novo pelo jogo — mas
+ * nenhum dos dois volta sozinho pela Câmara ou pelo cofre. Ver a memória do
+ * projeto e o aviso na tela de `/purificacao`.
  */
 export interface PalTemplate {
   PalID: string;
