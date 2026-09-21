@@ -28,6 +28,13 @@ export const IV_INICIAL_RITUAL = 100;
 export const IV_MINIMO_RESGATE_PADRAO = 110;
 
 /**
+ * Prazo mínimo e máximo (em dias) que a staff pode dar para a "sugestão de
+ * passivas" da rodada valer — ver migração 025 e `atualizarReferenciaDeRegra`.
+ */
+export const DIAS_REFERENCIA_MINIMO = 1;
+export const DIAS_REFERENCIA_MAXIMO = 30;
+
+/**
  * O IV de "Ataque" de um Pal — na API/save são DOIS eixos separados
  * (`AttackMelee`, `AttackShot`), e cada Pal usa naturalmente só um deles em
  * combate (o outro fica 0, não é imperfeição — ver PROMPT.md §14.3). Pega

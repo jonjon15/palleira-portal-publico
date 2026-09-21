@@ -13,6 +13,8 @@ import {
   IV_TETO_RITUAL,
   IV_INICIAL_RITUAL,
   IV_MINIMO_RESGATE_PADRAO,
+  DIAS_REFERENCIA_MINIMO,
+  DIAS_REFERENCIA_MAXIMO,
   ivAtaque,
   ivVida,
   ivDefesa,
@@ -50,6 +52,8 @@ export {
   DOADORES_POR_RODADA,
   IV_TETO_RITUAL,
   IV_INICIAL_RITUAL,
+  DIAS_REFERENCIA_MINIMO,
+  DIAS_REFERENCIA_MAXIMO,
   elegibilidadeDoador,
   elegibilidadeAlvo,
   type PalParaValidar,
@@ -174,27 +178,36 @@ export async function historicoDoRitual(ritualId: number): Promise<DoadorConfirm
 }
 
 /**
- * As passivas que o staff pediu da última vez que definiu uma regra —
- * mostrada na tela de "escolher Pal" (antes de existir ritual, e portanto
- * antes de existir regra de verdade) só como referência do que costuma ser
- * pedido. Não é uma regra fixa: o staff ainda define do zero a cada ritual
- * novo, em `definirRegraDoRitual`.
+ * As passivas sugeridas para a rodada atual — mostrada na tela de "escolher
+ * Pal" (antes de existir ritual, e portanto antes de existir regra de
+ * verdade) como orientação do que a staff costuma pedir. Não é uma regra
+ * fixa: o staff ainda define do zero a cada ritual novo, em
+ * `definirRegraDoRitual`.
+ *
+ * Vive em `purification_referencia` — tabela própria, singleton (migração
+ * 025), independente de qualquer ritual existir. Primeira versão
+ * reaproveitava `passivas_aceitas` de um ritual antigo cancelado/completo;
+ * errada, porque sem nenhum ritual encerrado ainda não havia linha nenhuma
+ * pra editar.
+ *
+ * Tem prazo de validade (`expira_em`) — passado ele, a sugestão simplesmente
+ * some da tela, como se nunca tivesse sido definida. Pedido do dono em
+ * 21/09/2026: sem isso, uma sugestão de meses atrás continuava aparecendo
+ * como se ainda valesse.
  */
 export interface ReferenciaDeRegra {
-  ritualId: number;
   passivasAceitas: string[];
+  expiraEm: string;
 }
 
 export async function passivasDoUltimoRitual(): Promise<ReferenciaDeRegra | null> {
   const rows = (await sql`
-    select id, passivas_aceitas
-    from purification_rituals
-    where regra_definida_em is not null
-    order by regra_definida_em desc
-    limit 1
-  `) as { id: number; passivas_aceitas: string[] }[];
+    select passivas_aceitas, expira_em
+    from purification_referencia
+    where id = 1 and expira_em is not null and expira_em > now()
+  `) as { passivas_aceitas: string[]; expira_em: string }[];
   const r = rows[0];
-  return r ? { ritualId: r.id, passivasAceitas: r.passivas_aceitas } : null;
+  return r ? { passivasAceitas: r.passivas_aceitas, expiraEm: r.expira_em } : null;
 }
 
 /**
@@ -214,34 +227,45 @@ export async function ritualEmDestaque(): Promise<{ palId: string } | null> {
 }
 
 /**
- * Atualiza só `passivas_aceitas` de um ritual já finalizado (cancelado ou
- * completo) — usado para editar a "regra de referência" mostrada na tela de
- * escolher Pal, sem reviver o ritual (não mexe em `status`). Diferente de
- * `definirRegraDoRitual`, que é para um ritual em andamento de verdade.
+ * Define (ou redefine) a "sugestão de passivas" da Câmara — configuração
+ * única e global, sem depender de nenhum ritual existir. Diferente de
+ * `definirRegraDoRitual`, que é a regra que vale de verdade para um ritual
+ * em andamento.
+ *
+ * `diasValidade`: por quantos dias a sugestão vale a partir de agora —
+ * passado isso, `passivasDoUltimoRitual` para de devolvê-la. Aceita fração
+ * de dia (ex: 0.5 = 12h), pedido do dono em 21/09/2026 pra poder dar
+ * validades curtas sem precisar de um segundo campo em horas.
  */
 export async function atualizarReferenciaDeRegra(
-  ritualId: number,
   passivas: string[],
+  diasValidade: number,
 ): Promise<Resultado> {
   const staff = await exigirStaff();
   if (!("discordId" in staff)) return staff;
   if (passivas.length === 0) {
     return { ok: false, mensagem: "Escolha pelo menos uma passiva aceita." };
   }
-
-  const atualizado = (await sql`
-    update purification_rituals
-    set passivas_aceitas = ${passivas},
-        regra_definida_por = ${staff.discordId},
-        regra_definida_em = now()
-    where id = ${ritualId} and status in ('cancelado', 'completo')
-    returning id
-  `) as { id: number }[];
-
-  if (!atualizado.length) {
-    return { ok: false, mensagem: "Esse ritual não é uma referência editável." };
+  if (
+    !Number.isFinite(diasValidade) ||
+    diasValidade < DIAS_REFERENCIA_MINIMO ||
+    diasValidade > DIAS_REFERENCIA_MAXIMO
+  ) {
+    return {
+      ok: false,
+      mensagem: `A validade precisa ser entre ${DIAS_REFERENCIA_MINIMO} e ${DIAS_REFERENCIA_MAXIMO} dias.`,
+    };
   }
-  return { ok: true, mensagem: "Referência atualizada." };
+
+  await sql`
+    update purification_referencia
+    set passivas_aceitas = ${passivas},
+        definida_por = ${staff.discordId},
+        definida_em = now(),
+        expira_em = now() + (${diasValidade} || ' days')::interval
+    where id = 1
+  `;
+  return { ok: true, mensagem: "Sugestão atualizada." };
 }
 
 /** O ritual em andamento (ou concluído mais recente) de um jogador. */

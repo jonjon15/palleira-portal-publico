@@ -8,6 +8,8 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 - **Câmara de Purificação ganhou uma explicação no topo da tela.** Agora dá pra ler o que é o sistema, como ele funciona e quais são os 4 requisitos pra doar um Pal, antes de mexer em qualquer coisa.
 - **Câmara de Purificação entrou em manutenção.** Iniciar, doar, resgatar e cancelar ficam fora do ar por enquanto — volta assim que estiver pronta.
+- **Passivas sugeridas da Câmara agora têm prazo de validade.** O staff escolhe por quantos dias a sugestão vale (com contagem regressiva na tela) — passado o prazo, ela some sozinha em vez de continuar valendo pra sempre. O texto também ficou mais direto: "Passivas sugeridas para essa rodada" no lugar de "da última vez".
+- Corrigido: depois de salvar a sugestão de passivas ou o IV mínimo de resgate (staff), o formulário ficava aberto — agora fecha sozinho.
 
 ## 2026-09-20
 

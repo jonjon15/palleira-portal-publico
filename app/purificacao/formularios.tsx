@@ -16,7 +16,12 @@ import {
   type EstadoResgate,
 } from "./actions";
 import { PalCard } from "@/components/pal-card";
-import { elegibilidadeDoador, elegibilidadeAlvo } from "@/lib/purificacao-regras";
+import {
+  elegibilidadeDoador,
+  elegibilidadeAlvo,
+  DIAS_REFERENCIA_MINIMO,
+  DIAS_REFERENCIA_MAXIMO,
+} from "@/lib/purificacao-regras";
 import type { PalDisponivel } from "@/lib/pal-cofre";
 import { nomeDaPassiva, rankDaPassiva, corDoRank, urlDoIconeRank, type PassivaListada } from "@/lib/passivas";
 
@@ -160,13 +165,23 @@ export function PassivasDoRitual({
   staff,
   catalogo,
   action,
+  ehReferencia = false,
 }: {
-  ritualId: number;
+  /** Ausente quando `ehReferencia` — a sugestão não pertence a nenhum ritual. */
+  ritualId?: number;
   passivasAceitas: string[];
   staff: boolean;
   catalogo: PassivaListada[];
-  /** Padrão define a regra de um ritual ativo; passar `acaoAtualizarReferencia` edita a referência sem ritual em andamento. */
+  /** Padrão define a regra de um ritual ativo; passar `acaoAtualizarReferencia` edita a sugestão sem ritual em andamento. */
   action?: typeof acaoDefinirRegra;
+  /**
+   * Se `action` é `acaoAtualizarReferencia` — sinalizado explicitamente pelo
+   * chamador em vez de comparar `action === acaoAtualizarReferencia`: Server
+   * Actions passadas como prop nem sempre preservam igualdade de referência
+   * entre o Server Component que as importa e o Client Component que as
+   * recebe (bundling/HMR), o que fazia a comparação falhar em silêncio.
+   */
+  ehReferencia?: boolean;
 }) {
   const [editando, setEditando] = useState(false);
 
@@ -175,7 +190,7 @@ export function PassivasDoRitual({
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#e8a33d" }}>
-            Editar regra
+            {ehReferencia ? "Editar sugestão" : "Editar regra"}
           </h3>
           <button
             type="button"
@@ -185,7 +200,13 @@ export function PassivasDoRitual({
             cancelar
           </button>
         </div>
-        <EscolherPassivasDoRitual ritualId={ritualId} passivas={catalogo} action={action} />
+        <EscolherPassivasDoRitual
+          ritualId={ritualId}
+          passivas={catalogo}
+          action={action}
+          ehReferencia={ehReferencia}
+          onSucesso={() => setEditando(false)}
+        />
       </div>
     );
   }
@@ -225,16 +246,22 @@ export function PassivasDoRitual({
           );
         })}
       </div>
-      <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
-        E ter pelo menos uma dessas passivas.
-      </p>
+      {passivasAceitas.length > 0 && (
+        <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
+          E ter pelo menos uma dessas passivas.
+        </p>
+      )}
       {staff && (
         <button
           type="button"
           onClick={() => setEditando(true)}
           className="mt-3 rounded-[var(--radius-control)] border border-line-strong px-3 py-1.5 text-xs font-semibold transition-colors hover:border-gold hover:text-gold"
         >
-          Editar passivas (staff)
+          {ehReferencia
+            ? passivasAceitas.length > 0
+              ? "Editar sugestão (staff)"
+              : "Definir sugestão (staff)"
+            : "Editar passivas (staff)"}
         </button>
       )}
     </>
@@ -249,6 +276,11 @@ export function PassivasDoRitual({
 export function IvMinimoResgateEditor({ ivAtual }: { ivAtual: number }) {
   const [estado, acao] = useActionState(acaoAtualizarIvMinimoResgate, INICIAL);
   const [editando, setEditando] = useState(false);
+
+  useEffect(() => {
+    if (estado.ok) setEditando(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado]);
 
   if (!editando) {
     return (
@@ -291,17 +323,30 @@ export function EscolherPassivasDoRitual({
   passivas,
   action = acaoDefinirRegra,
   pontoDePartida = [],
+  ehReferencia = false,
+  onSucesso,
 }: {
-  ritualId: number;
+  /** Ausente quando `ehReferencia` — a sugestão não pertence a nenhum ritual. */
+  ritualId?: number;
   passivas: PassivaListada[];
-  /** Padrão define a regra de um ritual ativo; passar `acaoAtualizarReferencia` edita a referência sem ritual em andamento. */
+  /** Padrão define a regra de um ritual ativo; passar `acaoAtualizarReferencia` edita a sugestão sem ritual em andamento. */
   action?: typeof acaoDefinirRegra;
-  /** Chaves já marcadas ao abrir — ex: a regra do último ritual configurado, como sugestão. */
+  /** Chaves já marcadas ao abrir — ex: a sugestão configurada, como ponto de partida. */
   pontoDePartida?: string[];
+  /** Só a "sugestão" (sem ritual ativo) tem prazo de validade — o ritual real, não. */
+  ehReferencia?: boolean;
+  /** Chamado depois de salvar com sucesso — o pai usa para fechar o modo de edição sozinho. */
+  onSucesso?: () => void;
 }) {
   const [estado, acao] = useActionState(action, INICIAL);
   const [busca, setBusca] = useState("");
   const [escolhidas, setEscolhidas] = useState<Set<string>>(() => new Set(pontoDePartida));
+  const [dias, setDias] = useState(2);
+
+  useEffect(() => {
+    if (estado.ok) onSucesso?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado]);
 
   const filtradas = useMemo(() => {
     const alvo = busca.trim().toLowerCase();
@@ -320,7 +365,7 @@ export function EscolherPassivasDoRitual({
 
   return (
     <form action={acao}>
-      <input type="hidden" name="ritualId" value={ritualId} />
+      {ritualId !== undefined && <input type="hidden" name="ritualId" value={ritualId} />}
       {[...escolhidas].map((chave) => (
         <input key={chave} type="hidden" name="passivas" value={chave} />
       ))}
@@ -380,8 +425,28 @@ export function EscolherPassivasDoRitual({
         para qualquer um dos 4 doadores desta purificação.
       </p>
 
+      {ehReferencia && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <label htmlFor="dias-validade" className="text-xs text-muted">
+            Vale por quantos dias
+          </label>
+          <input
+            id="dias-validade"
+            name="diasValidade"
+            type="number"
+            min={DIAS_REFERENCIA_MINIMO}
+            max={DIAS_REFERENCIA_MAXIMO}
+            step={0.5}
+            value={dias}
+            onChange={(e) => setDias(Number(e.target.value))}
+            required
+            className="w-20 rounded-[var(--radius-control)] border border-line-strong bg-bg px-2 py-1 text-sm outline-none focus:border-gold"
+          />
+        </div>
+      )}
+
       <div className="mt-3">
-        <Enviar>Ativar purificação com esta regra</Enviar>
+        <Enviar>{ehReferencia ? "Salvar sugestão" : "Ativar purificação com esta regra"}</Enviar>
       </div>
       <Aviso estado={estado} />
     </form>
@@ -663,4 +728,38 @@ export function ResgatarPal({
       <Aviso estado={estado} />
     </form>
   );
+}
+
+/* ------------------------------------------------------ contagem regressiva */
+
+/**
+ * Quanto tempo falta para a "sugestão de passivas" (`ReferenciaDeRegra`)
+ * expirar — client component porque precisa recalcular sozinho enquanto o
+ * tempo passa, sem esperar o jogador recarregar a página. Passado o prazo,
+ * `passivasDoUltimoRitual` já para de devolver a referência no próximo
+ * carregamento do server; aqui é só o aviso visual chegando primeiro.
+ */
+export function ContagemRegressiva({ expiraEm }: { expiraEm: string }) {
+  const alvo = useMemo(() => new Date(expiraEm).getTime(), [expiraEm]);
+  const [restanteMs, setRestanteMs] = useState(() => alvo - Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setRestanteMs(alvo - Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [alvo]);
+
+  if (restanteMs <= 0) {
+    return <span style={{ color: "#5c6e66" }}>expirando…</span>;
+  }
+
+  const horas = Math.floor(restanteMs / 3_600_000);
+  const minutos = Math.floor((restanteMs % 3_600_000) / 60_000);
+  const segundos = Math.floor((restanteMs % 60_000) / 1000);
+
+  const texto =
+    horas > 0
+      ? `${horas}h ${String(minutos).padStart(2, "0")}min`
+      : `${minutos}min ${String(segundos).padStart(2, "0")}s`;
+
+  return <span style={{ color: "#e8a33d" }}>{texto}</span>;
 }

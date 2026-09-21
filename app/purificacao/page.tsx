@@ -27,6 +27,7 @@ import {
   CancelarRitual,
   ResgatarPal,
   IvMinimoResgateEditor,
+  ContagemRegressiva,
 } from "./formularios";
 import { acaoAtualizarReferencia } from "./actions";
 import { CAMARA_EM_MANUTENCAO } from "./manutencao";
@@ -132,21 +133,29 @@ export default async function Purificacao() {
               <span className="text-sm">IV 100 em Vida, Ataque e Defesa, e Full Condensado (rank 5).</span>
             </div>
 
-            {passivasReferencia && (
+            {(passivasReferencia || staff) && (
               <div
                 className="rounded-lg px-4 py-3"
                 style={{ background: "#0d1512", border: "1px solid #1f2e27" }}
               >
-                <p className="mb-2.5 text-[11.5px]" style={{ color: "#5c6e66" }}>
-                  Da última vez, o staff pediu essas passivas dos doadores —
-                  cada purificação nova pode pedir outras, é só referência:
-                </p>
+                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[11.5px]" style={{ color: "#5c6e66" }}>
+                    {passivasReferencia
+                      ? "Passivas sugeridas para essa rodada — cada purificação nova pode pedir outras, é só sugestão:"
+                      : "Nenhuma sugestão de passivas ativa no momento."}
+                  </p>
+                  {passivasReferencia && (
+                    <p className="text-[11.5px] whitespace-nowrap" style={{ color: "#5c6e66" }}>
+                      expira em <ContagemRegressiva expiraEm={passivasReferencia.expiraEm} />
+                    </p>
+                  )}
+                </div>
                 <PassivasDoRitual
-                  ritualId={passivasReferencia.ritualId}
-                  passivasAceitas={passivasReferencia.passivasAceitas}
+                  passivasAceitas={passivasReferencia?.passivasAceitas ?? []}
                   staff={staff}
                   catalogo={todasAsPassivas()}
                   action={acaoAtualizarReferencia}
+                  ehReferencia
                 />
               </div>
             )}

@@ -81,17 +81,18 @@ export async function acaoCancelarRitual(
 }
 
 /**
- * Edita a "regra de referência" mostrada quando não há ritual ativo — o
- * botão "Editar" fica sempre visível para staff, mesmo sem ritual em
- * andamento (§pedido do dono, 14/09/2026).
+ * Define a "sugestão de passivas" da Câmara — configuração única e global
+ * (`purification_referencia`), o botão "Editar" fica sempre visível para
+ * staff, mesmo sem ritual em andamento (§pedido do dono, 14/09/2026, com
+ * prazo de validade a partir de 21/09/2026).
  */
 export async function acaoAtualizarReferencia(
   _anterior: Estado,
   form: FormData,
 ): Promise<Estado> {
-  const ritualId = Number(form.get("ritualId") ?? 0);
   const passivas = form.getAll("passivas").map(String);
-  const r = await atualizarReferenciaDeRegra(ritualId, passivas);
+  const diasValidade = Number(form.get("diasValidade") ?? 0);
+  const r = await atualizarReferenciaDeRegra(passivas, diasValidade);
   atualiza();
   return r;
 }
