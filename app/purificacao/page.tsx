@@ -29,6 +29,7 @@ import {
   IvMinimoResgateEditor,
 } from "./formularios";
 import { acaoAtualizarReferencia } from "./actions";
+import { CAMARA_EM_MANUTENCAO } from "./manutencao";
 
 export const metadata: Metadata = { title: "Câmara de Purificação" };
 export const dynamic = "force-dynamic";
@@ -152,7 +153,12 @@ export default async function Purificacao() {
 
             <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
               <h2 className="text-sm font-semibold">Escolher Pal da palbox</h2>
-              {!servidor ? (
+              {CAMARA_EM_MANUTENCAO ? (
+                <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
+                  A Câmara está em manutenção — ainda não dá para iniciar uma
+                  purificação nova.
+                </p>
+              ) : !servidor ? (
                 <p className="mt-3 text-sm" style={{ color: "#8fa39a" }}>
                   Entre no jogo com o time ou a palbox aberta para escolher o Pal.
                 </p>
@@ -237,24 +243,33 @@ export default async function Purificacao() {
             </>
           )}
 
-          {(ritualAndando.status === "ativo" || (ritualAndando.status === "completo" && resgatePendente)) && (
-            <div className="mt-1 w-full">
-              {resgatePendente ? (
-                <ResgatarPal ritualId={ritualAndando.id} pendente={resgatePendente} />
-              ) : ivMedio >= ivMinimoResgate ? (
-                <ResgatarPal ritualId={ritualAndando.id} />
-              ) : (
-                <p className="text-center text-[11px]" style={{ color: "#5c6e66" }}>
-                  Só dá para resgatar o Pal purificado a partir de IV {ivMinimoResgate}.
-                </p>
+          {CAMARA_EM_MANUTENCAO ? (
+            <p className="mt-1 text-center text-[11px]" style={{ color: "#5c6e66" }}>
+              A Câmara está em manutenção — doar, resgatar e cancelar ficam
+              fora do ar por enquanto.
+            </p>
+          ) : (
+            <>
+              {(ritualAndando.status === "ativo" || (ritualAndando.status === "completo" && resgatePendente)) && (
+                <div className="mt-1 w-full">
+                  {resgatePendente ? (
+                    <ResgatarPal ritualId={ritualAndando.id} pendente={resgatePendente} />
+                  ) : ivMedio >= ivMinimoResgate ? (
+                    <ResgatarPal ritualId={ritualAndando.id} />
+                  ) : (
+                    <p className="text-center text-[11px]" style={{ color: "#5c6e66" }}>
+                      Só dá para resgatar o Pal purificado a partir de IV {ivMinimoResgate}.
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {ritualAndando.status !== "completo" && (
-            <div className="mt-1">
-              <CancelarRitual ritualId={ritualAndando.id} />
-            </div>
+              {ritualAndando.status !== "completo" && (
+                <div className="mt-1">
+                  <CancelarRitual ritualId={ritualAndando.id} />
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -431,7 +446,12 @@ export default async function Purificacao() {
 
             {ritualAndando.status === "ativo" && (
               <div className="mt-4">
-                {disponiveis.erro ? (
+                {CAMARA_EM_MANUTENCAO ? (
+                  <p className="text-sm" style={{ color: "#5c6e66" }}>
+                    A Câmara está em manutenção — a doação fica fora do ar
+                    por enquanto.
+                  </p>
+                ) : disponiveis.erro ? (
                   <p className="text-sm text-danger">{disponiveis.erro}</p>
                 ) : (
                   <DoarPal
@@ -518,7 +538,80 @@ function Wrapper({ children }: { children: React.ReactNode }) {
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           Perfil da cápsula
         </h1>
+
+        {CAMARA_EM_MANUTENCAO && <BannerDeManutencao />}
+
+        <ExplicacaoDaCamara />
+
         {children}
+      </div>
+    </div>
+  );
+}
+
+function BannerDeManutencao() {
+  return (
+    <div
+      className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3"
+      style={{ background: "rgba(232,163,61,0.1)", border: "1px solid #8a6321" }}
+    >
+      <span className="text-sm font-semibold" style={{ color: "#e8a33d" }}>
+        🛠️ Em manutenção
+      </span>
+      <span className="text-sm" style={{ color: "#c9a876" }}>
+        A Câmara de Purificação ainda está sendo preparada — iniciar,
+        doar, resgatar e cancelar ficam fora do ar por enquanto. Volta em
+        breve.
+      </span>
+    </div>
+  );
+}
+
+function ExplicacaoDaCamara() {
+  return (
+    <div
+      className="mt-6 rounded-2xl p-5"
+      style={{ background: "#111a16", border: "1px solid #1f2e27" }}
+    >
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#e8a33d" }}>
+            O que é a Câmara de Purificação?
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: "#8fa39a" }}>
+            É um sistema do servidor para levar um Pal já perfeito além do
+            limite padrão do jogo. Um Pal normal trava em IV 100 e rank 5 — a
+            Câmara deixa ele passar disso.
+          </p>
+        </div>
+        <div>
+          <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#e8a33d" }}>
+            Como funciona?
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: "#8fa39a" }}>
+            Você coloca na cápsula um Pal com IV 100 em Vida, Ataque e Defesa
+            e Full Condensado. Depois disso você doa outros Pals para
+            alimentar a purificação: a cada {DOADORES_POR_RODADA} doações
+            confirmadas, o Pal da cápsula ganha +1 de IV em Vida, Ataque{" "}
+            <em>e</em> Defesa, juntos, até o teto de {IV_TETO_RITUAL}. Cada
+            Pal doado é consumido — não volta.
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="mt-4 pt-4"
+        style={{ borderTop: "1px solid #1f2e27" }}
+      >
+        <h2 className="text-xs font-bold tracking-[0.04em] uppercase" style={{ color: "#8fa39a" }}>
+          Requisitos para doar um Pal
+        </h2>
+        <ul className="mt-2 flex flex-col gap-1 text-sm" style={{ color: "#8fa39a" }}>
+          <li>• Mesma espécie do Pal que está na cápsula.</li>
+          <li>• IV 100 em Vida, Ataque e Defesa.</li>
+          <li>• Full Condensado (rank 5).</li>
+          <li>• Ter pelo menos uma das passivas que o staff escolheu para esta purificação.</li>
+        </ul>
       </div>
     </div>
   );
