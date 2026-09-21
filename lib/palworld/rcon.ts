@@ -177,10 +177,23 @@ export interface ResultadoComando {
  * ao cofre. Falso negativo em entrega vira duplicação de item; falso
  * positivo vira um item perdido, que o extrato mostra e o admin conserta.
  * Entre os dois, o segundo é o erro que se pode corrigir.
+ *
+ * ⚠️ Mas nem toda recusa começa com "Failed". Medido em 20/09/2026, na
+ * entrega manual de 2 Núcleos da Civilização Antiga com a mochila cheia:
+ *
+ * ```
+ * Could not give the requested items to 'steam_765…' (IP=…): Not enough
+ * inventory space to give 'AncientParts2' x2.
+ * ```
+ *
+ * O site deu isso por entregue, mostrou o verde de sucesso e o item nunca
+ * chegou — mesmo desenho de erro do "Deleted 0 pals" em `delPal()`. Este
+ * "Could not …" é a recusa do próprio `giveitems`/`delitems` depois de já
+ * ter achado o jogador, então reconhecer o prefixo vale para os dois.
  */
 function interpretar(resposta: string): ResultadoComando {
   const limpo = resposta.trim();
-  const falhou = /^(Failed|Unknown command)/i.test(limpo);
+  const falhou = /^(Failed|Unknown command|Could not)/i.test(limpo);
   return { ok: !falhou, resposta: limpo };
 }
 
