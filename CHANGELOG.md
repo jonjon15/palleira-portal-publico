@@ -4,6 +4,11 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-21
+
+- **Câmara de Purificação ganhou uma explicação no topo da tela.** Agora dá pra ler o que é o sistema, como ele funciona e quais são os 4 requisitos pra doar um Pal, antes de mexer em qualquer coisa.
+- **Câmara de Purificação entrou em manutenção.** Iniciar, doar, resgatar e cancelar ficam fora do ar por enquanto — volta assim que estiver pronta.
+
 ## 2026-09-20
 
 - **Corrigido: item recusado por mochila cheia sumia.** Quando o jogo negava a entrega porque não havia espaço livre na mochila, o site não entendia a recusa e dava a entrega por feita — o item não chegava e, no caso do cofre, também não voltava para lá. Agora a recusa é reconhecida: o item continua guardado no seu cofre e a tela avisa para abrir espaço antes de tentar de novo.
