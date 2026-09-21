@@ -7,6 +7,7 @@ import { saldo } from "@/lib/economia";
 const NAV = [
   { href: "/", label: "Início" },
   { href: "/servidores", label: "Servidores" },
+  { href: "/dominantes", label: "Dominantes" },
   { href: "/mercado", label: "Mercado" },
   { href: "/vip", label: "VIP" },
   { href: "/purificacao", label: "Purificação" },
