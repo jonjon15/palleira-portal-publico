@@ -423,6 +423,16 @@ export async function iniciarRitual(
   // história da Câmara, antes de qualquer referência existir.
   const referencia = await passivasDoUltimoRitual();
 
+  // O ritual parte do IV que o Pal JÁ tem, não de 100 fixo — um Pal que já
+  // passou pela Câmara (ex: resgatado com 110) e entra de novo para chegar
+  // mais perto de 150 perdia tudo o que tinha ganho, porque a coluna nascia
+  // com o default 100 e cancelar/resgatar gravava esse 100 por cima
+  // (Felbat do Handoroki, ritual 61, 22/09/2026).
+  const ivInicial = (iv: number) => Math.min(IV_TETO_RITUAL, Math.max(IV_INICIAL_RITUAL, iv));
+  const ivHealth = ivInicial(ivVida(template.IVs));
+  const ivAttack = ivInicial(ivAtaque(template.IVs));
+  const ivDefense = ivInicial(ivDefesa(template.IVs));
+
   // O jogo já removeu de verdade — se o insert falhar daqui pra frente, o
   // Pal não pode simplesmente sumir: registrar o erro é o mínimo, mas não
   // existe caminho de volta automático (mesmo risco documentado no cofre).
@@ -431,15 +441,19 @@ export async function iniciarRitual(
       await sql`
         insert into purification_rituals
           (discord_id, server_slug, pal_id, template, instance_id_inicial,
-           status, passivas_aceitas, regra_definida_por, regra_definida_em)
+           status, passivas_aceitas, regra_definida_por, regra_definida_em,
+           iv_health, iv_attack, iv_defense)
         values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
-                'ativo', ${referencia.passivasAceitas}, ${discordId}, now())
+                'ativo', ${referencia.passivasAceitas}, ${discordId}, now(),
+                ${ivHealth}, ${ivAttack}, ${ivDefense})
       `;
     } else {
       await sql`
         insert into purification_rituals
-          (discord_id, server_slug, pal_id, template, instance_id_inicial)
-        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId})
+          (discord_id, server_slug, pal_id, template, instance_id_inicial,
+           iv_health, iv_attack, iv_defense)
+        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
+                ${ivHealth}, ${ivAttack}, ${ivDefense})
       `;
     }
   } catch {
@@ -733,6 +747,34 @@ export async function atualizarIvMinimoResgate(ivMinimo: number): Promise<Result
  * cancelar continua sendo o risco de quem doou, perder o Pal em si nunca
  * deveria ter sido possível.
  */
+/**
+ * O template de saída da Câmara (cancelar → cofre, resgatar → palbox):
+ * clone inteiro do Pal que entrou, Gênero travado em "None", e os três
+ * eixos de IV no valor do ritual. Nunca abaixo do que o Pal já tinha ao
+ * entrar — rituais antigos nasciam em 100 mesmo com o Pal em 110.
+ */
+function templateComIvsDoRitual(ritual: {
+  template: PalTemplate;
+  iv_health: number;
+  iv_attack: number;
+  iv_defense: number;
+}): PalTemplate {
+  const ivsOriginais = ritual.template.IVs;
+  const atacaCorpoACorpo = Number(ivsOriginais.AttackMelee ?? 0) >= Number(ivsOriginais.AttackShot ?? 0);
+  return {
+    ...ritual.template,
+    Gender: "None",
+    IVs: {
+      ...ivsOriginais,
+      Health: Math.max(ritual.iv_health, ivVida(ivsOriginais)),
+      Defense: Math.max(ritual.iv_defense, ivDefesa(ivsOriginais)),
+      ...(atacaCorpoACorpo
+        ? { AttackMelee: Math.max(ritual.iv_attack, ivAtaque(ivsOriginais)) }
+        : { AttackShot: Math.max(ritual.iv_attack, ivAtaque(ivsOriginais)) }),
+    },
+  };
+}
+
 export async function cancelarRitual(ritualId: number): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
@@ -778,20 +820,7 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
 
   // Mesmo clone de `resgatarPalPurificado`: só os IVs atuais mudam, Gênero
   // travado em "None" (peça única da purificação, não entra em incubadora).
-  const ivsOriginais = ritual.template.IVs;
-  const atacaCorpoACorpo = Number(ivsOriginais.AttackMelee ?? 0) >= Number(ivsOriginais.AttackShot ?? 0);
-  const templateAtualizado: PalTemplate = {
-    ...ritual.template,
-    Gender: "None",
-    IVs: {
-      ...ivsOriginais,
-      Health: ritual.iv_health,
-      Defense: ritual.iv_defense,
-      ...(atacaCorpoACorpo
-        ? { AttackMelee: ritual.iv_attack }
-        : { AttackShot: ritual.iv_attack }),
-    },
-  };
+  const templateAtualizado = templateComIvsDoRitual(ritual);
 
   try {
     await sql`
@@ -918,28 +947,31 @@ export async function resgatarPalPurificado(ritualId: number): Promise<Resultado
   // sai infértil, nunca entra em incubadora — é a peça única que evita
   // alguém resgatar, escolher o mesmo Pal de novo (voltou pra palbox) e
   // repetir o ritual pra fabricar cópias purificadas sem limite.
-  const ivsOriginais = ritual.template.IVs;
-  const atacaCorpoACorpo = Number(ivsOriginais.AttackMelee ?? 0) >= Number(ivsOriginais.AttackShot ?? 0);
-  const templateAtualizado: PalTemplate = {
-    ...ritual.template,
-    Gender: "None",
-    IVs: {
-      ...ivsOriginais,
-      Health: ritual.iv_health,
-      Defense: ritual.iv_defense,
-      ...(atacaCorpoACorpo
-        ? { AttackMelee: ritual.iv_attack }
-        : { AttackShot: ritual.iv_attack }),
-    },
-  };
+  const templateAtualizado = templateComIvsDoRitual(ritual);
 
-  const [{ id: transferId }] = (await sql`
+  // Um resgate só por ritual: o status 'completo' continua aceito acima
+  // para permitir tentar de novo depois de uma entrega que FALHOU, mas um
+  // segundo clique com a primeira ainda na fila (ou já entregue) duplicava
+  // o Pal — o ritual 60 do Handoroki gerou duas transferências 13s uma da
+  // outra e as duas deram "Granted Pal" (22/09/2026). O `not exists` no
+  // mesmo insert fecha a janela entre conferir e gravar.
+  const inseridos = (await sql`
     insert into pal_transfers
       (discord_id, server_slug, palworld_uid, template, direction, status, arquivo, ritual_id)
-    values (${discordId}, ${ritual.server_slug}, ${vinculo.uid},
-            ${JSON.stringify(templateAtualizado)}, 'resgatar', 'aguardando_arquivo', '', ${ritualId})
+    select ${discordId}, ${ritual.server_slug}, ${vinculo.uid},
+           ${JSON.stringify(templateAtualizado)}, 'resgatar', 'aguardando_arquivo', '', ${ritualId}
+    where not exists (
+      select 1 from pal_transfers
+      where ritual_id = ${ritualId}
+        and direction = 'resgatar'
+        and status <> 'falhou'
+    )
     returning id
   `) as { id: number }[];
+  if (!inseridos.length) {
+    return { ok: false, mensagem: "O resgate desse Pal já foi feito — confira sua palbox." };
+  }
+  const transferId = inseridos[0].id;
 
   const arquivo = nomeDoArquivo(transferId);
   await sql`update pal_transfers set arquivo = ${arquivo} where id = ${transferId}`;
