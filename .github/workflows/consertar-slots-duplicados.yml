@@ -1,0 +1,86 @@
+# Tira a segunda referência de Pal que aparece em dois lugares da palbox —
+# o "Pal duplicado" achado no SantØs em 23/09/2026. Ver
+# tools/consertar_slots_duplicados.py. Disparado por /admin/moderacao.
+#
+# `simular` só lê o mundo. `aplicar` para o servidor, grava e religa — mas só
+# se a busca achar alguma coisa: sem Pal repetido, ninguém cai à toa.
+name: consertar-slots-duplicados
+
+on:
+  workflow_dispatch:
+    inputs:
+      servidor:
+        description: "Servidor"
+        required: true
+        type: choice
+        options: [pve-free, pve-vip, pvp-free]
+        default: pvp-free
+      modo:
+        description: "simular = só procura | aplicar = para, conserta e religa"
+        required: true
+        type: choice
+        options: [simular, aplicar]
+        default: simular
+      ator:
+        description: "Discord id de quem pediu (vai para o log do site)"
+        required: false
+        default: ""
+
+jobs:
+  consertar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependências
+        run: |
+          REPO=https://github.com/deafdudecomputers/PalworldSaveTools.git
+          pip install --quiet paramiko "psycopg[binary]"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav/palooz"
+          pip install --quiet "git+$REPO#subdirectory=src/palsav"
+
+      - name: Procurar
+        id: busca
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PYTHONIOENCODING: utf-8
+        # Em `simular` esta é a rodada que conta e vai para o log do site; em
+        # `aplicar` é só a triagem, e quem registra é a gravação.
+        run: |
+          python tools/consertar_slots_duplicados.py \
+            --servidor "${{ inputs.servidor }}" --simular \
+            --registrar-como "${{ inputs.modo == 'simular' && inputs.ator || '' }}"
+
+      - name: Parar o servidor
+        if: inputs.modo == 'aplicar' && fromJSON(steps.busca.outputs.achados || '0') > 0
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal stop --esperar offline
+
+      - name: Consertar
+        if: inputs.modo == 'aplicar' && fromJSON(steps.busca.outputs.achados || '0') > 0
+        env:
+          PALLEIRA_SERVERS: ${{ secrets.PALLEIRA_SERVERS }}
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          python tools/consertar_slots_duplicados.py \
+            --servidor "${{ inputs.servidor }}" --aplicar \
+            --registrar-como "${{ inputs.ator }}"
+
+      - name: Religar o servidor
+        # always() de propósito: se a gravação falhar no meio, o pior desfecho
+        # é o servidor ficar parado sem ninguém saber.
+        if: always() && inputs.modo == 'aplicar' && fromJSON(steps.busca.outputs.achados || '0') > 0
+        env:
+          ENX_API_KEY: ${{ secrets.ENX_API_KEY }}
+        run: python tools/energia_painel.py --servidor "${{ inputs.servidor }}" --sinal start --esperar running --limite 600

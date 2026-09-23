@@ -18,6 +18,7 @@ import {
   dispararRestauracaoBag,
   dispararSondagemBags,
   dispararReversao,
+  dispararConsertoDeRepetidos,
   cancelarPedidoDeFila,
   estornarPedidoDeFila,
   acaoEntregarPal,
@@ -1102,6 +1103,67 @@ export function ReverterSave({ servidor }: { servidor: string }) {
         </button>
         <Aviso {...estado} />
       </form>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------ Pals repetidos */
+
+/**
+ * Procura e conserta Pal que aparece em dois lugares da palbox. A busca só
+ * lê o mundo; o conserto para o servidor (só se achar algo), grava e religa.
+ */
+export function ConsertarPalsRepetidos({ servidor }: { servidor: string }) {
+  const [estado, acao, enviando] = useActionState(dispararConsertoDeRepetidos, SEM_ESTADO);
+  const [digitado, setDigitado] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <form action={acao}>
+        <input type="hidden" name="servidor" value={servidor} />
+        <input type="hidden" name="modo" value="simular" />
+        <button type="submit" disabled={enviando} className={botaoFantasma}>
+          {enviando ? "Pedindo…" : "Procurar Pals repetidos"}
+        </button>
+        <p className="mt-2 text-xs text-muted">
+          Não mexe em nada e não derruba ninguém. Diz quantos são e de quem.
+        </p>
+      </form>
+
+      <form action={acao} className="space-y-3 rounded-[var(--radius-card)] border border-line p-5">
+        <input type="hidden" name="servidor" value={servidor} />
+        <input type="hidden" name="modo" value="aplicar" />
+
+        <p className="text-sm text-muted">
+          Tira a entrada repetida de <b className="text-text">todo</b> Pal
+          repetido do servidor. O Pal fica, só some a cópia fantasma. O
+          servidor <b className="text-text">fica fora do ar uns 5 minutos</b> —
+          mas só se a busca achar alguma coisa.
+        </p>
+
+        <div>
+          <label htmlFor="conf-repetidos" className="block text-sm text-muted">
+            Para consertar, digite <b className="text-text">CONSERTAR</b>
+          </label>
+          <input
+            id="conf-repetidos"
+            name="confirmacao"
+            autoComplete="off"
+            value={digitado}
+            onChange={(e) => setDigitado(e.target.value)}
+            className={`${campo} mt-1.5`}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={enviando || digitado.trim().toUpperCase() !== "CONSERTAR"}
+          className={botao}
+        >
+          {enviando ? "Disparando…" : "Consertar Pals repetidos"}
+        </button>
+      </form>
+      <Aviso {...estado} />
     </div>
   );
 }

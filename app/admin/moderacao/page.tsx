@@ -25,6 +25,7 @@ import {
   LinhaJogador,
   FilaDeRestauracao,
   EntregarPal,
+  ConsertarPalsRepetidos,
 } from "./formularios";
 
 export const metadata: Metadata = { title: "Moderação" };
@@ -283,6 +284,25 @@ export default async function Moderacao({
               </p>
               <div className="mt-5 max-w-2xl">
                 <RestaurarJogador servidor={server.slug} escopo="jogador" />
+              </div>
+            </section>
+
+            {/* ------------------------------------------ Pals repetidos */}
+            <section className="mt-4 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold">Pals repetidos na palbox</h2>
+              <p className="mt-1.5 max-w-3xl text-sm text-muted">
+                Para quando alguém vê o mesmo Pal duas vezes na palbox — aconteceu
+                com o SantØs depois da raid de 22/09. Não é cópia: é o mesmo Pal
+                ocupando dois lugares, e soltar ou vender um deles pode sumir com
+                o outro ou travar o servidor.
+              </p>
+              <p className="mt-2 max-w-3xl text-xs text-muted">
+                A leitura do site não enxerga isso — só o save do mundo. Por isso
+                o trabalho roda no GitHub Actions, e o resultado aparece no{" "}
+                <b>log de auditoria</b>, no fim desta página, em 2 a 3 minutos.
+              </p>
+              <div className="mt-5 max-w-2xl">
+                <ConsertarPalsRepetidos servidor={server.slug} />
               </div>
             </section>
 

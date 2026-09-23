@@ -115,14 +115,53 @@ def planejar(world, uids: set[str]) -> tuple[list, list]:
     return remover, relatorio
 
 
+def nomes_dos_jogadores(world) -> dict[str, str]:
+    """uid -> nome do personagem, para o relatório não ficar só em hex."""
+    out = {}
+    for e in dig(world, "CharacterSaveParameterMap", "value", default=[]) or []:
+        p = dig(e, "value", "RawData", "value", "object", "SaveParameter", "value")
+        if isinstance(p, dict) and scalar(p.get("IsPlayer"), False):
+            out[norm_uid(scalar(dig(e, "key", "PlayerUId"), ""))] = str(scalar(p.get("NickName"), "") or "")
+    return out
+
+
+def registrar(ator: str, servidor: str, ok: bool, detalhe: str) -> None:
+    """Uma linha no log de auditoria de /admin/moderacao, para o resultado
+    aparecer no site e não só no log do GitHub. Nunca derruba a ferramenta."""
+    if not ator or not os.environ.get("DATABASE_URL"):
+        return
+    try:
+        import psycopg
+        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+            conn.execute(
+                "insert into admin_actions (actor_id, server_slug, action, target, detail, ok, error)"
+                " values (%s, %s, 'fix_slots', null, %s, %s, %s)",
+                (ator, servidor, detalhe[:500], ok, None if ok else detalhe[:500]),
+            )
+    except Exception as e:  # noqa: BLE001
+        print(f"  (não consegui registrar no log do site: {e})")
+
+
+def avisar_actions(achados: int) -> None:
+    """Deixa o workflow pular parar/gravar/religar quando não há nada."""
+    saida = os.environ.get("GITHUB_OUTPUT")
+    if saida:
+        with open(saida, "a", encoding="utf-8") as f:
+            f.write(f"achados={achados}\n")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Tira a segunda referência de Pal em dois slots")
     ap.add_argument("--servidor", required=True)
     ap.add_argument("--uids", default="", help="só estes donos (32 hex, vírgula); vazio = todos")
+    ap.add_argument("--registrar-como", default="",
+                    help="discord id de quem pediu; grava o resultado no log de /admin/moderacao")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--simular", action="store_true")
     modo.add_argument("--aplicar", action="store_true")
     args = ap.parse_args()
+    ator = args.registrar_como
+    rotulo = "conserto" if args.aplicar else "busca"
 
     from palsav.core import compress_gvas_to_sav, decompress_sav_to_gvas
     from palsav.gvas import GvasFile
@@ -143,6 +182,7 @@ def main() -> int:
         estado = estado_do_painel(pid)
         if estado != "offline":
             print(f"  ❌ O servidor está '{estado}', não 'offline'. Gravar com o jogo rodando corrompe o mundo.")
+            registrar(ator, cfg.slug, False, f"{rotulo}: o servidor não estava parado ({estado}), nada foi gravado")
             return 1
         print("  ✅ servidor confirmado 'offline'", flush=True)
 
@@ -160,15 +200,22 @@ def main() -> int:
     orfaos_antes = {i for i, p in pals0.items() if (not uids or p["dono"] in uids) and not refs0.get(i)}
 
     remover, relatorio = planejar(world, uids)
+    avisar_actions(len(relatorio))
     if not relatorio:
         print("  Nenhum Pal em dois slots. Nada a fazer.")
+        registrar(ator, cfg.slug, True, f"{rotulo}: nenhum Pal repetido — nada a fazer")
         return 0
+    nomes = nomes_dos_jogadores(world)
     for r in sorted(relatorio, key=lambda x: (x["dono"], x["especie"])):
         aviso = "  ⚠ nenhum slot bate com a casa do Pal" if r["sem_casa"] else ""
-        print(f"  {r['dono'][:8]} {r['especie']:<26} lv{r['nivel']:<3} {r['apelido']:<14} "
-              f"fica {r['fica']} · sai {r['sai']}{aviso}")
-    donos = sorted({r["dono"][:8] for r in relatorio})
-    print(f"\n  {len(relatorio)} Pal(s) em 2+ slots, {len(remover)} referência(s) a remover, donos: {donos}")
+        print(f"  {nomes.get(r['dono']) or r['dono'][:8]:<16} {r['especie']:<26} lv{r['nivel']:<3} "
+              f"{r['apelido']:<14} fica {r['fica']} · sai {r['sai']}{aviso}")
+    por_dono: dict[str, int] = {}
+    for r in relatorio:
+        nome = nomes.get(r["dono"]) or r["dono"][:8]
+        por_dono[nome] = por_dono.get(nome, 0) + 1
+    resumo = ", ".join(f"{n} ({q})" for n, q in sorted(por_dono.items(), key=lambda kv: -kv[1]))
+    print(f"\n  {len(relatorio)} Pal(s) em 2+ slots, {len(remover)} referência(s) a remover — {resumo}")
 
     for slots, entrada in remover:
         slots.remove(entrada)
@@ -188,16 +235,20 @@ def main() -> int:
           f"ainda repetidos: {len(repetidos)} · Pals que perderam o slot: {len(orfaos)}")
     if repetidos or orfaos:
         print("  ❌ A checagem falhou. Nada foi gravado.")
+        registrar(ator, cfg.slug, False, f"{rotulo}: a checagem falhou, nada foi gravado — {resumo}")
         return 1
 
     if args.simular:
         print("\n  (simulação — nada foi gravado)")
+        registrar(ator, cfg.slug, True,
+                  f"busca: {len(relatorio)} Pal(s) repetido(s), nada alterado — {resumo}")
         return 0
 
     backup_seguranca = caminho + time.strftime(".bak-%Y%m%d-%H%M%S")
     enviar(cfg, backup_seguranca, original)
     conf = info_arquivo(cfg, backup_seguranca)
     if not conf or conf[0] != len(original):
+        registrar(ator, cfg.slug, False, "conserto: o backup de segurança não subiu inteiro, nada foi gravado")
         return _abortar(f"backup incompleto ({conf[0] if conf else 0} de {len(original)} bytes).")
     print(f"  ✅ backup conferido: {backup_seguranca} ({conf[0]:,} bytes)", flush=True)
 
@@ -206,9 +257,12 @@ def main() -> int:
     conf_novo = info_arquivo(cfg, temporario)
     if not conf_novo or conf_novo[0] != len(novo):
         apagar(cfg, temporario)
+        registrar(ator, cfg.slug, False, "conserto: o save novo não subiu inteiro, nada foi gravado")
         return _abortar(f"upload incompleto ({conf_novo[0] if conf_novo else 0} de {len(novo)} bytes).")
     renomear(cfg, temporario, caminho)
     print(f"  ✅ Level.sav trocado ({len(novo):,} bytes, por rename)")
+    registrar(ator, cfg.slug, True,
+              f"conserto: {len(remover)} entrada(s) repetida(s) removida(s) — {resumo}")
     return 0
 
 

@@ -863,6 +863,51 @@ export async function dispararReversao(
   });
 }
 
+/* ------------------------------------------------------ Pals repetidos */
+
+/**
+ * Procura (e, se pedido, conserta) Pal que aparece em dois lugares da
+ * palbox — o mesmo Pal apontado por dois slots, achado no SantØs em
+ * 23/09/2026. Ver `tools/consertar_slots_duplicados.py`.
+ *
+ * O conserto derruba o servidor por alguns minutos, mas o workflow só para
+ * o jogo se a busca achar alguma coisa. O resultado volta como linha no log
+ * de auditoria desta página, gravada pelo próprio workflow.
+ */
+export async function dispararConsertoDeRepetidos(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const actorId = await exigirEnergia();
+  const server = servidorOuFalha(String(form.get("servidor") ?? ""));
+  const modo = String(form.get("modo") ?? "") as "simular" | "aplicar";
+  const confirmacao = String(form.get("confirmacao") ?? "").trim();
+
+  if (modo !== "simular" && modo !== "aplicar") {
+    return { ok: false, mensagem: "Modo inválido." };
+  }
+  if (modo === "aplicar" && confirmacao.toUpperCase() !== "CONSERTAR") {
+    return { ok: false, mensagem: "Para consertar, digite CONSERTAR." };
+  }
+
+  return executar({
+    actorId,
+    server,
+    action: "fix_slots",
+    detail: modo === "simular" ? "busca disparada" : "conserto disparado",
+    rodar: () =>
+      dispararWorkflow("consertar-slots-duplicados.yml", {
+        servidor: server.slug,
+        modo,
+        ator: actorId,
+      }),
+    sucesso:
+      modo === "simular"
+        ? "Busca disparada — não mexe em nada. Em 2 a 3 minutos o resultado aparece no log de auditoria, no fim desta página."
+        : `Conserto disparado em ${server.shortName}. Se houver Pal repetido, o servidor fica fora do ar por uns 5 minutos e volta sozinho; o resultado aparece no log de auditoria.`,
+  });
+}
+
 /* ------------------------------------------------ fila de restauração paga */
 
 /**
