@@ -39,6 +39,7 @@ export async function acaoIniciarRitual(
   const r = await iniciarRitual(
     String(form.get("servidor") ?? ""),
     String(form.get("instanceId") ?? ""),
+    form.get("aceitaPerderDespertar") === "1",
   );
   atualiza();
   return r;

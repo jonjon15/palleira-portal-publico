@@ -193,8 +193,9 @@ export interface PalDisponivel {
   passives: string[];
   /**
    * Se o Pal já usou o Cristal do Despertar. `givepal_j` não preserva isso
-   * (confirmado 21/09/2026, ver `lib/pal-template.ts`) — usado só para
-   * barrar entrada na Câmara de Purificação, nunca entra no template salvo.
+   * (confirmado 21/09/2026, ver `lib/pal-template.ts`) — usado só para a
+   * Câmara de Purificação pedir o aceite de perder o despertar, nunca entra
+   * no template salvo.
    */
   isAwakening: boolean;
 }

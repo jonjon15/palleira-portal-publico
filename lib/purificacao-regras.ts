@@ -53,8 +53,6 @@ export interface PalParaValidar {
   partnerSkillLevel: number;
   passives: string[];
   palId: string;
-  /** Só existe para checar `elegibilidadeAlvo` — o doador é consumido, nunca sai da Câmara. */
-  isAwakening?: boolean;
 }
 
 /**
@@ -96,13 +94,12 @@ export function elegibilidadeDoador(
  * entrada dos doadores (IV 100 + Full Condensado), sem a exigência de
  * passiva, que só faz sentido para quem é consumido no ritual.
  *
- * 🔴 Pal despertado (Cristal do Despertar) fica de fora — `givepal_j` não
- * escreve `IsAwakening` de volta (confirmado por teste em 21/09/2026, ver
- * `lib/pal-template.ts`), então qualquer Pal despertado que entrasse na
- * Câmara sairia sem o despertar, sem jeito de restaurar automaticamente.
- * Foi o que aconteceu com o Felbat do SantØs. Bloquear na entrada evita o
- * jogador perder isso sem saber — em vez de só avisar e confiar que
- * ninguém vai clicar sem ler.
+ * Pal despertado (Cristal do Despertar) PODE entrar, mas sai sem o
+ * despertar — `givepal_j` não escreve `IsAwakening` de volta (confirmado por
+ * teste em 21/09/2026, ver `lib/pal-template.ts`). De 21 a 23/09 ele ficava
+ * barrado; a comunidade pediu para liberar, então a trava virou um aceite
+ * explícito: `iniciarRitual` recusa Pal despertado sem `aceitaPerderDespertar`,
+ * e o formulário só manda isso depois de a pessoa marcar a caixa do aviso.
  */
 export function elegibilidadeAlvo(
   pal: PalParaValidar,
@@ -117,11 +114,8 @@ export function elegibilidadeAlvo(
   if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
     return { ok: false, motivo: "Precisa ser Full Condensado (rank 5)." };
   }
-  if (pal.isAwakening) {
-    return {
-      ok: false,
-      motivo: "Pal despertado não pode entrar — a Câmara não devolve o despertar.",
-    };
-  }
   return { ok: true, motivo: "" };
 }
+
+export const AVISO_DESPERTAR =
+  "Esse Pal está despertado. O despertar não volta depois da Câmara: ao resgatar (ou cancelar), ele sai sem o despertar, e só dá para despertar de novo no jogo, com outro Cristal do Despertar.";

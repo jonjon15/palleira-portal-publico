@@ -346,6 +346,7 @@ export async function meuRitualAtivo(discordId: string): Promise<RitualDePurific
 export async function iniciarRitual(
   serverSlug: string,
   instanceId: string,
+  aceitaPerderDespertar = false,
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
@@ -388,12 +389,19 @@ export async function iniciarRitual(
     partnerSkillLevel: template.PartnerSkillLevel,
     passives: template.Passives,
     palId: template.PalID,
-    // `IsAwakening` não faz parte do `PalTemplate` (ver `lib/pal-template.ts`),
-    // mas está na resposta crua da API — é só daqui que dá pra checar.
-    isAwakening: pal.IsAwakening === true,
   });
   if (!elegivel.ok) {
     return { ok: false, mensagem: elegivel.motivo };
+  }
+  // `IsAwakening` não faz parte do `PalTemplate` (ver `lib/pal-template.ts`),
+  // só da resposta crua da API — e é lido da palbox agora, não do que o
+  // navegador mandou: se o Pal despertou depois de a página abrir, o aceite
+  // ainda é exigido.
+  if (pal.IsAwakening === true && !aceitaPerderDespertar) {
+    return {
+      ok: false,
+      mensagem: "Esse Pal está despertado — confirme que entende que ele sai da Câmara sem o despertar.",
+    };
   }
 
   // O Pal sai da palbox de verdade — mesma disciplina do cofre

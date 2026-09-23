@@ -7,6 +7,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 ## 2026-09-23
 
 - **Corrigido: Pal que já tinha passado pela Câmara voltava com IV menor.** Um Pal já purificado (ex: 110) que entrava de novo pra continuar subindo era contado como se estivesse em 100 — e ao cancelar ou resgatar, saía com 100, perdendo o que já tinha ganho. Agora a purificação continua do IV que o Pal já tem, e nunca devolve abaixo disso.
+- **Pal despertado volta a poder entrar na Câmara de Purificação**, a pedido de vocês. Ele aparece na lista com a etiqueta "Despertado", e antes de começar a Câmara avisa: **o despertar não volta** — ao resgatar ou cancelar, o Pal sai sem ele, e só dá para despertar de novo no jogo, com outro Cristal do Despertar. O botão só libera depois de marcar que entendeu.
 - **Corrigido: resgatar o Pal purificado duas vezes seguidas.** Clicar em "Resgatar" de novo enquanto o primeiro ainda estava a caminho criava uma segunda entrega. Agora cada purificação resgata uma vez só.
 
 ## 2026-09-21

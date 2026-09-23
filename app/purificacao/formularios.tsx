@@ -19,6 +19,7 @@ import { PalCard } from "@/components/pal-card";
 import {
   elegibilidadeDoador,
   elegibilidadeAlvo,
+  AVISO_DESPERTAR,
   DIAS_REFERENCIA_MAXIMO,
 } from "@/lib/purificacao-regras";
 import type { PalDisponivel } from "@/lib/pal-cofre";
@@ -66,6 +67,8 @@ export function EscolherPalDoRitual({
 }) {
   const [estado, acao] = useActionState(acaoIniciarRitual, INICIAL);
   const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [aceitaDespertar, setAceitaDespertar] = useState(false);
+  const despertadoSelecionado = pals.find((p) => p.instanceId === selecionado)?.isAwakening === true;
 
   // Só quem pode entrar na câmara aparece — a palbox inteira acinzentada com
   // o motivo em vermelho virava uma lista longa de Pal que não serve.
@@ -88,8 +91,7 @@ export function EscolherPalDoRitual({
     return (
       <p className="text-sm text-muted">
         Nenhum Pal da sua palbox pode entrar na câmara — precisa de IV 100 em
-        Vida, Ataque e Defesa, ser Full Condensado (rank 5), e não pode ter
-        usado o Cristal do Despertar.
+        Vida, Ataque e Defesa e ser Full Condensado (rank 5).
       </p>
     );
   }
@@ -98,6 +100,7 @@ export function EscolherPalDoRitual({
     <form action={acao}>
       <input type="hidden" name="servidor" value={servidor} />
       <input type="hidden" name="instanceId" value={selecionado ?? ""} />
+      <input type="hidden" name="aceitaPerderDespertar" value={despertadoSelecionado && aceitaDespertar ? "1" : ""} />
 
       {/*
         O destaque vem do estado do React (`marcado`), nunca do CSS
@@ -124,9 +127,17 @@ export function EscolherPalDoRitual({
                 type="radio"
                 name="_escolha"
                 checked={marcado}
-                onChange={() => setSelecionado(p.instanceId)}
+                onChange={() => {
+                  setSelecionado(p.instanceId);
+                  setAceitaDespertar(false);
+                }}
                 className="sr-only"
               />
+              {p.isAwakening && (
+                <span className="mb-1.5 self-start rounded-full border border-gold/40 bg-gold/[0.08] px-2 py-0.5 text-[11px] font-semibold text-gold">
+                  Despertado · perde o despertar na Câmara
+                </span>
+              )}
               <PalCard
                 pal={{
                   palId: p.palId,
@@ -144,8 +155,33 @@ export function EscolherPalDoRitual({
         })}
       </div>
 
+      {despertadoSelecionado && (
+        <div className="mt-4 rounded-[var(--radius-control)] border border-gold/40 bg-gold/[0.06] px-4 py-3 text-sm">
+          <p>{AVISO_DESPERTAR}</p>
+          <label className="mt-2.5 flex cursor-pointer items-start gap-2 font-semibold">
+            <input
+              type="checkbox"
+              checked={aceitaDespertar}
+              onChange={(e) => setAceitaDespertar(e.target.checked)}
+              className="mt-0.5"
+            />
+            Entendo que ele não volta despertado.
+          </label>
+        </div>
+      )}
+
       <div className="mt-4">
-        <Enviar>Iniciar purificação com este Pal</Enviar>
+        {despertadoSelecionado && !aceitaDespertar ? (
+          <button
+            type="button"
+            disabled
+            className="cursor-not-allowed rounded-[var(--radius-control)] bg-gold px-5 py-2.5 text-sm font-semibold text-[#14120f] opacity-50"
+          >
+            Iniciar purificação com este Pal
+          </button>
+        ) : (
+          <Enviar>Iniciar purificação com este Pal</Enviar>
+        )}
       </div>
       <Aviso estado={estado} />
     </form>

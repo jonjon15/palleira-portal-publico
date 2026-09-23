@@ -131,10 +131,9 @@ export default async function Purificacao() {
                 Só entra quem já é perfeito:
               </span>
               <span className="text-sm">
-                IV 100 em Vida, Ataque e Defesa, Full Condensado (rank 5), e
-                sem ter usado o Cristal do Despertar — o jogo não devolve o
-                despertar de um Pal que passa pela Câmara, então ela nem
-                deixa entrar quem já despertou.
+                IV 100 em Vida, Ataque e Defesa e Full Condensado (rank 5).
+                Pal despertado pode entrar, mas sai sem o despertar — o jogo
+                não devolve o despertar de um Pal que passa pela Câmara.
               </span>
             </div>
 
