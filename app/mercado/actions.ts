@@ -9,6 +9,7 @@ import {
   type Resultado,
 } from "@/lib/mercado";
 import { comprarKit } from "@/lib/kits";
+import { comprarPalMonster } from "@/lib/pals-monster";
 
 /**
  * Ponte entre as telas do mercado e o `lib/mercado`.
@@ -47,6 +48,19 @@ export async function acaoComprarKit(
   form: FormData,
 ): Promise<Estado> {
   const r = await comprarKit(Number(form.get("id") ?? 0));
+  atualiza();
+  return r;
+}
+
+/**
+ * Compra de Pal Monster da loja — cobra, queima a Paleta e põe uma cópia no
+ * cofre de Pals, sem trava de servidor. Ver `lib/pals-monster.ts`.
+ */
+export async function acaoComprarPalMonster(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  const r = await comprarPalMonster(Number(form.get("id") ?? 0));
   atualiza();
   return r;
 }

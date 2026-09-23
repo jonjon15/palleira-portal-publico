@@ -7,7 +7,8 @@ import { vitrine, type Anuncio, type TipoAnuncio } from "@/lib/mercado";
 import { nomeDoItem, categoriaDoItem, CATEGORIA_LABEL } from "@/lib/itens";
 import { nomeDoPal } from "@/lib/pals";
 import { kitsAtivos, type Kit } from "@/lib/kits";
-import { Comprar, ComprarKit, NomeDoItem } from "./formularios";
+import { palsMonsterAVenda, restantes, type PalMonster } from "@/lib/pals-monster";
+import { Comprar, ComprarKit, ComprarPalMonster, NomeDoItem } from "./formularios";
 import { ItemIcon } from "@/components/item-icon";
 import { PalCard } from "@/components/pal-card";
 import { Pal3DSobDemanda } from "@/components/pal-3d-sob-demanda";
@@ -26,13 +27,14 @@ export const dynamic = "force-dynamic";
  * produto de loja, com estoque infinito e entrega direta no jogo, enquanto
  * anúncio é peça única que passa pelo cofre (ver `lib/kits.ts`).
  */
-type Filtro = TipoAnuncio | "kit" | undefined;
+type Filtro = TipoAnuncio | "kit" | "monster" | undefined;
 
 const FILTROS: { valor: Filtro; rotulo: string }[] = [
   { valor: undefined, rotulo: "Todos" },
   { valor: "item", rotulo: "Itens" },
   { valor: "pal", rotulo: "Pals" },
   { valor: "kit", rotulo: "Kits" },
+  { valor: "monster", rotulo: "Pals Monster" },
 ];
 
 export default async function Mercado({
@@ -40,20 +42,23 @@ export default async function Mercado({
 }: {
   searchParams: Promise<{ q?: string; tipo?: string }>;
 }) {
-  const [{ q, tipo: tipoCru }, session, anuncios, kits] = await Promise.all([
+  const [{ q, tipo: tipoCru }, session, anuncios, kits, monsters] = await Promise.all([
     searchParams,
     auth(),
     vitrine(),
     kitsAtivos(),
+    palsMonsterAVenda(),
   ]);
 
   const tipo: Filtro =
-    tipoCru === "item" || tipoCru === "pal" || tipoCru === "kit" ? tipoCru : undefined;
+    tipoCru === "item" || tipoCru === "pal" || tipoCru === "kit" || tipoCru === "monster"
+      ? tipoCru
+      : undefined;
   const busca = (q ?? "").trim().toLowerCase();
 
   const lista = anuncios.filter((a) => {
-    // Na aba Kits nenhum anúncio de `listings` entra — só a seção de kits.
-    if (tipo === "kit") return false;
+    // Nas abas da loja nenhum anúncio de `listings` entra.
+    if (tipo === "kit" || tipo === "monster") return false;
     if (tipo && a.kind !== tipo) return false;
     if (!busca) return true;
     // Busca pelo nome traduzido E pela chave crua: quem só conhece o item ou
@@ -94,7 +99,22 @@ export default async function Mercado({
           );
         });
 
-  const vazio = lista.length === 0 && kitsVisiveis.length === 0;
+  const monstersVisiveis =
+    tipo !== undefined && tipo !== "monster"
+      ? []
+      : monsters.filter((m) => {
+          if (!busca) return true;
+          const palId = String(m.template.PalID ?? "");
+          return (
+            m.nome.toLowerCase().includes(busca) ||
+            m.descricao.toLowerCase().includes(busca) ||
+            nomeDoPal(palId).toLowerCase().includes(busca) ||
+            palId.toLowerCase().includes(busca)
+          );
+        });
+
+  const vazio =
+    lista.length === 0 && kitsVisiveis.length === 0 && monstersVisiveis.length === 0;
 
   return (
     <>
@@ -199,9 +219,28 @@ export default async function Mercado({
               </section>
             )}
 
+            {monstersVisiveis.length > 0 && (
+              <section className={kitsVisiveis.length > 0 ? "mt-10" : ""}>
+                {tipo === undefined && (
+                  <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
+                    Pals Monster da loja
+                  </h2>
+                )}
+                <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {monstersVisiveis.map((m) => (
+                    <CardDePalMonster key={m.id} pal={m} logado={Boolean(session)} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {pals.length > 0 && (
-              <section className={kitsVisiveis.length > 0 ? "mt-10" : "mt-8"}>
-                {tipo === undefined && itens.length > 0 && (
+              <section
+                className={
+                  kitsVisiveis.length > 0 || monstersVisiveis.length > 0 ? "mt-10" : "mt-8"
+                }
+              >
+                {tipo === undefined && (itens.length > 0 || monstersVisiveis.length > 0) && (
                   <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
                     Pals
                   </h2>
@@ -220,7 +259,11 @@ export default async function Mercado({
 
             {itens.length > 0 && (
               <section
-                className={pals.length > 0 || kitsVisiveis.length > 0 ? "mt-10" : "mt-8"}
+                className={
+                  pals.length > 0 || kitsVisiveis.length > 0 || monstersVisiveis.length > 0
+                    ? "mt-10"
+                    : "mt-8"
+                }
               >
                 {tipo === undefined && pals.length > 0 && (
                   <h2 className="text-sm font-bold tracking-[0.14em] text-muted uppercase">
@@ -307,6 +350,81 @@ function CardDeKit({ kit, logado }: { kit: Kit; logado: boolean }) {
             Entrar para comprar
           </Link>
         )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * O card de um Pal Monster da loja: a ficha completa do molde, quanto resta
+ * e a promessa que o diferencia do anúncio comum — vale para qualquer
+ * servidor e cai no cofre de Pals.
+ */
+function CardDePalMonster({ pal, logado }: { pal: PalMonster; logado: boolean }) {
+  const t = pal.template;
+  const resta = restantes(pal);
+  return (
+    <li className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-gold/25 bg-surface">
+      <div className="border-b border-line bg-surface-2">
+        <Pal3DSobDemanda palId={t.PalID} className="aspect-square" />
+      </div>
+
+      <div className="flex flex-1 flex-col p-5 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate font-semibold">{pal.nome}</h3>
+            <p className="mt-0.5 text-xs font-bold tracking-wider text-gold uppercase">
+              Pal Monster da loja
+            </p>
+          </div>
+          {resta !== null && (
+            <span className="tabular shrink-0 text-xs text-muted">
+              {resta} restante{resta === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+        {pal.descricao && <p className="mt-2 text-sm text-muted">{pal.descricao}</p>}
+
+        <div className="pt-4">
+          <PalCard
+            pal={{
+              palId: t.PalID,
+              level: Number(t.Level ?? 1),
+              gender: t.Gender,
+              shiny: t.Shiny,
+              condensedPals: t.PartnerSkillLevel,
+              ivs: t.IVs,
+              passives: t.Passives,
+              activeSkills: t.ActiveSkills,
+            }}
+            detalhado
+            semIcone
+          />
+        </div>
+
+        <p className="mt-3 text-xs text-muted">
+          Vale para qualquer servidor. Cai no seu cofre de Pals — resgate na
+          hora, onde estiver jogando.
+        </p>
+
+        <div className="mt-4 flex items-center gap-1.5">
+          <Pick className="size-5" withLetter={false} />
+          <span className="tabular text-2xl font-bold">{pal.preco}</span>
+          <span className="text-sm text-muted">Paleta{pal.preco === 1 ? "" : "s"}</span>
+        </div>
+
+        <div className="mt-auto pt-3">
+          {logado ? (
+            <ComprarPalMonster id={pal.id} preco={pal.preco} />
+          ) : (
+            <Link
+              href="/entrar"
+              className="block w-full rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-center text-sm font-semibold transition-colors hover:border-gold hover:text-gold"
+            >
+              Entrar para comprar
+            </Link>
+          )}
+        </div>
       </div>
     </li>
   );

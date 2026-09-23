@@ -188,6 +188,13 @@ export default async function Painel() {
           )}
           {canPowerServer(level) && (
             <Card
+              title="Pals Monster"
+              body="Pôr Pal montado por JSON na loja — vende para qualquer servidor."
+              href="/admin/pals-monster"
+            />
+          )}
+          {canPowerServer(level) && (
+            <Card
               title="Entregar itens"
               body="Dar item de graça pra quem está online — avulso ou por kit de prêmio salvo."
               href="/admin/entregar-itens"

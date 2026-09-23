@@ -45,7 +45,7 @@ async function exigirStaff(): Promise<{ ok: true; discordId: string } | Resultad
  * repassar o JSON colado direto pro banco. O staff pode digitar qualquer
  * coisa; só o que o `PalTemplate` documenta vira arquivo de verdade.
  */
-function paraTemplateDeJson(bruto: unknown): PalTemplate | null {
+export function paraTemplateDeJson(bruto: unknown): PalTemplate | null {
   if (!bruto || typeof bruto !== "object") return null;
   const o = bruto as Record<string, unknown>;
   if (typeof o.PalID !== "string" || !o.PalID.trim()) return null;

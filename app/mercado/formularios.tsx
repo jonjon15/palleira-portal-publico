@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import {
   acaoComprar,
   acaoComprarKit,
+  acaoComprarPalMonster,
   acaoAnunciar,
   acaoCancelar,
   type Estado,
@@ -87,6 +88,19 @@ export function Comprar({ id, preco }: { id: number; preco: number }) {
  */
 export function ComprarKit({ id, preco }: { id: number; preco: number }) {
   const [estado, acao] = useActionState(acaoComprarKit, INICIAL);
+
+  return (
+    <form action={acao}>
+      <input type="hidden" name="id" value={id} />
+      <BotaoComprar preco={preco} />
+      <Aviso estado={estado} />
+    </form>
+  );
+}
+
+/** Compra de Pal Monster — a cópia cai no cofre de Pals (`lib/pals-monster.ts`). */
+export function ComprarPalMonster({ id, preco }: { id: number; preco: number }) {
+  const [estado, acao] = useActionState(acaoComprarPalMonster, INICIAL);
 
   return (
     <form action={acao}>
