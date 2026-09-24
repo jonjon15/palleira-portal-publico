@@ -58,6 +58,9 @@ export interface PalParaValidar {
 /** A espécie sem o prefixo de alfa (`BOSS_Anubis` → `Anubis`). */
 const especie = (palId: string) => palId.replace(/^BOSS_/i, "");
 
+/** Alfa e comum da mesma espécie contam como iguais — ver `elegibilidadeDoador`. */
+export const mesmaEspecie = (a: string, b: string) => especie(a) === especie(b);
+
 /**
  * Se este Pal serve como doador para as passivas aceitas do ritual. Usada
  * tanto para realce visual no formulário quanto — a que vale de fato —
@@ -76,7 +79,7 @@ export function elegibilidadeDoador(
   passivasAceitas: string[],
   palIdDoAlvo: string,
 ): { ok: boolean; motivo: string; passivaUsada: string } {
-  if (especie(pal.palId) !== especie(palIdDoAlvo)) {
+  if (!mesmaEspecie(pal.palId, palIdDoAlvo)) {
     return { ok: false, motivo: "Precisa ser da mesma espécie do Pal em purificação.", passivaUsada: "" };
   }
   if (

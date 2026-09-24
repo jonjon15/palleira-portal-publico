@@ -20,6 +20,7 @@ import {
   elegibilidadeDoador,
   elegibilidadeAlvo,
   AVISO_DESPERTAR,
+  mesmaEspecie,
   DIAS_REFERENCIA_MAXIMO,
 } from "@/lib/purificacao-regras";
 import type { PalDisponivel } from "@/lib/pal-cofre";
@@ -682,14 +683,14 @@ export function DoarPal({
     }
   }, [estado, router]);
 
-  // Só a mesma espécie do alvo pode doar de qualquer forma
+  // Só a mesma espécie do alvo (alfa e comum contam iguais) pode doar
   // (`elegibilidadeDoador`) — filtrar antes de renderizar em vez de
   // desenhar e desabilitar os ~280 Pals da palbox inteira. Numa palbox
   // cheia, montar todos os cards a cada clique travava a aba por meio
   // segundo (visível como "tela preta" — não era crash, era o navegador
   // ocupado demais pra pintar a tela).
   const candidatos = useMemo(
-    () => pals.filter((p) => p.palId === palIdDoAlvo),
+    () => pals.filter((p) => mesmaEspecie(p.palId, palIdDoAlvo)),
     [pals, palIdDoAlvo],
   );
 
