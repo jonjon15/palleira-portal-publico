@@ -6,6 +6,8 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-24
 
+- **Mercado, VIP, Ranking, Mapa, Eventos e Painel agora são só para a comunidade.** Para ver essas páginas é preciso entrar com o Discord e estar no servidor da Palleira. Início, Servidores, Como jogar e Regras continuam abertos para quem ainda está conhecendo.
+
 - **Itens do VIP chegam pelo site.** Moedas Cachorro, esferas, Núcleos de IA e os outros itens do jogo que o VIP dá agora vêm junto com a doação: aparecem na página VIP com o botão "Receber no jogo". É só entrar em um servidor e clicar, e os itens caem na mochila de onde você estiver jogando. Vêm uma vez por doação e ficam te esperando, sem prazo. Se a mochila estiver cheia, libere espaço e clique de novo: só o que faltou é enviado.
 
 - **O site é só para quem está no Discord da Palleira.** Cofre, Câmara de Purificação, Kits, restauração de base e vínculo de personagem agora exigem estar no servidor do Discord, como já era com daily, Mercado e VIP. Quem sair do Discord perde o acesso em até 5 minutos, mas nada do que tem guardado some: ao voltar, está tudo lá.
