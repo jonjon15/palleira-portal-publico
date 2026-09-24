@@ -1,6 +1,6 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/auth";
-import { canPowerServer, levelOf } from "@/lib/roles";
+import { canPowerServer, levelOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
 import { getPlayers } from "@/lib/palworld/paldefender";
 import { giveItems } from "@/lib/palworld/rcon";
@@ -299,6 +299,7 @@ async function ondeEstaAgora(
 export async function comprarKit(kitId: number): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const kits = (await sql`

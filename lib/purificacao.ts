@@ -6,7 +6,7 @@ import { getPal, ForaDoJogo, semEspacoParaPal, type PalCru } from "@/lib/palworl
 import { delPal } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo, type PalTemplate } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
-import { isStaff, levelOf } from "@/lib/roles";
+import { isStaff, levelOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import {
   IV_MINIMO_DOADOR,
@@ -400,6 +400,7 @@ export async function iniciarRitual(
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const vinculo = await meuVinculo(discordId);
@@ -513,6 +514,7 @@ export async function iniciarRitual(
 export async function iniciarRitualDoCofre(vaultPalId: number): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const vinculo = await meuVinculo(discordId);
@@ -577,6 +579,7 @@ export async function iniciarRitualDoCofre(vaultPalId: number): Promise<Resultad
 export async function doarPal(instanceId: string): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const ritual = await meuRitualAtivo(discordId);
@@ -1004,6 +1007,7 @@ export async function meuResgatePendenteDaCamara(
 export async function resgatarPalPurificado(ritualId: number): Promise<Resultado & { transferId?: number }> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const rows = (await sql`

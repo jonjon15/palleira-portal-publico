@@ -8,6 +8,7 @@ import {
   cancelarPedidoDeRestauracao,
   type Resultado,
 } from "@/lib/resgate-base";
+import { MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 
 /**
  * Ponte entre os formulários e `lib/resgate-base`.
@@ -30,6 +31,7 @@ export async function acaoPedirRestauracao(
 ): Promise<Estado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
 
   const vinculo = await meuVinculo(session.user.discordId);
   if (!vinculo) {

@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-24
+
+- **O site é só para quem está no Discord da Palleira.** Cofre, Câmara de Purificação, Kits, restauração de base e vínculo de personagem agora exigem estar no servidor do Discord, como já era com daily, Mercado e VIP. Quem sair do Discord perde o acesso em até 5 minutos, mas nada do que tem guardado some: ao voltar, está tudo lá.
+
 ## 2026-09-23
 
 - **Corrigido: Pal que já tinha passado pela Câmara voltava com IV menor.** Um Pal já purificado (ex: 110) que entrava de novo pra continuar subindo era contado como se estivesse em 100 — e ao cancelar ou resgatar, saía com 100, perdendo o que já tinha ganho. Agora a purificação continua do IV que o Pal já tem, e nunca devolve abaixo disso.

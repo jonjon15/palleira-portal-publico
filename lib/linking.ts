@@ -5,6 +5,7 @@ import { serverBySlug, activeServers } from "@/lib/servers";
 import { getPlayers } from "@/lib/palworld/paldefender";
 import { sendToPlayer } from "@/lib/palworld/rcon";
 import { normalizarUid } from "@/lib/palworld/uid";
+import { MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 
 /**
  * Vínculo entre a conta do Discord e o personagem do jogo (§4.2 do PROMPT.md).
@@ -345,6 +346,7 @@ export async function pedirCodigo(
 export async function confirmarCodigo(digitado: string): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const limpo = digitado.replace(/\D/g, "");

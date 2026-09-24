@@ -115,3 +115,12 @@ export const LEVEL_LABEL: Record<AccessLevel, string> = {
   membro: "Palleiro",
   visitante: "Visitante",
 };
+
+/**
+ * O site é só da comunidade (decisão do dono em 24/09/2026): tudo que mexe
+ * no jogo exige estar no Discord da Palleira. Quem sai perde o acesso em
+ * até 5 minutos (`VALIDADE_DOS_CARGOS` em auth.ts) e recupera ao voltar —
+ * o que tem guardado no cofre e na carteira continua lá.
+ */
+export const MENSAGEM_SO_MEMBRO =
+  "Só quem está no Discord da Palleira pode usar isso. Entre no servidor e tente de novo em alguns minutos.";

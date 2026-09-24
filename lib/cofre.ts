@@ -7,7 +7,7 @@ import { delItems, giveItems } from "@/lib/palworld/rcon";
 import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
 import { lancar } from "@/lib/economia";
 import { precoDoSlot } from "@/lib/cofre-regras";
-import { slotsGratisDoCofre } from "@/lib/roles";
+import { slotsGratisDoCofre, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 
 /**
  * O cofre na nuvem (§7.3 do PROMPT.md).
@@ -341,6 +341,7 @@ export async function importarParaCofre(
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   if (!Number.isInteger(qty) || qty <= 0) {
@@ -452,6 +453,7 @@ export async function resgatarDoCofre(
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   if (!Number.isInteger(qty) || qty <= 0) {

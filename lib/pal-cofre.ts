@@ -7,7 +7,7 @@ import { delPal, givePalTemplate } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
 import { ondeEstouOnline, type PersonagemOnline } from "@/lib/cofre";
-import { isStaff, levelOf, slotsGratisDoCofre } from "@/lib/roles";
+import { isStaff, levelOf, slotsGratisDoCofre, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { precoDoSlot } from "@/lib/cofre-regras";
 import { lancar } from "@/lib/economia";
 
@@ -254,6 +254,7 @@ export async function importarPalParaCofre(
 ): Promise<Resultado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const vinculo = await meuVinculo(discordId);
@@ -386,6 +387,7 @@ export async function iniciarResgateDePal(
 ): Promise<Resultado & { transferId?: number }> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
   const discordId = session.user.discordId;
 
   const vinculo = await meuVinculo(discordId);

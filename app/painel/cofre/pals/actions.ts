@@ -14,6 +14,7 @@ import {
 } from "@/lib/pal-cofre";
 import { anunciarPal } from "@/lib/mercado";
 import { auth } from "@/auth";
+import { MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 
 /**
  * Ponte entre as telas de Pal e o `lib/pal-cofre`. Mesma disciplina do
@@ -63,6 +64,7 @@ export async function acaoSemearTeste(
 export async function acaoComprarSlotDePal(): Promise<Estado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
 
   const r = await comprarSlotDePal(session.user.discordId, session.user.roles);
   atualiza();

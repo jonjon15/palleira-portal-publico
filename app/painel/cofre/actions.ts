@@ -8,6 +8,7 @@ import {
   comprarSlot,
   type Resultado,
 } from "@/lib/cofre";
+import { MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 
 /**
  * Ponte entre os formulários do cofre e o `lib/cofre`.
@@ -51,6 +52,7 @@ export async function acaoResgatar(
 export async function acaoComprarSlot(): Promise<Estado> {
   const session = await auth();
   if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  if (!session.user.isMember) return { ok: false, mensagem: MENSAGEM_SO_MEMBRO };
 
   const r = await comprarSlot(session.user.discordId, session.user.roles);
   atualiza();
