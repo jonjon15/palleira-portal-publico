@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import {
   iniciarRitual,
+  iniciarRitualDoCofre,
   doarPal,
   definirRegraDoRitual,
   atualizarReferenciaDeRegra,
@@ -41,6 +42,17 @@ export async function acaoIniciarRitual(
     String(form.get("instanceId") ?? ""),
     form.get("aceitaPerderDespertar") === "1",
   );
+  atualiza();
+  return r;
+}
+
+/** Começa a purificação com um Pal do cofre de Pals do site. Ver `iniciarRitualDoCofre`. */
+export async function acaoIniciarRitualDoCofre(
+  _anterior: Estado,
+  form: FormData,
+): Promise<Estado> {
+  if (CAMARA_EM_MANUTENCAO) return MENSAGEM_MANUTENCAO;
+  const r = await iniciarRitualDoCofre(Number(form.get("vaultPalId") ?? 0));
   atualiza();
   return r;
 }

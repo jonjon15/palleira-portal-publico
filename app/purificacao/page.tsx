@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { Camara3D } from "@/components/camara-3d";
 import { meuVinculo } from "@/lib/linking";
 import { ondeEstouOnline } from "@/lib/cofre";
-import { palsNoJogo, COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
+import { palsNoJogo, meuCofreDePals, COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import {
   meuRitualAtivo,
   historicoDoRitual,
@@ -21,6 +21,7 @@ import { nomeDaPassiva, todasAsPassivas } from "@/lib/passivas";
 import { isStaff, levelOf } from "@/lib/roles";
 import {
   EscolherPalDoRitual,
+  EscolherPalDoCofre,
   DoarPal,
   EscolherPassivasDoRitual,
   PassivasDoRitual,
@@ -99,14 +100,15 @@ export default async function Purificacao() {
   // dela muda.
   if (!ritualAndando) {
     const servidor = onde[0]?.serverSlug ?? null;
-    const disponiveis = servidor
-      ? await palsNoJogo(discordId, servidor)
-      : { pals: [], erro: "" };
+    const [disponiveis, cofre] = await Promise.all([
+      servidor ? palsNoJogo(discordId, servidor) : Promise.resolve({ pals: [], erro: "" }),
+      meuCofreDePals(discordId, session.user.roles),
+    ]);
 
     return (
       <Wrapper>
         <p className="mt-3 max-w-4xl text-sm" style={{ color: "#8fa39a" }}>
-          Escolha o Pal da sua palbox que vai entrar na cápsula. Depois disso
+          Escolha o Pal da sua palbox, ou do seu cofre de Pals, que vai entrar na cápsula. Depois disso
           o staff define quais passivas os doadores precisam ter, e você
           começa a doar Pals para purificá-lo.
         </p>
@@ -175,6 +177,19 @@ export default async function Purificacao() {
                 </div>
               )}
             </div>
+
+            {!CAMARA_EM_MANUTENCAO && (
+              <div className="rounded-2xl p-5" style={{ background: "#111a16", border: "1px solid #1f2e27" }}>
+                <h2 className="text-sm font-semibold">Ou escolher do seu cofre de Pals</h2>
+                <p className="mt-1 text-xs" style={{ color: "#8fa39a" }}>
+                  Não precisa estar no jogo nem ter espaço na palbox. Ao resgatar,
+                  o Pal volta no servidor de onde saiu.
+                </p>
+                <div className="mt-4">
+                  <EscolherPalDoCofre pals={cofre.pals} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Wrapper>

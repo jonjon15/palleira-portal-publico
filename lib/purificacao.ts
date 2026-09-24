@@ -339,6 +339,56 @@ export async function meuRitualAtivo(discordId: string): Promise<RitualDePurific
 /* -------------------------------------------------------------- iniciar */
 
 /**
+ * Grava o ritual novo — comum à entrada pela palbox (`iniciarRitual`) e pelo
+ * cofre (`iniciarRitualDoCofre`). Devolve se já nasceu com a regra de
+ * referência. Lança se o insert falhar; quem chama decide como desfazer.
+ */
+async function gravarRitual(
+  discordId: string,
+  serverSlug: string,
+  template: PalTemplate,
+  instanceId: string,
+): Promise<boolean> {
+  // Se já existe uma regra de referência (o staff já definiu isso antes,
+  // mesmo que num ritual anterior), o ritual novo nasce direto `ativo` com
+  // ela — não faz sentido esperar o staff repetir um clique que já deu.
+  // "aguardando_regra" só acontece de verdade no primeiro ritual da
+  // história da Câmara, antes de qualquer referência existir.
+  const referencia = await passivasDoUltimoRitual();
+
+  // O ritual parte do IV que o Pal JÁ tem, não de 100 fixo — um Pal que já
+  // passou pela Câmara (ex: resgatado com 110) e entra de novo para chegar
+  // mais perto de 150 perdia tudo o que tinha ganho, porque a coluna nascia
+  // com o default 100 e cancelar/resgatar gravava esse 100 por cima
+  // (Felbat do Handoroki, ritual 61, 22/09/2026).
+  const ivInicial = (iv: number) => Math.min(IV_TETO_RITUAL, Math.max(IV_INICIAL_RITUAL, iv));
+  const ivHealth = ivInicial(ivVida(template.IVs));
+  const ivAttack = ivInicial(ivAtaque(template.IVs));
+  const ivDefense = ivInicial(ivDefesa(template.IVs));
+
+  if (referencia) {
+    await sql`
+      insert into purification_rituals
+        (discord_id, server_slug, pal_id, template, instance_id_inicial,
+         status, passivas_aceitas, regra_definida_por, regra_definida_em,
+         iv_health, iv_attack, iv_defense)
+      values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
+              'ativo', ${referencia.passivasAceitas}, ${discordId}, now(),
+              ${ivHealth}, ${ivAttack}, ${ivDefense})
+    `;
+  } else {
+    await sql`
+      insert into purification_rituals
+        (discord_id, server_slug, pal_id, template, instance_id_inicial,
+         iv_health, iv_attack, iv_defense)
+      values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
+              ${ivHealth}, ${ivAttack}, ${ivDefense})
+    `;
+  }
+  return Boolean(referencia);
+}
+
+/**
  * Abre um ritual novo com o Pal escolhido na palbox. Falha se já houver um
  * ritual em `aguardando_regra`/`ativo` — a migração 020 tem o índice único
  * que faz valer isso mesmo sob corrida.
@@ -424,46 +474,12 @@ export async function iniciarRitual(
     return { ok: false, mensagem: "O jogo recusou a retirada. Nada foi movido." };
   }
 
-  // Se já existe uma regra de referência (o staff já definiu isso antes,
-  // mesmo que num ritual anterior), o ritual novo nasce direto `ativo` com
-  // ela — não faz sentido esperar o staff repetir um clique que já deu.
-  // "aguardando_regra" só acontece de verdade no primeiro ritual da
-  // história da Câmara, antes de qualquer referência existir.
-  const referencia = await passivasDoUltimoRitual();
-
-  // O ritual parte do IV que o Pal JÁ tem, não de 100 fixo — um Pal que já
-  // passou pela Câmara (ex: resgatado com 110) e entra de novo para chegar
-  // mais perto de 150 perdia tudo o que tinha ganho, porque a coluna nascia
-  // com o default 100 e cancelar/resgatar gravava esse 100 por cima
-  // (Felbat do Handoroki, ritual 61, 22/09/2026).
-  const ivInicial = (iv: number) => Math.min(IV_TETO_RITUAL, Math.max(IV_INICIAL_RITUAL, iv));
-  const ivHealth = ivInicial(ivVida(template.IVs));
-  const ivAttack = ivInicial(ivAtaque(template.IVs));
-  const ivDefense = ivInicial(ivDefesa(template.IVs));
-
   // O jogo já removeu de verdade — se o insert falhar daqui pra frente, o
   // Pal não pode simplesmente sumir: registrar o erro é o mínimo, mas não
   // existe caminho de volta automático (mesmo risco documentado no cofre).
+  let referencia: boolean;
   try {
-    if (referencia) {
-      await sql`
-        insert into purification_rituals
-          (discord_id, server_slug, pal_id, template, instance_id_inicial,
-           status, passivas_aceitas, regra_definida_por, regra_definida_em,
-           iv_health, iv_attack, iv_defense)
-        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
-                'ativo', ${referencia.passivasAceitas}, ${discordId}, now(),
-                ${ivHealth}, ${ivAttack}, ${ivDefense})
-      `;
-    } else {
-      await sql`
-        insert into purification_rituals
-          (discord_id, server_slug, pal_id, template, instance_id_inicial,
-           iv_health, iv_attack, iv_defense)
-        values (${discordId}, ${serverSlug}, ${template.PalID}, ${JSON.stringify(template)}, ${instanceId},
-                ${ivHealth}, ${ivAttack}, ${ivDefense})
-      `;
-    }
+    referencia = await gravarRitual(discordId, serverSlug, template, instanceId);
   } catch {
     return {
       ok: false,
@@ -477,6 +493,81 @@ export async function iniciarRitual(
     mensagem: referencia
       ? `${template.PalID} entrou na câmara, já com a regra de sempre. Pode começar a doar.`
       : `${template.PalID} entrou na câmara. Aguarde o staff definir as passivas aceitas.`,
+  };
+}
+
+/**
+ * Começa a purificação com um Pal que está no cofre de Pals do site, sem
+ * passar pelo jogo (pedido do dono em 23/09/2026). Serve a quem está com a
+ * palbox cheia — a Handoroki, com 960/960 — ou longe do jogo.
+ *
+ * Mesma barra de entrada (`elegibilidadeAlvo`). O Pal sai do cofre e entra
+ * no ritual num passo só do lado do banco; se gravar o ritual falhar, volta
+ * para o cofre com o mesmo `imported_at` (ver a memória
+ * gotcha-tirar-do-cofre-zera-a-trava).
+ *
+ * O ritual fica no servidor de onde o Pal saiu (`vault_pals.server_slug`) —
+ * é lá que ele volta ao resgatar. Pal sem origem (ex: Pal Monster) fica no
+ * servidor do vínculo.
+ */
+export async function iniciarRitualDoCofre(vaultPalId: number): Promise<Resultado> {
+  const session = await auth();
+  if (!session) return { ok: false, mensagem: "Entre com o Discord primeiro." };
+  const discordId = session.user.discordId;
+
+  const vinculo = await meuVinculo(discordId);
+  if (!vinculo) {
+    return { ok: false, mensagem: "Vincule seu personagem antes de usar a Câmara." };
+  }
+
+  const emAndamento = await meuRitualAtivo(discordId);
+  if (emAndamento && (emAndamento.status === "aguardando_regra" || emAndamento.status === "ativo")) {
+    return { ok: false, mensagem: "Você já tem um Pal em purificação agora." };
+  }
+
+  const [linha] = (await sql`
+    select id, template, server_slug from vault_pals
+    where id = ${vaultPalId} and discord_id = ${discordId}
+  `) as { id: number; template: PalTemplate; server_slug: string | null }[];
+  if (!linha) return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
+
+  const template = linha.template;
+  const elegivel = elegibilidadeAlvo({
+    ivs: template.IVs,
+    partnerSkillLevel: template.PartnerSkillLevel,
+    passives: template.Passives,
+    palId: template.PalID,
+  });
+  if (!elegivel.ok) return { ok: false, mensagem: elegivel.motivo };
+
+  const serverSlug = linha.server_slug ?? vinculo.serverSlug;
+  if (!serverBySlug(serverSlug)) return { ok: false, mensagem: "Servidor inválido." };
+
+  // Tira do cofre primeiro — o `delete ... returning` é a trava contra dois
+  // cliques: só um deles leva a linha.
+  const saiu = (await sql`
+    delete from vault_pals where id = ${vaultPalId} and discord_id = ${discordId}
+    returning pal_id, template, server_slug, imported_at
+  `) as { pal_id: string; template: PalTemplate; server_slug: string | null; imported_at: string }[];
+  if (!saiu.length) return { ok: false, mensagem: "Esse Pal não está mais no seu cofre." };
+
+  let referencia: boolean;
+  try {
+    referencia = await gravarRitual(discordId, serverSlug, template, `cofre-${vaultPalId}`);
+  } catch {
+    const s = saiu[0];
+    await sql`
+      insert into vault_pals (discord_id, pal_id, template, server_slug, imported_at)
+      values (${discordId}, ${s.pal_id}, ${JSON.stringify(s.template)}, ${s.server_slug}, ${s.imported_at})
+    `;
+    return { ok: false, mensagem: "Não consegui começar agora — o Pal continua no seu cofre." };
+  }
+
+  return {
+    ok: true,
+    mensagem: referencia
+      ? `${template.PalID} saiu do cofre e entrou na câmara. Pode começar a doar.`
+      : `${template.PalID} saiu do cofre e entrou na câmara. Aguarde o staff definir as passivas aceitas.`,
   };
 }
 

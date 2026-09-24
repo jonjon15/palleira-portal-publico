@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   acaoIniciarRitual,
+  acaoIniciarRitualDoCofre,
   acaoDoarPal,
   acaoDefinirRegra,
   acaoAtualizarReferencia,
@@ -23,7 +24,7 @@ import {
   mesmaEspecie,
   DIAS_REFERENCIA_MAXIMO,
 } from "@/lib/purificacao-regras";
-import type { PalDisponivel } from "@/lib/pal-cofre";
+import type { PalDisponivel, PalNoCofre } from "@/lib/pal-cofre";
 import { nomeDaPassiva, rankDaPassiva, corDoRank, urlDoIconeRank, type PassivaListada } from "@/lib/passivas";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
@@ -173,6 +174,95 @@ export function EscolherPalDoRitual({
 
       <div className="mt-4">
         {despertadoSelecionado && !aceitaDespertar ? (
+          <button
+            type="button"
+            disabled
+            className="cursor-not-allowed rounded-[var(--radius-control)] bg-gold px-5 py-2.5 text-sm font-semibold text-[#14120f] opacity-50"
+          >
+            Iniciar purificação com este Pal
+          </button>
+        ) : (
+          <Enviar>Iniciar purificação com este Pal</Enviar>
+        )}
+      </div>
+      <Aviso estado={estado} />
+    </form>
+  );
+}
+
+/* ------------------------------------------------ escolher do cofre */
+
+/**
+ * O mesmo "escolher o Pal", só que do cofre de Pals do site — não precisa
+ * estar no jogo nem ter espaço na palbox. Só aparece quem passa na barra de
+ * entrada (`elegibilidadeAlvo`); `iniciarRitualDoCofre` revalida no server.
+ */
+export function EscolherPalDoCofre({ pals }: { pals: PalNoCofre[] }) {
+  const [estado, acao] = useActionState(acaoIniciarRitualDoCofre, INICIAL);
+  const [selecionado, setSelecionado] = useState<number | null>(null);
+
+  const elegiveis = useMemo(
+    () =>
+      pals.filter((p) =>
+        elegibilidadeAlvo({
+          ivs: (p.template.IVs as Record<string, number>) ?? {},
+          partnerSkillLevel: Number(p.template.PartnerSkillLevel ?? 0),
+          passives: (p.template.Passives as string[]) ?? [],
+          palId: p.palId,
+        }).ok,
+      ),
+    [pals],
+  );
+
+  if (elegiveis.length === 0) {
+    return (
+      <p className="text-sm text-muted">
+        {pals.length === 0
+          ? "Seu cofre de Pals está vazio."
+          : "Nenhum Pal do seu cofre pode entrar — precisa de IV 100 em Vida, Ataque e Defesa e ser Full Condensado (rank 5)."}
+      </p>
+    );
+  }
+
+  return (
+    <form action={acao}>
+      <input type="hidden" name="vaultPalId" value={selecionado ?? ""} />
+      <div className="grid max-h-[24rem] grid-cols-1 gap-2 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-2 sm:grid-cols-2">
+        {elegiveis.map((p) => {
+          const t = p.template;
+          const marcado = selecionado === p.id;
+          return (
+            <label
+              key={p.id}
+              className={`flex h-full cursor-pointer flex-col rounded-[var(--radius-control)] border p-2.5 transition-colors ${
+                marcado ? "border-gold bg-gold/[0.06]" : "border-line bg-bg hover:border-line-strong"
+              }`}
+            >
+              <input
+                type="radio"
+                name="_escolha_cofre"
+                checked={marcado}
+                onChange={() => setSelecionado(p.id)}
+                className="sr-only"
+              />
+              <PalCard
+                pal={{
+                  palId: p.palId,
+                  nickname: t.Nickname as string | undefined,
+                  level: Number(t.Level ?? 1),
+                  gender: t.Gender as string | undefined,
+                  shiny: t.Shiny as boolean | undefined,
+                  condensedPals: t.PartnerSkillLevel as number | undefined,
+                  ivs: t.IVs as Record<string, number> | undefined,
+                  passives: t.Passives as string[] | undefined,
+                }}
+              />
+            </label>
+          );
+        })}
+      </div>
+      <div className="mt-4">
+        {selecionado === null ? (
           <button
             type="button"
             disabled
