@@ -188,9 +188,11 @@ export default async function Vip() {
             <h2 className="text-2xl font-bold tracking-tight">🚀 Booster da comunidade</h2>
             <p className="mt-1 max-w-3xl text-sm text-muted">
               Turbina o servidor inteiro por {DURACAO_HORAS} horas: taxa{" "}
-              {boosterCfg.multiplicador.toLocaleString("pt-BR")}x de XP, Drop ou Captura para todo mundo
-              que estiver jogando. Entra no próximo restart do servidor (de 4 em 4 horas). Quem é VIP tem
-              boosters para ativar; acabou, é só doar outro.
+              {boosterCfg.multiplicador.toLocaleString("pt-BR")}x de XP e/ou Drop para todo mundo que
+              estiver jogando. Entra no próximo restart do servidor (de 4 em 4 horas). Se o tipo já estiver
+              ligado, o seu pedido estende o tempo — a taxa nunca passa de{" "}
+              {boosterCfg.multiplicador.toLocaleString("pt-BR")}x. Quem é VIP tem boosters para ativar;
+              acabou, é só doar outro.
             </p>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[3fr_2fr]">
@@ -231,10 +233,13 @@ export default async function Vip() {
                     ) : (
                       <p className="mt-2 text-sm text-muted">Sem booster agora</p>
                     )}
-                    {s.fila.length > 0 && (
+                    {Object.keys(s.fila).length > 0 && (
                       <p className="mt-3 text-xs text-muted">
-                        Na fila: {s.fila.map((f) => f.map((t) => TIPOS[t].rotulo).join(" + ")).join(", ")} —
-                        entra{s.fila.length > 1 ? "m" : ""} nos próximos restarts
+                        Na fila:{" "}
+                        {(Object.entries(s.fila) as [keyof typeof TIPOS, number][])
+                          .map(([t, n]) => `${TIPOS[t].rotulo} +${n * DURACAO_HORAS}h`)
+                          .join(" · ")}{" "}
+                        — entra nos próximos restarts
                       </p>
                     )}
                   </div>

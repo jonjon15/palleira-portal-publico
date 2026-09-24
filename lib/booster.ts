@@ -27,18 +27,22 @@ import {
  * nunca derruba servidor. E por isso "ativo" aqui é verdade: só vira ativo
  * quando o próprio servidor ligou pedindo.
  *
- * Fila: cada booster entra no primeiro ciclo em que os tipos dele ainda não
- * foram pegos. XP e Drop de duas pessoas podem valer juntos; dois XP
- * entram um depois do outro — o 2x não vira 4x.
+ * Fila **por tipo** (migração 031): cada (booster, tipo) é gasto num ciclo,
+ * na ordem de pagamento. Pedir com outro já ligado mantém o que foi
+ * escolhido e acrescenta o que faltar — XP ligado + pedido de XP e Drop =
+ * Drop entra no próximo RR e o XP novo estende o XP por mais um ciclo. A
+ * taxa nunca passa de 2x: o tipo está ligado ou não está.
  */
 
-export type TipoBooster = "xp" | "drop" | "captura";
+export type TipoBooster = "xp" | "drop";
 
+/** Captura saiu a pedido do dono (24/09/2026). */
 export const TIPOS: Record<TipoBooster, { rotulo: string; chaves: string[] }> = {
   xp: { rotulo: "XP", chaves: ["ExpRate"] },
   drop: { rotulo: "Drop", chaves: ["EnemyDropItemRate", "CollectionDropRate"] },
-  captura: { rotulo: "Captura", chaves: ["PalCaptureRate"] },
 };
+
+export const rotuloDoTipo = (t: string) => (TIPOS as Record<string, { rotulo: string }>)[t]?.rotulo ?? t;
 
 const ehTipo = (t: string): t is TipoBooster => t in TIPOS;
 
@@ -157,7 +161,9 @@ export async function pedirBooster(args: {
     );
     return {
       ok: true,
-      mensagem: `Booster ${rotulo} na fila do ${server.shortName}. Ele entra no próximo restart do servidor.`,
+      mensagem:
+        `Booster ${rotulo} na fila do ${server.shortName}. Ele entra no próximo restart; ` +
+        `se o tipo já estiver ligado, o seu estende o tempo (nunca passa de 2x).`,
     };
   }
 
@@ -240,90 +246,118 @@ export async function confirmarPagamentoBooster(
 
 /* ---------------------------------------------------------------- aplicar */
 
-interface LinhaFila {
-  id: number;
-  tipos: TipoBooster[];
+const JANELA = `${MESMO_CICLO_HORAS} hours`;
+
+interface UsoDoCiclo {
+  booster_id: number;
+  tipo: string;
   multiplicador: string;
-  ativado_em: string | null;
+  ativado_em: string;
+}
+
+async function usosDoCiclo(serverSlug: string): Promise<UsoDoCiclo[]> {
+  return (await sql`
+    select u.booster_id, u.tipo, b.multiplicador, u.ativado_em
+      from booster_usos u
+      join boosters b on b.id = u.booster_id
+     where u.server_slug = ${serverSlug}
+       and u.ativado_em > now() - ${JANELA}::interval
+  `) as UsoDoCiclo[];
 }
 
 /**
  * O servidor acabou de ligar e pergunta o que vale neste ciclo.
  *
  * `base` são as taxas que ele leu do `.ini` sem booster. Volta o que gravar
- * por cima (vazio = taxa normal). Quem estava ativo de um ciclo anterior é
- * dado por encerrado; quem foi ativado há pouco (queda, restart manual) é
- * reaplicado, sem consumir fila.
+ * por cima (vazio = taxa normal).
+ *
+ * Um uso ativado há menos de 3,5h é o mesmo ciclo (queda, restart manual):
+ * é reaplicado sem gastar fila. Passou disso, é ciclo novo, e cada tipo
+ * pega o próximo pedido da fila dele — no máximo um por tipo, por isso a
+ * taxa nunca passa do multiplicador.
  */
 export async function aplicarNoBoot(
   serverSlug: string,
   base: Record<string, number>,
 ): Promise<{ tipos: TipoBooster[]; valores: Record<string, number>; boosters: number[] }> {
-  await sql`
-    update boosters set status = 'encerrado', encerrado_em = now(), updated_at = now()
-     where server_slug = ${serverSlug} and status = 'ativo'
-       and ativado_em < now() - (interval '1 hour' * ${MESMO_CICLO_HORAS})
-  `;
-
-  let escolhidos = (await sql`
-    select id, tipos, multiplicador, ativado_em from boosters
-     where server_slug = ${serverSlug} and status = 'ativo'
-  `) as LinhaFila[];
+  let usos = await usosDoCiclo(serverSlug);
+  let cicloNovo = false;
 
   const cfg = await configBooster();
-  if (escolhidos.length === 0 && cfg.ativo) {
-    const fila = (await sql`
-      select id, tipos, multiplicador, ativado_em from boosters
-       where server_slug = ${serverSlug} and status = 'na_fila'
-       order by pago_em, id
-    `) as LinhaFila[];
-    const pegos = new Set<string>();
-    for (const b of fila) {
-      if (b.tipos.some((t) => pegos.has(t))) continue;
-      b.tipos.forEach((t) => pegos.add(t));
-      escolhidos.push(b);
+  if (usos.length === 0 && cfg.ativo) {
+    for (const tipo of Object.keys(TIPOS)) {
+      const r = (await sql`
+        insert into booster_usos (booster_id, server_slug, tipo)
+        select b.id, b.server_slug, ${tipo}
+          from boosters b
+         where b.server_slug = ${serverSlug}
+           and b.status in ('na_fila', 'ativo')
+           and ${tipo} = any(b.tipos)
+           and not exists (select 1 from booster_usos u where u.booster_id = b.id and u.tipo = ${tipo})
+         order by b.pago_em, b.id
+         limit 1
+        on conflict (booster_id, tipo) do nothing
+        returning id
+      `) as { id: number }[];
+      if (r.length) cicloNovo = true;
     }
-    if (escolhidos.length) {
-      escolhidos = (await sql`
-        update boosters set status = 'ativo', ativado_em = now(), updated_at = now()
-         where id = any(${escolhidos.map((b) => b.id)}::bigint[]) and status = 'na_fila'
-        returning id, tipos, multiplicador, ativado_em
-      `) as LinhaFila[];
-    }
+    if (cicloNovo) usos = await usosDoCiclo(serverSlug);
   }
+
+  // Status de cada pedido: ligado se tem uso neste ciclo; encerrado quando
+  // todos os tipos dele já foram usados; senão, esperando.
+  await sql`
+    update boosters b
+       set status = case
+             when exists (select 1 from booster_usos u
+                           where u.booster_id = b.id and u.ativado_em > now() - ${JANELA}::interval)
+               then 'ativo'
+             when (select count(*) from booster_usos u where u.booster_id = b.id) >= cardinality(b.tipos)
+               then 'encerrado'
+             else 'na_fila'
+           end,
+           ativado_em = coalesce(b.ativado_em,
+             (select min(u.ativado_em) from booster_usos u where u.booster_id = b.id)),
+           updated_at = now()
+     where b.server_slug = ${serverSlug} and b.status in ('na_fila', 'ativo')
+  `;
+  await sql`
+    update boosters set encerrado_em = now()
+     where server_slug = ${serverSlug} and status = 'encerrado' and encerrado_em is null
+  `;
 
   const valores: Record<string, number> = {};
-  const taxas: Record<string, [number, number]> = {};
   const tipos = new Set<TipoBooster>();
-  for (const b of escolhidos) {
-    for (const t of b.tipos) {
-      if (!ehTipo(t)) continue;
-      tipos.add(t);
-      for (const chave of TIPOS[t].chaves) {
-        const atual = base[chave];
-        if (typeof atual !== "number" || !Number.isFinite(atual)) continue;
-        const novo = Math.round(atual * Number(b.multiplicador) * 100) / 100;
-        valores[chave] = Math.max(valores[chave] ?? 0, novo);
-        taxas[chave] = [atual, valores[chave]];
-      }
+  for (const u of usos) {
+    if (!ehTipo(u.tipo)) continue;
+    tipos.add(u.tipo);
+    const taxas: Record<string, [number, number]> = {};
+    for (const chave of TIPOS[u.tipo].chaves) {
+      const atual = base[chave];
+      if (typeof atual !== "number" || !Number.isFinite(atual)) continue;
+      // Nunca soma: o tipo está ligado ou não, e vale o maior multiplicador.
+      const novo = Math.round(atual * Number(u.multiplicador) * 100) / 100;
+      valores[chave] = Math.max(valores[chave] ?? 0, novo);
+      taxas[chave] = [atual, valores[chave]];
     }
-  }
-
-  if (escolhidos.length) {
     await sql`
-      update boosters set taxas = ${JSON.stringify(taxas)}, updated_at = now()
-       where id = any(${escolhidos.map((b) => b.id)}::bigint[])
+      update booster_usos set taxas = ${JSON.stringify(taxas)}
+       where booster_id = ${u.booster_id} and tipo = ${u.tipo}
     `;
-    const novos = escolhidos.filter((b) => b.ativado_em && Date.now() - new Date(b.ativado_em).getTime() < 60_000);
-    if (novos.length) {
-      await logarNoDiscord(
-        `🔥 Booster ligado no ${serverBySlug(serverSlug)?.shortName ?? serverSlug}: ` +
-          Object.entries(taxas).map(([k, [a, n]]) => `${k} ${a} → ${n}`).join(", "),
-      );
-    }
   }
 
-  return { tipos: [...tipos], valores, boosters: escolhidos.map((b) => Number(b.id)) };
+  if (cicloNovo) {
+    await logarNoDiscord(
+      `🔥 Booster ligado no ${serverBySlug(serverSlug)?.shortName ?? serverSlug}: ` +
+        Object.entries(valores).map(([k, n]) => `${k} ${base[k]} → ${n}`).join(", "),
+    );
+  }
+
+  return {
+    tipos: [...tipos],
+    valores,
+    boosters: [...new Set(usos.map((u) => Number(u.booster_id)))],
+  };
 }
 
 /* ----------------------------------------------------------------- telas */
@@ -335,34 +369,41 @@ export interface SituacaoDoServidor {
   ativos: TipoBooster[];
   ate: string | null;
   taxas: Record<string, [number, number]>;
-  /** Tipos esperando, em ordem — o próximo RR pega o que couber. */
-  fila: TipoBooster[][];
+  /** Quantos ciclos de cada tipo ainda esperam — cada um é mais 4h. */
+  fila: Partial<Record<TipoBooster, number>>;
 }
 
 export async function situacaoDosServidores(): Promise<SituacaoDoServidor[]> {
-  const rows = (await sql`
-    select server_slug, status, tipos, ativado_em, taxas
-      from boosters
-     where status in ('ativo', 'na_fila')
-     order by pago_em, id
-  `) as {
-    server_slug: string; status: string; tipos: TipoBooster[]; ativado_em: string | null;
-    taxas: Record<string, [number, number]>;
-  }[];
+  const [usos, fila] = await Promise.all([
+    sql`
+      select server_slug, tipo, ativado_em, taxas
+        from booster_usos
+       where ativado_em > now() - ${JANELA}::interval
+    `.then((r) => r as { server_slug: string; tipo: string; ativado_em: string; taxas: Record<string, [number, number]> }[]),
+    sql`
+      select b.server_slug, t.tipo, count(*)::int as n
+        from boosters b
+       cross join unnest(b.tipos) as t(tipo)
+       where b.status in ('na_fila', 'ativo')
+         and not exists (select 1 from booster_usos u where u.booster_id = b.id and u.tipo = t.tipo)
+       group by 1, 2
+    `.then((r) => r as { server_slug: string; tipo: string; n: number }[]),
+  ]);
 
   return servidoresComBooster().map((s) => {
-    const meus = rows.filter((r) => r.server_slug === s.slug);
-    const ativos = meus.filter((r) => r.status === "ativo");
-    const desde = ativos.map((r) => new Date(r.ativado_em ?? Date.now()).getTime());
+    const meus = usos.filter((u) => u.server_slug === s.slug && ehTipo(u.tipo));
+    const desde = meus.map((u) => new Date(u.ativado_em).getTime());
+    const esperando: Partial<Record<TipoBooster, number>> = {};
+    for (const f of fila) {
+      if (f.server_slug === s.slug && ehTipo(f.tipo)) esperando[f.tipo] = f.n;
+    }
     return {
       slug: s.slug,
       nome: s.shortName,
-      ativos: [...new Set(ativos.flatMap((r) => r.tipos))],
-      ate: desde.length
-        ? new Date(Math.min(...desde) + DURACAO_HORAS * 3600_000).toISOString()
-        : null,
-      taxas: Object.assign({}, ...ativos.map((r) => r.taxas)),
-      fila: meus.filter((r) => r.status === "na_fila").map((r) => r.tipos),
+      ativos: [...new Set(meus.map((u) => u.tipo as TipoBooster))],
+      ate: desde.length ? new Date(Math.min(...desde) + DURACAO_HORAS * 3600_000).toISOString() : null,
+      taxas: Object.assign({}, ...meus.map((u) => u.taxas)),
+      fila: esperando,
     };
   });
 }

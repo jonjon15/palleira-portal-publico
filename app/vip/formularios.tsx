@@ -65,7 +65,7 @@ export function Doar({ plano, valor }: { plano: string; valor: string }) {
   );
 }
 
-const ROTULO_TIPO = { xp: "XP", drop: "Drop", captura: "Captura" } as const;
+const ROTULO_TIPO = { xp: "XP", drop: "Drop" } as const;
 
 /** Recarrega a página a cada 5s por até 3 min — para esperar o Pix confirmar. */
 export function AtualizarSozinho() {
@@ -121,7 +121,7 @@ export function PedirBooster({
       </div>
       <fieldset>
         <legend className="text-sm text-muted">
-          O que turbinar ({multiplicador.toLocaleString("pt-BR")}x) — escolha um ou misture
+          O que turbinar ({multiplicador.toLocaleString("pt-BR")}x) — escolha um ou os dois
         </legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {(Object.keys(ROTULO_TIPO) as (keyof typeof ROTULO_TIPO)[]).map((t) => (
