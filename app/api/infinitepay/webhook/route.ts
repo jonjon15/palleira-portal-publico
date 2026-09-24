@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { confirmarPagamento } from "@/lib/vip";
+import { confirmarPagamentoBooster } from "@/lib/booster";
 
 /**
  * Aviso de pagamento da InfinitePay (checkout das doações VIP).
@@ -25,7 +26,11 @@ export async function POST(req: Request) {
   }
 
   const texto = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v) : "");
-  const r = await confirmarPagamento({
+  // `vip-<id>` ou `boost-<id>`: cada doação confirma na sua tabela.
+  const confirmar = texto(corpo.order_nsu).startsWith("boost-")
+    ? confirmarPagamentoBooster
+    : confirmarPagamento;
+  const r = await confirmar({
     orderNsu: texto(corpo.order_nsu),
     transactionNsu: texto(corpo.transaction_nsu),
     slug: texto(corpo.invoice_slug ?? corpo.slug),

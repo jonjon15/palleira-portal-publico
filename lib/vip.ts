@@ -8,6 +8,13 @@ import { giveItems } from "@/lib/palworld/rcon";
 import { meuVinculo } from "@/lib/linking";
 import { nomeDoItem } from "@/lib/itens";
 import { ondeEstaAgora, type ItemDoKit } from "@/lib/kits";
+import {
+  infiniteTag,
+  reais,
+  criarCheckout,
+  checarPagamento,
+  type DadosDoPagamento,
+} from "@/lib/infinitepay";
 
 /**
  * VIP por doação via Pix, pela InfinitePay, com entrega automática do cargo
@@ -36,11 +43,9 @@ import { ondeEstaAgora, type ItemDoKit } from "@/lib/kits";
  * ESTA rotina deu, nunca um VIP que a staff deu na mão.
  */
 
-const CHECKOUT = "https://api.checkout.infinitepay.io";
-// Fixo de propósito: o webhook e a volta do checkout precisam do endereço
-// público, e o `NEXT_PUBLIC_SITE_URL` local é localhost.
-const SITE = "https://palleira.com.br";
 export const DIAS_DE_VIP = 30;
+export { infiniteTag, reais };
+export type { DadosDoPagamento };
 
 export interface PlanoVip {
   key: string;
@@ -50,6 +55,8 @@ export interface PlanoVip {
   beneficios: string[];
   /** Itens do jogo, entregues uma vez por doação. */
   itens: ItemDoKit[];
+  /** Boosters que cada doação dá para ativar (`lib/booster.ts`). */
+  boosters: number;
   destaque: boolean;
   ativo: boolean;
   /** Regra do site, fixa no código (`PLANOS` em `lib/roles.ts`). */
@@ -71,6 +78,7 @@ interface LinhaPlano {
   paletas_no_mes: number;
   beneficios: string[];
   itens: ItemDoKit[];
+  boosters: number;
   destaque: boolean;
   ativo: boolean;
 }
@@ -85,6 +93,7 @@ function paraPlano(r: LinhaPlano): PlanoVip | null {
     paletasNoMes: r.paletas_no_mes,
     beneficios: r.beneficios,
     itens: r.itens,
+    boosters: r.boosters,
     destaque: r.destaque,
     ativo: r.ativo,
     dailyPaletas: regra.dailyPaletas,
@@ -94,21 +103,13 @@ function paraPlano(r: LinhaPlano): PlanoVip | null {
 
 export async function planosVip(soAtivos = true): Promise<PlanoVip[]> {
   const rows = (await sql`
-    select key, nome, preco_centavos, paletas_no_mes, beneficios, itens, destaque, ativo
+    select key, nome, preco_centavos, paletas_no_mes, beneficios, itens, boosters, destaque, ativo
     from vip_planos
     where ${!soAtivos} or ativo
     order by ordem
   `) as LinhaPlano[];
   return rows.map(paraPlano).filter((p): p is PlanoVip => p !== null);
 }
-
-export async function infiniteTag(): Promise<string> {
-  const [c] = (await sql`select infinite_tag from vip_config where id = 1`) as { infinite_tag: string }[];
-  return (c?.infinite_tag ?? "").trim().replace(/^\$/, "");
-}
-
-export const reais = (centavos: number) =>
-  (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 /* -------------------------------------------------------------- doar */
 
@@ -132,40 +133,20 @@ export async function iniciarDoacao(
   if (!plano) return { ok: false, mensagem: "Esse plano não está disponível." };
 
   const [{ id }] = (await sql`
-    insert into vip_doacoes (discord_id, plano_key, plano_nome, valor_centavos, paletas, itens)
+    insert into vip_doacoes (discord_id, plano_key, plano_nome, valor_centavos, paletas, itens, boosters)
     values (${session.user.discordId}, ${plano.key}, ${plano.nome}, ${plano.precoCentavos},
-            ${plano.paletasNoMes}, ${JSON.stringify(plano.itens)})
+            ${plano.paletasNoMes}, ${JSON.stringify(plano.itens)}, ${plano.boosters})
     returning id
   `) as { id: number }[];
   const orderNsu = `vip-${id}`;
 
-  let url = "";
-  let erro = "";
-  try {
-    const res = await fetch(`${CHECKOUT}/links`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        handle: tag,
-        order_nsu: orderNsu,
-        items: [
-          {
-            quantity: 1,
-            price: plano.precoCentavos,
-            description: `Doação à comunidade Palleira — agradecimento VIP ${plano.nome}`,
-          },
-        ],
-        redirect_url: `${SITE}/vip/obrigado/${id}`,
-        webhook_url: `${SITE}/api/infinitepay/webhook`,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const corpo = (await res.json().catch(() => ({}))) as { url?: string; message?: string };
-    if (res.ok && corpo.url) url = corpo.url;
-    else erro = corpo.message ?? `InfinitePay respondeu ${res.status}`;
-  } catch (e) {
-    erro = e instanceof Error ? e.message : String(e);
-  }
+  const { url, erro } = await criarCheckout({
+    tag,
+    orderNsu,
+    precoCentavos: plano.precoCentavos,
+    descricao: `Doação à comunidade Palleira — agradecimento VIP ${plano.nome}`,
+    redirectPath: `/vip/obrigado/${id}`,
+  });
 
   if (!url) {
     await sql`
@@ -183,14 +164,6 @@ export async function iniciarDoacao(
 }
 
 /* ---------------------------------------------------- confirmar e entregar */
-
-export interface DadosDoPagamento {
-  orderNsu: string;
-  transactionNsu: string;
-  slug: string;
-  receiptUrl?: string;
-  captureMethod?: string;
-}
 
 /**
  * Confirma com a InfinitePay e, se pago, entrega. Idempotente: chamada pelo
@@ -214,28 +187,9 @@ export async function confirmarPagamento(
     return { pago: true, transitorio: false, motivo: "já confirmada" };
   }
 
-  const tag = await infiniteTag();
-  let r: { success?: boolean; paid?: boolean; paid_amount?: number; amount?: number; capture_method?: string };
-  try {
-    const res = await fetch(`${CHECKOUT}/payment_check`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        handle: tag,
-        order_nsu: d.orderNsu,
-        transaction_nsu: d.transactionNsu,
-        slug: d.slug,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) return { pago: false, transitorio: true, motivo: `payment_check ${res.status}` };
-    r = await res.json();
-  } catch (e) {
-    return { pago: false, transitorio: true, motivo: e instanceof Error ? e.message : String(e) };
-  }
-
-  if (!r.success || !r.paid) return { pago: false, transitorio: false, motivo: "não consta como pago" };
-  const pago = Number(r.paid_amount ?? r.amount ?? 0);
+  const r = await checarPagamento(d);
+  if (!r.pago) return r;
+  const pago = r.valor;
   if (pago < doacao.valor_centavos) {
     await sql`
       update vip_doacoes set detail = ${`pago ${pago} de ${doacao.valor_centavos} centavos — não entregue`},
@@ -252,7 +206,7 @@ export async function confirmarPagamento(
        set status = 'pago', pago_em = now(), paid_amount = ${pago},
            transaction_nsu = ${d.transactionNsu}, invoice_slug = ${d.slug},
            receipt_url = ${d.receiptUrl ?? null},
-           capture_method = ${r.capture_method ?? d.captureMethod ?? null},
+           capture_method = ${r.captureMethod},
            vip_ate = greatest(
              now(),
              coalesce((select max(o.vip_ate) from vip_doacoes o
@@ -576,6 +530,7 @@ export async function salvarPlano(args: {
   paletasNoMes: number;
   beneficios: string[];
   itens: ItemDoKit[];
+  boosters: number;
   destaque: boolean;
   ativo: boolean;
 }): Promise<Resultado> {
@@ -593,6 +548,9 @@ export async function salvarPlano(args: {
   }
   const beneficios = args.beneficios.map((b) => b.trim()).filter(Boolean).slice(0, 30);
 
+  if (!Number.isInteger(args.boosters) || args.boosters < 0 || args.boosters > 50) {
+    return { ok: false, mensagem: "Boosters precisa ser um número inteiro de 0 a 50." };
+  }
   if (args.itens.length > 30) return { ok: false, mensagem: "No máximo 30 itens diferentes por plano." };
   const itens: ItemDoKit[] = [];
   for (const i of args.itens) {
@@ -609,7 +567,7 @@ export async function salvarPlano(args: {
     update vip_planos
        set nome = ${args.nome.trim()}, preco_centavos = ${centavos},
            paletas_no_mes = ${args.paletasNoMes}, beneficios = ${JSON.stringify(beneficios)},
-           itens = ${JSON.stringify(itens)},
+           itens = ${JSON.stringify(itens)}, boosters = ${args.boosters},
            destaque = ${args.destaque}, ativo = ${args.ativo},
            updated_at = now(), updated_by = ${s.discordId}
      where key = ${args.key}

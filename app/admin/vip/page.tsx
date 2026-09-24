@@ -6,7 +6,8 @@ import { levelOf, canManageEconomy, PLANOS } from "@/lib/roles";
 import { planosVip, infiniteTag, doacoesRecentes, reais } from "@/lib/vip";
 import { nomesDe, botPodeDarCargos } from "@/lib/discord";
 import { catalogoDeItens } from "@/lib/itens";
-import { FormularioDaTag, FormularioDePlano, Reentregar } from "./formularios";
+import { FormularioDaTag, FormularioDePlano, FormularioDoBooster, Reentregar } from "./formularios";
+import { configBooster, boostersRecentes, TIPOS } from "@/lib/booster";
 
 export const metadata: Metadata = { title: "VIP — administração" };
 export const dynamic = "force-dynamic";
@@ -23,15 +24,19 @@ export default async function VipAdmin() {
   if (!session) redirect("/entrar");
   if (!canManageEconomy(levelOf(session.user.roles, session.user.isMember))) notFound();
 
-  const [planos, tag, doacoes, botOk] = await Promise.all([
+  const [planos, tag, doacoes, botOk, boosterCfg, boosters] = await Promise.all([
     planosVip(false),
     infiniteTag(),
     doacoesRecentes(),
     botPodeDarCargos(PLANOS.map((p) => p.role)),
+    configBooster(),
+    boostersRecentes(),
   ]);
   const testado = doacoes.some((d) => d.status === "entregue");
   const catalogo = catalogoDeItens();
-  const nomes = await nomesDe([...new Set(doacoes.map((d) => d.discordId))]);
+  const nomes = await nomesDe([
+    ...new Set([...doacoes.map((d) => d.discordId), ...boosters.map((b) => b.discordId)]),
+  ]);
 
   return (
     <>
@@ -106,6 +111,45 @@ export default async function VipAdmin() {
               <FormularioDePlano key={p.key} plano={p} catalogo={catalogo} />
             ))}
           </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold">Booster da comunidade</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted">
+            O servidor aplica sozinho no restart: o script <code>vigia/booster_boot.py</code> roda antes do
+            jogo abrir, multiplica as taxas do painel e grava. Os boosters do VIP de cada plano ficam no
+            campo &ldquo;Boosters&rdquo; acima.
+          </p>
+          <div className="mt-4">
+            <FormularioDoBooster cfg={boosterCfg} />
+          </div>
+          {boosters.length > 0 && (
+            <ul className="mt-4 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+              {boosters.map((b) => (
+                <li key={b.id} className="flex flex-wrap items-start gap-3 px-5 py-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {nomes.get(b.discordId) ?? b.discordId} · {b.tipos.map((t) => TIPOS[t]?.rotulo ?? t).join(" + ")} ·{" "}
+                      {b.servidor}
+                    </p>
+                    <p className="text-xs text-muted">
+                      #{b.id} · {b.origem === "vip" ? "crédito VIP" : reais(b.valorCentavos)} ·{" "}
+                      {new Date(b.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                      {b.ativadoEm && (
+                        <> · ligou {new Date(b.ativadoEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</>
+                      )}
+                    </p>
+                    {b.detail && <p className="mt-1 text-xs text-danger">{b.detail}</p>}
+                  </div>
+                  <span className="text-xs font-semibold text-muted">
+                    {{ aguardando: "Aguardando Pix", na_fila: "Na fila", ativo: "Ligado", encerrado: "Já rodou", falhou: "Link não abriu" }[
+                      b.status
+                    ] ?? b.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section>

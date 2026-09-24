@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
-import { acaoSalvarTag, acaoSalvarPlano, acaoReentregar, type Estado } from "./actions";
+import { acaoSalvarTag, acaoSalvarPlano, acaoSalvarBooster, acaoReentregar, type Estado } from "./actions";
 import type { PlanoVip } from "@/lib/vip";
+import type { ConfigBooster } from "@/lib/booster";
 import type { ItemDoCatalogo } from "@/lib/itens";
 import { GradeDeItens, LinhaDoLote } from "@/components/seletor-de-itens";
 
@@ -68,7 +69,7 @@ export function FormularioDePlano({ plano, catalogo }: { plano: PlanoVip; catalo
     <form action={acao} className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <input type="hidden" name="key" value={k} />
       <input type="hidden" name="itens" value={JSON.stringify(itensValidos)} />
-      <div className="grid gap-3 sm:grid-cols-[1fr_8rem_8rem]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_8rem_8rem_8rem]">
         <div>
           <label htmlFor={`nome-${k}`} className="block text-sm text-muted">Nome</label>
           <input id={`nome-${k}`} name="nome" defaultValue={plano.nome} maxLength={40} required className={`${campo} mt-1.5`} />
@@ -92,6 +93,18 @@ export function FormularioDePlano({ plano, catalogo }: { plano: PlanoVip; catalo
             type="number"
             min={0}
             defaultValue={plano.paletasNoMes}
+            className={`${campo} tabular mt-1.5`}
+          />
+        </div>
+        <div>
+          <label htmlFor={`boosters-${k}`} className="block text-sm text-muted">Boosters</label>
+          <input
+            id={`boosters-${k}`}
+            name="boosters"
+            type="number"
+            min={0}
+            max={50}
+            defaultValue={plano.boosters}
             className={`${campo} tabular mt-1.5`}
           />
         </div>
@@ -162,6 +175,44 @@ export function FormularioDePlano({ plano, catalogo }: { plano: PlanoVip; catalo
       </div>
       <button type="submit" disabled={pendente} className={botao}>
         {pendente ? "Salvando…" : `Salvar ${plano.nome}`}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+export function FormularioDoBooster({ cfg }: { cfg: ConfigBooster }) {
+  const [estado, acao, pendente] = useActionState(acaoSalvarBooster, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="booster-preco" className="block text-sm text-muted">Doação avulsa (R$)</label>
+          <input
+            id="booster-preco"
+            name="preco"
+            inputMode="decimal"
+            defaultValue={(cfg.precoCentavos / 100).toFixed(2).replace(".", ",")}
+            className={`${campo} tabular mt-1.5`}
+          />
+        </div>
+        <div>
+          <label htmlFor="booster-mult" className="block text-sm text-muted">Multiplica a taxa por</label>
+          <input
+            id="booster-mult"
+            name="multiplicador"
+            inputMode="decimal"
+            defaultValue={String(cfg.multiplicador).replace(".", ",")}
+            className={`${campo} tabular mt-1.5`}
+          />
+        </div>
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="ativo" value="1" defaultChecked={cfg.ativo} /> Booster ligado (aparece em /vip e
+        o servidor aplica no restart)
+      </label>
+      <button type="submit" disabled={pendente} className={botao}>
+        {pendente ? "Salvando…" : "Salvar booster"}
       </button>
       <Aviso {...estado} />
     </form>

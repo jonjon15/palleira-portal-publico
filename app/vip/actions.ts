@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { iniciarDoacao, minhaDoacao, resgatarItensVip, type StatusDaDoacao } from "@/lib/vip";
+import { pedirBooster } from "@/lib/booster";
 
 export interface Estado {
   ok: boolean;
@@ -19,6 +20,19 @@ export async function acaoDoar(_anterior: Estado, form: FormData): Promise<Estad
     form.get("aceite") === "1",
   );
   if (r.ok && r.url) redirect(r.url);
+  return { ok: r.ok, mensagem: r.mensagem };
+}
+
+/** Sessão, servidor, tipos e crédito são conferidos em `pedirBooster`. */
+export async function acaoPedirBooster(_anterior: Estado, form: FormData): Promise<Estado> {
+  const r = await pedirBooster({
+    serverSlug: String(form.get("servidor") ?? ""),
+    tipos: form.getAll("tipo").map(String),
+    aceitou: form.get("aceite") === "1",
+    usarCredito: form.get("credito") === "1",
+  });
+  if (r.ok && r.url) redirect(r.url);
+  revalidatePath("/vip");
   return { ok: r.ok, mensagem: r.mensagem };
 }
 

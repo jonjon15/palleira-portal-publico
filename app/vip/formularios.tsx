@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { acaoDoar, acaoResgatarItens, acaoStatusDaDoacao, type Estado } from "./actions";
+import {
+  acaoDoar,
+  acaoPedirBooster,
+  acaoResgatarItens,
+  acaoStatusDaDoacao,
+  type Estado,
+} from "./actions";
 import type { StatusDaDoacao } from "@/lib/vip";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
@@ -50,6 +57,137 @@ export function Doar({ plano, valor }: { plano: string; valor: string }) {
         <p
           role="status"
           className="rounded-[var(--radius-control)] border border-danger/30 bg-danger/[0.08] px-3 py-2 text-sm text-danger"
+        >
+          {estado.mensagem}
+        </p>
+      )}
+    </form>
+  );
+}
+
+const ROTULO_TIPO = { xp: "XP", drop: "Drop", captura: "Captura" } as const;
+
+/** Recarrega a página a cada 5s por até 3 min — para esperar o Pix confirmar. */
+export function AtualizarSozinho() {
+  const router = useRouter();
+  useEffect(() => {
+    let vezes = 0;
+    const t = setInterval(() => {
+      router.refresh();
+      if (++vezes >= 36) clearInterval(t);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [router]);
+  return null;
+}
+
+/**
+ * Pedir um booster: servidor, tipos (pode misturar) e como pagar — crédito
+ * do VIP, se sobrar, ou doação avulsa via Pix.
+ */
+export function PedirBooster({
+  servidores,
+  preco,
+  multiplicador,
+  creditos,
+  pixLigado,
+}: {
+  servidores: { slug: string; nome: string }[];
+  preco: string;
+  multiplicador: number;
+  creditos: number;
+  pixLigado: boolean;
+}) {
+  const [estado, acao, pendente] = useActionState(acaoPedirBooster, INICIAL);
+  const [tipos, setTipos] = useState<string[]>(["xp"]);
+  const [aceite, setAceite] = useState(false);
+  const alternar = (t: string) =>
+    setTipos((a) => (a.includes(t) ? a.filter((x) => x !== t) : [...a, t]));
+
+  return (
+    <form action={acao} className="space-y-4">
+      <input type="hidden" name="aceite" value={aceite ? "1" : ""} />
+      <div>
+        <label htmlFor="booster-servidor" className="block text-sm text-muted">Servidor</label>
+        <select
+          id="booster-servidor"
+          name="servidor"
+          className="mt-1.5 w-full rounded-[var(--radius-control)] border border-line bg-bg px-4 py-2.5 outline-none focus:border-gold"
+        >
+          {servidores.map((s) => (
+            <option key={s.slug} value={s.slug}>{s.nome}</option>
+          ))}
+        </select>
+      </div>
+      <fieldset>
+        <legend className="text-sm text-muted">
+          O que turbinar ({multiplicador.toLocaleString("pt-BR")}x) — escolha um ou misture
+        </legend>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(Object.keys(ROTULO_TIPO) as (keyof typeof ROTULO_TIPO)[]).map((t) => (
+            <label
+              key={t}
+              className={`flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border px-4 py-2 text-sm font-semibold transition-colors ${
+                tipos.includes(t) ? "border-gold bg-gold/10 text-gold" : "border-line-strong text-muted"
+              }`}
+            >
+              <input
+                type="checkbox"
+                name="tipo"
+                value={t}
+                checked={tipos.includes(t)}
+                onChange={() => alternar(t)}
+                className="sr-only"
+              />
+              {ROTULO_TIPO[t]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {creditos > 0 && (
+        <button
+          type="submit"
+          name="credito"
+          value="1"
+          disabled={pendente || tipos.length === 0}
+          className="w-full rounded-[var(--radius-control)] bg-gold px-5 py-2.5 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {pendente ? "Ativando…" : `Usar 1 booster do VIP (${creditos} ${creditos === 1 ? "disponível" : "disponíveis"})`}
+        </button>
+      )}
+
+      {pixLigado && (
+        <div className="space-y-3 rounded-[var(--radius-control)] border border-line p-3">
+          <label className="flex cursor-pointer items-start gap-2 text-xs text-muted">
+            <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} className="mt-0.5" />
+            <span>
+              Entendo que é uma <b className="text-text">doação voluntária</b>, não uma compra, e que ela não
+              é reembolsável.
+            </span>
+          </label>
+          <button
+            type="submit"
+            disabled={pendente || !aceite || tipos.length === 0}
+            className={`w-full rounded-[var(--radius-control)] px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              creditos > 0
+                ? "border border-line-strong hover:border-gold hover:text-gold"
+                : "bg-gold text-[#14120f] hover:bg-gold-hi"
+            }`}
+          >
+            {pendente ? "Abrindo o pagamento…" : `Doar ${preco} via Pix`}
+          </button>
+        </div>
+      )}
+
+      {estado.mensagem && (
+        <p
+          role="status"
+          className={`rounded-[var(--radius-control)] border px-3 py-2 text-sm ${
+            estado.ok
+              ? "border-success/30 bg-success/[0.08] text-success"
+              : "border-danger/30 bg-danger/[0.08] text-danger"
+          }`}
         >
           {estado.mensagem}
         </p>
