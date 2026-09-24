@@ -6,6 +6,9 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-24
 
+- **"Seus personagens" no painel mostra os números de agora.** No servidor em que você está jogando, o level e a quantidade de Pals são os do momento, com o selo "Online". Nos outros servidores, valem os do último save lido. O PVE VIP aparece como "servidor desativado".
+- **Corrigido: level do mundo antigo depois de um wipe.** Quem recomeçou num servidor continuava aparecendo com o level que tinha antes do wipe. Agora vale o level do personagem atual.
+
 - **Entrar no site já te coloca no Discord da Palleira.** Quem ainda não está no servidor entra nele automaticamente ao fazer login com o Discord, sem precisar de convite. Só o servidor da Palleira, nenhum outro.
 
 - **Home mais viva.** Nova lista "Jogando agora", com quem está conectado neste momento e o level de cada um. "Os melhores da Palleira" e os números da comunidade agora contam só os servidores ativos (o PVE VIP, que está sendo desligado, saiu da conta), mostram de qual servidor é cada jogador e marcam quem está online.

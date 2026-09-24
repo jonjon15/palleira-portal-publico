@@ -189,7 +189,11 @@ def save_to_db(conn, slug: str, data: Extract) -> None:
                 values (%s, %s, %s, %s, %s, %s, now())
                 on conflict (server_slug, palworld_uid) do update set
                   name = case when excluded.name <> '' then excluded.name else players.name end,
-                  level = greatest(players.level, excluded.level),
+                  -- O save manda. 0 = o personagem não foi lido nesta passada
+                  -- (só apareceu como membro de guild), então fica o que
+                  -- estava. Antes era greatest(), e quem recomeçou depois de
+                  -- um wipe ficava para sempre com o level do mundo velho.
+                  level = case when excluded.level > 0 then excluded.level else players.level end,
                   guild_id = excluded.guild_id,
                   pal_count = excluded.pal_count,
                   updated_at = now()

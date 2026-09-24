@@ -16,12 +16,56 @@ import {
   canPowerServer,
 } from "@/lib/roles";
 import { meuVinculo, meusPersonagens } from "@/lib/linking";
+import { serverBySlug } from "@/lib/servers";
+import { getPlayers } from "@/lib/palworld/rest";
+import { poderDaPalbox } from "@/lib/palworld/paldefender";
 import { saldo, jaPegouODaily, dailyPaletas } from "@/lib/economia";
 import { meuCofre } from "@/lib/cofre";
 import { meusAnuncios } from "@/lib/mercado";
 import { basesResgataveis } from "@/lib/resgate-base";
 
 export const metadata: Metadata = { title: "Meu painel" };
+
+interface Personagem {
+  serverSlug: string;
+  serverName: string;
+  name: string;
+  level: number;
+  palCount: number;
+  online: boolean;
+  desativado: boolean;
+}
+
+/**
+ * Os personagens com o número do momento para quem está jogando — level
+ * pela REST oficial, Pals pela palbox no PalDefender (time, palbox e
+ * bases), o mesmo que o ranking faz. Quem está offline fica com o do
+ * último save lido. Servidor que não responder não derruba o painel.
+ */
+async function personagensAoVivo(
+  base: Awaited<ReturnType<typeof meusPersonagens>>,
+  uid: string | undefined,
+): Promise<Personagem[]> {
+  const lista = await Promise.all(
+    base.map(async (p) => {
+      const server = serverBySlug(p.serverSlug);
+      const semLive = { ...p, online: false, desativado: Boolean(server?.foraDaHome) };
+      if (!server || !uid || server.foraDaHome) return semLive;
+      try {
+        const eu = (await getPlayers(server)).find((j) => j.playerId === uid);
+        if (!eu) return semLive;
+        const pals = await poderDaPalbox(server, uid).then((x) => x.pals).catch(() => p.palCount);
+        return { ...semLive, online: true, level: eu.level || p.level, palCount: pals };
+      } catch {
+        return semLive;
+      }
+    }),
+  );
+  // Quem está jogando primeiro; servidor desativado por último.
+  return lista.sort(
+    (a, b) => Number(b.online) - Number(a.online) || Number(a.desativado) - Number(b.desativado),
+  );
+}
 
 export default async function Painel() {
   const session = await auth();
@@ -31,7 +75,7 @@ export default async function Painel() {
   const level = levelOf(user.roles, user.isMember);
   const plano = planoOf(user.roles);
   const quantoDaily = dailyPaletas(user.roles);
-  const [vinculo, personagens, paletas, pegouDaily, cofre, anuncios] =
+  const [vinculo, personagensDoSave, paletas, pegouDaily, cofre, anuncios] =
     await Promise.all([
       meuVinculo(user.discordId),
       // Um vínculo, vários personagens: o UID é o mesmo nos três servidores.
@@ -42,8 +86,11 @@ export default async function Painel() {
       meusAnuncios(user.discordId),
     ]);
   const anunciosAtivos = anuncios.filter((a) => a.status === "ativo").length;
-  // Depende do UID do vínculo — não dá para entrar no mesmo Promise.all.
-  const bases = vinculo ? await basesResgataveis(vinculo.uid) : [];
+  // Dependem do UID do vínculo — não dá para entrar no mesmo Promise.all.
+  const [bases, personagens] = await Promise.all([
+    vinculo ? basesResgataveis(vinculo.uid) : Promise.resolve([]),
+    personagensAoVivo(personagensDoSave, vinculo?.uid),
+  ]);
 
   return (
     <>
@@ -220,8 +267,9 @@ export default async function Painel() {
           <section className="mt-8">
             <h2 className="text-lg font-semibold">Seus personagens</h2>
             <p className="mt-1 text-sm text-muted">
-              O vínculo é um só e vale em todos os servidores. Estes números
-              vêm do save, então valem mesmo com você offline.
+              O vínculo é um só e vale em todos os servidores. Onde você está
+              jogando, os números são os de agora; nos outros, os do último
+              save lido (a cada ~2 horas).
             </p>
             <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
               {personagens.map((p) => (
@@ -230,8 +278,18 @@ export default async function Painel() {
                   className="flex items-center gap-4 px-5 py-3.5"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{p.name}</p>
-                    <p className="truncate text-sm text-muted">{p.serverName}</p>
+                    <p className="flex items-center gap-2 truncate font-medium">
+                      {p.name}
+                      {p.online && (
+                        <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[0.65rem] font-bold tracking-wider text-success uppercase">
+                          Online
+                        </span>
+                      )}
+                    </p>
+                    <p className="truncate text-sm text-muted">
+                      {p.serverName}
+                      {p.desativado && " · servidor desativado"}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="tabular font-bold">Nível {p.level}</p>
