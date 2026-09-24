@@ -33,7 +33,7 @@ export function FormularioDaTag({ tag }: { tag: string }) {
     <form action={acao} className="flex flex-wrap items-end gap-3">
       <div className="min-w-60 flex-1">
         <label htmlFor="tag" className="block text-sm text-muted">
-          InfiniteTag (sem o $) — vazio desliga as doações
+          InfiniteTag — vazio desliga as doações
         </label>
         <input id="tag" name="tag" defaultValue={tag} placeholder="palleira" className={`${campo} mt-1.5`} />
       </div>

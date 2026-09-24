@@ -2,9 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
-import { levelOf, canManageEconomy } from "@/lib/roles";
+import { levelOf, canManageEconomy, PLANOS } from "@/lib/roles";
 import { planosVip, infiniteTag, doacoesRecentes, reais } from "@/lib/vip";
-import { nomesDe } from "@/lib/discord";
+import { nomesDe, botPodeDarCargos } from "@/lib/discord";
 import { FormularioDaTag, FormularioDePlano, Reentregar } from "./formularios";
 
 export const metadata: Metadata = { title: "VIP — administração" };
@@ -22,7 +22,13 @@ export default async function VipAdmin() {
   if (!session) redirect("/entrar");
   if (!canManageEconomy(levelOf(session.user.roles, session.user.isMember))) notFound();
 
-  const [planos, tag, doacoes] = await Promise.all([planosVip(false), infiniteTag(), doacoesRecentes()]);
+  const [planos, tag, doacoes, botOk] = await Promise.all([
+    planosVip(false),
+    infiniteTag(),
+    doacoesRecentes(),
+    botPodeDarCargos(PLANOS.map((p) => p.role)),
+  ]);
+  const testado = doacoes.some((d) => d.status === "entregue");
   const nomes = await nomesDe([...new Set(doacoes.map((d) => d.discordId))]);
 
   return (
@@ -35,21 +41,56 @@ export default async function VipAdmin() {
 
       <div className="mx-auto max-w-4xl space-y-10 px-4 py-12">
         <section className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
-          <h2 className="text-lg font-semibold">Conta da InfinitePay</h2>
+          <h2 className="text-lg font-semibold">Passo a passo para ligar as doações</h2>
           <p className="mt-1.5 max-w-2xl text-sm text-muted">
-            O Pix cai na conta desta InfiniteTag. Antes, ligue o{" "}
-            <b className="text-text">Checkout Integrado</b> no app da InfinitePay
-            (Vendas → Checkout → Configurações) — sem isso o botão de doar dá erro.
+            O Pix cai direto na conta InfinitePay do dono — o site só confirma o
+            pagamento e entrega o cargo e as Paletas. Faça uma vez, na ordem.
           </p>
-          <p className="mt-2 max-w-2xl text-xs text-muted">
-            O cargo sai sozinho só se o bot do Discord tiver a permissão
-            &ldquo;Gerenciar cargos&rdquo; num cargo acima dos três V.i.p. Sem
-            isso, a doação fica &ldquo;entrega pela metade&rdquo; e o botão
-            &ldquo;Entregar de novo&rdquo; abaixo resolve depois de ajustar.
-          </p>
-          <div className="mt-5">
-            <FormularioDaTag tag={tag} />
-          </div>
+
+          <ol className="mt-5 space-y-4">
+            <Passo n={1} titulo="Ligar o Checkout Integrado na InfinitePay" estado="manual">
+              No app da InfinitePay: <b className="text-text">Vendas → Checkout → Configurações</b> →
+              ativar <b className="text-text">Checkout Integrado</b>. Pelo computador, o mesmo fica em{" "}
+              <a
+                href="https://app.infinitepay.io/external-checkout#configuracoes?enabled=true"
+                target="_blank"
+                rel="noreferrer"
+                className="text-gold underline"
+              >
+                app.infinitepay.io
+              </a>
+              . Sem isso, o botão de doar mostra erro. O site não consegue conferir este passo — confira no app.
+            </Passo>
+
+            <Passo n={2} titulo="Salvar a InfiniteTag aqui" estado={tag ? "ok" : "falta"}>
+              A InfiniteTag é o nome de usuário na InfinitePay, o que começa com <b className="text-text">$</b>.
+              Digite abaixo (com ou sem o $) e salve. É isso que faz o botão &ldquo;Doar via Pix&rdquo; aparecer
+              em /vip. Para desligar as doações, apague e salve.
+              <div className="mt-3">
+                <FormularioDaTag tag={tag} />
+              </div>
+            </Passo>
+
+            <Passo
+              n={3}
+              titulo="Dar ao bot do Discord a permissão de dar cargo"
+              estado={botOk === null ? "manual" : botOk ? "ok" : "falta"}
+            >
+              No Discord: <b className="text-text">Configurações do servidor → Cargos</b>. Dê ao bot{" "}
+              <b className="text-text">Palleira BR</b> um cargo com a permissão{" "}
+              <b className="text-text">Gerenciar cargos</b>, e arraste esse cargo para{" "}
+              <b className="text-text">acima</b> dos três V.i.p. (Hard Metal, New Metal e Palleira). Sem isso o Pix
+              entra e as Paletas saem, mas o cargo fica esperando o botão &ldquo;Entregar de novo&rdquo;.
+              {botOk === null && <> (Não consegui perguntar ao Discord agora — recarregue para conferir.)</>}
+            </Passo>
+
+            <Passo n={4} titulo="Fazer uma doação de teste" estado={testado ? "ok" : "falta"}>
+              Em <b className="text-text">Planos</b>, abaixo, mude o valor de um plano para{" "}
+              <b className="text-text">1,00</b> e salve. Doe esse plano em /vip com a sua conta, confira se o cargo e
+              as Paletas chegaram e se a doação aparece como &ldquo;Entregue&rdquo; em Doações recentes. Depois volte
+              o valor.
+            </Passo>
+          </ol>
         </section>
 
         <section>
@@ -105,5 +146,39 @@ export default async function VipAdmin() {
         </section>
       </div>
     </>
+  );
+}
+
+const ESTADO_DO_PASSO = {
+  ok: { rotulo: "Feito", cor: "border-success/40 bg-success/10 text-success" },
+  falta: { rotulo: "Falta", cor: "border-warning/40 bg-warning/10 text-warning" },
+  manual: { rotulo: "Confira", cor: "border-line-strong text-muted" },
+} as const;
+
+function Passo({
+  n,
+  titulo,
+  estado,
+  children,
+}: {
+  n: number;
+  titulo: string;
+  estado: keyof typeof ESTADO_DO_PASSO;
+  children: React.ReactNode;
+}) {
+  const e = ESTADO_DO_PASSO[estado];
+  return (
+    <li className="rounded-[var(--radius-control)] border border-line bg-bg p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="tabular flex size-6 items-center justify-center rounded-full bg-gold text-xs font-bold text-[#14120f]">
+          {n}
+        </span>
+        <h3 className="font-semibold">{titulo}</h3>
+        <span className={`ml-auto rounded-full border px-2 py-0.5 text-[0.65rem] font-bold tracking-wider uppercase ${e.cor}`}>
+          {e.rotulo}
+        </span>
+      </div>
+      <div className="mt-2 text-sm text-muted">{children}</div>
+    </li>
   );
 }

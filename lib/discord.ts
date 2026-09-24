@@ -144,6 +144,34 @@ export async function alterarCargo(
 }
 
 /**
+ * O bot consegue dar estes cargos? Precisa de "Gerenciar cargos" (ou
+ * Administrador) num cargo posicionado acima de todos eles. Só lê — serve
+ * para o passo a passo de /admin/vip mostrar o que falta.
+ * `null` = não deu para perguntar ao Discord agora.
+ */
+export async function botPodeDarCargos(roleIds: string[]): Promise<boolean | null> {
+  try {
+    const eu = await (await chamar("/users/@me")).json() as { id: string };
+    const [membro, cargos] = await Promise.all([
+      chamar(`/guilds/${GUILD_ID}/members/${eu.id}`).then((r) => r.json() as Promise<{ roles: string[] }>),
+      chamar(`/guilds/${GUILD_ID}/roles`).then(
+        (r) => r.json() as Promise<{ id: string; position: number; permissions: string }[]>,
+      ),
+    ]);
+    const porId = new Map(cargos.map((c) => [c.id, c]));
+    const meus = membro.roles.map((id) => porId.get(id)).filter((c) => c !== undefined);
+    const perm = meus.reduce((a, c) => a | BigInt(c.permissions), BigInt(porId.get(GUILD_ID)?.permissions ?? 0));
+    const ADMIN = BigInt(8);
+    const GERENCIAR_CARGOS = BigInt(1) << BigInt(28);
+    if ((perm & (ADMIN | GERENCIAR_CARGOS)) === BigInt(0)) return false;
+    const topo = Math.max(-1, ...meus.map((c) => c.position));
+    return roleIds.every((id) => (porId.get(id)?.position ?? Infinity) < topo);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Todo mundo do servidor, paginado de mil em mil.
  *
  * Exige o **Server Members Intent** ligado no Developer Portal — sem ele o
