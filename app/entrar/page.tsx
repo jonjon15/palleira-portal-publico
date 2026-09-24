@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 const BENEFITS = [
   "Sua conta do Discord é a sua conta aqui — sem senha nova",
+  "Ainda não está no Discord da Palleira? O login já te coloca lá",
   "Seus cargos da Palleira viram permissões no site",
   "Vincule o personagem do jogo: Steam, Xbox ou PlayStation",
   "Carteira de Paletas com extrato de tudo que entrou e saiu",
@@ -47,8 +48,9 @@ export default async function Entrar() {
 
         <p className="mt-5 text-center text-xs text-muted">
           Pedimos só o essencial: quem você é, de quais servidores participa e
-          seus cargos na Palleira. Não lemos suas mensagens e não entramos em
-          servidor nenhum.
+          seus cargos na Palleira. Se você ainda não está no Discord da
+          Palleira, já entra nele ao fazer login — em nenhum outro servidor.
+          Não lemos suas mensagens.
         </p>
       </div>
     </>

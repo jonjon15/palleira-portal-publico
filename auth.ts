@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
-import { buscarMembro } from "@/lib/discord";
+import { buscarMembro, colocarNoServidor, logarNoDiscord } from "@/lib/discord";
 
 /**
  * Login com Discord — a única porta de entrada do portal (§4.1 do PROMPT.md).
@@ -13,8 +13,10 @@ import { buscarMembro } from "@/lib/discord";
  *   identify            — quem é o usuário
  *   guilds              — de quais servidores participa (para checar a Palleira)
  *   guilds.members.read — os cargos dele dentro da Palleira
+ *   guilds.join         — pôr no Discord da Palleira quem ainda não está
+ *                         (pedido do dono em 24/09/2026; só esse servidor)
  *
- * Nada de ler mensagem, nada de entrar em servidor.
+ * Nada de ler mensagem.
  */
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? "";
@@ -89,7 +91,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.AUTH_DISCORD_ID,
       clientSecret: process.env.AUTH_DISCORD_SECRET,
       authorization:
-        "https://discord.com/api/oauth2/authorize?scope=identify+guilds+guilds.members.read",
+        "https://discord.com/api/oauth2/authorize?scope=identify+guilds+guilds.members.read+guilds.join",
     }),
   ],
 
@@ -101,7 +103,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.access_token) {
         token.discordId = (profile?.id as string) ?? token.sub ?? "";
         try {
-          const membership = await fetchMembership(account.access_token);
+          let membership = await fetchMembership(account.access_token);
+
+          // Ainda não está no Discord: põe agora, com o token do login.
+          if (!membership.isMember && token.discordId) {
+            const r = await colocarNoServidor(token.discordId as string, account.access_token);
+            if (r.ok) {
+              membership = { isMember: true, roles: r.membro?.roles ?? [], nick: null };
+              await logarNoDiscord(`👋 <@${token.discordId}> entrou no Discord pelo login do site`).catch(() => {});
+            } else {
+              console.error("[login] não entrou no Discord:", r.erro);
+            }
+          }
+
           token.isMember = membership.isMember;
           token.roles = membership.roles;
           token.nick = membership.nick;

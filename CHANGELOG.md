@@ -6,6 +6,8 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-09-24
 
+- **Entrar no site já te coloca no Discord da Palleira.** Quem ainda não está no servidor entra nele automaticamente ao fazer login com o Discord, sem precisar de convite. Só o servidor da Palleira, nenhum outro.
+
 - **Home mais viva.** Nova lista "Jogando agora", com quem está conectado neste momento e o level de cada um. "Os melhores da Palleira" e os números da comunidade agora contam só os servidores ativos (o PVE VIP, que está sendo desligado, saiu da conta), mostram de qual servidor é cada jogador e marcam quem está online.
 
 - **Mercado, VIP, Ranking, Mapa, Eventos e Painel agora são só para a comunidade.** Para ver essas páginas é preciso entrar com o Discord e estar no servidor da Palleira. Início, Servidores, Como jogar e Regras continuam abertos para quem ainda está conhecendo.

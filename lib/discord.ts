@@ -114,6 +114,45 @@ export async function buscarMembro(
 }
 
 /**
+ * Põe a pessoa no Discord da Palleira — pedido do dono em 24/09/2026: quem
+ * entra no site com o Discord já cai no servidor, sem convite.
+ *
+ * Usa o token OAuth dela (escopo `guilds.join`, pedido em `auth.ts`) e o do
+ * bot, que precisa da permissão "Criar convite". 201 = entrou agora, 204 =
+ * já estava. Falha nunca derruba o login: a pessoa só continua visitante.
+ *
+ * ⚠️ Banido do servidor volta 403 — e é assim que deve ser.
+ */
+export async function colocarNoServidor(
+  discordId: string,
+  accessToken: string,
+): Promise<{ ok: boolean; membro: MembroDiscord | null; erro: string }> {
+  if (!BOT_TOKEN || !GUILD_ID) {
+    return { ok: false, membro: null, erro: "DISCORD_BOT_TOKEN ou DISCORD_GUILD_ID não configurado" };
+  }
+  try {
+    const res = await fetch(`${API}/guilds/${GUILD_ID}/members/${discordId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${BOT_TOKEN}`,
+        "Content-Type": "application/json",
+        "X-Audit-Log-Reason": encodeURIComponent("Entrou pelo login do site"),
+      },
+      body: JSON.stringify({ access_token: accessToken }),
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    });
+    if (res.status === 201) {
+      return { ok: true, membro: traduz((await res.json()) as RawMember), erro: "" };
+    }
+    if (res.status === 204) return { ok: true, membro: null, erro: "" };
+    return { ok: false, membro: null, erro: `Discord respondeu ${res.status}: ${await res.text().catch(() => "")}` };
+  } catch (e) {
+    return { ok: false, membro: null, erro: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
  * Dá ou tira um cargo — usado pelo VIP por doação (`lib/vip.ts`).
  *
  * ⚠️ O bot precisa da permissão "Gerenciar cargos" e de um cargo ACIMA do
