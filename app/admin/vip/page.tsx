@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { levelOf, canManageEconomy, PLANOS } from "@/lib/roles";
 import { planosVip, infiniteTag, doacoesRecentes, reais } from "@/lib/vip";
 import { nomesDe, botPodeDarCargos } from "@/lib/discord";
+import { catalogoDeItens } from "@/lib/itens";
 import { FormularioDaTag, FormularioDePlano, Reentregar } from "./formularios";
 
 export const metadata: Metadata = { title: "VIP — administração" };
@@ -29,6 +30,7 @@ export default async function VipAdmin() {
     botPodeDarCargos(PLANOS.map((p) => p.role)),
   ]);
   const testado = doacoes.some((d) => d.status === "entregue");
+  const catalogo = catalogoDeItens();
   const nomes = await nomesDe([...new Set(doacoes.map((d) => d.discordId))]);
 
   return (
@@ -101,7 +103,7 @@ export default async function VipAdmin() {
           </p>
           <div className="mt-4 space-y-4">
             {planos.map((p) => (
-              <FormularioDePlano key={p.key} plano={p} />
+              <FormularioDePlano key={p.key} plano={p} catalogo={catalogo} />
             ))}
           </div>
         </section>
@@ -133,9 +135,17 @@ export default async function VipAdmin() {
                         )}
                       </p>
                       {d.detail && <p className="mt-1 text-xs text-danger">{d.detail}</p>}
+                      {d.itensStatus !== "entregue" && d.itensDetail && (
+                        <p className="mt-1 text-xs text-warning">Itens do jogo: {d.itensDetail}</p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       <span className={`text-xs font-semibold ${st.cor}`}>{st.rotulo}</span>
+                      {(d.status === "pago" || d.status === "entregue") && d.itensStatus !== "sem" && (
+                        <span className={`text-xs ${d.itensStatus === "entregue" ? "text-success" : "text-muted"}`}>
+                          {d.itensStatus === "entregue" ? "Itens do jogo recebidos" : "Itens do jogo: falta resgatar"}
+                        </span>
+                      )}
                       {d.status === "pago" && <Reentregar id={d.id} />}
                     </div>
                   </li>

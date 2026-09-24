@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { iniciarDoacao, minhaDoacao, type StatusDaDoacao } from "@/lib/vip";
+import { revalidatePath } from "next/cache";
+import { iniciarDoacao, minhaDoacao, resgatarItensVip, type StatusDaDoacao } from "@/lib/vip";
 
 export interface Estado {
   ok: boolean;
@@ -19,6 +20,15 @@ export async function acaoDoar(_anterior: Estado, form: FormData): Promise<Estad
   );
   if (r.ok && r.url) redirect(r.url);
   return { ok: r.ok, mensagem: r.mensagem };
+}
+
+/** Dono da doação, vínculo e online são conferidos em `resgatarItensVip`. */
+export async function acaoResgatarItens(_anterior: Estado, form: FormData): Promise<Estado> {
+  const id = Number(form.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return { ok: false, mensagem: "Doação inválida." };
+  const r = await resgatarItensVip(id);
+  revalidatePath("/vip");
+  return r;
 }
 
 export async function acaoStatusDaDoacao(id: number): Promise<StatusDaDoacao | null> {

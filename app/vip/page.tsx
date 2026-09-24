@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/page-header";
 import { Pick } from "@/components/pick";
-import { planosVip, infiniteTag, reais, DIAS_DE_VIP } from "@/lib/vip";
-import { Doar } from "./formularios";
+import { ItemIcon } from "@/components/item-icon";
+import { nomeDoItem } from "@/lib/itens";
+import { planosVip, infiniteTag, reais, meusItensVip, DIAS_DE_VIP } from "@/lib/vip";
+import { Doar, ResgatarItens } from "./formularios";
 
 export const metadata: Metadata = { title: "VIP" };
 // Planos editáveis no admin: cache aqui mostraria valor antigo.
@@ -18,7 +20,12 @@ export const dynamic = "force-dynamic";
  * O texto deixa explícito, mais de uma vez, que é doação — pedido do dono.
  */
 export default async function Vip() {
-  const [planos, tag, session] = await Promise.all([planosVip(), infiniteTag(), auth()]);
+  const [planos, tag, session, aResgatar] = await Promise.all([
+    planosVip(),
+    infiniteTag(),
+    auth(),
+    meusItensVip(),
+  ]);
   const ligado = Boolean(tag);
 
   return (
@@ -30,6 +37,44 @@ export default async function Vip() {
       />
 
       <div className="mx-auto max-w-6xl px-4 py-12">
+        {aResgatar.length > 0 && (
+          <section className="mb-8 max-w-3xl space-y-4 rounded-[var(--radius-card)] border border-success/40 bg-success/[0.06] p-5">
+            <div>
+              <h2 className="font-semibold text-success">Seus itens do VIP chegaram</h2>
+              <p className="mt-1 text-sm text-muted">
+                Entre em um dos servidores com o seu personagem e clique em
+                &ldquo;Receber no jogo&rdquo; — os itens caem direto na mochila,
+                no servidor em que você estiver.
+              </p>
+            </div>
+            {aResgatar.map((d) => (
+              <div key={d.id} className="rounded-[var(--radius-control)] border border-line bg-surface p-4">
+                <p className="text-sm font-semibold">
+                  VIP {d.planoNome}
+                  <span className="ml-2 text-xs font-normal text-muted">
+                    doação de {new Date(d.pagoEm).toLocaleDateString("pt-BR")}
+                  </span>
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {d.itens.map((i) => (
+                    <li
+                      key={i.itemId}
+                      className="flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-surface-2/60 py-1 pr-2.5 pl-1 text-xs"
+                    >
+                      <ItemIcon itemId={i.itemId} className="size-6" bare />
+                      <span className="tabular font-semibold">{i.quantidade.toLocaleString("pt-BR")}</span>
+                      <span className="text-muted">{nomeDoItem(i.itemId)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3">
+                  <ResgatarItens id={d.id} />
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
         <div className="mb-8 max-w-3xl rounded-[var(--radius-card)] border border-gold/40 bg-gold/[0.06] p-5 text-sm">
           <p className="font-semibold text-gold">Isto é uma doação, não uma compra.</p>
           <p className="mt-1.5 text-muted">
@@ -87,6 +132,15 @@ export default async function Vip() {
                     <span className="text-muted">{b}</span>
                   </li>
                 ))}
+                {plano.itens.map((i) => (
+                  <li key={i.itemId} className="flex items-center gap-2">
+                    <ItemIcon itemId={i.itemId} className="size-5" bare />
+                    <span className="text-muted">
+                      <span className="tabular text-text">{i.quantidade.toLocaleString("pt-BR")}</span>{" "}
+                      {nomeDoItem(i.itemId)}
+                    </span>
+                  </li>
+                ))}
               </ul>
 
               <div className="mt-6">
@@ -118,11 +172,15 @@ export default async function Vip() {
             antes de acabar soma mais {DIAS_DE_VIP}.
           </p>
           <p>
+            Os itens do jogo vêm uma vez a cada doação. Eles ficam esperando
+            nesta página até você entrar em um servidor e clicar em
+            &ldquo;Receber no jogo&rdquo; — não expiram.
+          </p>
+          <p>
             <b className="text-text">Doações são voluntárias e não reembolsáveis.</b>{" "}
             Os agradecimentos (cargo, Paletas e itens no jogo) podem mudar ou deixar
             de existir — por exemplo, se um servidor for desligado — e não dão
-            direito a nenhum serviço contínuo. Os itens do jogo são entregues pela
-            administração.
+            direito a nenhum serviço contínuo.
           </p>
           <p>
             A Palleira é uma comunidade independente, sem vínculo com a Pocketpair.

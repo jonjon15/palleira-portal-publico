@@ -44,14 +44,22 @@ export async function acaoSalvarPlano(_a: Estado, form: FormData): Promise<Estad
   const precoReais = Number(String(form.get("preco") ?? "").replace(",", "."));
   const paletasNoMes = Number(form.get("paletas") ?? 0);
   const beneficios = String(form.get("beneficios") ?? "").split(/\r?\n/);
+  let itens: { itemId: string; quantidade: number }[];
+  try {
+    const bruto = JSON.parse(String(form.get("itens") ?? "[]"));
+    if (!Array.isArray(bruto)) throw new Error();
+    itens = bruto.map((i) => ({ itemId: String(i?.itemId ?? ""), quantidade: Number(i?.quantidade) }));
+  } catch {
+    return { ok: false, mensagem: "A lista de itens chegou quebrada. Recarregue a página." };
+  }
   const r = await salvarPlano({
-    key, nome, precoReais, paletasNoMes, beneficios,
+    key, nome, precoReais, paletasNoMes, beneficios, itens,
     destaque: form.get("destaque") === "1",
     ativo: form.get("ativo") === "1",
   });
   await registrar({
     actorId, serverSlug: "-", action: "vip", target: key,
-    detail: `editou ${nome}: R$ ${precoReais}, ${paletasNoMes} Paletas`,
+    detail: `editou ${nome}: R$ ${precoReais}, ${paletasNoMes} Paletas, ${itens.length} itens do jogo`,
     ok: r.ok, error: r.ok ? undefined : r.mensagem,
   });
   atualiza();

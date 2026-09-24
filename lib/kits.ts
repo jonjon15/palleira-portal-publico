@@ -261,7 +261,7 @@ export async function excluirKit(id: number): Promise<Resultado> {
  * está no Dominantes precisa receber no Dominantes, que é onde o
  * `giveitems` vai achar a pessoa.
  */
-async function ondeEstaAgora(
+export async function ondeEstaAgora(
   uid: string,
 ): Promise<{ slug: string; nome: string } | null> {
   const achados = await Promise.all(

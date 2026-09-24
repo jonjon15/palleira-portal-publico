@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { acaoDoar, acaoStatusDaDoacao, type Estado } from "./actions";
+import { acaoDoar, acaoResgatarItens, acaoStatusDaDoacao, type Estado } from "./actions";
 import type { StatusDaDoacao } from "@/lib/vip";
 
 const INICIAL: Estado = { ok: false, mensagem: "" };
@@ -57,6 +58,35 @@ export function Doar({ plano, valor }: { plano: string; valor: string }) {
   );
 }
 
+/** O botão que manda os itens do jogo de uma doação para a mochila. */
+export function ResgatarItens({ id }: { id: number }) {
+  const [estado, acao, pendente] = useActionState(acaoResgatarItens, INICIAL);
+  return (
+    <form action={acao} className="space-y-2">
+      <input type="hidden" name="id" value={id} />
+      <button
+        type="submit"
+        disabled={pendente}
+        className="rounded-[var(--radius-control)] bg-gold px-5 py-2.5 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pendente ? "Entregando…" : "Receber no jogo"}
+      </button>
+      {estado.mensagem && (
+        <p
+          role="status"
+          className={`rounded-[var(--radius-control)] border px-3 py-2 text-sm ${
+            estado.ok
+              ? "border-success/30 bg-success/[0.08] text-success"
+              : "border-danger/30 bg-danger/[0.08] text-danger"
+          }`}
+        >
+          {estado.mensagem}
+        </p>
+      )}
+    </form>
+  );
+}
+
 /**
  * Na página de volta: enquanto a InfinitePay ainda não confirmou, pergunta
  * a cada 5 segundos (por até 3 minutos) e mostra quando o cargo chegar.
@@ -88,6 +118,13 @@ export function AcompanharDoacao({ id, inicial }: { id: number; inicial: StatusD
           {s.paletas > 0 ? <>, e <b className="text-text">{s.paletas} Paletas</b> entraram na sua carteira</> : null}.
           O site reconhece o cargo em até 5 minutos.
         </p>
+        {s.itensPendentes && (
+          <p className="mt-3 text-sm text-muted">
+            Os <b className="text-text">itens do jogo</b> esperam por você na{" "}
+            <Link href="/vip" className="font-semibold text-gold underline">página VIP</Link>: entre em
+            um servidor e clique em &ldquo;Receber no jogo&rdquo;.
+          </p>
+        )}
       </div>
     );
   }

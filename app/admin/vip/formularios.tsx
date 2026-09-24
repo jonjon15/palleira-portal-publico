@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { acaoSalvarTag, acaoSalvarPlano, acaoReentregar, type Estado } from "./actions";
 import type { PlanoVip } from "@/lib/vip";
+import type { ItemDoCatalogo } from "@/lib/itens";
+import { GradeDeItens, LinhaDoLote } from "@/components/seletor-de-itens";
 
 const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 
@@ -47,12 +49,25 @@ export function FormularioDaTag({ tag }: { tag: string }) {
   );
 }
 
-export function FormularioDePlano({ plano }: { plano: PlanoVip }) {
+export function FormularioDePlano({ plano, catalogo }: { plano: PlanoVip; catalogo: ItemDoCatalogo[] }) {
   const [estado, acao, pendente] = useActionState(acaoSalvarPlano, SEM_ESTADO);
   const k = plano.key;
+  const [itens, setItens] = useState(
+    plano.itens.map((i, n) => ({ chave: n, itemId: i.itemId, quantidade: String(i.quantidade) })),
+  );
+  const [grade, setGrade] = useState(false);
+  const proxima = useRef(plano.itens.length);
+  const porId = useMemo(() => new Map(catalogo.map((c) => [c.id, c])), [catalogo]);
+  const escolhidos = useMemo(() => new Set(itens.map((l) => l.itemId)), [itens]);
+  const itensValidos = itens.map((l) => ({
+    itemId: l.itemId,
+    quantidade: Math.max(1, Math.floor(Number(l.quantidade) || 1)),
+  }));
+
   return (
     <form action={acao} className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <input type="hidden" name="key" value={k} />
+      <input type="hidden" name="itens" value={JSON.stringify(itensValidos)} />
       <div className="grid gap-3 sm:grid-cols-[1fr_8rem_8rem]">
         <div>
           <label htmlFor={`nome-${k}`} className="block text-sm text-muted">Nome</label>
@@ -90,6 +105,48 @@ export function FormularioDePlano({ plano }: { plano: PlanoVip }) {
           defaultValue={plano.beneficios.join("\n")}
           className={`${campo} mt-1.5 text-sm`}
         />
+      </div>
+      <div>
+        <p className="text-sm text-muted">
+          Itens do jogo — o jogador recebe uma vez por doação, clicando em /vip com o personagem online.
+          Aparecem sozinhos no card; não repita no texto acima.
+        </p>
+        {itens.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {itens.map((linha) => (
+              <LinhaDoLote
+                key={linha.chave}
+                item={porId.get(linha.itemId)}
+                itemId={linha.itemId}
+                quantidade={linha.quantidade}
+                onQuantidade={(v) =>
+                  setItens((a) => a.map((l) => (l.chave === linha.chave ? { ...l, quantidade: v } : l)))
+                }
+                onRemover={() => setItens((a) => a.filter((l) => l.chave !== linha.chave))}
+              />
+            ))}
+          </div>
+        )}
+        <div className="mt-2">
+          {grade ? (
+            <GradeDeItens
+              catalogo={catalogo}
+              jaEscolhidos={escolhidos}
+              onEscolher={(item) =>
+                setItens((a) =>
+                  a.some((l) => l.itemId === item.id)
+                    ? a
+                    : [...a, { chave: proxima.current++, itemId: item.id, quantidade: "1" }],
+                )
+              }
+              onFechar={() => setGrade(false)}
+            />
+          ) : (
+            <button type="button" onClick={() => setGrade(true)} className={botaoFantasma}>
+              {itens.length ? "Escolher mais itens" : "Escolher itens"}
+            </button>
+          )}
+        </div>
       </div>
       <p className="text-xs text-muted">
         Fixo no site (muda só no código): daily de {plano.dailyPaletas} Paletas e{" "}
