@@ -280,5 +280,11 @@ export async function givePalTemplate(
     server,
     `givepal_j ${uidParaComando(playerUid)} ${nomeDoArquivo}`,
   );
+  // Resposta vazia NÃO é entrega: `givepal_j` que entrega sempre diz
+  // "Granted Pal". Em 19/09/2026 o RCON do Dominantes respondia vazio a tudo,
+  // a Knocklem Ignis da Handoroki (transferência 247) foi dada por entregue e
+  // nunca chegou. Vazio vira "sem resposta" — quem chama deixa em
+  // `arquivo_pronto` em vez de concluir (ou de falhar e arriscar duplicar).
+  if (!res.trim()) throw new RconError("o jogo respondeu vazio ao givepal_j");
   return interpretar(res);
 }

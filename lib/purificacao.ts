@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/auth";
 import { meuVinculo } from "@/lib/linking";
 import { serverBySlug } from "@/lib/servers";
-import { getPal, ForaDoJogo, type PalCru } from "@/lib/palworld/paldefender";
+import { getPal, ForaDoJogo, semEspacoParaPal, type PalCru } from "@/lib/palworld/paldefender";
 import { delPal } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo, type PalTemplate } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
@@ -948,6 +948,19 @@ export async function resgatarPalPurificado(ritualId: number): Promise<Resultado
   const server = serverBySlug(ritual.server_slug);
   if (!vinculo || !server) {
     return { ok: false, mensagem: "Vincule seu personagem antes de resgatar." };
+  }
+
+  // Mesmo cuidado do cofre (`semEspacoParaPal`): palbox e time lotados
+  // deixariam o Pal purificado sem lugar para cair.
+  try {
+    if (await semEspacoParaPal(server, vinculo.uid)) {
+      return {
+        ok: false,
+        mensagem: "Sua palbox e seu time estão cheios — solte ou guarde um Pal no jogo antes de resgatar.",
+      };
+    }
+  } catch {
+    /* sem resposta da REST: segue, como antes */
   }
 
   // Clona o template inteiro — só os IVs mudam, e o Gênero é travado em

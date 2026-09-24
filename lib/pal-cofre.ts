@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/auth";
 import { meuVinculo } from "@/lib/linking";
 import { serverBySlug } from "@/lib/servers";
-import { getPals, getPal, ForaDoJogo, type PalCru } from "@/lib/palworld/paldefender";
+import { getPals, getPal, ForaDoJogo, semEspacoParaPal, type PalCru } from "@/lib/palworld/paldefender";
 import { delPal, givePalTemplate } from "@/lib/palworld/rcon";
 import { paraTemplate, candidatosDeFiltro, nomeDoArquivo } from "@/lib/pal-template";
 import { dispararWorkflow } from "@/lib/github";
@@ -394,6 +394,20 @@ export async function iniciarResgateDePal(
   const server = serverBySlug(serverSlug);
   if (!server?.rconPort) {
     return { ok: false, mensagem: "Esse servidor não recebe Pal agora." };
+  }
+
+  // Antes de tirar do cofre: com palbox e time lotados o Pal não tem para
+  // onde ir (ver `semEspacoParaPal`). Se não der para perguntar (offline,
+  // REST fora), segue — a entrega de sempre já lida com isso.
+  try {
+    if (await semEspacoParaPal(server, vinculo.uid)) {
+      return {
+        ok: false,
+        mensagem: "Sua palbox e seu time estão cheios — solte ou guarde um Pal no jogo antes de resgatar.",
+      };
+    }
+  } catch {
+    /* segue */
   }
 
   // Lê antes de debitar: precisa saber se este Pal pode voltar para ESTE

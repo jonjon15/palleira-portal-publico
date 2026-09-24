@@ -376,6 +376,27 @@ export async function contarPals(
   return (m.TeamCount ?? 0) + (m.PalboxCount ?? 0) + (m.BaseCampCount ?? 0);
 }
 
+/** 32 páginas de 30 — a palbox cheia do jogo. */
+export const CAPACIDADE_PALBOX = 960;
+const CAPACIDADE_TIME = 5;
+
+/**
+ * Não cabe mais nenhum Pal: palbox E time lotados. Com isso, `givepal_j`
+ * não tem onde pôr o Pal — achado em 23/09/2026 na conta da Handoroki, com
+ * 960/960 e 5/5. Resgate precisa perguntar antes de tirar do cofre.
+ *
+ * ⚠️ Só responde com o jogador online, como `contarPals`.
+ */
+export async function semEspacoParaPal(server: PalleiraServer, uid: string): Promise<boolean> {
+  const raw = await call<{ Meta?: { TeamCount?: number; PalboxCount?: number } }>(
+    server,
+    `pals/${normalizarUid(uid)}`,
+    false,
+  );
+  const m = raw.Meta ?? {};
+  return (m.PalboxCount ?? 0) >= CAPACIDADE_PALBOX && (m.TeamCount ?? 0) >= CAPACIDADE_TIME;
+}
+
 export interface PoderDaPalbox {
   /** Quantos Pals a pessoa tem, somando time, palbox e bases. */
   pals: number;

@@ -122,7 +122,7 @@ def rcon_comando(host: str, porta: int, senha: str, comando: str) -> str:
 
 
 def rcon_ok(resposta: str) -> bool:
-    return not resposta.lower().startswith(("failed", "unknown command"))
+    return not resposta.lower().startswith(("failed", "unknown command", "could not"))
 
 
 # --------------------------------------------------------------------- sftp
@@ -188,6 +188,14 @@ def processar_pendentes(conn, alvos: dict[str, Alvo]) -> int:
             # propósito — igual continuarResgate — para não arriscar duplicar.
             print(f"  RCON sem resposta: {e}")
             marcar_detalhe(conn, transfer_id, f"RCON sem resposta: {e}")
+            continue
+
+        # Vazio não é entrega: givepal_j que entrega sempre diz "Granted Pal".
+        # Foi assim que a #247 (Knocklem Ignis da Handoroki, 19/09/2026) virou
+        # "concluido" sem nunca chegar. Fica em arquivo_pronto, como sem resposta.
+        if not resposta.strip():
+            print("  RCON respondeu vazio — deixando em arquivo_pronto")
+            marcar_detalhe(conn, transfer_id, "RCON respondeu vazio")
             continue
 
         if not rcon_ok(resposta):
