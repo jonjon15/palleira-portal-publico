@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { levelOf, canManageEconomy } from "@/lib/roles";
 import { registrar } from "@/lib/moderacao";
 import { salvarTag, salvarPlano, reentregar } from "@/lib/vip";
-import { salvarConfigBooster } from "@/lib/booster";
+import { salvarConfigBooster, concederBoosterStaff } from "@/lib/booster";
 
 export interface Estado {
   ok: boolean;
@@ -77,6 +77,21 @@ export async function acaoSalvarBooster(_a: Estado, form: FormData): Promise<Est
   await registrar({
     actorId, serverSlug: "-", action: "vip", target: "booster",
     detail: `booster: R$ ${precoReais}, ${multiplicador}x, ${ativo ? "ligado" : "desligado"}`,
+    ok: r.ok, error: r.ok ? undefined : r.mensagem,
+  });
+  atualiza();
+  return r;
+}
+
+export async function acaoConcederBooster(_a: Estado, form: FormData): Promise<Estado> {
+  const actorId = await exigirCupula();
+  const serverSlug = String(form.get("servidor") ?? "");
+  const tipos = form.getAll("tipo").map(String);
+  const motivo = String(form.get("motivo") ?? "");
+  const r = await concederBoosterStaff({ serverSlug, tipos, motivo });
+  await registrar({
+    actorId, serverSlug: serverSlug || "-", action: "vip", target: "booster",
+    detail: `booster da staff: ${tipos.join("+")}${motivo ? ` (${motivo})` : ""}`,
     ok: r.ok, error: r.ok ? undefined : r.mensagem,
   });
   atualiza();

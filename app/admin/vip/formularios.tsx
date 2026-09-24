@@ -1,7 +1,14 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
-import { acaoSalvarTag, acaoSalvarPlano, acaoSalvarBooster, acaoReentregar, type Estado } from "./actions";
+import {
+  acaoSalvarTag,
+  acaoSalvarPlano,
+  acaoSalvarBooster,
+  acaoConcederBooster,
+  acaoReentregar,
+  type Estado,
+} from "./actions";
 import type { PlanoVip } from "@/lib/vip";
 import type { ConfigBooster } from "@/lib/booster";
 import type { ItemDoCatalogo } from "@/lib/itens";
@@ -213,6 +220,47 @@ export function FormularioDoBooster({ cfg }: { cfg: ConfigBooster }) {
       </label>
       <button type="submit" disabled={pendente} className={botao}>
         {pendente ? "Salvando…" : "Salvar booster"}
+      </button>
+      <Aviso {...estado} />
+    </form>
+  );
+}
+
+/** Dar um booster sem Pix — entra na mesma fila dos doados. */
+export function ConcederBooster({
+  servidores,
+  tipos,
+}: {
+  servidores: { slug: string; nome: string }[];
+  tipos: { key: string; rotulo: string }[];
+}) {
+  const [estado, acao, pendente] = useActionState(acaoConcederBooster, SEM_ESTADO);
+  return (
+    <form action={acao} className="space-y-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+      <h3 className="font-semibold">Dar um booster (sem Pix)</h3>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="staff-servidor" className="block text-sm text-muted">Servidor</label>
+          <select id="staff-servidor" name="servidor" className={`${campo} mt-1.5`}>
+            {servidores.map((s) => (
+              <option key={s.slug} value={s.slug}>{s.nome}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="staff-motivo" className="block text-sm text-muted">Motivo (opcional)</label>
+          <input id="staff-motivo" name="motivo" maxLength={200} placeholder="Evento de sábado" className={`${campo} mt-1.5`} />
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-4 text-sm">
+        {tipos.map((t) => (
+          <label key={t.key} className="flex items-center gap-2">
+            <input type="checkbox" name="tipo" value={t.key} defaultChecked={t.key === "xp"} /> {t.rotulo}
+          </label>
+        ))}
+      </div>
+      <button type="submit" disabled={pendente} className={botao}>
+        {pendente ? "Colocando na fila…" : "Colocar na fila"}
       </button>
       <Aviso {...estado} />
     </form>

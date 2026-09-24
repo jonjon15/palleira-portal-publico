@@ -466,6 +466,41 @@ export async function salvarConfigBooster(args: {
   return { ok: true, mensagem: "Booster salvo. Vale para os próximos pedidos." };
 }
 
+/**
+ * Booster dado pela staff, sem Pix (pedido do dono em 24/09/2026): evento,
+ * prêmio, compensação. Entra na mesma fila, com as mesmas regras (um ciclo
+ * por tipo, nunca acima do multiplicador), e fica no nome de quem deu.
+ */
+export async function concederBoosterStaff(args: {
+  serverSlug: string;
+  tipos: string[];
+  motivo: string;
+}): Promise<Resultado> {
+  const s = await exigirCupula();
+  if (!("discordId" in s)) return s;
+
+  const v = validar(args.serverSlug, args.tipos);
+  if (!("tipos" in v)) return v;
+  const server = serverBySlug(args.serverSlug)!;
+  const cfg = await configBooster();
+  const motivo = args.motivo.trim().slice(0, 200);
+
+  await sql`
+    insert into boosters (discord_id, server_slug, tipos, origem, multiplicador, status, pago_em, detail)
+    values (${s.discordId}, ${server.slug}, ${v.tipos}::text[], 'staff', ${cfg.multiplicador}, 'na_fila', now(), ${motivo})
+  `;
+  const rotulo = v.tipos.map((t) => TIPOS[t].rotulo).join(" + ");
+  await logarNoDiscord(
+    `🎁 Booster **${rotulo}** no ${server.shortName} dado pela staff — <@${s.discordId}>` +
+      (motivo ? ` · ${motivo}` : "") +
+      " · entra no próximo RR",
+  );
+  return {
+    ok: true,
+    mensagem: `Booster ${rotulo} na fila do ${server.shortName}. Entra no próximo restart.`,
+  };
+}
+
 export interface BoosterAdmin {
   id: number;
   discordId: string;

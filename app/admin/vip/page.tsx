@@ -6,8 +6,14 @@ import { levelOf, canManageEconomy, PLANOS } from "@/lib/roles";
 import { planosVip, infiniteTag, doacoesRecentes, reais } from "@/lib/vip";
 import { nomesDe, botPodeDarCargos } from "@/lib/discord";
 import { catalogoDeItens } from "@/lib/itens";
-import { FormularioDaTag, FormularioDePlano, FormularioDoBooster, Reentregar } from "./formularios";
-import { configBooster, boostersRecentes, TIPOS } from "@/lib/booster";
+import {
+  FormularioDaTag,
+  FormularioDePlano,
+  FormularioDoBooster,
+  ConcederBooster,
+  Reentregar,
+} from "./formularios";
+import { configBooster, boostersRecentes, servidoresComBooster, TIPOS } from "@/lib/booster";
 
 export const metadata: Metadata = { title: "VIP — administração" };
 export const dynamic = "force-dynamic";
@@ -120,8 +126,12 @@ export default async function VipAdmin() {
             jogo abrir, multiplica as taxas do painel e grava. Os boosters do VIP de cada plano ficam no
             campo &ldquo;Boosters&rdquo; acima.
           </p>
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             <FormularioDoBooster cfg={boosterCfg} />
+            <ConcederBooster
+              servidores={servidoresComBooster().map((s) => ({ slug: s.slug, nome: s.shortName }))}
+              tipos={Object.entries(TIPOS).map(([key, t]) => ({ key, rotulo: t.rotulo }))}
+            />
           </div>
           {boosters.length > 0 && (
             <ul className="mt-4 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
@@ -133,13 +143,16 @@ export default async function VipAdmin() {
                       {b.servidor}
                     </p>
                     <p className="text-xs text-muted">
-                      #{b.id} · {b.origem === "vip" ? "crédito VIP" : reais(b.valorCentavos)} ·{" "}
+                      #{b.id} ·{" "}
+                      {b.origem === "vip" ? "crédito VIP" : b.origem === "staff" ? "dado pela staff" : reais(b.valorCentavos)} ·{" "}
                       {new Date(b.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       {b.ativadoEm && (
                         <> · ligou {new Date(b.ativadoEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</>
                       )}
                     </p>
-                    {b.detail && <p className="mt-1 text-xs text-danger">{b.detail}</p>}
+                    {b.detail && (
+                      <p className={`mt-1 text-xs ${b.origem === "staff" ? "text-muted" : "text-danger"}`}>{b.detail}</p>
+                    )}
                   </div>
                   <span className="text-xs font-semibold text-muted">
                     {{ aguardando: "Aguardando Pix", na_fila: "Na fila", ativo: "Ligado", encerrado: "Já rodou", falhou: "Link não abriu" }[
