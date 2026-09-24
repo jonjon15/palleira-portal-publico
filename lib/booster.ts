@@ -34,12 +34,16 @@ import {
  * taxa nunca passa de 2x: o tipo está ligado ou não está.
  */
 
-export type TipoBooster = "xp" | "drop";
+export type TipoBooster = "xp" | "drop" | "coleta";
 
-/** Captura saiu a pedido do dono (24/09/2026). */
+/**
+ * Captura saiu a pedido do dono (24/09/2026), e o Drop foi separado em dois
+ * no mesmo dia: o que cai dos Pals e o que sai da coleta no mapa.
+ */
 export const TIPOS: Record<TipoBooster, { rotulo: string; chaves: string[] }> = {
   xp: { rotulo: "XP", chaves: ["ExpRate"] },
-  drop: { rotulo: "Drop", chaves: ["EnemyDropItemRate", "CollectionDropRate"] },
+  drop: { rotulo: "Drop de Pals", chaves: ["EnemyDropItemRate"] },
+  coleta: { rotulo: "Coleta", chaves: ["CollectionDropRate"] },
 };
 
 export const rotuloDoTipo = (t: string) => (TIPOS as Record<string, { rotulo: string }>)[t]?.rotulo ?? t;

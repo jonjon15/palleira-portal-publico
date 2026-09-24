@@ -188,8 +188,8 @@ export default async function Vip() {
             <h2 className="text-2xl font-bold tracking-tight">🚀 Booster da comunidade</h2>
             <p className="mt-1 max-w-3xl text-sm text-muted">
               Turbina o servidor inteiro por {DURACAO_HORAS} horas: taxa{" "}
-              {boosterCfg.multiplicador.toLocaleString("pt-BR")}x de XP e/ou Drop para todo mundo que
-              estiver jogando. Entra no próximo restart do servidor (de 4 em 4 horas). Se o tipo já estiver
+              {boosterCfg.multiplicador.toLocaleString("pt-BR")}x de XP, Drop de Pals (o que cai ao derrotar)
+              e/ou Coleta (madeira, pedra, minério, plantas) para todo mundo que estiver jogando. Entra no próximo restart do servidor (de 4 em 4 horas). Se o tipo já estiver
               ligado, o seu pedido estende o tempo — a taxa nunca passa de{" "}
               {boosterCfg.multiplicador.toLocaleString("pt-BR")}x. Quem é VIP tem boosters para ativar;
               acabou, é só doar outro.
