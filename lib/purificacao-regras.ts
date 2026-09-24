@@ -55,6 +55,9 @@ export interface PalParaValidar {
   palId: string;
 }
 
+/** A espécie sem o prefixo de alfa (`BOSS_Anubis` → `Anubis`). */
+const especie = (palId: string) => palId.replace(/^BOSS_/i, "");
+
 /**
  * Se este Pal serve como doador para as passivas aceitas do ritual. Usada
  * tanto para realce visual no formulário quanto — a que vale de fato —
@@ -63,13 +66,17 @@ export interface PalParaValidar {
  * `palIdDoAlvo` trava o doador na mesma espécie do Pal que está sendo
  * purificado — pedido do dono em 14/09/2026, para que só um Pal
  * genuinamente igual ao alvo possa alimentar o ritual.
+ *
+ * Alfa e comum contam como a mesma espécie (pedido do dono em 23/09/2026):
+ * o jogo chama o alfa de `BOSS_<espécie>`, e a Handoroki, purificando um
+ * Felbat alfa, não via nenhum dos 38 Felbats comuns que tinha para doar.
  */
 export function elegibilidadeDoador(
   pal: PalParaValidar,
   passivasAceitas: string[],
   palIdDoAlvo: string,
 ): { ok: boolean; motivo: string; passivaUsada: string } {
-  if (pal.palId !== palIdDoAlvo) {
+  if (especie(pal.palId) !== especie(palIdDoAlvo)) {
     return { ok: false, motivo: "Precisa ser da mesma espécie do Pal em purificação.", passivaUsada: "" };
   }
   if (
