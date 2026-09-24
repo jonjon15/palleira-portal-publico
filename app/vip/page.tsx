@@ -37,7 +37,7 @@ export default async function Vip() {
     situacaoDosServidores(),
   ]);
   const ligado = Boolean(tag);
-  const creditos = session ? await creditosVip(session.user.discordId) : { disponiveis: 0, total: 0 };
+  const creditos = session ? await creditosVip(session.user.discordId, session.user.roles) : { disponiveis: 0, total: 0, proximoVolta: null };
 
   return (
     <>
@@ -148,7 +148,7 @@ export default async function Vip() {
                     <span className="text-gold">🚀</span>
                     <span className="text-muted">
                       <span className="tabular text-text">{plano.boosters}</span>{" "}
-                      {plano.boosters === 1 ? "booster" : "boosters"} de servidor para ativar quando quiser
+                      {plano.boosters === 1 ? "booster" : "boosters"} de servidor por mês, para ativar quando quiser
                     </span>
                   </li>
                 )}
@@ -260,6 +260,9 @@ export default async function Vip() {
                           {creditos.disponiveis} de {creditos.total}
                         </b>{" "}
                         disponíveis
+                        {creditos.proximoVolta && creditos.disponiveis < creditos.total && (
+                          <> · o próximo volta em {new Date(creditos.proximoVolta).toLocaleDateString("pt-BR")}</>
+                        )}
                       </p>
                     )}
                     {creditos.disponiveis === 0 && !ligado ? (

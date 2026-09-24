@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { levelOf, canManageEconomy } from "@/lib/roles";
 import { registrar } from "@/lib/moderacao";
 import { salvarTag, salvarPlano, reentregar } from "@/lib/vip";
-import { salvarConfigBooster, concederBoosterStaff } from "@/lib/booster";
+import { salvarConfigBooster, concederBoosterStaff, definirBoostersRestantes } from "@/lib/booster";
 
 export interface Estado {
   ok: boolean;
@@ -92,6 +92,20 @@ export async function acaoConcederBooster(_a: Estado, form: FormData): Promise<E
   await registrar({
     actorId, serverSlug: serverSlug || "-", action: "vip", target: "booster",
     detail: `booster da staff: ${tipos.join("+")}${motivo ? ` (${motivo})` : ""}`,
+    ok: r.ok, error: r.ok ? undefined : r.mensagem,
+  });
+  atualiza();
+  return r;
+}
+
+export async function acaoDefinirBoosters(_a: Estado, form: FormData): Promise<Estado> {
+  const actorId = await exigirCupula();
+  const discordId = String(form.get("discordId") ?? "");
+  const restantes = Number(form.get("restantes"));
+  const r = await definirBoostersRestantes({ discordId, restantes });
+  await registrar({
+    actorId, serverSlug: "-", action: "vip", target: discordId,
+    detail: `boosters do VIP restantes: ${restantes}`,
     ok: r.ok, error: r.ok ? undefined : r.mensagem,
   });
   atualiza();

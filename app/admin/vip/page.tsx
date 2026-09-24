@@ -11,9 +11,10 @@ import {
   FormularioDePlano,
   FormularioDoBooster,
   ConcederBooster,
+  BoostersDoVip,
   Reentregar,
 } from "./formularios";
-import { configBooster, boostersRecentes, servidoresComBooster, TIPOS } from "@/lib/booster";
+import { configBooster, boostersRecentes, servidoresComBooster, vipsComBoosters, TIPOS } from "@/lib/booster";
 
 export const metadata: Metadata = { title: "VIP — administração" };
 export const dynamic = "force-dynamic";
@@ -30,13 +31,14 @@ export default async function VipAdmin() {
   if (!session) redirect("/entrar");
   if (!canManageEconomy(levelOf(session.user.roles, session.user.isMember))) notFound();
 
-  const [planos, tag, doacoes, botOk, boosterCfg, boosters] = await Promise.all([
+  const [planos, tag, doacoes, botOk, boosterCfg, boosters, vips] = await Promise.all([
     planosVip(false),
     infiniteTag(),
     doacoesRecentes(),
     botPodeDarCargos(PLANOS.map((p) => p.role)),
     configBooster(),
     boostersRecentes(),
+    vipsComBoosters().catch(() => null),
   ]);
   const testado = doacoes.some((d) => d.status === "entregue");
   const catalogo = catalogoDeItens();
@@ -133,6 +135,26 @@ export default async function VipAdmin() {
               tipos={Object.entries(TIPOS).map(([key, t]) => ({ key, rotulo: t.rotulo }))}
             />
           </div>
+
+          <div className="mt-6">
+            <h3 className="font-semibold">Boosters dos VIPs</h3>
+            <p className="mt-1 text-sm text-muted">
+              Quem tem cargo VIP no Discord agora. Cada booster usado volta 30 dias depois. Se alguém já usou
+              por fora, ajuste aqui quantos ainda pode usar neste período e salve.
+            </p>
+            {vips === null ? (
+              <p className="mt-3 text-sm text-danger">Não consegui ler a lista do Discord agora — recarregue.</p>
+            ) : vips.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">Ninguém com cargo VIP.</p>
+            ) : (
+              <ul className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+                {vips.map((v) => (
+                  <BoostersDoVip key={v.discordId} {...v} />
+                ))}
+              </ul>
+            )}
+          </div>
+
           {boosters.length > 0 && (
             <ul className="mt-4 divide-y divide-[var(--line)] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
               {boosters.map((b) => (

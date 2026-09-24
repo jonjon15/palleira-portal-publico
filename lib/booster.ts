@@ -1,8 +1,8 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/auth";
-import { canManageEconomy, levelOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
+import { canManageEconomy, levelOf, planoOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
-import { logarNoDiscord } from "@/lib/discord";
+import { logarNoDiscord, listarMembros, buscarMembro } from "@/lib/discord";
 import {
   infiniteTag,
   reais,
@@ -17,7 +17,7 @@ import {
  *
  * Uma doação (ou um crédito do VIP) turbina a taxa de UM servidor por UM
  * ciclo de restart, para todo mundo que estiver nele. Quem doa escolhe os
- * tipos — XP, Drop, Captura — e pode misturar.
+ * tipos — XP, Drop de Pals, Coleta — e pode misturar.
  *
  * **Quem aplica é o servidor, não o site.** O Palworld só lê as taxas no
  * boot e reescreve o `.ini` ao desligar, então o site não tem como mudar
@@ -87,28 +87,67 @@ export const servidoresComBooster = () => activeServers().filter((s) => !s.foraD
 
 /* --------------------------------------------------------- créditos do VIP */
 
+/** Cada booster do VIP usado volta depois disto. */
+export const DIAS_DO_CREDITO = 30;
+const JANELA_CREDITO = `${DIAS_DO_CREDITO} days`;
+
 export interface CreditosVip {
   disponiveis: number;
   total: number;
+  /** Quando o próximo booster gasto volta — null se nada foi gasto. */
+  proximoVolta: string | null;
+}
+
+/** Quantos boosters por período o plano do cargo dá (vip_planos.boosters). */
+async function boostersDoPlano(roles: string[]): Promise<number> {
+  const plano = planoOf(roles);
+  if (!plano) return 0;
+  const [p] = (await sql`select boosters from vip_planos where key = ${plano.key}`) as { boosters: number }[];
+  return p?.boosters ?? 0;
 }
 
 /**
- * Os boosters do VIP: cada doação ainda valendo dá os do plano dela, e
- * vencem com ela. Acabou, a pessoa doa um booster avulso como qualquer um.
+ * Gasto nos últimos 30 dias: boosters pedidos com crédito do VIP + acertos
+ * da staff (`booster_ajustes`). É uma expressão só, para caber tanto na
+ * leitura quanto na trava do insert em `pedirBooster`.
  */
-export async function creditosVip(discordId: string): Promise<CreditosVip> {
-  const [r] = (await sql`
-    select coalesce(sum(d.boosters), 0)::int as total,
-           coalesce(sum(greatest(d.boosters - (
-             select count(*) from boosters b where b.vip_doacao_id = d.id
-           ), 0)), 0)::int as disponiveis
-    from vip_doacoes d
-    where d.discord_id = ${discordId}
-      and d.status in ('pago', 'entregue')
-      and d.vip_ate > now()
-      and d.boosters > 0
-  `) as { total: number; disponiveis: number }[];
-  return { total: r?.total ?? 0, disponiveis: r?.disponiveis ?? 0 };
+async function gastos(discordIds: string[]): Promise<Map<string, { usados: number; primeiro: string | null }>> {
+  if (discordIds.length === 0) return new Map();
+  const rows = (await sql`
+    select discord_id, sum(n)::int as usados, min(quando) as primeiro
+      from (
+        select discord_id, 1 as n, created_at as quando
+          from boosters
+         where origem = 'vip' and discord_id = any(${discordIds}::text[])
+           and created_at > now() - ${JANELA_CREDITO}::interval
+        union all
+        select discord_id, consumidos, created_at
+          from booster_ajustes
+         where discord_id = any(${discordIds}::text[])
+           and created_at > now() - ${JANELA_CREDITO}::interval
+      ) g
+     group by discord_id
+  `) as { discord_id: string; usados: number; primeiro: string | null }[];
+  return new Map(rows.map((r) => [r.discord_id, { usados: r.usados, primeiro: r.primeiro }]));
+}
+
+/**
+ * Os boosters do VIP, pelo CARGO do Discord (pedido do dono em 24/09/2026):
+ * Hard Metal, New Metal e Palleira dão os do plano, e cada um gasto volta
+ * 30 dias depois. Perdeu o cargo, perdeu os boosters. Acabaram, doa avulso.
+ */
+export async function creditosVip(discordId: string, roles: string[]): Promise<CreditosVip> {
+  const total = await boostersDoPlano(roles);
+  if (total === 0) return { total: 0, disponiveis: 0, proximoVolta: null };
+  const g = (await gastos([discordId])).get(discordId);
+  const usados = g?.usados ?? 0;
+  return {
+    total,
+    disponiveis: Math.max(0, total - usados),
+    proximoVolta: g?.primeiro
+      ? new Date(new Date(g.primeiro).getTime() + DIAS_DO_CREDITO * 86_400_000).toISOString()
+      : null,
+  };
 }
 
 /* ---------------------------------------------------------------- pedir */
@@ -146,17 +185,20 @@ export async function pedirBooster(args: {
 
   if (args.usarCredito) {
     // Um insert só, condicionado a ainda sobrar crédito: dois cliques
-    // seguidos não gastam o mesmo crédito duas vezes.
+    // seguidos não gastam o mesmo crédito duas vezes. O total vem do cargo
+    // (sessão relida a cada 5 min), o gasto é contado aqui dentro.
+    const total = await boostersDoPlano(session.user.roles);
     const r = (await sql`
-      insert into boosters (discord_id, server_slug, tipos, origem, vip_doacao_id, multiplicador, status, pago_em)
-      select ${discordId}, ${server.slug}, ${v.tipos}::text[], 'vip', d.id, ${cfg.multiplicador}, 'na_fila', now()
-        from vip_doacoes d
-       where d.discord_id = ${discordId}
-         and d.status in ('pago', 'entregue')
-         and d.vip_ate > now()
-         and d.boosters > (select count(*) from boosters b where b.vip_doacao_id = d.id)
-       order by d.vip_ate
-       limit 1
+      insert into boosters (discord_id, server_slug, tipos, origem, multiplicador, status, pago_em)
+      select ${discordId}, ${server.slug}, ${v.tipos}::text[], 'vip', ${cfg.multiplicador}, 'na_fila', now()
+       where ${total}::int > (
+         (select count(*) from boosters
+           where origem = 'vip' and discord_id = ${discordId}
+             and created_at > now() - ${JANELA_CREDITO}::interval)
+         + (select coalesce(sum(consumidos), 0) from booster_ajustes
+             where discord_id = ${discordId}
+               and created_at > now() - ${JANELA_CREDITO}::interval)
+       )
       returning id
     `) as { id: number }[];
     if (!r.length) return { ok: false, mensagem: "Você não tem booster do VIP sobrando." };
@@ -498,6 +540,73 @@ export async function concederBoosterStaff(args: {
   return {
     ok: true,
     mensagem: `Booster ${rotulo} na fila do ${server.shortName}. Entra no próximo restart.`,
+  };
+}
+
+export interface VipComBoosters {
+  discordId: string;
+  nome: string;
+  plano: string;
+  total: number;
+  disponiveis: number;
+}
+
+/** Todo mundo com cargo VIP no Discord agora, e quantos boosters sobram. */
+export async function vipsComBoosters(): Promise<VipComBoosters[]> {
+  const s = await exigirCupula();
+  if (!("discordId" in s)) return [];
+  const [membros, planos] = await Promise.all([
+    listarMembros(),
+    sql`select key, boosters from vip_planos`.then((r) => r as { key: string; boosters: number }[]),
+  ]);
+  const porPlano = new Map(planos.map((p) => [p.key, p.boosters]));
+  const vips = membros
+    .map((m) => ({ m, plano: planoOf(m.roles) }))
+    .filter((x): x is { m: (typeof membros)[number]; plano: NonNullable<ReturnType<typeof planoOf>> } => x.plano !== null);
+  const g = await gastos(vips.map((v) => v.m.id));
+  return vips
+    .map(({ m, plano }) => {
+      const total = porPlano.get(plano.key) ?? 0;
+      return {
+        discordId: m.id,
+        nome: m.displayName,
+        plano: plano.nome,
+        total,
+        disponiveis: Math.max(0, total - (g.get(m.id)?.usados ?? 0)),
+      };
+    })
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+/**
+ * A staff acerta quantos boosters a pessoa ainda pode usar neste período
+ * (alguns já usaram por fora). Grava a diferença em `booster_ajustes`, que
+ * vence em 30 dias como qualquer uso.
+ */
+export async function definirBoostersRestantes(args: {
+  discordId: string;
+  restantes: number;
+}): Promise<Resultado> {
+  const s = await exigirCupula();
+  if (!("discordId" in s)) return s;
+  if (!Number.isInteger(args.restantes) || args.restantes < 0 || args.restantes > 50) {
+    return { ok: false, mensagem: "Coloque um número de 0 a 50." };
+  }
+  const membro = await buscarMembro(args.discordId).catch(() => null);
+  if (!membro) return { ok: false, mensagem: "Essa pessoa não está no Discord." };
+  const atual = await creditosVip(membro.id, membro.roles);
+  if (atual.total === 0) return { ok: false, mensagem: `${membro.displayName} não tem cargo VIP.` };
+
+  const diferenca = atual.disponiveis - args.restantes;
+  if (diferenca !== 0) {
+    await sql`
+      insert into booster_ajustes (discord_id, consumidos, motivo, por)
+      values (${membro.id}, ${diferenca}, 'acerto da staff', ${s.discordId})
+    `;
+  }
+  return {
+    ok: true,
+    mensagem: `${membro.displayName} agora tem ${args.restantes} de ${atual.total} boosters neste período.`,
   };
 }
 

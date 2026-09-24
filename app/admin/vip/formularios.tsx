@@ -6,6 +6,7 @@ import {
   acaoSalvarPlano,
   acaoSalvarBooster,
   acaoConcederBooster,
+  acaoDefinirBoosters,
   acaoReentregar,
   type Estado,
 } from "./actions";
@@ -264,6 +265,52 @@ export function ConcederBooster({
       </button>
       <Aviso {...estado} />
     </form>
+  );
+}
+
+/** Uma linha da lista de VIPs: quantos boosters ainda pode usar, editável. */
+export function BoostersDoVip({
+  discordId,
+  nome,
+  plano,
+  total,
+  disponiveis,
+}: {
+  discordId: string;
+  nome: string;
+  plano: string;
+  total: number;
+  disponiveis: number;
+}) {
+  const [estado, acao, pendente] = useActionState(acaoDefinirBoosters, SEM_ESTADO);
+  return (
+    <li className="px-5 py-3 text-sm">
+      <form action={acao} className="flex flex-wrap items-center gap-3">
+        <input type="hidden" name="discordId" value={discordId} />
+        <div className="min-w-40 flex-1">
+          <p className="font-medium">{nome}</p>
+          <p className="text-xs text-muted">VIP {plano}</p>
+        </div>
+        <label className="flex items-center gap-2 text-muted">
+          <input
+            name="restantes"
+            type="number"
+            min={0}
+            max={50}
+            defaultValue={disponiveis}
+            aria-label={`Boosters restantes de ${nome}`}
+            className="tabular w-16 rounded-[var(--radius-control)] border border-line bg-bg px-2 py-1.5 text-center text-text outline-none focus:border-gold"
+          />
+          de {total}
+        </label>
+        <button type="submit" disabled={pendente} className={botaoFantasma}>
+          {pendente ? "Salvando…" : "Salvar"}
+        </button>
+      </form>
+      {estado.mensagem && (
+        <p className={`mt-1 text-xs ${estado.ok ? "text-success" : "text-danger"}`}>{estado.mensagem}</p>
+      )}
+    </li>
   );
 }
 
