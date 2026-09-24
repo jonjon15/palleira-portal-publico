@@ -63,14 +63,23 @@ function traduz(m: RawMember): MembroDiscord | null {
  * Uma tentativa extra basta: o `retry-after` do Discord é quase sempre menos
  * de 1 segundo, e insistir mais seguraria a renderização da página.
  */
-async function chamar(caminho: string): Promise<Response> {
+async function chamar(
+  caminho: string,
+  metodo: "GET" | "PUT" | "DELETE" = "GET",
+  motivo?: string,
+): Promise<Response> {
   if (!BOT_TOKEN || !GUILD_ID) {
     throw new Error("DISCORD_BOT_TOKEN ou DISCORD_GUILD_ID não configurado");
   }
 
   const pedir = () =>
     fetch(`${API}${caminho}`, {
-      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+      method: metodo,
+      headers: {
+        Authorization: `Bot ${BOT_TOKEN}`,
+        // Aparece no log de auditoria do servidor do Discord.
+        ...(motivo ? { "X-Audit-Log-Reason": encodeURIComponent(motivo) } : {}),
+      },
       signal: AbortSignal.timeout(15_000),
       cache: "no-store",
     });
@@ -102,6 +111,36 @@ export async function buscarMembro(
   if (res.status === 403) throw new SemIntentError();
   if (!res.ok) throw new Error(`Discord respondeu ${res.status}`);
   return traduz((await res.json()) as RawMember);
+}
+
+/**
+ * Dá ou tira um cargo — usado pelo VIP por doação (`lib/vip.ts`).
+ *
+ * ⚠️ O bot precisa da permissão "Gerenciar cargos" e de um cargo ACIMA do
+ * cargo que vai dar. Em 23/09/2026 o bot não tinha cargo nenhum: o Discord
+ * responde 403 e a doação fica 'pago', esperando o admin reentregar.
+ */
+export async function alterarCargo(
+  discordId: string,
+  roleId: string,
+  acao: "dar" | "tirar",
+  motivo: string,
+): Promise<{ ok: boolean; erro: string }> {
+  try {
+    const res = await chamar(
+      `/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`,
+      acao === "dar" ? "PUT" : "DELETE",
+      motivo,
+    );
+    if (res.ok) return { ok: true, erro: "" };
+    if (res.status === 403) {
+      return { ok: false, erro: "o bot não tem permissão de Gerenciar cargos acima do cargo VIP" };
+    }
+    if (res.status === 404) return { ok: false, erro: "a pessoa não está no servidor do Discord" };
+    return { ok: false, erro: `Discord respondeu ${res.status}` };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 /**

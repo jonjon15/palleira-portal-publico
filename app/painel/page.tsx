@@ -165,6 +165,13 @@ export default async function Painel() {
               href="/admin/economia"
             />
           )}
+          {canManageEconomy(level) && (
+            <Card
+              title="VIP por doação"
+              body="Planos da página VIP, conta da InfinitePay e doações que chegaram."
+              href="/admin/vip"
+            />
+          )}
           {isStaff(level) && (
             <Card
               title="Moderação"

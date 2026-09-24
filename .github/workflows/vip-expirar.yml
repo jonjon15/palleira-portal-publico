@@ -1,0 +1,33 @@
+# Tira o cargo VIP de quem teve a doação vencida (30 dias). O endpoint faz o
+# trabalho; isto só bate na porta. Ver app/api/vip/expirar/route.ts e
+# lib/vip.ts. Agendado aqui, e não no vercel.json, pelo mesmo motivo do
+# eventos-do-discord.yml.
+name: vip-expirar
+
+on:
+  schedule:
+    # Todo dia às 09:17 UTC (06:17 em SP).
+    - cron: "17 9 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  expirar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Chamar o endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Falta o secret CRON_SECRET no repositório."
+            exit 1
+          fi
+          resposta=$(curl -sS -w '\n%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://palleira.com.br/api/vip/expirar)
+          corpo=$(echo "$resposta" | head -n -1)
+          codigo=$(echo "$resposta" | tail -n 1)
+          echo "$corpo"
+          [ "$codigo" = "200" ] || { echo "::error::HTTP $codigo"; exit 1; }

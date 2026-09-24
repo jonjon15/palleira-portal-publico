@@ -28,7 +28,8 @@ export type AcaoModeracao =
   | "kit_premio"
   | "deliver_kit_premio"
   | "fix_slots"
-  | "pal_monster";
+  | "pal_monster"
+  | "vip";
 
 export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   broadcast: "Anúncio",
@@ -51,6 +52,7 @@ export const ACAO_LABEL: Record<AcaoModeracao, string> = {
   deliver_kit_premio: "Entrega de kit de prêmio",
   fix_slots: "Pals repetidos",
   pal_monster: "Pal Monster",
+  vip: "VIP por doação",
 };
 
 export interface AcaoRow {
