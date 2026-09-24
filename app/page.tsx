@@ -3,8 +3,8 @@ import Image from "next/image";
 import { Pick } from "@/components/pick";
 import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
-import { getRates } from "@/lib/palworld/rest";
-import { servidoresVisiveis } from "@/lib/presenca-de-servidor";
+import { getRates, getPlayers } from "@/lib/palworld/rest";
+import { servidoresVisiveis, type Presenca } from "@/lib/presenca-de-servidor";
 import { communityStats, topPlayers } from "@/lib/db";
 import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
@@ -23,8 +23,7 @@ export const revalidate = 60;
  * servidor desligado no painel suma da home sozinho depois de 30 min — e
  * volte sozinho quando religar, sem deploy (`lib/presenca-de-servidor.ts`).
  */
-async function loadServers(): Promise<ServerCardData[]> {
-  const presentes = await servidoresVisiveis();
+async function loadServers(presentes: Presenca[]): Promise<ServerCardData[]> {
   return Promise.all(
     presentes.map(async ({ server, metrics }) => ({
       server,
@@ -34,14 +33,62 @@ async function loadServers(): Promise<ServerCardData[]> {
   );
 }
 
+interface JogandoAgora {
+  chave: string;
+  name: string;
+  level: number;
+  server: string;
+}
+
+/**
+ * Quem está conectado agora, com o level do momento — a REST oficial do
+ * jogo só lista quem está online de verdade. Servidor que não responder
+ * fica de fora, sem derrubar a home.
+ */
+async function loadJogandoAgora(presentes: Presenca[]): Promise<JogandoAgora[]> {
+  const listas = await Promise.all(
+    presentes
+      .filter((p) => p.metrics && !p.server.foraDaHome)
+      .map(async ({ server }) =>
+        (await getPlayers(server).catch(() => []))
+          .filter((p) => p.name && !/adm/i.test(p.name))
+          .map((p) => ({
+            chave: `${server.slug}:${p.playerId}`,
+            name: p.name,
+            level: p.level,
+            server: server.shortName,
+          })),
+      ),
+  );
+  return listas.flat().sort((a, b) => b.level - a.level);
+}
+
 export default async function Home() {
-  const [servers, stats, best, evento, purificando] = await Promise.all([
-    loadServers(),
-    communityStats().catch(() => null),
-    topPlayers(5).catch(() => []),
+  // Primeiro quem está no ar: números e ranking somam só esses mundos, senão
+  // o save parado de um servidor desligado domina o "melhores da Palleira".
+  const presentes = await servidoresVisiveis();
+  const slugs = presentes.filter((p) => !p.server.foraDaHome).map((p) => p.server.slug);
+
+  const [servers, stats, best, jogando, evento, purificando] = await Promise.all([
+    loadServers(presentes),
+    communityStats(slugs).catch(() => null),
+    topPlayers(5, slugs).catch(() => []),
+    loadJogandoAgora(presentes),
     eventoAtual().catch(() => null),
     ritualEmDestaque().catch(() => null),
   ]);
+
+  // Quem do top está jogando agora entra com o level do momento, não o do
+  // último save lido.
+  const levelAgora = new Map(jogando.map((j) => [j.chave, j.level]));
+  const melhores = best.map((p) => ({
+    ...p,
+    level: Math.max(p.level, levelAgora.get(`${p.server_slug}:${p.palworld_uid}`) ?? 0),
+    online: levelAgora.has(`${p.server_slug}:${p.palworld_uid}`),
+  }));
+  const nomeDoServidor = new Map<string, string>(
+    presentes.map((p) => [p.server.slug, p.server.shortName]),
+  );
 
   // Só busca a galeria se tiver um evento em destaque — a maioria das
   // visitas não tem evento nenhum, e não vale a pena consultar à toa.
@@ -249,7 +296,8 @@ export default async function Home() {
               A comunidade em números
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Somando os dois mundos, contado direto do save.
+              Somando os servidores no ar, contado direto do save. Quem está
+              jogando aparece na hora.
             </p>
 
             <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -259,13 +307,43 @@ export default async function Home() {
               <Stat label="Bases construídas" value={stats.bases} />
             </dl>
 
-            {best.length > 0 && (
+            {jogando.length > 0 && (
+              <>
+                <h3 className="mt-12 flex items-center gap-2 text-lg font-semibold">
+                  <span className="size-2 animate-pulse rounded-full bg-success" aria-hidden />
+                  Jogando agora
+                  <span className="tabular text-sm font-normal text-muted">
+                    {jogando.length} {jogando.length === 1 ? "pessoa" : "pessoas"}
+                  </span>
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {jogando.slice(0, 24).map((j) => (
+                    <li
+                      key={j.chave}
+                      className="flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm"
+                    >
+                      <span className="font-semibold">{j.name}</span>
+                      <span className="tabular text-xs text-muted">
+                        Lv {j.level} · {j.server}
+                      </span>
+                    </li>
+                  ))}
+                  {jogando.length > 24 && (
+                    <li className="px-2 py-1.5 text-sm text-muted">
+                      e mais {jogando.length - 24}
+                    </li>
+                  )}
+                </ul>
+              </>
+            )}
+
+            {melhores.length > 0 && (
               <>
                 <h3 className="mt-12 text-lg font-semibold">
                   Os melhores da Palleira
                 </h3>
                 <ol className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                  {best.map((p, i) => (
+                  {melhores.map((p, i) => (
                     <li
                       key={`${p.server_slug}-${p.palworld_uid}`}
                       className="flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-3"
@@ -279,12 +357,18 @@ export default async function Home() {
                         {i + 1}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-semibold">
+                        <span className="flex items-center gap-2 truncate font-semibold">
                           {p.name}
+                          {p.online && (
+                            <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[0.65rem] font-bold tracking-wider text-success uppercase">
+                              Online
+                            </span>
+                          )}
                         </span>
                         <span className="tabular block text-sm text-muted">
                           Level {p.level} ·{" "}
-                          {p.pal_count.toLocaleString("pt-BR")} Pals
+                          {p.pal_count.toLocaleString("pt-BR")} Pals ·{" "}
+                          {nomeDoServidor.get(p.server_slug) ?? p.server_slug}
                         </span>
                       </span>
                     </li>

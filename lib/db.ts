@@ -84,8 +84,10 @@ export async function topGuilds(
  */
 export async function topPlayers(
   limit = 25,
-  serverSlug?: string,
+  serverSlug?: string | string[],
 ): Promise<PlayerRow[]> {
+  // Um slug ou vários: a home soma só os servidores que estão no ar.
+  const slugs = serverSlug === undefined ? null : [serverSlug].flat();
   return (await sql`
     select p.server_slug, p.palworld_uid, p.name, p.level, p.pal_count,
            p.poder_hp, p.poder_level, p.poder_ivs, p.poder_shiny, p.poder_em,
@@ -94,7 +96,7 @@ export async function topPlayers(
     left join account_links a on a.palworld_uid = p.palworld_uid
     where p.name <> ''
       and p.name !~* 'adm'
-      and (${serverSlug ?? null}::text is null or p.server_slug = ${serverSlug ?? null})
+      and (${slugs}::text[] is null or p.server_slug = any(${slugs}::text[]))
     order by p.level desc, p.pal_count desc
     limit ${limit}
   `) as PlayerRow[];
@@ -174,15 +176,24 @@ export interface CommunityStats {
 /**
  * Números da comunidade para a home — prova de que o servidor é vivo, visível
  * antes de qualquer login.
+ *
+ * `slugs` limita aos servidores no ar: o save de um servidor desligado fica
+ * parado no banco, e somá-lo mostraria números de um mundo que não existe
+ * mais (o PVE VIP, desligado em 20/09/2026).
  */
-export async function communityStats(): Promise<CommunityStats | null> {
+export async function communityStats(slugs?: string[]): Promise<CommunityStats | null> {
+  const s = slugs ?? null;
   const rows = (await sql`
     select
-      (select count(*)                from players)          as players,
-      (select coalesce(sum(pal_count), 0)  from players)     as pals,
-      (select count(*)                from guilds
-        where pal_count > 0 or base_count > 0)               as guilds,
-      (select coalesce(sum(base_count), 0) from guilds)      as bases
+      (select count(*) from players
+        where ${s}::text[] is null or server_slug = any(${s}::text[]))       as players,
+      (select coalesce(sum(pal_count), 0) from players
+        where ${s}::text[] is null or server_slug = any(${s}::text[]))       as pals,
+      (select count(*) from guilds
+        where (pal_count > 0 or base_count > 0)
+          and (${s}::text[] is null or server_slug = any(${s}::text[])))     as guilds,
+      (select coalesce(sum(base_count), 0) from guilds
+        where ${s}::text[] is null or server_slug = any(${s}::text[]))       as bases
   `) as { players: string; pals: string; guilds: string; bases: string }[];
 
   const row = rows[0];

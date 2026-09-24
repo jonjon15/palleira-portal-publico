@@ -61,6 +61,14 @@ export interface PalleiraServer {
    * restrição — só este slug fica isolado do resto da economia.
    */
   mercadoRestrito: boolean;
+  /**
+   * Fica fora dos números e do "melhores da Palleira" da home, mesmo no ar.
+   *
+   * Para servidor que está saindo de cena: o save dele para de mudar, e os
+   * level 80 de dois anos atrás tomariam o top da home de quem joga hoje.
+   * Não tira o servidor de mais nada (cofre, ranking, vínculo continuam).
+   */
+  foraDaHome?: boolean;
 }
 
 const env = (key: string) => process.env[key] ?? "";
@@ -101,6 +109,8 @@ export const SERVERS: PalleiraServer[] = [
     mode: "PvE",
     tier: "vip",
     mercadoRestrito: false,
+    // Desativado por decisão do dono em 20/09/2026 — o save está parado.
+    foraDaHome: true,
   },
   {
     slug: "pvp-free",
