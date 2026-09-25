@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-25
+
+- **Corrigido: booster sumia da página antes da hora.** Na última meia hora do ciclo, a página VIP dizia "Sem booster agora" com o servidor ainda turbinado. Agora ele aparece até o restart que de fato o desliga, e o horário "até ~" mostra esse restart.
+
 ## 2026-09-24
 
 - **Booster da comunidade.** Na página VIP, qualquer um pode doar R$ 5 para turbinar um servidor: XP, Drop de Pals (o que cai ao derrotar) e/ou Coleta (madeira, pedra, minério, plantas) em dobro, por 4 horas e para todo mundo que estiver jogando. O booster entra no próximo restart do servidor, e a página mostra quais servidores estão com booster e o que está na fila. Pedir com outro booster já ligado não empilha: o que faltar é acrescentado, o tipo que já estava ligado ganha mais 4 horas, e a taxa nunca passa do dobro. Quem tem cargo VIP no Discord ganha boosters para ativar de graça (1, 2 ou 4 por mês, conforme o plano) e vê quantos ainda tem. Cada um volta 30 dias depois de usado. Acabaram, é só doar outro.

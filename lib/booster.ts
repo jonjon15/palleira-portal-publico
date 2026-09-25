@@ -294,6 +294,25 @@ export async function confirmarPagamentoBooster(
 
 const JANELA = `${MESMO_CICLO_HORAS} hours`;
 
+/**
+ * Até quando um booster ligado em `ativadoEm` vale de verdade. Todo boot
+ * dentro da janela de 3,5h reaplica o mesmo booster, então ele só sai no
+ * primeiro RR do painel depois dela. O RR é às 0, 4, 8, 12, 16 e 20h de
+ * Brasília (UTC-3, sem horário de verão) — em UTC, 3, 7, 11, 15, 19 e 23h.
+ *
+ * A tela usava só a janela de 3,5h e mostrava "Sem booster agora" na última
+ * meia hora do ciclo (ou mais, quando ligou num restart manual), com o
+ * servidor ainda em 2x.
+ */
+function fimDoCiclo(ativadoEm: string | Date): number {
+  const t = new Date(ativadoEm).getTime() + MESMO_CICLO_HORAS * 3600_000;
+  const d = new Date(t);
+  d.setUTCMinutes(0, 0, 0);
+  // Horas de RR em UTC: (h + 1) % 4 === 0 → 3, 7, 11, 15, 19, 23.
+  while (d.getTime() < t || (d.getUTCHours() + 1) % 4 !== 0) d.setUTCHours(d.getUTCHours() + 1);
+  return d.getTime();
+}
+
 interface UsoDoCiclo {
   booster_id: number;
   tipo: string;
@@ -424,8 +443,11 @@ export async function situacaoDosServidores(): Promise<SituacaoDoServidor[]> {
     sql`
       select server_slug, tipo, ativado_em, taxas
         from booster_usos
-       where ativado_em > now() - ${JANELA}::interval
-    `.then((r) => r as { server_slug: string; tipo: string; ativado_em: string; taxas: Record<string, [number, number]> }[]),
+       where ativado_em > now() - interval '9 hours'
+    `.then((r) =>
+      (r as { server_slug: string; tipo: string; ativado_em: string; taxas: Record<string, [number, number]> }[])
+        .filter((u) => Date.now() < fimDoCiclo(u.ativado_em)),
+    ),
     sql`
       select b.server_slug, t.tipo, count(*)::int as n
         from boosters b
@@ -438,7 +460,7 @@ export async function situacaoDosServidores(): Promise<SituacaoDoServidor[]> {
 
   return servidoresComBooster().map((s) => {
     const meus = usos.filter((u) => u.server_slug === s.slug && ehTipo(u.tipo));
-    const desde = meus.map((u) => new Date(u.ativado_em).getTime());
+    const fins = meus.map((u) => fimDoCiclo(u.ativado_em));
     const esperando: Partial<Record<TipoBooster, number>> = {};
     for (const f of fila) {
       if (f.server_slug === s.slug && ehTipo(f.tipo)) esperando[f.tipo] = f.n;
@@ -447,7 +469,7 @@ export async function situacaoDosServidores(): Promise<SituacaoDoServidor[]> {
       slug: s.slug,
       nome: s.shortName,
       ativos: [...new Set(meus.map((u) => u.tipo as TipoBooster))],
-      ate: desde.length ? new Date(Math.min(...desde) + DURACAO_HORAS * 3600_000).toISOString() : null,
+      ate: fins.length ? new Date(Math.min(...fins)).toISOString() : null,
       taxas: Object.assign({}, ...meus.map((u) => u.taxas)),
       fila: esperando,
     };
