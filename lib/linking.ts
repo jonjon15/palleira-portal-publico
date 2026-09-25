@@ -177,7 +177,20 @@ export async function jogouNoServidor(
     where a.discord_id = ${discordId} and p.server_slug = ${serverSlug}
     limit 1
   `) as unknown[];
-  return rows.length > 0;
+  if (rows.length > 0) return true;
+
+  // `players` só enche no import do save, de 2 em 2 horas: quem entrou no
+  // mundo agora ainda não aparece lá. O PalDefender lista todo personagem que
+  // o servidor conhece (online ou não), então serve de segunda opinião.
+  const vinculo = await meuVinculo(discordId);
+  const server = serverBySlug(serverSlug);
+  if (!vinculo || !server) return false;
+  try {
+    const todos = await getPlayers(server, true);
+    return todos.some((p) => p.playerUid === vinculo.uid);
+  } catch {
+    return false;
+  }
 }
 
 /** Código já enviado, esperando confirmação. Expirado conta como inexistente. */

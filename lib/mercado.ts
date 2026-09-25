@@ -5,7 +5,7 @@ import { podeNegociar, motivoDoBloqueio } from "@/lib/itens";
 import { debitarCofre, devolverAoCofre, temPilha, cofreCheio, chaveDeServidor } from "@/lib/cofre";
 import { cofreDePalsCheio, COOLDOWN_RESGATE_HORAS } from "@/lib/pal-cofre";
 import { serverBySlug } from "@/lib/servers";
-import { jogouNoServidor } from "@/lib/linking";
+import { jogouNoServidor, meuVinculo } from "@/lib/linking";
 import {
   taxaDaVenda,
   PRECO_MINIMO,
@@ -461,6 +461,12 @@ export async function comprar(id: number): Promise<Resultado> {
   if (alvo.serverSlug) {
     const server = serverBySlug(alvo.serverSlug)!;
     if (!(await jogouNoServidor(discordId, alvo.serverSlug))) {
+      if (!(await meuVinculo(discordId))) {
+        return {
+          ok: false,
+          mensagem: `Esse anúncio veio do ${server.shortName}. Vincule seu personagem em /vincular antes de comprar.`,
+        };
+      }
       return {
         ok: false,
         mensagem: `Esse anúncio veio do ${server.shortName} — só quem também joga lá pode comprar.`,
