@@ -2,7 +2,15 @@ import { sql } from "@/lib/db";
 import { auth } from "@/auth";
 import { canManageEconomy, levelOf, planoOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
-import { logarNoDiscord, listarMembros, buscarMembro, nomesDe } from "@/lib/discord";
+import { after } from "next/server";
+import {
+  logarNoDiscord,
+  listarMembros,
+  buscarMembro,
+  nomesDe,
+  postarNoCanal,
+  CANAL_CHAT_GERAL,
+} from "@/lib/discord";
 import {
   infiniteTag,
   reais,
@@ -414,10 +422,17 @@ export async function aplicarNoBoot(
   }
 
   if (cicloNovo) {
-    await logarNoDiscord(
-      `🔥 Booster ligado no ${serverBySlug(serverSlug)?.shortName ?? serverSlug}: ` +
-        Object.entries(valores).map(([k, n]) => `${k} ${base[k]} → ${n}`).join(", "),
-    );
+    // Depois da resposta: o booster_boot.py espera no máximo 12s, e o
+    // servidor não pode subir sem booster por causa do Discord lento.
+    const nome = serverBySlug(serverSlug)?.shortName ?? serverSlug;
+    const ids = [...new Set(usos.map((u) => Number(u.booster_id)))];
+    after(async () => {
+      await logarNoDiscord(
+        `🔥 Booster ligado no ${nome}: ` +
+          Object.entries(valores).map(([k, n]) => `${k} ${base[k]} → ${n}`).join(", "),
+      );
+      await anunciarNoChatGeral(nome, [...tipos], ids);
+    });
   }
 
   return {
@@ -425,6 +440,29 @@ export async function aplicarNoBoot(
     valores,
     boosters: [...new Set(usos.map((u) => Number(u.booster_id)))],
   };
+}
+
+/**
+ * Aviso no 💬┇chat-geral com @everyone quando um ciclo novo liga (pedido do
+ * dono em 25/09/2026). Só no ciclo novo: restart manual que reaplica o mesmo
+ * booster não repete o aviso.
+ */
+async function anunciarNoChatGeral(servidor: string, tipos: TipoBooster[], boosterIds: number[]) {
+  if (tipos.length === 0) return;
+  const quem = (await sql`
+    select distinct discord_id, origem from boosters where id = any(${boosterIds}::bigint[])
+  `) as { discord_id: string; origem: string }[];
+  const oque = tipos.map((t) => `**${TIPOS[t].rotulo} em dobro**`).join(" + ");
+  const agradecimento = quem.length
+    ? `\nCortesia de ${quem.map((q) => (q.origem === "staff" ? "a staff" : `<@${q.discord_id}>`)).join(", ")} 💛`
+    : "";
+  await postarNoCanal(
+    CANAL_CHAT_GERAL,
+    `@everyone 🔥 **BOOSTER LIGADO no ${servidor}!** ${oque} até o próximo restart. Bora jogar!` +
+      agradecimento +
+      `\nQuer turbinar também? https://palleira.com.br/vip#booster`,
+    true,
+  );
 }
 
 /* ----------------------------------------------------------------- telas */

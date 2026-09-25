@@ -9,6 +9,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 - **Corrigido: booster sumia da página antes da hora.** Na última meia hora do ciclo, a página VIP dizia "Sem booster agora" com o servidor ainda turbinado. Agora ele aparece até o restart que de fato o desliga, e o horário "até ~" mostra esse restart.
 - **Booster termina sempre num restart programado.** Se o servidor for reiniciado no meio do ciclo, o booster volta ligado e o tempo não se perde. Ligado perto de um restart, ele segue até o restart seguinte.
 - **"Quem turbinou".** Embaixo dos servidores, a página VIP mostra quem colocou cada booster, onde, e se está ligado, na fila ou se já rodou.
+- **Aviso no Discord quando o booster liga.** No restart em que um booster entra, o bot avisa todo mundo no 💬┇chat-geral, dizendo o que ficou em dobro, em qual servidor e quem colocou.
 - **Confirmação antes do booster.** Antes de usar o booster do VIP ou de ir para o Pix, o site pergunta se é mesmo naquele servidor.
 
 ## 2026-09-24

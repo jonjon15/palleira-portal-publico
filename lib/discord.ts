@@ -596,6 +596,29 @@ export const espelharAnuncio = (servidor: string, mensagem: string) =>
     `📢 **${servidor}** — ${mensagem}`,
   );
 
+/** 💬┇chat-geral do Discord da Palleira. */
+export const CANAL_CHAT_GERAL = "1451355547264880794";
+
+/**
+ * Mensagem do bot num canal, podendo marcar @everyone. Best-effort, como o
+ * `avisar`. Só pinga se o cargo do bot tiver "Mencionar @everyone" no canal.
+ * Sem essa permissão, o Discord manda o texto e não notifica ninguém.
+ */
+export async function postarNoCanal(canalId: string, content: string, everyone = false): Promise<boolean> {
+  if (!BOT_TOKEN) return false;
+  try {
+    const res = await fetch(`${API}/channels/${canalId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ content, allowed_mentions: { parse: everyone ? ["everyone"] : [] } }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Log de ação administrativa (kick/ban/shutdown/…) no canal privado da staff. */
 export const logarNoDiscord = (linha: string) =>
   avisar(process.env.DISCORD_WEBHOOK_ADMIN_LOG, linha);
