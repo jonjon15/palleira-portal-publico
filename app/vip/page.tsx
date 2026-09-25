@@ -12,6 +12,7 @@ import {
   creditosVip,
   situacaoDosServidores,
   servidoresComBooster,
+  muralDeBoosters,
   TIPOS,
   DURACAO_HORAS,
 } from "@/lib/booster";
@@ -28,13 +29,14 @@ export const dynamic = "force-dynamic";
  * O texto deixa explícito, mais de uma vez, que é doação — pedido do dono.
  */
 export default async function Vip() {
-  const [planos, tag, session, aResgatar, boosterCfg, situacao] = await Promise.all([
+  const [planos, tag, session, aResgatar, boosterCfg, situacao, mural] = await Promise.all([
     planosVip(),
     infiniteTag(),
     auth(),
     meusItensVip(),
     configBooster(),
     situacaoDosServidores(),
+    muralDeBoosters(),
   ]);
   const ligado = Boolean(tag);
   const creditos = session ? await creditosVip(session.user.discordId, session.user.roles) : { disponiveis: 0, total: 0, proximoVolta: null };
@@ -196,6 +198,7 @@ export default async function Vip() {
             </p>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[3fr_2fr]">
+              <div className="space-y-6">
               <div className="grid content-start gap-3 sm:grid-cols-2">
                 {situacao.map((s) => (
                   <div
@@ -244,6 +247,44 @@ export default async function Vip() {
                     )}
                   </div>
                 ))}
+              </div>
+
+              {mural.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold">Quem turbinou</h3>
+                  <ul className="mt-2 divide-y divide-line rounded-[var(--radius-card)] border border-line bg-surface">
+                    {mural.map((b) => (
+                      <li key={b.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-4 py-2.5 text-sm">
+                        <span className="font-semibold">{b.nome}</span>
+                        <span className="text-muted">
+                          {{ doacao: "doou", vip: "usou um booster do VIP:", staff: "deu, pela staff:" }[b.origem] ??
+                            "ativou"}{" "}
+                          <span className="text-text">{b.tipos.map((t) => TIPOS[t].rotulo).join(" + ")}</span> no{" "}
+                          {b.servidor}
+                        </span>
+                        <span className="ml-auto flex items-baseline gap-2 text-xs text-muted">
+                          <span
+                            className={
+                              b.status === "ativo" ? "font-semibold text-gold" : b.status === "na_fila" ? "text-text" : ""
+                            }
+                          >
+                            {{ ativo: "🔥 ligado", na_fila: "na fila", encerrado: "já rodou" }[b.status] ?? b.status}
+                          </span>
+                          <span className="tabular">
+                            {new Date(b.quando).toLocaleString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "America/Sao_Paulo",
+                            })}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               </div>
 
               <div className="rounded-[var(--radius-card)] border border-line bg-surface p-5">

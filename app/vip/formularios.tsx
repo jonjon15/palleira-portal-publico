@@ -104,8 +104,27 @@ export function PedirBooster({
   const alternar = (t: string) =>
     setTipos((a) => (a.includes(t) ? a.filter((x) => x !== t) : [...a, t]));
 
+  // Pedido do dono (25/09/2026): confirmar o servidor antes de gastar o
+  // booster. Um clique no servidor errado não tem volta.
+  const confirmar = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
+    const slug = (form.elements.namedItem("servidor") as HTMLSelectElement | null)?.value;
+    const nome = servidores.find((s) => s.slug === slug)?.nome ?? slug;
+    const comCredito = (e.nativeEvent as SubmitEvent).submitter?.getAttribute("name") === "credito";
+    const oque = tipos.map((t) => ROTULO_TIPO[t as keyof typeof ROTULO_TIPO] ?? t).join(" + ");
+    if (
+      !confirm(
+        `Colocar o booster de ${oque} no ${nome}?\n\n` +
+          (comCredito ? "Isso usa 1 booster do seu VIP. " : `Você vai doar ${preco} via Pix. `) +
+          "Depois de confirmado, não dá para trocar de servidor.",
+      )
+    ) {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <form action={acao} className="space-y-4">
+    <form action={acao} onSubmit={confirmar} className="space-y-4">
       <input type="hidden" name="aceite" value={aceite ? "1" : ""} />
       <div>
         <label htmlFor="booster-servidor" className="block text-sm text-muted">Servidor</label>

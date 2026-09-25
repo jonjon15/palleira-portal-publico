@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/auth";
 import { canManageEconomy, levelOf, planoOf, MENSAGEM_SO_MEMBRO } from "@/lib/roles";
 import { activeServers, serverBySlug } from "@/lib/servers";
-import { logarNoDiscord, listarMembros, buscarMembro } from "@/lib/discord";
+import { logarNoDiscord, listarMembros, buscarMembro, nomesDe } from "@/lib/discord";
 import {
   infiniteTag,
   reais,
@@ -53,10 +53,10 @@ const ehTipo = (t: string): t is TipoBooster => t in TIPOS;
 /** Um ciclo de RR. Só para a tela estimar até quando vale. */
 export const DURACAO_HORAS = 4;
 /**
- * Um boot dentro desta janela depois da ativação é o mesmo ciclo (queda,
- * restart manual): o booster é reaplicado em vez de ser dado por gasto.
+ * Ligado num restart manual perto do RR, o booster não acaba nesse RR: passa
+ * para o seguinte. Com 2h, a duração fica entre 2h e 6h, e a média dá 4h.
  */
-const MESMO_CICLO_HORAS = 3.5;
+const MINIMO_HORAS = 2;
 
 export interface Resultado {
   ok: boolean;
@@ -292,20 +292,20 @@ export async function confirmarPagamentoBooster(
 
 /* ---------------------------------------------------------------- aplicar */
 
-const JANELA = `${MESMO_CICLO_HORAS} hours`;
-
 /**
- * Até quando um booster ligado em `ativadoEm` vale de verdade. Todo boot
- * dentro da janela de 3,5h reaplica o mesmo booster, então ele só sai no
- * primeiro RR do painel depois dela. O RR é às 0, 4, 8, 12, 16 e 20h de
- * Brasília (UTC-3, sem horário de verão) — em UTC, 3, 7, 11, 15, 19 e 23h.
+ * Quando termina o ciclo de um booster ligado em `ativadoEm`: no primeiro RR
+ * do painel que venha pelo menos 2h depois. O RR é às 0, 4, 8, 12, 16 e 20h
+ * de Brasília (UTC-3, sem horário de verão), ou seja, 3, 7, 11, 15, 19 e 23h
+ * em UTC.
  *
- * A tela usava só a janela de 3,5h e mostrava "Sem booster agora" na última
- * meia hora do ciclo (ou mais, quando ligou num restart manual), com o
- * servidor ainda em 2x.
+ * O fim é sempre um RR agendado, e não uma janela de horas. Assim, restart
+ * manual do dono no meio do ciclo reaplica o mesmo booster sem gastar fila,
+ * e a tela sabe exatamente até quando ele vale. Antes era uma janela de 3,5h:
+ * a tela apagava o booster meia hora antes do RR, e o booster ligado num
+ * restart manual logo depois de um RR durava até 7h30.
  */
 function fimDoCiclo(ativadoEm: string | Date): number {
-  const t = new Date(ativadoEm).getTime() + MESMO_CICLO_HORAS * 3600_000;
+  const t = new Date(ativadoEm).getTime() + MINIMO_HORAS * 3600_000;
   const d = new Date(t);
   d.setUTCMinutes(0, 0, 0);
   // Horas de RR em UTC: (h + 1) % 4 === 0 → 3, 7, 11, 15, 19, 23.
@@ -320,14 +320,16 @@ interface UsoDoCiclo {
   ativado_em: string;
 }
 
+/** 6h é o ciclo mais longo possível (ver `fimDoCiclo`); 9h dá folga. */
 async function usosDoCiclo(serverSlug: string): Promise<UsoDoCiclo[]> {
-  return (await sql`
+  const rows = (await sql`
     select u.booster_id, u.tipo, b.multiplicador, u.ativado_em
       from booster_usos u
       join boosters b on b.id = u.booster_id
      where u.server_slug = ${serverSlug}
-       and u.ativado_em > now() - ${JANELA}::interval
+       and u.ativado_em > now() - interval '9 hours'
   `) as UsoDoCiclo[];
+  return rows.filter((u) => Date.now() < fimDoCiclo(u.ativado_em));
 }
 
 /**
@@ -336,8 +338,9 @@ async function usosDoCiclo(serverSlug: string): Promise<UsoDoCiclo[]> {
  * `base` são as taxas que ele leu do `.ini` sem booster. Volta o que gravar
  * por cima (vazio = taxa normal).
  *
- * Um uso ativado há menos de 3,5h é o mesmo ciclo (queda, restart manual):
- * é reaplicado sem gastar fila. Passou disso, é ciclo novo, e cada tipo
+ * Até o fim do ciclo (`fimDoCiclo`), todo boot é o mesmo ciclo (queda,
+ * restart manual): o booster é reaplicado sem gastar fila. Depois disso é
+ * ciclo novo, e cada tipo
  * pega o próximo pedido da fila dele — no máximo um por tipo, por isso a
  * taxa nunca passa do multiplicador.
  */
@@ -374,8 +377,7 @@ export async function aplicarNoBoot(
   await sql`
     update boosters b
        set status = case
-             when exists (select 1 from booster_usos u
-                           where u.booster_id = b.id and u.ativado_em > now() - ${JANELA}::interval)
+             when b.id = any(${usos.map((u) => Number(u.booster_id))}::bigint[])
                then 'ativo'
              when (select count(*) from booster_usos u where u.booster_id = b.id) >= cardinality(b.tipos)
                then 'encerrado'
@@ -474,6 +476,43 @@ export async function situacaoDosServidores(): Promise<SituacaoDoServidor[]> {
       fila: esperando,
     };
   });
+}
+
+export interface BoosterDoMural {
+  id: number;
+  nome: string;
+  servidor: string;
+  tipos: TipoBooster[];
+  origem: string;
+  status: string;
+  quando: string;
+}
+
+/**
+ * Quem turbinou os servidores — o mural embaixo dos cards (pedido do dono em
+ * 25/09/2026). Só o que já foi pago ou dado: Pix aberto e não pago fica fora.
+ */
+export async function muralDeBoosters(limite = 10): Promise<BoosterDoMural[]> {
+  const rows = (await sql`
+    select id, discord_id, server_slug, tipos, origem, status, coalesce(pago_em, created_at) as quando
+      from boosters
+     where status in ('na_fila', 'ativo', 'encerrado')
+     order by coalesce(pago_em, created_at) desc, id desc
+     limit ${limite}
+  `) as {
+    id: number; discord_id: string; server_slug: string; tipos: TipoBooster[];
+    origem: string; status: string; quando: string;
+  }[];
+  const nomes = await nomesDe(rows.map((r) => r.discord_id));
+  return rows.map((r) => ({
+    id: Number(r.id),
+    nome: nomes.get(r.discord_id) ?? "Alguém da comunidade",
+    servidor: serverBySlug(r.server_slug)?.shortName ?? r.server_slug,
+    tipos: r.tipos.filter(ehTipo),
+    origem: r.origem,
+    status: r.status,
+    quando: new Date(r.quando).toISOString(),
+  }));
 }
 
 export interface StatusDoBooster {
