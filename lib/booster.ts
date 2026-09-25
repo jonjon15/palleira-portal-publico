@@ -460,7 +460,8 @@ async function anunciarNoChatGeral(servidor: string, tipos: TipoBooster[], boost
     CANAL_CHAT_GERAL,
     `@everyone 🔥 **BOOSTER LIGADO no ${servidor}!** ${oque} até o próximo restart. Bora jogar!` +
       agradecimento +
-      `\nQuer turbinar também? https://palleira.com.br/vip#booster`,
+      // Entre < >: sem a prévia do link, que mostrava a tela de login.
+      `\nQuer turbinar também? <https://palleira.com.br/vip#booster>`,
     true,
   );
 }
