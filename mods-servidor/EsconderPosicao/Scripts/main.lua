@@ -28,7 +28,7 @@ local MOD = "EsconderPosicao"
 local Config = {
     -- "esconder": sobrescreve a posição. "medir": só conta quantas vezes o
     -- jogo muda a posição, sem escrever nada (diagnóstico sem efeito).
-    Modo = "esconder",
+    Modo = "medir",
     -- De quanto em quanto tempo sobrescrever. Menor = menos vazamento,
     -- mais CPU. O custo por volta é baixo (só os PlayerStates em cache).
     IntervaloMs = 20,
