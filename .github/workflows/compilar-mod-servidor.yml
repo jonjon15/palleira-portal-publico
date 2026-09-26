@@ -1,0 +1,95 @@
+# Compila um mod C++ de servidor (UE4SS) sem instalar nada no PC do dono.
+#
+# O mod é compilado DENTRO do RE-UE4SS, no mesmo commit do UE4SS que roda no
+# Dominantes (o UE4SS.log diz "Git SHA #2281fa31"). Commit diferente = DLL
+# que não carrega ou derruba o servidor.
+#
+# ⚠️ Precisa do secret UEPSEUDO_PAT: o RE-UE4SS depende do submódulo
+# Re-UE4SS/UEPseudo, que é privado e só abre para conta do GitHub ligada a
+# uma conta da Epic Games. O token é de quem fez essa ligação.
+#
+# A DLL sai como artefato do run; quem instala no servidor é o SFTP, à mão.
+name: compilar-mod-servidor
+
+on:
+  workflow_dispatch:
+    inputs:
+      mod:
+        description: "Pasta em mods-servidor/"
+        required: true
+        default: "FiltroPosicaoGuilda"
+      ue4ss_sha:
+        description: "Commit do RE-UE4SS (o mesmo do servidor)"
+        required: true
+        default: "2281fa311e417b1dfddedbcd49972d764fddb244"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  compilar:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Código do mod
+        uses: actions/checkout@v4
+        with:
+          path: palleira
+
+      - name: RE-UE4SS no commit do servidor
+        uses: actions/checkout@v4
+        with:
+          repository: UE4SS-RE/RE-UE4SS
+          ref: ${{ inputs.ue4ss_sha }}
+          path: ue4ss
+          token: ${{ secrets.UEPSEUDO_PAT }}
+          submodules: recursive
+
+      - name: Colocar o mod em cppmods/
+        run: |
+          $mod = "${{ inputs.mod }}"
+          Copy-Item -Recurse "palleira/mods-servidor/$mod" "ue4ss/cppmods/$mod"
+          Add-Content "ue4ss/cppmods/CMakeLists.txt" "`nadd_subdirectory(`"$mod`")"
+          Get-Content "ue4ss/cppmods/CMakeLists.txt"
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: "latest"
+
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Configurar
+        working-directory: ue4ss
+        run: |
+          cmake -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Game__Shipping__Win64 `
+            -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+
+      - name: Compilar só o mod (e o que ele precisa)
+        working-directory: ue4ss
+        run: cmake --build build --target "${{ inputs.mod }}"
+
+      - name: Juntar a DLL
+        run: |
+          $mod = "${{ inputs.mod }}"
+          $dll = Get-ChildItem -Recurse "ue4ss/build" -Filter "$mod.dll" | Select-Object -First 1
+          if (-not $dll) { throw "DLL $mod.dll não foi gerada" }
+          New-Item -ItemType Directory -Force "saida/$mod/dlls" | Out-Null
+          Copy-Item $dll.FullName "saida/$mod/dlls/main.dll"
+          $pdb = [IO.Path]::ChangeExtension($dll.FullName, ".pdb")
+          if (Test-Path $pdb) { Copy-Item $pdb "saida/$mod/dlls/main.pdb" }
+          Get-ChildItem -Recurse saida | Format-Table FullName, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.mod }}
+          path: saida/
+          retention-days: 7
