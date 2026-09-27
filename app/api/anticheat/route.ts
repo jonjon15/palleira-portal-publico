@@ -197,6 +197,15 @@ const LIMIARES: Record<Tipo, number> = { dano: 16, stamina: 16 };
  * equipada; assim que ele a removeu, as detecções pararam por completo. Vara
  * de pesca não é arma de combate — não há cenário de PvP em que valha contar.
  *
+ * ⚠️ `Lantern` (a lanterna "Brilho Noturno", `YakushimaLantern001`) pelo
+ * mesmo motivo, em 27/09/2026. O `Fabao` levou 2 kicks fazendo boss com
+ * `BasePower=240` — e o **mesmo 240** aparece com a vara de pesca na mão
+ * (`AttackValue=25`) e com a lanterna (`AttackValue=70`). A lanterna de
+ * verdade dá 1 de dano (testado pelo dono): o 240 vem de outra fonte, e o
+ * servidor só culpa o item que está no slot. Ele estava em live na Twitch.
+ * Chegou a ser revertido achando que era cheat, e ele foi banido à toa —
+ * não tirar sem antes descobrir de onde vem o 240.
+ *
  * 🔴 Dano só conta contra Boss/Ginásio ou outro jogador, nunca contra Pal
  * selvagem comum — achado em 18/09/2026: o `Kaninos` disparou ~164 avisos de
  * dano em 90 segundos (quase 2/s) só de **pegar ovos na incubadora**, contra
@@ -207,7 +216,7 @@ const LIMIARES: Record<Tipo, number> = { dano: 16, stamina: 16 };
  * positivo — que também é candidato a ter contribuído para o servidor cair
  * pouco depois de cada boot, por volume de webhook.
  */
-const ARMA_IGNORADA = /FishingRod/i;
+const ARMA_IGNORADA = /FishingRod|Lantern/i;
 const ALVO_VALIDO = /_Gym_|BOSS_|\(ToPlayer\)/i;
 
 function contaParaOGatilho(linha: string, tipo: Tipo): boolean {

@@ -7,6 +7,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 ## 2026-09-27
 
 - **Anticheat agora avisa 5 vezes antes de cada kick, e bane depois do 3º kick.** Cada aviso chega no chat com o número dele (1 de 5, 2 de 5…) e diz o que vem depois. Quem continua depois do 5º aviso é kickado. Depois de 3 kicks, a próxima sequência de 5 avisos termina em ban. Parou de usar, parou de ser avisado.
+- **Corrigido: anticheat expulsava quem lutava segurando a lanterna Brilho Noturno.** O servidor culpava a lanterna por um dano que vinha de outra coisa, igual já acontecia com a vara de pesca. Agora as duas são ignoradas.
 
 ## 2026-09-25
 
