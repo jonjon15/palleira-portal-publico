@@ -153,6 +153,23 @@ export async function kickPlayer(
   return res.toLowerCase().includes("kicked");
 }
 
+/**
+ * Bane pelo RCON, com o mesmo anúncio do `kickPlayer`. Usado pelo anticheat
+ * depois do 3º kick. O ban entra no `banlist.txt` do servidor e se desfaz
+ * com `UnBanPlayer <userId>` (console do painel ou /admin/moderacao).
+ */
+export async function banirPorRcon(
+  server: PalleiraServer,
+  userId: string,
+  linhasDoAviso: string[],
+): Promise<boolean> {
+  for (const linha of linhasDoAviso) {
+    await rcon(server, `Broadcast ${linha.replace(/\s+/g, "_")}`).catch(() => "");
+  }
+  const res = await rcon(server, `BanPlayer ${userId}`);
+  return res.toLowerCase().includes("ban");
+}
+
 /* ------------------------------------------------------- itens (o cofre) */
 
 export interface ResultadoComando {

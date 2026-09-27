@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-09-27
+
+- **Anticheat agora avisa 5 vezes antes de cada kick, e bane depois do 3º kick.** Cada aviso chega no chat com o número dele (1 de 5, 2 de 5…) e diz o que vem depois. Quem continua depois do 5º aviso é kickado. Depois de 3 kicks, a próxima sequência de 5 avisos termina em ban. Parou de usar, parou de ser avisado.
+
 ## 2026-09-25
 
 - **Corrigido: booster sumia da página antes da hora.** Na última meia hora do ciclo, a página VIP dizia "Sem booster agora" com o servidor ainda turbinado. Agora ele aparece até o restart que de fato o desliga, e o horário "até ~" mostra esse restart.

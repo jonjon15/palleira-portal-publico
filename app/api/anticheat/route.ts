@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { serverBySlug, SERVERS } from "@/lib/servers";
-import { kickPlayer, rcon } from "@/lib/palworld/rcon";
+import { banirPorRcon, kickPlayer, rcon } from "@/lib/palworld/rcon";
+import { logarNoDiscord } from "@/lib/discord";
 import { sql } from "@/lib/db";
 
 /**
@@ -30,25 +31,43 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const JANELA_MS = 5 * 60_000;
-/** Não repetir o kick pelos mesmos avisos enquanto a pessoa não volta. */
-const SILENCIO_MS = 60 * 60_000;
+/**
+ * Depois de um kick, ignora o resto da rajada que ainda está chegando.
+ *
+ * Era 1 hora, quando o kick era a punição final. Com a escada de avisos
+ * (ver `AVISOS_POR_KICK`), quem volta e continua precisa começar a levar
+ * aviso logo — o Fabao voltou em minutos e seguiu (27/09/2026). Um minuto
+ * cobre os POSTs atrasados da mesma rajada sem deixar brecha.
+ */
+const SILENCIO_MS = 60_000;
 
 /**
- * Quanto tempo a pessoa tem para desligar o cheat depois do aviso.
+ * A escada de punição, pedida pelo dono em 27/09/2026:
  *
- * O dono pediu esta etapa depois de conversar com um jogador e ele desligar
- * o que estava usando (12/09/2026): quem para na hora não é expulso. Passado
- * o prazo, uma nova rajada cai direto no kick — o aviso vale uma vez.
+ *   5 avisos → kick 1 → 5 avisos → kick 2 → 5 avisos → kick 3 → 5 avisos → ban
  *
- * 🔴 Baixado de 3 minutos para 10 segundos em 17/09/2026, a pedido do dono:
- * `GOMES` e `King` (Dominantes) já tinham sido avisados e kickados antes
- * (14 e 15/09) e voltaram a fazer o mesmo — "estão acabando com o servidor".
- * 3 minutos de prazo dava tempo demais pra continuar jogando sujo depois de
- * já saber que seria pego. 10 segundos ainda dá para quem reage na hora (ex:
- * fechar o Cheat Engine) evitar o kick, mas não sobra tempo para mais uma
- * rajada de dano.
+ * Os 5 avisos antes de cada kick são para a pessoa ficar ciente — cada
+ * recado diz o número do aviso e o que vem depois. Os kicks somam dano e
+ * stamina, e só contam os de 27/09/2026 em diante (migração 033).
  */
-const PRAZO_AVISO_MS = 10_000;
+const AVISOS_POR_KICK = 5;
+const KICKS_ANTES_DO_BAN = 3;
+
+/**
+ * Intervalo mínimo entre dois avisos.
+ *
+ * Um cheat de dano manda dezenas de detecções por segundo — o Fabao chegou
+ * a 131. Sem este intervalo, os 5 avisos sairiam todos no mesmo segundo e
+ * ninguém leria nenhum. Com 10 segundos, os 5 levam quase um minuto: tempo
+ * de ler e de fechar o cheat. O que chega dentro do intervalo é descartado.
+ */
+const INTERVALO_AVISO_MS = 10_000;
+
+/**
+ * Avisos esquecidos: quem ficou uma hora sem nova rajada recomeça do 1º.
+ * Evita que picos de lag espalhados por dias somem até um kick.
+ */
+const AVISO_EXPIRA_MS = 60 * 60_000;
 
 /**
  * A contagem mora no banco, não na memória do processo.
@@ -264,39 +283,57 @@ export async function POST(req: Request) {
     return NextResponse.json({ tipo: det.tipo, contando: naJanela, limiar });
   }
 
-  // Estado do jogador: quando levou o aviso e quando levou o último kick.
-  // Uma consulta só, para não somar duas idas ao banco no caminho quente.
+  // Estado do jogador: quando levou o último kick neste tipo e quantos kicks
+  // do anticheat já levou no total (dano + stamina). Uma consulta só, para
+  // não somar duas idas ao banco no caminho quente.
   const estado = (await sql`
     select
-      (select extract(epoch from now() - avisado_em) * 1000
-         from anticheat_warnings
-        where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
-      )::float8 as desde_aviso,
       (select extract(epoch from now() - kickado_em) * 1000
          from anticheat_kicks
         where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
-      )::float8 as desde_kick
-  `) as { desde_aviso: number | null; desde_kick: number | null }[];
+      )::float8 as desde_kick,
+      (select coalesce(sum(kicks), 0)
+         from anticheat_kicks
+        where server_slug = ${slug} and user_id = ${det.userId}
+      )::int as kicks
+  `) as { desde_kick: number | null; kicks: number }[];
 
-  const desdeAviso = estado[0]?.desde_aviso ?? null;
   const desdeKick = estado[0]?.desde_kick ?? null;
+  const kicks = estado[0]?.kicks ?? 0;
+  const vaiSerBan = kicks >= KICKS_ANTES_DO_BAN;
 
   if (desdeKick !== null && desdeKick < SILENCIO_MS) {
     return NextResponse.json({ ja_kickado: true });
   }
 
-  // Primeira rajada: avisa e dá um prazo para desligar o cheat. Quem para
-  // não é expulso — foi o que aconteceu na conversa do dono com um jogador
-  // em 12/09/2026. Só quem continua depois do prazo cai no kick.
-  if (desdeAviso === null || desdeAviso > PRAZO_AVISO_MS) {
-    await sql`
-      insert into anticheat_warnings (server_slug, user_id, tipo, avisado_em)
-      values (${slug}, ${det.userId}, ${det.tipo}, now())
-      on conflict (server_slug, user_id, tipo)
-      do update set avisado_em = now()
-    `;
-    await limparJanela(slug, det);
+  // Conta o aviso numa escrita só, e só se o anterior já passou do
+  // intervalo. O `where` do `on conflict` trava a linha: duas instâncias com
+  // a mesma rajada não contam o mesmo aviso duas vezes — a segunda não
+  // recebe linha de volta e cai no descarte logo abaixo.
+  const contado = (await sql`
+    insert into anticheat_warnings (server_slug, user_id, tipo, avisos, avisado_em)
+    values (${slug}, ${det.userId}, ${det.tipo}, 1, now())
+    on conflict (server_slug, user_id, tipo) do update
+      set avisos = case
+            when anticheat_warnings.avisado_em
+                 < now() - ${`${AVISO_EXPIRA_MS} milliseconds`}::interval
+            then 1
+            else anticheat_warnings.avisos + 1
+          end,
+          avisado_em = now()
+      where anticheat_warnings.avisado_em
+            < now() - ${`${INTERVALO_AVISO_MS} milliseconds`}::interval
+    returning avisos
+  `) as { avisos: number }[];
 
+  await limparJanela(slug, det);
+
+  if (contado.length === 0) {
+    return NextResponse.json({ aguardando_intervalo: true });
+  }
+  const aviso = contado[0].avisos;
+
+  if (aviso <= AVISOS_POR_KICK) {
     // `rcon` direto, e não `sendToPlayer`: aquele converte o UID para o
     // formato 8-8-8-8 do Palworld, e aqui o id vem da plataforma
     // (`steam_…`, `gdk_…`, `ps5_…`). O `send msg` aceita os dois — testado
@@ -305,47 +342,69 @@ export async function POST(req: Request) {
     // a pessoa "usar" nada — por isso o aviso manda FECHAR o programa, não
     // só parar de usar. Relato do dono em 12/09/2026: o jogador fechou tudo,
     // reiniciou, e as detecções pararam na hora.
-    const recado =
+    const oQueFazer =
       det.tipo === "stamina"
-        ? "ANTICHEAT:_feche_o_Cheat_Engine_e_reinicie_o_jogo_ou_sera_expulso"
-        : "ANTICHEAT:_desligue_o_cheat_de_dano_ou_sera_expulso";
+        ? "feche_o_Cheat_Engine_e_reinicie_o_jogo"
+        : "desligue_o_cheat_de_dano";
+    const depois = vaiSerBan
+      ? "BAN"
+      : `KICK_${kicks + 1}_de_${KICKS_ANTES_DO_BAN}_(depois_do_${KICKS_ANTES_DO_BAN}o_kick_vem_BAN)`;
+    const recado = `ANTICHEAT_aviso_${aviso}_de_${AVISOS_POR_KICK}:_${oQueFazer}._Depois_do_${AVISOS_POR_KICK}o_aviso:_${depois}`;
     await rcon(server, `send msg ${det.userId} ${recado}`).catch(() => "");
 
     return NextResponse.json({
       avisado: det.nome,
       tipo: det.tipo,
-      avisos: naJanela,
+      aviso,
+      kicks,
     });
   }
 
-  // Avisado e continuou: registra o kick ANTES de executar, para que uma
+  // Passou dos avisos: registra a punição ANTES de executar, para que uma
   // segunda detecção chegando em paralelo (outra instância, mesma rajada)
-  // já encontre o silêncio e não kicke duas vezes.
+  // já encontre o silêncio e não puna duas vezes. Os avisos zeram — depois
+  // de voltar, a escada recomeça do 1º.
   await sql`
-    insert into anticheat_kicks (server_slug, user_id, tipo, nome, kickado_em)
-    values (${slug}, ${det.userId}, ${det.tipo}, ${det.nome}, now())
+    insert into anticheat_kicks (server_slug, user_id, tipo, nome, kickado_em, kicks, banido_em)
+    values (${slug}, ${det.userId}, ${det.tipo}, ${det.nome}, now(),
+            ${vaiSerBan ? 0 : 1}, ${vaiSerBan ? new Date() : null})
     on conflict (server_slug, user_id, tipo)
-    do update set kickado_em = now(), nome = excluded.nome
+    do update set kickado_em = now(),
+                  nome = excluded.nome,
+                  kicks = anticheat_kicks.kicks + ${vaiSerBan ? 0 : 1},
+                  banido_em = coalesce(excluded.banido_em, anticheat_kicks.banido_em)
   `;
   await sql`
     delete from anticheat_warnings
      where server_slug = ${slug} and user_id = ${det.userId} and tipo = ${det.tipo}
   `;
-  await limparJanela(slug, det);
+
+  const motivo =
+    det.tipo === "stamina" ? "MOTIVO: ANTICHEAT DE STAMINA" : "MOTIVO: ANTICHEAT DE DANO";
+
+  if (vaiSerBan) {
+    const ok = await banirPorRcon(server, det.userId, [
+      `${det.nome} FOI BANIDO`,
+      motivo,
+      `${KICKS_ANTES_DO_BAN} KICKS E CONTINUOU`,
+    ]).catch(() => false);
+    await logarNoDiscord(
+      `🔨 Anticheat baniu **${det.nome}** (\`${det.userId}\`) em ${server.shortName} — ${det.tipo}, depois de ${KICKS_ANTES_DO_BAN} kicks. Desfazer: \`UnBanPlayer ${det.userId}\` no console do painel.`,
+    ).catch(() => false);
+    return NextResponse.json({ banido: ok, jogador: det.nome, tipo: det.tipo });
+  }
 
   const ok = await kickPlayer(server, det.userId, [
-    `${det.nome} FOI KICKADO`,
-    det.tipo === "stamina"
-      ? "MOTIVO: ANTICHEAT DE STAMINA"
-      : "MOTIVO: ANTICHEAT DE DANO",
-    "AVISADO E CONTINUOU",
+    `${det.nome} FOI KICKADO (${kicks + 1}/${KICKS_ANTES_DO_BAN})`,
+    motivo,
+    `DEPOIS DO ${KICKS_ANTES_DO_BAN}o KICK VEM BAN`,
   ]).catch(() => false);
 
   return NextResponse.json({
     kickado: ok,
     jogador: det.nome,
     tipo: det.tipo,
-    avisos: naJanela,
+    kick: kicks + 1,
   });
 }
 
