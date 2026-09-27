@@ -4,10 +4,6 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
-## 2026-09-27
-
-- **Corrigido: anticheat expulsava quem lutava segurando a lanterna Brilho Noturno.** O servidor confundia a lanterna com uma arma e achava que o dano estava alto demais. Agora ela é ignorada, como a vara de pesca.
-
 ## 2026-09-25
 
 - **Corrigido: booster sumia da página antes da hora.** Na última meia hora do ciclo, a página VIP dizia "Sem booster agora" com o servidor ainda turbinado. Agora ele aparece até o restart que de fato o desliga, e o horário "até ~" mostra esse restart.
