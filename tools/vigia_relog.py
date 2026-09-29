@@ -635,6 +635,9 @@ def bater_ponto(slug: str, detalhe: dict | None = None) -> None:
         pass  # ver o docstring: reportar é secundário, punir é o trabalho
 
 
+PONTO_A_CADA_S = 15 * 60
+
+
 # -------------------------------------------------------------------- rodada
 
 def uma_rodada(sftp, cfg: dict, slug: str, args, estado: dict,
@@ -843,6 +846,11 @@ def main() -> int:
           f"escada {'/'.join(str(m) for m in ESCADA_MINUTOS)} min)", flush=True)
 
     transporte = sftp = None
+    # Ponto no site no máximo a cada 15 min, não a cada rodada: o POST acorda
+    # o banco (Neon), e de minuto em minuto ele nunca dormia — foi o que
+    # estourou a cota grátis de computação em 29/09/2026 e derrubou o site
+    # inteiro. A vigia em si continua a cada `--intervalo`.
+    ultimo_ponto = 0.0
     try:
         while time.time() < fim:
             try:
@@ -852,7 +860,9 @@ def main() -> int:
                 # Só depois de uma checagem que deu certo: um ponto batido
                 # mesmo com a rodada falhando diria "estou bem" justamente
                 # quando não está.
-                bater_ponto(args.servidor, {"intervalo": args.intervalo})
+                if time.time() - ultimo_ponto >= PONTO_A_CADA_S:
+                    bater_ponto(args.servidor, {"intervalo": args.intervalo})
+                    ultimo_ponto = time.time()
             except (OSError, paramiko.SSHException) as e:
                 print(f"  [ERRO] falha na checagem ({e}); reconectando", flush=True)
                 if transporte:

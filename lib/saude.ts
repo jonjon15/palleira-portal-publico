@@ -30,8 +30,9 @@ export interface Sinal {
 const LIMITES = {
   // O cron é de 2 em 2h; 3h já significa uma execução perdida.
   import: { atencao: 3 * 3600, ruim: 6 * 3600 },
-  // O vigia bate ponto a cada rodada (padrão 60s).
-  vigia: { atencao: 10 * 60, ruim: 30 * 60 },
+  // O vigia bate ponto a cada 15 min (antes era a cada rodada de 60s — isso
+  // não deixava o banco dormir e estourou a cota do Neon em 29/09/2026).
+  vigia: { atencao: 35 * 60, ruim: 60 * 60 },
 } as const;
 
 function idadeEmSegundos(quando: string | Date): number {
