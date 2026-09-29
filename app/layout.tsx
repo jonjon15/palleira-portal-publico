@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AvisoManutencao } from "@/components/aviso-manutencao";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -34,6 +35,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
+        <AvisoManutencao />
         <SiteHeader />
         <ServerTicker />
         <main className="flex-1">{children}</main>

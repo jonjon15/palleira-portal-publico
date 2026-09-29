@@ -6,7 +6,36 @@ import { neon } from "@neondatabase/serverless";
  * `DATABASE_URL` é injetada pela integração Neon do próprio Vercel — não
  * precisa cadastrar nada à mão.
  */
-export const sql = neon(process.env.DATABASE_URL ?? "");
+const conexao = neon(process.env.DATABASE_URL ?? "");
+
+/**
+ * Banco fora por cota: o Neon grátis estourou as horas de computação em
+ * 29/09/2026 e passou a responder HTTP 402 a toda consulta — o site inteiro
+ * caiu na tela de erro. Com isto, **leitura** volta vazia (a página abre, só
+ * sem os dados) e **escrita** falha com uma mensagem clara. Nunca finge que
+ * uma escrita deu certo: dinheiro e Pal não podem sumir num "sucesso" falso.
+ */
+export function bancoForaDoAr(e: unknown): boolean {
+  return e instanceof Error && /HTTP status 402|exceeded the quota/i.test(e.message);
+}
+
+function ehLeitura(partes: TemplateStringsArray): boolean {
+  const texto = partes.join(" ").trimStart().toLowerCase();
+  if (texto.startsWith("select")) return true;
+  return texto.startsWith("with") && !/\b(insert|update|delete)\b/.test(texto);
+}
+
+export const sql = (async (partes: TemplateStringsArray, ...valores: unknown[]) => {
+  try {
+    return await conexao(partes, ...valores);
+  } catch (e) {
+    if (!bancoForaDoAr(e)) throw e;
+    if (ehLeitura(partes)) return [];
+    throw new Error(
+      "O banco do site está em manutenção. Tente de novo depois de 30/09 às 21h.",
+    );
+  }
+}) as unknown as typeof conexao;
 
 export interface GuildRow {
   server_slug: string;
