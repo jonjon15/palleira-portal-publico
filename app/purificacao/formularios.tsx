@@ -23,6 +23,7 @@ import {
   AVISO_DESPERTAR,
   mesmaEspecie,
   DIAS_REFERENCIA_MAXIMO,
+  PASSIVAS_MAXIMO,
 } from "@/lib/purificacao-regras";
 import type { PalDisponivel, PalNoCofre } from "@/lib/pal-cofre";
 import { nomeDaPassiva, rankDaPassiva, corDoRank, urlDoIconeRank, type PassivaListada } from "@/lib/passivas";
@@ -482,7 +483,7 @@ export function EscolherPassivasDoRitual({
     setEscolhidas((atual) => {
       const novo = new Set(atual);
       if (novo.has(chave)) novo.delete(chave);
-      else novo.add(chave);
+      else if (novo.size < PASSIVAS_MAXIMO) novo.add(chave);
       return novo;
     });
   };

@@ -17,6 +17,7 @@ import {
   MINUTOS_REFERENCIA_MINIMO,
   MINUTOS_REFERENCIA_MAXIMO,
   DIAS_REFERENCIA_MAXIMO,
+  PASSIVAS_MAXIMO,
   ivAtaque,
   ivVida,
   ivDefesa,
@@ -299,6 +300,9 @@ export async function atualizarReferenciaDeRegra(
   if (!("discordId" in staff)) return staff;
   if (passivas.length === 0) {
     return { ok: false, mensagem: "Escolha pelo menos uma passiva aceita." };
+  }
+  if (new Set(passivas).size > PASSIVAS_MAXIMO) {
+    return { ok: false, mensagem: `Escolha no máximo ${PASSIVAS_MAXIMO} passivas — um Pal não tem mais que isso.` };
   }
   if (
     !Number.isFinite(minutosValidade) ||
@@ -774,6 +778,9 @@ export async function definirRegraDoRitual(
   if (!("discordId" in staff)) return staff;
   if (passivas.length === 0) {
     return { ok: false, mensagem: "Escolha pelo menos uma passiva aceita." };
+  }
+  if (new Set(passivas).size > PASSIVAS_MAXIMO) {
+    return { ok: false, mensagem: `Escolha no máximo ${PASSIVAS_MAXIMO} passivas — um Pal não tem mais que isso.` };
   }
 
   const atualizado = (await sql`

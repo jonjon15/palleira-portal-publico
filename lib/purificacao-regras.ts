@@ -18,6 +18,12 @@ export const IV_MINIMO_DOADOR = 100;
  */
 export const PARTNER_SKILL_MINIMO_DOADOR = 5;
 export const DOADORES_POR_RODADA = 4;
+/**
+ * Um Pal tem no máximo 4 passivas. Desde que o doador precisa ter TODAS as
+ * passivas do ritual (01/10/2026), marcar uma 5ª deixaria a doação
+ * impossível — por isso o teto.
+ */
+export const PASSIVAS_MAXIMO = 4;
 export const IV_TETO_RITUAL = 150;
 export const IV_INICIAL_RITUAL = 100;
 /**
