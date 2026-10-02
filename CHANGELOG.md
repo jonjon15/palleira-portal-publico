@@ -6,7 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-10-02
 
-- **Câmara de Purificação: o Pal doado precisa ter todas as passivas escolhidas pela staff.** Antes bastava uma. O texto da Câmara também ficou mais claro: "Full Condensado 4 estrelas" no lugar de "rank 5", e as passivas não aparecem mais como "só sugestão".
+- **Câmara de Purificação: o Pal doado precisa ter todas as passivas escolhidas pela staff.** Antes bastava uma. As passivas agora são sempre escolhidas pela staff (o site não sorteia mais): se a staff ainda não escolheu, o Pal entra na cápsula e espera a staff definir antes de começar as doações. O texto da Câmara também ficou mais claro: "Full Condensado 4 estrelas" no lugar de "rank 5", e as passivas não aparecem mais como "só sugestão".
 - **Booster: um tipo por booster.** Cada booster do VIP (ou doação) liga XP, Drop de Pals ou Coleta — um só. Antes dava para marcar os três e gastar um booster só. Nenhum tipo vem marcado de início, para ninguém gastar no XP sem querer.
 - **Menu no celular.** No celular o cabeçalho não mostrava as páginas do site, e não tinha como chegar ao VIP sem digitar o endereço. Agora tem um botão de menu no canto direito.
 

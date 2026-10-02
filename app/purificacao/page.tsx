@@ -145,12 +145,16 @@ export default async function Purificacao() {
             >
               <p className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px]" style={{ color: "#5c6e66" }}>
                 <span>Passivas para essa rodada</span>
-                <span className="whitespace-nowrap">
-                  · expira em <ContagemRegressiva expiraEm={passivasReferencia.expiraEm} />
-                </span>
+                {passivasReferencia ? (
+                  <span className="whitespace-nowrap">
+                    · expira em <ContagemRegressiva expiraEm={passivasReferencia.expiraEm} />
+                  </span>
+                ) : (
+                  <span>· a staff ainda vai definir</span>
+                )}
               </p>
               <PassivasDoRitual
-                passivasAceitas={passivasReferencia.passivasAceitas}
+                passivasAceitas={passivasReferencia?.passivasAceitas ?? []}
                 staff={staff}
                 catalogo={todasAsPassivas()}
                 action={acaoAtualizarReferencia}
@@ -312,7 +316,7 @@ export default async function Purificacao() {
                   <EscolherPassivasDoRitual
                     ritualId={ritualAndando.id}
                     passivas={todasAsPassivas()}
-                    pontoDePartida={passivasReferencia.passivasAceitas}
+                    pontoDePartida={passivasReferencia?.passivasAceitas ?? []}
                   />
                 </div>
               )}

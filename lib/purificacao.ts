@@ -24,7 +24,6 @@ import {
   elegibilidadeDoador,
   elegibilidadeAlvo,
 } from "@/lib/purificacao-regras";
-import { todasAsPassivas } from "@/lib/passivas";
 
 /**
  * A Câmara de Purificação: o jogador escolhe 1 Pal da palbox para
@@ -204,64 +203,26 @@ export interface ReferenciaDeRegra {
   expiraEm: string;
 }
 
-/** Quantas passivas o sorteio automático escolhe quando a sugestão expira sem a staff renovar. */
-const PASSIVAS_POR_SORTEIO = 4;
-/** Validade (em dias) da sugestão sorteada automaticamente — mesmo teto do editor manual. */
-const DIAS_VALIDADE_SORTEIO = DIAS_REFERENCIA_MAXIMO;
-
-/** `N` chaves distintas sorteadas do catálogo de passivas (Fisher-Yates parcial). */
-function sortearPassivas(n: number): string[] {
-  const chaves = todasAsPassivas().map((p) => p.chave);
-  for (let i = chaves.length - 1; i > 0 && i >= chaves.length - n; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [chaves[i], chaves[j]] = [chaves[j], chaves[i]];
-  }
-  return chaves.slice(-n);
-}
-
 /**
- * Sorteia uma sugestão nova e grava — só quando a linha ainda está expirada
- * na hora de escrever (`and expira_em ... `), para duas requisições
- * simultâneas não sortearem duas sugestões diferentes uma sobre a outra.
- * Quem perde a corrida simplesmente lê o que a outra gravou.
+ * `null` quando a staff não definiu passivas válidas agora. Até 02/10/2026,
+ * sem sugestão o site sorteava 4 passivas sozinho (pedido de 21/09); com a
+ * regra nova — o doador precisa ter TODAS — um sorteio de 4 passivas
+ * aleatórias deixava a doação quase impossível. Então quem escolhe é sempre
+ * a staff: sem lista, o ritual novo nasce em `aguardando_regra`.
+ *
+ * `definida_por is not null` descarta a última lista sorteada, que ainda
+ * estava dentro do prazo quando o sorteio saiu.
  */
-async function sortearEGravarReferencia(): Promise<ReferenciaDeRegra> {
-  const passivas = sortearPassivas(PASSIVAS_POR_SORTEIO);
-  const rows = (await sql`
-    update purification_referencia
-    set passivas_aceitas = ${passivas},
-        definida_por = null,
-        definida_em = now(),
-        expira_em = now() + (${DIAS_VALIDADE_SORTEIO} || ' days')::interval
-    where id = 1 and (expira_em is null or expira_em <= now())
-    returning passivas_aceitas, expira_em
-  `) as { passivas_aceitas: string[]; expira_em: string }[];
-
-  if (rows[0]) return { passivasAceitas: rows[0].passivas_aceitas, expiraEm: rows[0].expira_em };
-
-  // Perdeu a corrida: outra requisição já sorteou e gravou antes. Lê o que
-  // ficou — nunca `null` aqui, porque a linha singleton sempre existe
-  // (migração 025 insere id=1 na criação) e acabou de ser preenchida.
-  const atual = (await sql`
-    select passivas_aceitas, expira_em from purification_referencia where id = 1
-  `) as { passivas_aceitas: string[]; expira_em: string }[];
-  return { passivasAceitas: atual[0].passivas_aceitas, expiraEm: atual[0].expira_em };
-}
-
-export async function passivasDoUltimoRitual(): Promise<ReferenciaDeRegra> {
+export async function passivasDoUltimoRitual(): Promise<ReferenciaDeRegra | null> {
   const rows = (await sql`
     select passivas_aceitas, expira_em
     from purification_referencia
     where id = 1 and expira_em is not null and expira_em > now()
+      and definida_por is not null
+      and cardinality(passivas_aceitas) > 0
   `) as { passivas_aceitas: string[]; expira_em: string }[];
   const r = rows[0];
-  if (r) return { passivasAceitas: r.passivas_aceitas, expiraEm: r.expira_em };
-
-  // Expirou (ou nunca houve sugestão): sorteia uma nova em vez de devolver
-  // vazio — pedido do dono em 21/09/2026, a Câmara nunca fica sem sugestão
-  // por muito tempo mesmo sem a staff mexer. A staff continua podendo
-  // substituir na hora que quiser, em `atualizarReferenciaDeRegra`.
-  return sortearEGravarReferencia();
+  return r ? { passivasAceitas: r.passivas_aceitas, expiraEm: r.expira_em } : null;
 }
 
 /**
@@ -287,8 +248,8 @@ export async function ritualEmDestaque(): Promise<{ palId: string } | null> {
  * em andamento.
  *
  * `minutosValidade`: por quantos minutos a sugestão vale a partir de agora
- * — passado isso, `passivasDoUltimoRitual` para de devolvê-la e sorteia
- * outra. O formulário soma dias + horas + minutos antes de chamar isto;
+ * — passado isso, `passivasDoUltimoRitual` para de devolvê-la e a Câmara
+ * fica sem lista até a staff definir outra. O formulário soma dias + horas + minutos antes de chamar isto;
  * aceita minutos de propósito (não só dias) para o dono poder testar/dar
  * validades curtas, pedido de 21/09/2026.
  */
@@ -356,8 +317,8 @@ async function gravarRitual(
   // Se já existe uma regra de referência (o staff já definiu isso antes,
   // mesmo que num ritual anterior), o ritual novo nasce direto `ativo` com
   // ela — não faz sentido esperar o staff repetir um clique que já deu.
-  // "aguardando_regra" só acontece de verdade no primeiro ritual da
-  // história da Câmara, antes de qualquer referência existir.
+  // Sem lista válida da staff, nasce em "aguardando_regra" e espera a staff
+  // definir as passivas.
   const referencia = await passivasDoUltimoRitual();
 
   // O ritual parte do IV que o Pal JÁ tem, não de 100 fixo — um Pal que já
