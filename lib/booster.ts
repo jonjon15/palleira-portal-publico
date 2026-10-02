@@ -24,8 +24,8 @@ import {
  * `db/migrations/030-booster.sql`.
  *
  * Uma doação (ou um crédito do VIP) turbina a taxa de UM servidor por UM
- * ciclo de restart, para todo mundo que estiver nele. Quem doa escolhe os
- * tipos — XP, Drop de Pals, Coleta — e pode misturar.
+ * ciclo de restart, para todo mundo que estiver nele. Quem doa escolhe um
+ * tipo — XP, Drop de Pals ou Coleta (só a staff pode misturar).
  *
  * **Quem aplica é o servidor, não o site.** O Palworld só lê as taxas no
  * boot e reescreve o `.ini` ao desligar, então o site não tem como mudar
@@ -188,6 +188,10 @@ export async function pedirBooster(args: {
 
   const v = validar(args.serverSlug, args.tipos);
   if (!("tipos" in v)) return v;
+  // 1 booster = 1 tipo (pedido da staff em 01/10/2026). Antes dava para
+  // marcar os três e gastar um crédito só. A staff (`concederBoosterStaff`)
+  // continua podendo misturar.
+  if (v.tipos.length > 1) return { ok: false, mensagem: "Escolha só um tipo por booster." };
   const server = serverBySlug(args.serverSlug)!;
   const rotulo = v.tipos.map((t) => TIPOS[t].rotulo).join(" + ");
 

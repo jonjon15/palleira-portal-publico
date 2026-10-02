@@ -133,7 +133,7 @@ export default async function Purificacao() {
                 Só entra quem já é perfeito:
               </span>
               <span className="text-sm">
-                IV 100 em Vida, Ataque e Defesa e Full Condensado (rank 5).
+                IV 100 em Vida, Ataque e Defesa e Full Condensado 4 estrelas.
                 Pal despertado pode entrar, mas sai sem o despertar — o jogo
                 não devolve o despertar de um Pal que passa pela Câmara.
               </span>
@@ -144,7 +144,7 @@ export default async function Purificacao() {
               style={{ background: "#0d1512", border: "1px solid #1f2e27" }}
             >
               <p className="mb-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px]" style={{ color: "#5c6e66" }}>
-                <span>Passivas sugeridas para essa rodada, é só sugestão</span>
+                <span>Passivas para essa rodada</span>
                 <span className="whitespace-nowrap">
                   · expira em <ContagemRegressiva expiraEm={passivasReferencia.expiraEm} />
                 </span>
@@ -600,7 +600,7 @@ function ExplicacaoDaCamara() {
           </h2>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: "#8fa39a" }}>
             É um sistema do servidor para levar um Pal já perfeito além do
-            limite padrão do jogo. Um Pal normal trava em IV 100 e rank 5 — a
+            limite padrão do jogo. Um Pal normal trava em IV 100 e 4 estrelas — a
             Câmara deixa ele passar disso.
           </p>
         </div>
@@ -629,8 +629,8 @@ function ExplicacaoDaCamara() {
         <ul className="mt-2 flex flex-col gap-1 text-sm" style={{ color: "#8fa39a" }}>
           <li>• Mesma espécie do Pal que está na cápsula.</li>
           <li>• IV 100 em Vida, Ataque e Defesa.</li>
-          <li>• Full Condensado (rank 5).</li>
-          <li>• Ter pelo menos uma das passivas que o staff escolheu para esta purificação.</li>
+          <li>• Full Condensado 4 estrelas.</li>
+          <li>• Ter todas as passivas escolhidas pela staff.</li>
         </ul>
       </div>
     </div>

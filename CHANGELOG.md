@@ -4,6 +4,12 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-02
+
+- **Câmara de Purificação: o Pal doado precisa ter todas as passivas escolhidas pela staff.** Antes bastava uma. O texto da Câmara também ficou mais claro: "Full Condensado 4 estrelas" no lugar de "rank 5", e as passivas não aparecem mais como "só sugestão".
+- **Booster: um tipo por booster.** Cada booster do VIP (ou doação) liga XP, Drop de Pals ou Coleta — um só. Antes dava para marcar os três e gastar um booster só. Nenhum tipo vem marcado de início, para ninguém gastar no XP sem querer.
+- **Menu no celular.** No celular o cabeçalho não mostrava as páginas do site, e não tinha como chegar ao VIP sem digitar o endereço. Agora tem um botão de menu no canto direito.
+
 ## 2026-09-27
 
 - **Anticheat agora avisa 5 vezes antes de cada kick, e bane depois do 3º kick.** Cada aviso chega no chat com o número dele (1 de 5, 2 de 5…) e diz o que vem depois. Quem continua depois do 5º aviso é kickado. Depois de 3 kicks, a próxima sequência de 5 avisos termina em ban. Parou de usar, parou de ser avisado.

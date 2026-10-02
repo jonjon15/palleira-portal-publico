@@ -93,7 +93,7 @@ export function EscolherPalDoRitual({
     return (
       <p className="text-sm text-muted">
         Nenhum Pal da sua palbox pode entrar na câmara — precisa de IV 100 em
-        Vida, Ataque e Defesa e ser Full Condensado (rank 5).
+        Vida, Ataque e Defesa e ser Full Condensado 4 estrelas.
       </p>
     );
   }
@@ -219,7 +219,7 @@ export function EscolherPalDoCofre({ pals }: { pals: PalNoCofre[] }) {
       <p className="text-sm text-muted">
         {pals.length === 0
           ? "Seu cofre de Pals está vazio."
-          : "Nenhum Pal do seu cofre pode entrar — precisa de IV 100 em Vida, Ataque e Defesa e ser Full Condensado (rank 5)."}
+          : "Nenhum Pal do seu cofre pode entrar — precisa de IV 100 em Vida, Ataque e Defesa e ser Full Condensado 4 estrelas."}
       </p>
     );
   }
@@ -373,11 +373,6 @@ export function PassivasDoRitual({
           );
         })}
       </div>
-      {passivasAceitas.length > 0 && (
-        <p className="mt-3 text-sm" style={{ color: "#5c6e66" }}>
-          E ter pelo menos uma dessas passivas.
-        </p>
-      )}
       {staff && (
         <button
           type="button"

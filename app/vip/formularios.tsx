@@ -82,8 +82,10 @@ export function AtualizarSozinho() {
 }
 
 /**
- * Pedir um booster: servidor, tipos (pode misturar) e como pagar — crédito
- * do VIP, se sobrar, ou doação avulsa via Pix.
+ * Pedir um booster: servidor, UM tipo e como pagar — crédito do VIP, se
+ * sobrar, ou doação avulsa via Pix. Até 01/10/2026 dava para misturar os
+ * três tipos pagando um só; a staff pediu 1 booster = 1 tipo, e nenhum
+ * marcado de início para ninguém gastar no XP sem querer.
  */
 export function PedirBooster({
   servidores,
@@ -99,10 +101,8 @@ export function PedirBooster({
   pixLigado: boolean;
 }) {
   const [estado, acao, pendente] = useActionState(acaoPedirBooster, INICIAL);
-  const [tipos, setTipos] = useState<string[]>(["xp"]);
+  const [tipo, setTipo] = useState<string | null>(null);
   const [aceite, setAceite] = useState(false);
-  const alternar = (t: string) =>
-    setTipos((a) => (a.includes(t) ? a.filter((x) => x !== t) : [...a, t]));
 
   // Pedido do dono (25/09/2026): confirmar o servidor antes de gastar o
   // booster. Um clique no servidor errado não tem volta.
@@ -111,7 +111,7 @@ export function PedirBooster({
     const slug = (form.elements.namedItem("servidor") as HTMLSelectElement | null)?.value;
     const nome = servidores.find((s) => s.slug === slug)?.nome ?? slug;
     const comCredito = (e.nativeEvent as SubmitEvent).submitter?.getAttribute("name") === "credito";
-    const oque = tipos.map((t) => ROTULO_TIPO[t as keyof typeof ROTULO_TIPO] ?? t).join(" + ");
+    const oque = ROTULO_TIPO[tipo as keyof typeof ROTULO_TIPO] ?? tipo;
     if (
       !confirm(
         `Colocar o booster de ${oque} no ${nome}?\n\n` +
@@ -140,22 +140,22 @@ export function PedirBooster({
       </div>
       <fieldset>
         <legend className="text-sm text-muted">
-          O que turbinar ({multiplicador.toLocaleString("pt-BR")}x) — escolha um ou misture
+          O que turbinar ({multiplicador.toLocaleString("pt-BR")}x) — escolha um
         </legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {(Object.keys(ROTULO_TIPO) as (keyof typeof ROTULO_TIPO)[]).map((t) => (
             <label
               key={t}
               className={`flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border px-4 py-2 text-sm font-semibold transition-colors ${
-                tipos.includes(t) ? "border-gold bg-gold/10 text-gold" : "border-line-strong text-muted"
+                tipo === t ? "border-gold bg-gold/10 text-gold" : "border-line-strong text-muted"
               }`}
             >
               <input
-                type="checkbox"
+                type="radio"
                 name="tipo"
                 value={t}
-                checked={tipos.includes(t)}
-                onChange={() => alternar(t)}
+                checked={tipo === t}
+                onChange={() => setTipo(t)}
                 className="sr-only"
               />
               {ROTULO_TIPO[t]}
@@ -169,7 +169,7 @@ export function PedirBooster({
           type="submit"
           name="credito"
           value="1"
-          disabled={pendente || tipos.length === 0}
+          disabled={pendente || !tipo}
           className="w-full rounded-[var(--radius-control)] bg-gold px-5 py-2.5 text-sm font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pendente ? "Ativando…" : `Usar 1 booster do VIP (${creditos} ${creditos === 1 ? "disponível" : "disponíveis"})`}
@@ -187,7 +187,7 @@ export function PedirBooster({
           </label>
           <button
             type="submit"
-            disabled={pendente || !aceite || tipos.length === 0}
+            disabled={pendente || !aceite || !tipo}
             className={`w-full rounded-[var(--radius-control)] px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
               creditos > 0
                 ? "border border-line-strong hover:border-gold hover:text-gold"

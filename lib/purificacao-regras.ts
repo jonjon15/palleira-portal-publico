@@ -90,13 +90,15 @@ export function elegibilidadeDoador(
     return { ok: false, motivo: "Precisa de IV 100 em Vida, Ataque e Defesa.", passivaUsada: "" };
   }
   if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
-    return { ok: false, motivo: "Precisa ser Full Condensado (rank 5).", passivaUsada: "" };
+    return { ok: false, motivo: "Precisa ser Full Condensado 4 estrelas.", passivaUsada: "" };
   }
-  const passivaUsada = pal.passives.find((p) => passivasAceitas.includes(p));
-  if (!passivaUsada) {
-    return { ok: false, motivo: "Não tem nenhuma das passivas aceitas neste ritual.", passivaUsada: "" };
+  // Pedido da staff (01/10/2026): o doador precisa ter TODAS as passivas
+  // escolhidas, não só uma. Ritual sem passiva definida não doa nada.
+  const faltando = passivasAceitas.filter((p) => !pal.passives.includes(p));
+  if (passivasAceitas.length === 0 || faltando.length > 0) {
+    return { ok: false, motivo: "Precisa ter todas as passivas escolhidas pela staff.", passivaUsada: "" };
   }
-  return { ok: true, motivo: "", passivaUsada };
+  return { ok: true, motivo: "", passivaUsada: passivasAceitas[0] };
 }
 
 /**
@@ -122,7 +124,7 @@ export function elegibilidadeAlvo(
     return { ok: false, motivo: "Precisa de IV 100 em Vida, Ataque e Defesa." };
   }
   if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
-    return { ok: false, motivo: "Precisa ser Full Condensado (rank 5)." };
+    return { ok: false, motivo: "Precisa ser Full Condensado 4 estrelas." };
   }
   return { ok: true, motivo: "" };
 }

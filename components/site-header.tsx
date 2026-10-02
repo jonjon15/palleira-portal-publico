@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
+import { MenuCelular } from "@/components/menu-celular";
 import { Pick } from "@/components/pick";
 import { saldo } from "@/lib/economia";
 
@@ -91,6 +92,7 @@ export async function SiteHeader() {
               Entrar
             </Link>
           )}
+          <MenuCelular itens={NAV} />
         </div>
       </nav>
     </header>
