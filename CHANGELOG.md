@@ -6,7 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-10-05
 
-- **Câmara de Purificação: Pal de Jornada não entra mais.** Pal com 5 passivas não pode ser colocado na cápsula, nem da palbox nem do cofre. A página da Câmara mostra um aviso sobre isso.
+- **Câmara de Purificação: Pal de Jornada não entra mais.** Pal com 5 passivas não pode ser colocado na cápsula, nem da palbox nem do cofre. A página da Câmara mostra um aviso sobre isso, e agora também diz com todas as letras que o Pal sai castrado (sem gênero, não cruza), inclusive embaixo do botão de resgatar.
 
 ## 2026-10-02
 

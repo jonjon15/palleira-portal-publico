@@ -537,8 +537,8 @@ export default async function Purificacao() {
           <p className="pt-3.5 text-xs leading-relaxed" style={{ borderTop: "1px solid #1f2e27", color: "#5c6e66" }}>
             O registro do ritual já é real — só falta aplicar o IV de
             verdade dentro do jogo, que ainda depende de uma etapa futura.
-            Gênero travado desde a 1ª rodada — nunca entra em incubadora, é
-            peça única da guilda.
+            Sai castrado (sem gênero) — nunca entra em incubadora, é peça
+            única da guilda.
           </p>
         </div>
       </div>
@@ -605,7 +605,9 @@ function AvisoPalDeJornada() {
       </span>
       <span className="text-sm" style={{ color: "#e0a898" }}>
         Não é permitido colocar Pals de Jornada (com 5 passivas) na Câmara.
-        O site não deixa esses Pals entrarem na cápsula.
+        O site não deixa esses Pals entrarem na cápsula. E todo Pal que sai
+        da Câmara (resgatado ou cancelado) vem castrado: sem gênero, não
+        cruza na incubadora.
       </span>
     </div>
   );
@@ -638,7 +640,8 @@ function ExplicacaoDaCamara() {
             alimentar a purificação: a cada {DOADORES_POR_RODADA} doações
             confirmadas, o Pal da cápsula ganha +1 de IV em Vida, Ataque{" "}
             <em>e</em> Defesa, juntos, até o teto de {IV_TETO_RITUAL}. Cada
-            Pal doado é consumido — não volta.
+            Pal doado é consumido — não volta. O Pal purificado sai castrado
+            (sem gênero) e não pode ser cruzado.
           </p>
         </div>
       </div>

@@ -886,6 +886,9 @@ export function ResgatarPal({
     <form action={acao}>
       <input type="hidden" name="ritualId" value={ritualId} />
       <Enviar>Resgatar Pal</Enviar>
+      <p className="mt-2 text-xs text-muted">
+        O Pal sai castrado (sem gênero) e não pode ser cruzado.
+      </p>
       {status && status.status !== "concluido" && (
         <p className="mt-2 text-xs text-muted">
           {status.status === "falhou" ? "O resgate falhou — fale com o staff." : "Resgatando…"}
