@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-05
+
+- **Câmara de Purificação: Pal de Jornada não entra mais.** Pal com 5 passivas não pode ser colocado na cápsula, nem da palbox nem do cofre. A página da Câmara mostra um aviso sobre isso.
+
 ## 2026-10-02
 
 - **Câmara de Purificação: o Pal doado precisa ter todas as passivas escolhidas pela staff.** Antes bastava uma. As passivas agora são sempre escolhidas pela staff (o site não sorteia mais): se a staff ainda não escolheu, o Pal entra na cápsula e espera a staff definir antes de começar as doações. O texto da Câmara também ficou mais claro: "Full Condensado 4 estrelas" no lugar de "rank 5", e as passivas não aparecem mais como "só sugestão".

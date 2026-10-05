@@ -565,6 +565,8 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
         {CAMARA_EM_MANUTENCAO && <BannerDeManutencao />}
 
+        <AvisoPalDeJornada />
+
         <ExplicacaoDaCamara />
 
         {children}
@@ -586,6 +588,24 @@ function BannerDeManutencao() {
         A Câmara de Purificação ainda está sendo preparada — iniciar,
         doar, resgatar e cancelar ficam fora do ar por enquanto. Volta em
         breve.
+      </span>
+    </div>
+  );
+}
+
+/** Pedido da staff em 03/10/2026 — a trava em si está em `elegibilidadeAlvo`. */
+function AvisoPalDeJornada() {
+  return (
+    <div
+      className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3"
+      style={{ background: "rgba(232,93,61,0.1)", border: "1px solid #8a3a21" }}
+    >
+      <span className="text-sm font-semibold" style={{ color: "#f07a5a" }}>
+        ⛔ Aviso
+      </span>
+      <span className="text-sm" style={{ color: "#e0a898" }}>
+        Não é permitido colocar Pals de Jornada (com 5 passivas) na Câmara.
+        O site não deixa esses Pals entrarem na cápsula.
       </span>
     </div>
   );
@@ -614,7 +634,7 @@ function ExplicacaoDaCamara() {
           </h2>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: "#8fa39a" }}>
             Você coloca na cápsula um Pal com IV 100 em Vida, Ataque e Defesa
-            e Full Condensado. Depois disso você doa outros Pals para
+            e Full Condensado (Pal de Jornada não entra). Depois disso você doa outros Pals para
             alimentar a purificação: a cada {DOADORES_POR_RODADA} doações
             confirmadas, o Pal da cápsula ganha +1 de IV em Vida, Ataque{" "}
             <em>e</em> Defesa, juntos, até o teto de {IV_TETO_RITUAL}. Cada

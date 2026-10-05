@@ -132,6 +132,12 @@ export function elegibilidadeAlvo(
   if (pal.partnerSkillLevel < PARTNER_SKILL_MINIMO_DOADOR) {
     return { ok: false, motivo: "Precisa ser Full Condensado 4 estrelas." };
   }
+  // Pedido da staff (03/10/2026): Pal de Jornada vem com 5 passivas e dois
+  // deles dão para cruzar — a galera ia purificar para ter 5 passivas + IV
+  // 150. Pal comum tem no máximo 4, então mais que isso é Pal de Jornada.
+  if (pal.passives.length > PASSIVAS_MAXIMO) {
+    return { ok: false, motivo: "Pal de Jornada (5 passivas) não pode entrar na Câmara." };
+  }
   return { ok: true, motivo: "" };
 }
 
