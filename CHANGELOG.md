@@ -6,6 +6,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 ## 2026-10-07
 
+- **Corrigido: Pal que chegava ao IV 150 ficava sem botão de resgatar.** Com a purificação completa, a Câmara escondia o botão e o Pal ficava preso na cápsula. Agora dá para resgatar normalmente.
 - **Câmara de Purificação: os Pals prontos para doar aparecem primeiro.** Antes eles ficavam misturados no meio dos que não servem, e numa palbox com dezenas da mesma espécie parecia que o Pal não estava lá. A lista agora também diz quantos estão prontos, e avisa que um Pal recém-condensado leva até 1 minuto para atualizar no site.
 
 ## 2026-10-05

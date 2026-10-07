@@ -274,7 +274,9 @@ export default async function Purificacao() {
             </p>
           ) : (
             <>
-              {(ritualAndando.status === "ativo" || (ritualAndando.status === "completo" && resgatePendente)) && (
+              {/* `completo` (teto de 150) também resgata — até 07/10/2026 o botão
+                  sumia aqui e a Handoroki ficou com o Felbat 150 preso na cápsula. */}
+              {(ritualAndando.status === "ativo" || ritualAndando.status === "completo") && (
                 <div className="mt-1 w-full">
                   {resgatePendente ? (
                     <ResgatarPal ritualId={ritualAndando.id} pendente={resgatePendente} />
