@@ -775,9 +775,18 @@ export function DoarPal({
   // cheia, montar todos os cards a cada clique travava a aba por meio
   // segundo (visível como "tela preta" — não era crash, era o navegador
   // ocupado demais pra pintar a tela).
-  const candidatos = useMemo(
-    () => pals.filter((p) => mesmaEspecie(p.palId, palIdDoAlvo)),
-    [pals, palIdDoAlvo],
+  //
+  // Quem já pode doar vem primeiro: a Handoroki (07/10/2026) tinha 46
+  // Felbats e só 6 aptos, espalhados no meio dos esmaecidos — parecia que
+  // "o Pal não aparecia".
+  const candidatos = useMemo(() => {
+    const mesma = pals.filter((p) => mesmaEspecie(p.palId, palIdDoAlvo));
+    const aptos = mesma.filter((p) => elegibilidadeDoador(p, passivasAceitas, palIdDoAlvo).ok);
+    return [...aptos, ...mesma.filter((p) => !aptos.includes(p))];
+  }, [pals, passivasAceitas, palIdDoAlvo]);
+  const aptos = useMemo(
+    () => candidatos.filter((p) => elegibilidadeDoador(p, passivasAceitas, palIdDoAlvo).ok).length,
+    [candidatos, passivasAceitas, palIdDoAlvo],
   );
 
   if (pals.length === 0) {
@@ -801,7 +810,10 @@ export function DoarPal({
     <form action={acao}>
       <input type="hidden" name="instanceId" value={selecionado ?? ""} />
 
-      <p className="mb-1.5 text-[0.7rem] text-muted">Escolha 1 Pal por vez para doar.</p>
+      <p className="mb-1.5 text-[0.7rem] text-muted">
+        Escolha 1 Pal por vez para doar · {aptos} de {candidatos.length} prontos para doar (aparecem
+        primeiro). Pal condensado agora leva até 1 minuto para atualizar aqui.
+      </p>
       <ListaDeDoadores
         pals={candidatos}
         passivasAceitas={passivasAceitas}

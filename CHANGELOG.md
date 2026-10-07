@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-07
+
+- **Câmara de Purificação: os Pals prontos para doar aparecem primeiro.** Antes eles ficavam misturados no meio dos que não servem, e numa palbox com dezenas da mesma espécie parecia que o Pal não estava lá. A lista agora também diz quantos estão prontos, e avisa que um Pal recém-condensado leva até 1 minuto para atualizar no site.
+
 ## 2026-10-05
 
 - **Câmara de Purificação: Pal de Jornada não entra mais.** Pal com 5 passivas não pode ser colocado na cápsula, nem da palbox nem do cofre. A página da Câmara mostra um aviso sobre isso, e agora também diz com todas as letras que o Pal sai castrado (sem gênero, não cruza), inclusive embaixo do botão de resgatar.
