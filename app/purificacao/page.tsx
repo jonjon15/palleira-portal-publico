@@ -17,6 +17,7 @@ import {
   IV_TETO_RITUAL,
 } from "@/lib/purificacao";
 import { nomeDoPal, urlDoIcone } from "@/lib/pals";
+import { acoesDoRitual, ivMedioDoRitual, ocupaACapsula } from "@/lib/purificacao-regras";
 import { nomeDaPassiva, todasAsPassivas } from "@/lib/passivas";
 import { isStaff, levelOf } from "@/lib/roles";
 import {
@@ -85,9 +86,7 @@ export default async function Purificacao() {
   const onde = await ondeEstouOnline(discordId);
 
   const ritualAndando =
-    ritual && (ritual.status === "aguardando_regra" || ritual.status === "ativo" || ritual.status === "completo")
-      ? ritual
-      : null;
+    ritual && ocupaACapsula(ritual.status) ? ritual : null;
 
   // `resgatado` significa que o Pal já voltou pra palbox de verdade — a
   // cápsula fica livre para uma purificação nova, mesmo comportamento de não
@@ -202,11 +201,17 @@ export default async function Purificacao() {
 
   const doadoresNaRodada = ritualAndando.doadoresDaRodada.length;
   const progresso = Math.round((doadoresNaRodada / DOADORES_POR_RODADA) * 100);
-  const ivMedio = Math.round((ritualAndando.ivHealth + ritualAndando.ivAttack + ritualAndando.ivDefense) / 3);
+  const ivMedio = ivMedioDoRitual(ritualAndando);
+  const acoes = acoesDoRitual({
+    status: ritualAndando.status,
+    ivMedio,
+    ivMinimoResgate,
+    resgatePendente: resgatePendente !== null,
+  });
 
   const servidorDoRitual = onde.find((o) => o.serverSlug === ritualAndando.serverSlug);
   const disponiveis =
-    ritualAndando.status === "ativo" && servidorDoRitual
+    acoes.doar && servidorDoRitual
       ? await palsNoJogo(discordId, ritualAndando.serverSlug)
       : { pals: [], erro: "" };
 
@@ -274,13 +279,13 @@ export default async function Purificacao() {
             </p>
           ) : (
             <>
-              {/* `completo` (teto de 150) também resgata — até 07/10/2026 o botão
-                  sumia aqui e a Handoroki ficou com o Felbat 150 preso na cápsula. */}
-              {(ritualAndando.status === "ativo" || ritualAndando.status === "completo") && (
+              {/* Quais botões aparecem vem de `acoesDoRitual`, a mesma regra que
+                  o servidor confere — ver `lib/purificacao-regras.ts`. */}
+              {acoes.resgate && (
                 <div className="mt-1 w-full">
-                  {resgatePendente ? (
+                  {acoes.resgate === "pendente" && resgatePendente ? (
                     <ResgatarPal ritualId={ritualAndando.id} pendente={resgatePendente} />
-                  ) : ivMedio >= ivMinimoResgate ? (
+                  ) : acoes.resgate === "botao" ? (
                     <ResgatarPal ritualId={ritualAndando.id} />
                   ) : (
                     <p className="text-center text-[11px]" style={{ color: "#5c6e66" }}>
@@ -290,7 +295,7 @@ export default async function Purificacao() {
                 </div>
               )}
 
-              {ritualAndando.status !== "completo" && (
+              {acoes.cancelar && (
                 <div className="mt-1">
                   <CancelarRitual ritualId={ritualAndando.id} cooldownHoras={COOLDOWN_RESGATE_HORAS} />
                 </div>
@@ -470,7 +475,7 @@ export default async function Purificacao() {
               ))}
             </div>
 
-            {ritualAndando.status === "ativo" && (
+            {acoes.doar && (
               <div className="mt-4">
                 {CAMARA_EM_MANUTENCAO ? (
                   <p className="text-sm" style={{ color: "#5c6e66" }}>

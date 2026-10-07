@@ -141,5 +141,54 @@ export function elegibilidadeAlvo(
   return { ok: true, motivo: "" };
 }
 
+/**
+ * O que a pessoa pode fazer com o ritual em cada status. A página (botões) e
+ * as server actions (`doarPal`, `cancelarRitual`, `resgatarPal`) usam estas
+ * mesmas funções — antes cada lado tinha a sua condição e elas divergiram:
+ * em 07/10/2026 o servidor aceitava resgatar um ritual `completo`, mas a
+ * página escondia o botão, e o Felbat 150 da Handoroki ficou preso.
+ * Os testes em `tests/purificacao-regras.test.ts` cobrem cada status.
+ */
+export type StatusDoRitual = "aguardando_regra" | "ativo" | "completo" | "resgatado" | "cancelado";
+
+/**
+ * O Pal ainda está dentro da cápsula — não dá para começar outro ritual.
+ * `completo` conta: o Pal 150 só sai pelo resgate. Até 07/10/2026 o início
+ * de ritual só barrava `aguardando_regra`/`ativo`, e um ritual novo por cima
+ * de um `completo` esconderia o Pal purificado da tela.
+ */
+export const ocupaACapsula = (status: string) =>
+  status === "aguardando_regra" || status === "ativo" || status === "completo";
+export const podeDoar = (status: string) => status === "ativo";
+export const podeCancelar = (status: string) => status === "aguardando_regra" || status === "ativo";
+export const podeResgatar = (status: string, ivMedio: number, ivMinimoResgate: number) =>
+  (status === "ativo" || status === "completo") && ivMedio >= ivMinimoResgate;
+
+/** Média dos três eixos, do jeito que o resgate compara com o IV mínimo. */
+export const ivMedioDoRitual = (r: { ivHealth: number; ivAttack: number; ivDefense: number }) =>
+  Math.round((r.ivHealth + r.ivAttack + r.ivDefense) / 3);
+
+export function acoesDoRitual(r: {
+  status: string;
+  ivMedio: number;
+  ivMinimoResgate: number;
+  resgatePendente: boolean;
+}): {
+  /** `pendente`: retoma um resgate já começado; `iv_baixo`: mostra o aviso do IV mínimo. */
+  resgate: "botao" | "pendente" | "iv_baixo" | null;
+  cancelar: boolean;
+  doar: boolean;
+} {
+  const resgate =
+    r.status !== "ativo" && r.status !== "completo"
+      ? null
+      : r.resgatePendente
+        ? "pendente"
+        : podeResgatar(r.status, r.ivMedio, r.ivMinimoResgate)
+          ? "botao"
+          : "iv_baixo";
+  return { resgate, cancelar: podeCancelar(r.status), doar: podeDoar(r.status) };
+}
+
 export const AVISO_DESPERTAR =
   "Esse Pal está despertado. O despertar não volta depois da Câmara: ao resgatar (ou cancelar), ele sai sem o despertar, e só dá para despertar de novo no jogo, com outro Cristal do Despertar.";

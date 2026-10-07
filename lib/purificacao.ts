@@ -23,6 +23,10 @@ import {
   ivDefesa,
   elegibilidadeDoador,
   elegibilidadeAlvo,
+  podeDoar,
+  podeCancelar,
+  podeResgatar,
+  ocupaACapsula,
 } from "@/lib/purificacao-regras";
 
 /**
@@ -378,7 +382,7 @@ export async function iniciarRitual(
   }
 
   const emAndamento = await meuRitualAtivo(discordId);
-  if (emAndamento && (emAndamento.status === "aguardando_regra" || emAndamento.status === "ativo")) {
+  if (emAndamento && ocupaACapsula(emAndamento.status)) {
     return { ok: false, mensagem: "Você já tem um Pal em purificação agora." };
   }
 
@@ -488,7 +492,7 @@ export async function iniciarRitualDoCofre(vaultPalId: number): Promise<Resultad
   }
 
   const emAndamento = await meuRitualAtivo(discordId);
-  if (emAndamento && (emAndamento.status === "aguardando_regra" || emAndamento.status === "ativo")) {
+  if (emAndamento && ocupaACapsula(emAndamento.status)) {
     return { ok: false, mensagem: "Você já tem um Pal em purificação agora." };
   }
 
@@ -548,7 +552,7 @@ export async function doarPal(instanceId: string): Promise<Resultado> {
   const discordId = session.user.discordId;
 
   const ritual = await meuRitualAtivo(discordId);
-  if (!ritual || ritual.status !== "ativo") {
+  if (!ritual || !podeDoar(ritual.status)) {
     return { ok: false, mensagem: "Você não tem um ritual ativo agora." };
   }
 
@@ -870,7 +874,7 @@ export async function cancelarRitual(ritualId: number): Promise<Resultado> {
   if (!staff && ritual.discord_id !== discordId) {
     return { ok: false, mensagem: "Essa purificação não é sua." };
   }
-  if (ritual.status !== "aguardando_regra" && ritual.status !== "ativo") {
+  if (!podeCancelar(ritual.status)) {
     return { ok: false, mensagem: "Esse ritual não pode mais ser cancelado." };
   }
 
@@ -1000,7 +1004,7 @@ export async function resgatarPalPurificado(ritualId: number): Promise<Resultado
 
   const ivMinimo = await ivMinimoResgateAtual();
   const ivMedio = Math.round((ritual.iv_health + ritual.iv_attack + ritual.iv_defense) / 3);
-  if (ivMedio < ivMinimo) {
+  if (!podeResgatar(ritual.status, ivMedio, ivMinimo)) {
     return {
       ok: false,
       mensagem: `Só dá para resgatar a partir de IV ${ivMinimo} — está em ${ivMedio}.`,
