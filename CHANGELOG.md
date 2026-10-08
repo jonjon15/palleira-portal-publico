@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-08
+
+- **Corrigido: ninguém conseguia entrar no site.** O Discord mudou um detalhe no retorno do login e o site passou a recusar todo mundo com "Server error". Quem já estava logado continuava dentro; quem saiu ficava de fora.
+
 ## 2026-10-07
 
 - **Corrigido: dava para começar uma purificação nova com um Pal 150 ainda na cápsula esperando resgate.** O Pal purificado sumiria da tela. Agora o site exige resgatar antes de começar outro.

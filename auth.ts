@@ -90,6 +90,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Discord({
       clientId: process.env.AUTH_DISCORD_ID,
       clientSecret: process.env.AUTH_DISCORD_SECRET,
+      // O Discord passou a mandar `iss` no retorno do login (RFC 9207). Sem o
+      // issuer declarado, o Auth.js compara com um valor fictício e recusa
+      // todo login com error=Configuration.
+      issuer: "https://discord.com",
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+guilds+guilds.members.read+guilds.join",
     }),
