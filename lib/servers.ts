@@ -45,9 +45,9 @@ export interface PalleiraServer {
   /**
    * Se as posições de jogador e base podem aparecer no mapa público.
    *
-   * ⚠️ Em PvP, mapa é ferramenta de caçada: entrega onde a pessoa está e
-   * onde fica a base dela. O servidor aparece no placar e nas estatísticas,
-   * mas nunca no mapa.
+   * ⚠️ Em PvP com combate livre, mapa é ferramenta de caçada: entrega onde a
+   * pessoa está e onde fica a base dela. O Dominantes ficou de fora até o
+   * wipe de 10/2026, quando o PvP passou a valer só em áreas fixas.
    */
   mapVisible: boolean;
   mode: "PvE" | "PvP";
@@ -125,8 +125,10 @@ export const SERVERS: PalleiraServer[] = [
     palDefenderToken: env("SRV3_PALDEFENDER_TOKEN"),
     panelId: "59ec87fa",
     enabled: true,
-    // 🔴 NUNCA no mapa: é PvP, e posição de jogador e base viram alvo.
-    mapVisible: false,
+    // Liberado no wipe de 10/2026, a pedido do Lobo: o PvP ficou só nas
+    // plataformas e na ilha de eventos, e um mod da Steam já mostra todo
+    // mundo no mapa do jogo — esconder aqui não protegia mais ninguém.
+    mapVisible: true,
     mode: "PvP",
     tier: "free",
     // Pedido do dono em 11/09/2026: item/Pal vindo daqui só troca com quem
@@ -142,8 +144,9 @@ export const activeServers = () => SERVERS.filter((s) => s.enabled);
 /**
  * Servidores cujas posições podem ir para o mapa público.
  *
- * Separado de `activeServers` de propósito: o PvP aparece no placar, mas
- * mostrar onde os jogadores estão ali causaria briga de verdade.
+ * Separado de `activeServers` de propósito: servidor com PvP livre no mapa
+ * aparece no placar, mas mostrar onde os jogadores estão ali causaria briga
+ * de verdade. Hoje os três estão liberados.
  */
 export const mappableServers = () =>
   SERVERS.filter((s) => s.enabled && s.mapVisible);

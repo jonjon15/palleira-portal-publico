@@ -43,8 +43,8 @@ const loadMap = unstable_cache(
     const players: JogadorNoMapa[] = [];
     const failed: string[] = [];
 
-    // ⚠️ mappableServers(), não activeServers(): o PvP fica de fora de
-    // propósito — posição de jogador e de base ali vira alvo de raide.
+    // ⚠️ mappableServers(), não activeServers(): servidor com PvP livre fica
+    // de fora — posição de jogador e de base ali vira alvo de raide.
     await Promise.all(
       mappableServers().map(async (server) => {
         try {
