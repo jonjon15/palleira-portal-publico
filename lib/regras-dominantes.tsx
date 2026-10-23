@@ -4,10 +4,12 @@
  * as mostra sozinhas). Um módulo só, para não editar o mesmo texto em dois
  * lugares quando a regra mudar.
  *
- * Fonte: `REGRAS DOMINANTE.txt` (fornecido pelo dono, 21/09/2026) — mais
- * completo que o canal do Discord (`📰┇regras-palleira-br-dominantes`), que
- * é a fonte original de antes dessa data. Como toda regra do site, é
- * estática de propósito: mudou no Discord ou no arquivo, muda aqui à mão.
+ * Fonte: o canal `📰┇regras-palleira-br-dominantes` e o fórum
+ * `📌┇®registro-de-player`, relidos no wipe de 10/2026 (pedido do Lobo em
+ * 19/10). Saíram os elementos, o uso de Pal por elemento, o limite de 2
+ * bases, o reset mensal e a arena do nível 40 — nada disso está mais nas
+ * regras do Discord. Como toda regra do site, é estática de propósito:
+ * mudou no Discord, muda aqui à mão.
  */
 
 export interface Regra {
@@ -21,55 +23,46 @@ export interface Secao {
   titulo: string;
   intro?: string;
   regras: Regra[];
+  /** Imagem abaixo das regras — um print do mapa, por exemplo. */
+  imagem?: { src: string; alt: string; legenda?: string };
 }
 
 export const DOMINANTES: Secao[] = [
   {
     emoji: "⚔️",
     titulo: "PvP e combate",
-    intro: "PvP liberado no mapa, com drop de mochila. A base é área segura.",
+    intro:
+      "PvP liberado apenas nas 2 plataformas do jogo e na ilha de eventos. Fora delas, ninguém ataca ninguém.",
     regras: [
-      {
-        texto:
-          "Proibido matar jogadores dentro da base, e também atacar de dentro da base alguém que está do lado de fora.",
-        proibido: true,
-      },
-      { texto: "Proibido atacar Pals dentro da base.", proibido: true },
+      { texto: "O drop de mochila está ativado." },
+      { texto: "A fuga emergencial está desativada." },
       {
         texto:
           "Proibido usar qualquer mod, hack, macro, exploit ou programa que dê vantagem indevida.",
         proibido: true,
       },
     ],
+    imagem: {
+      src: "/dominantes/ilha-pvp.png",
+      alt: "Mapa do jogo com a ilha de eventos PvP circulada em vermelho, a leste do continente.",
+      legenda: "A ilha de eventos PvP, circulada no mapa.",
+    },
   },
   {
     emoji: "📜",
     titulo: "Linhagem e registro",
-    intro:
-      "O Dominantes tem sistema de elementos: sua raça define como você joga.",
+    intro: "Duas raças disputam o mundo: Daemon e Kryos.",
     regras: [
       {
         texto:
-          "Sua raça é o seu elemento primário: Fogo, Gelo, Grama ou Terra.",
+          "Registro obrigatório no fórum 📌┇®registro-de-player do Discord ANTES de jogar, com o nome do personagem e a raça.",
       },
       {
         texto:
-          "O elemento secundário você escolhe entre Elétrico, Água, Dragão ou Sombra.",
-      },
-      { texto: "O elemento Neutro pode ser usado por todos." },
-      {
-        texto:
-          "Registro obrigatório no canal #📋registro-player ANTES de começar a jogar.",
+          "Caracterização obrigatória — Kryos: pele azul, cabelo branco e barba branca. Daemon: pele vermelha, cabelo preto e barba preta.",
       },
       {
-        texto:
-          "É obrigatório manter a aparência correspondente à raça escolhida no registro.",
-      },
-      { texto: "É permitido 1 reset de personagem por mês." },
-      { texto: "A primeira disputa de arena é só a partir do nível 40." },
-      {
-        texto:
-          "Proibido trocar a cor da pele depois do registro para mudar ou burlar o elemento escolhido.",
+        texto: "Proibido trocar a cor da pele depois do registro.",
         proibido: true,
       },
     ],
@@ -78,49 +71,24 @@ export const DOMINANTES: Secao[] = [
     emoji: "🏰",
     titulo: "Território e bases",
     intro:
-      "Cada guilda constrói sua base definitiva dentro do bioma da sua raça/elemento — mas você não nasce nele.",
+      "Cada guilda constrói dentro do bioma da sua raça — mas você não nasce nele. O segundo bioma será liberado por jornada.",
     regras: [
       {
         texto:
-          "Até o nível 30 você pode fazer base temporária em qualquer lugar do mapa, para conseguir chegar ao seu bioma.",
+          "Até o level 30 você pode fazer base temporária nas áreas iniciais, enquanto chega ao seu bioma.",
       },
       {
         texto:
-          "A partir do nível 30 é obrigatório estar estabelecido dentro do seu bioma. Base permanente fora dele é irregular.",
+          "Depois do level 30 é obrigatório estar no bioma da sua raça. Nas áreas iniciais só fica permitida a Palpedia, para capturar os comerciantes lendários.",
       },
-      { texto: "Limite de 2 bases por guilda." },
       {
         texto:
-          "Proibido usar guilda falsa, conta secundária ou qualquer outro método para ter bases adicionais.",
+          "Proibido construir em área de boss ou de teleporte de um jeito que atrapalhe o livre trânsito ou impeça outro jogador de pegar as estátuas.",
         proibido: true,
       },
       {
         texto:
-          "Proibido atacar jogadores dentro de suas bases, e também atacar de dentro da base alguém que está do lado de fora.",
-        proibido: true,
-      },
-    ],
-  },
-  {
-    emoji: "🐾",
-    titulo: "Uso de Pals",
-    regras: [
-      {
-        texto:
-          "Dentro da base: livre. Pode usar qualquer Pal para trabalhar, independente do elemento.",
-      },
-      {
-        texto:
-          "No mundo aberto e nas arenas: proibido usar Pal fora dos elementos que você registrou.",
-        proibido: true,
-      },
-      {
-        texto:
-          "Pal voador é liberado para locomoção pelo mapa, desde que em modo pacífico.",
-      },
-      {
-        texto:
-          "Se o Pal voador for usado para atacar outro jogador, isso é infração e está sujeito a punição.",
+          "Proibido usar guilda fake ou conta secundária para ter mais bases.",
         proibido: true,
       },
     ],
@@ -157,6 +125,22 @@ export function BlocoDeRegras({ secoes }: { secoes: Secao[] }) {
               </li>
             ))}
           </ul>
+          {s.imagem && (
+            <figure className="mt-5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={s.imagem.src}
+                alt={s.imagem.alt}
+                loading="lazy"
+                className="w-full rounded-[var(--radius-card)] border border-line"
+              />
+              {s.imagem.legenda && (
+                <figcaption className="mt-2 text-xs text-muted">
+                  {s.imagem.legenda}
+                </figcaption>
+              )}
+            </figure>
+          )}
         </section>
       ))}
     </div>

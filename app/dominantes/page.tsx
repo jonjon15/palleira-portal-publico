@@ -57,7 +57,7 @@ export default async function Dominantes() {
       <PageHeader
         kicker="Servidor"
         title="Dominantes"
-        description="O mundo PvP da Palleira — elementos, território e disputa livre no mapa."
+        description="O mundo PvP da Palleira — Daemon contra Kryos, território por raça e PvP nas plataformas e na ilha de eventos."
       />
 
       <div className="mx-auto max-w-3xl px-4 py-12">

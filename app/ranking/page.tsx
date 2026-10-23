@@ -8,7 +8,7 @@ import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers, guardarPoder } from "@/lib/db";
-import { racasRegistradas } from "@/lib/racas-do-discord";
+import { racasRegistradas, registroDe } from "@/lib/racas-do-discord";
 import { NOME_DO_ELEMENTO } from "@/lib/racas";
 
 export const metadata: Metadata = {
@@ -245,10 +245,15 @@ export default async function Ranking() {
   const doPve = classificados.filter((p) => p.server_slug !== "pvp-free");
 
   const linhaDe = (p: (typeof classificados)[number]) => {
-    // Personagem → conta do Discord → registro no fórum. Só o Dominantes
-    // exige isso, mas a busca não filtra por servidor — quem não tem os
-    // dois elos simplesmente não ganha selo, em qualquer mundo.
-    const reg = p.discord_id ? racas.get(p.discord_id) : undefined;
+    // O nome do personagem no post só vale no Dominantes — é de lá o
+    // registro, e o mesmo nome num PVE seria outra pessoa. Nos outros
+    // mundos sobra o elo pela conta do Discord, como sempre foi.
+    const reg =
+      p.server_slug === "pvp-free"
+        ? registroDe(racas, p)
+        : p.discord_id
+          ? racas.porDiscord.get(p.discord_id)
+          : undefined;
     return {
       chave: `${p.server_slug}-${p.palworld_uid}`,
       nome: p.name,

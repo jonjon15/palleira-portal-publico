@@ -120,13 +120,32 @@ export interface RegistroDeRaca {
   raca: Raca | null;
   /** O que ela escreveu, para a tela poder mostrar mesmo sem reconhecer. */
   racaCrua: string;
+  /**
+   * Sempre nulo nos registros feitos depois do wipe de 10/2026: o
+   * Dominantes deixou de ter elemento secundário. Fica para ler o histórico.
+   */
   secundario: Elemento | null;
+  /** `NOME DO PERSONAGEM:` do post, quando a pessoa preencheu. */
+  personagem: string | null;
 }
+
+/**
+ * Nome de personagem pronto para comparar: sem acento, sem espaço, sem
+ * pontuação. O jogo deixa escrever "C H R I S", e no registro a pessoa
+ * escreve "Chris" — ver a memória dos nomes espaçados.
+ */
+export const chaveDeNome = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 
 /**
  * Lê um post do fórum de registro.
  *
- * O formato pedido é `RAÇA: … / ELEMENTOS INICIAIS: … / …`, mas ninguém
+ * Desde o wipe de 10/2026 o formato é só `NOME DO PERSONAGEM: … / RAÇA: …`
+ * (Daemon ou Kryos). Antes era `RAÇA: … / ELEMENTOS INICIAIS: … / …`, e ninguém
  * segue à risca: aparece com asterisco de negrito, com "ELEMENTOS:" sem o
  * "INICIAIS", separado por vírgula, por "e" ou por hífen. Devolve `null`
  * quando não é um registro — inclusive para o post-modelo em branco que o
@@ -149,5 +168,8 @@ export function lerRegistro(texto: string): RegistroDeRaca | null {
       .map((p) => elementoDoTexto(p))
       .find((e) => e && e !== raca?.elemento) ?? null;
 
-  return { raca, racaCrua, secundario };
+  const achouNome = /NOME(?:\s+DO)?\s+PERSONAGEM\s*:\s*([^\n|]+)/i.exec(limpo);
+  const personagem = achouNome?.[1]?.trim() || null;
+
+  return { raca, racaCrua, secundario, personagem };
 }

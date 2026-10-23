@@ -7,7 +7,7 @@ import { normalizarUid } from "@/lib/palworld/uid";
 import { getPlayers, getGuilds, poderDaPalbox } from "@/lib/palworld/paldefender";
 import { getPlayers as getLivePlayers } from "@/lib/palworld/rest";
 import { topPlayers, guardarPoder } from "@/lib/db";
-import { racasRegistradas } from "@/lib/racas-do-discord";
+import { racasRegistradas, registroDe } from "@/lib/racas-do-discord";
 import { NOME_DO_ELEMENTO } from "@/lib/racas";
 
 const SLUG = "pvp-free";
@@ -232,10 +232,10 @@ export default async function RankingDominantes() {
             ordenar por ele.
           </p>
           <p className="mt-1 text-sm text-muted">
-            A <b className="text-text">raça</b> ao lado do nome vem do registro
-            no Discord, com o ícone do elemento primário e do secundário. Só
-            aparece para quem vinculou o personagem no site — é o vínculo que
-            diz de quem é aquele personagem no jogo.
+            A <b className="text-text">raça</b> ao lado do nome — Daemon ou
+            Kryos — vem do registro no Discord. Aparece quando o nome do
+            personagem no registro bate com o do jogo, ou quando o personagem
+            está vinculado no site.
           </p>
 
           {classificados.length === 0 ? (
@@ -244,9 +244,9 @@ export default async function RankingDominantes() {
             <TabelaJogadores
               mostrarElementos
               linhas={classificados.map((p) => {
-                // Personagem → conta do Discord → registro no fórum. Some
-                // qualquer elo e a linha simplesmente não ganha selo.
-                const reg = p.discord_id ? racas.get(p.discord_id) : undefined;
+                // Pelo nome do personagem no post; sem ele, pela conta
+                // vinculada. Sem nenhum dos dois, a linha não ganha selo.
+                const reg = registroDe(racas, p);
                 return {
                 chave: p.palworld_uid,
                 nome: p.name,

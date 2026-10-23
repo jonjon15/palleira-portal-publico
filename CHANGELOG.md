@@ -4,6 +4,11 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-23
+
+- **Dominantes: regras novas para o wipe.** Agora são só duas raças, Daemon e Kryos, sem elementos. O PvP fica restrito às 2 plataformas do jogo e à ilha de eventos, que aparece circulada num print do mapa em /regras e /dominantes. Também entraram a caracterização obrigatória de cada raça e a proibição de construir em área de boss ou de teleporte.
+- **Ranking do Dominantes: a raça aparece sem precisar vincular o personagem.** O registro no Discord agora traz o nome do personagem, e o site usa esse nome para mostrar o selo de Daemon ou Kryos ao lado do jogador.
+
 ## 2026-10-08
 
 - **Corrigido: ninguém conseguia entrar no site.** O Discord mudou um detalhe no retorno do login e o site passou a recusar todo mundo com "Server error". Quem já estava logado continuava dentro; quem saiu ficava de fora.

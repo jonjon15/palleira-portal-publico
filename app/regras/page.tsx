@@ -27,6 +27,8 @@ export const metadata: Metadata = {
  * `REGRAS DOMINANTE.txt` (fornecido pelo dono fora do Discord), que é mais
  * completo que o canal: acrescenta o reset de personagem (1×/mês) e a regra
  * de Pal voador (locomoção em modo pacífico ok, ataque é infração).
+ * No wipe de 10/2026 foi reescrita de novo a partir do Discord: só Daemon e
+ * Kryos, sem elementos, e PvP só nas plataformas e na ilha de eventos.
  *
  * Quando a regra mudar no Discord, ela precisa mudar aqui à mão: a página é
  * estática de propósito. Regra que depende da API do Discord estar de pé é
