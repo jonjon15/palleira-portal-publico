@@ -124,7 +124,11 @@ export async function entregarPalPorJson(
   if (!vinculo) {
     return { ok: false, mensagem: "Esse Discord ID não tem personagem vinculado." };
   }
-  const server = serverBySlug(vinculo.serverSlug);
+  // ⚠️ O Pal vai para ONDE A PESSOA ESTÁ, não para onde ela vinculou — o
+  // vínculo guarda um servidor só, mas o UID vale nos três. Em 26/10/2026 o
+  // Lobo, vinculado no PVE VIP (desligado), jogava no Dominantes e o Pal
+  // seguia para o VIP. Offline em todos, fica o servidor do vínculo.
+  const server = (await servidorOndeEsta(vinculo.uid)) ?? serverBySlug(vinculo.serverSlug);
   if (!server) {
     return { ok: false, mensagem: "Servidor do vínculo é inválido." };
   }
@@ -138,7 +142,7 @@ export async function entregarPalPorJson(
       const [{ id: transferId }] = (await sql`
         insert into pal_transfers
           (discord_id, server_slug, palworld_uid, template, direction, status, arquivo)
-        values (${discordIdDestino.trim()}, ${vinculo.serverSlug}, ${vinculo.uid},
+        values (${discordIdDestino.trim()}, ${server.slug}, ${vinculo.uid},
                 ${JSON.stringify(template)}, 'resgatar', 'aguardando_arquivo', '')
         returning id
       `) as { id: number }[];
@@ -278,8 +282,11 @@ export async function jogadoresOnlineParaEntrega(): Promise<JogadorOnline[]> {
       try {
         const online = await getPlayers(server);
         for (const p of online) {
+          // Sem exigir que o servidor do vínculo bata com este: o UID vale
+          // nos três, e quem vinculou num servidor e joga em outro sumia da
+          // lista (mesma correção de `jogadoresOnlineParaItens`).
           const vinculo = porUid.get(p.playerId);
-          if (!vinculo || vinculo.server_slug !== server.slug) continue;
+          if (!vinculo) continue;
           achados.push({
             discordId: vinculo.discord_id,
             nome: p.name,
@@ -293,6 +300,25 @@ export async function jogadoresOnlineParaEntrega(): Promise<JogadorOnline[]> {
     }),
   );
 
-  const nomes = await nomesDe(achados.map((a) => a.discordId)).catch(() => new Map<string, string>());
-  return achados.map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }));
+  // Uma linha por pessoa: o mesmo UID conectado em dois servidores
+  // duplicaria a chave do dropdown. Fica a primeira que respondeu.
+  const unicos = new Map<string, JogadorOnline>();
+  for (const a of achados) if (!unicos.has(a.discordId)) unicos.set(a.discordId, a);
+  const lista = [...unicos.values()];
+
+  const nomes = await nomesDe(lista.map((a) => a.discordId)).catch(() => new Map<string, string>());
+  return lista.map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }));
+}
+
+/** O servidor em que esse UID está conectado agora, ou `null` se em nenhum. */
+async function servidorOndeEsta(uid: string) {
+  for (const server of activeServers()) {
+    if (!server.rconPort) continue;
+    try {
+      if ((await getPlayers(server)).some((p) => p.playerId === uid)) return server;
+    } catch {
+      // Servidor mudo: tenta o próximo.
+    }
+  }
+  return null;
 }
