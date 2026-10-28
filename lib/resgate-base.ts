@@ -63,16 +63,22 @@ export interface Resultado {
 
 const nomeDoServidor = (slug: string) => serverBySlug(slug)?.shortName ?? slug;
 
+/** Recorte feito antes do wipe atual do servidor é de outra season. */
+const daSeasonAtual = (slug: string, takenAt: string | Date) => {
+  const wipe = serverBySlug(slug)?.wipeEm;
+  return !wipe || new Date(takenAt).getTime() >= new Date(wipe).getTime();
+};
+
 /**
  * Uma base por servidor: a de mais peças entre as que este UID é membro.
  *
  * Cobre tanto o arquivo diário (desde 06/09/2026) quanto o backfill de 22/08
  * — para quem procura, as duas fontes são a mesma tabela, sem diferença.
+ * Recortes de antes do último wipe ficam de fora (ver `wipeEm`).
  */
 export async function basesResgataveis(uid: string): Promise<BaseResgatavel[]> {
-  const rows = (await sql`
-    select distinct on (server_slug)
-      server_slug, id, guild_id, guild_name, piece_count, taken_at
+  const todas = (await sql`
+    select server_slug, id, guild_id, guild_name, piece_count, taken_at
     from base_snapshots
     where ${uid} = any(member_uids) and formato >= 2
     order by server_slug, piece_count desc, taken_at desc
@@ -84,6 +90,14 @@ export async function basesResgataveis(uid: string): Promise<BaseResgatavel[]> {
     piece_count: number;
     taken_at: string;
   }[];
+
+  // Uma por servidor: a primeira da season atual na ordem acima.
+  const vistos = new Set<string>();
+  const rows = todas.filter((r) => {
+    if (vistos.has(r.server_slug) || !daSeasonAtual(r.server_slug, r.taken_at)) return false;
+    vistos.add(r.server_slug);
+    return true;
+  });
 
   return rows.map((r) => ({
     serverSlug: r.server_slug,
@@ -223,11 +237,17 @@ export async function pedirRestauracao(opts: {
   // O guild_id vem do banco, nunca do formulário — o mesmo espírito da
   // posição: o cliente escolhe QUAL base (snapshotId), não quanto ela custa.
   const snap = (await sql`
-    select guild_id from base_snapshots
+    select guild_id, taken_at from base_snapshots
     where id = ${opts.snapshotId} and server_slug = ${opts.serverSlug}
-  `) as { guild_id: string }[];
+  `) as { guild_id: string; taken_at: string }[];
   const guildId = snap[0]?.guild_id ?? "";
   if (!snap[0]) return { ok: false, mensagem: "Base não encontrada." };
+  if (!daSeasonAtual(opts.serverSlug, snap[0].taken_at)) {
+    return {
+      ok: false,
+      mensagem: "Essa base é de antes do wipe e não pode ser restaurada.",
+    };
+  }
 
   const gratis = !(await jaTeveRestauracaoFeita(opts.serverSlug, guildId));
   const custo = gratis ? 0 : PRECO_RESTAURACAO;

@@ -69,6 +69,15 @@ export interface PalleiraServer {
    * Não tira o servidor de mais nada (cofre, ranking, vínculo continuam).
    */
   foraDaHome?: boolean;
+  /**
+   * Quando o mundo atual começou (ISO, UTC). Base arquivada antes disso é de
+   * outra season e não pode ser restaurada — o UID do jogador é o mesmo nos
+   * dois mundos, então sem este corte o site oferecia a base velha. Em
+   * 28/10/2026 um jogador do Dominantes trouxe assim a base de antes do wipe.
+   *
+   * ⚠️ A cada wipe, atualizar aqui e em `tools/processar_fila.py` (WIPE_EM).
+   */
+  wipeEm?: string;
 }
 
 const env = (key: string) => process.env[key] ?? "";
@@ -135,6 +144,9 @@ export const SERVERS: PalleiraServer[] = [
     // também joga no Dominantes — os outros dois servidores não têm essa
     // trava.
     mercadoRestrito: true,
+    // Wipe de 23/10/2026: o último recorte do mundo velho é de 22/10 05:50
+    // UTC e o primeiro do novo, de 25/10.
+    wipeEm: "2026-10-23T00:00:00Z",
   },
 ];
 

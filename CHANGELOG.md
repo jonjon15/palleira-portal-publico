@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-28
+
+- **Corrigido: restaurar base de antes do wipe.** A restauração de base oferecia também a base da season passada do Dominantes. Agora só aparecem e só são aceitas bases do mundo atual.
+
 ## 2026-10-23
 
 - **Dominantes: regras novas para o wipe.** Agora são só duas raças, Daemon e Kryos, sem elementos. O PvP fica restrito às 2 plataformas do jogo e à ilha de eventos, que aparece circulada num print do mapa em /regras e /dominantes. Também entraram a caracterização obrigatória de cada raça e a proibição de construir em área de boss ou de teleporte.

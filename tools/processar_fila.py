@@ -43,6 +43,7 @@ import os
 import pickle
 import sys
 import time
+from datetime import datetime, timezone
 
 import psycopg
 
@@ -57,6 +58,13 @@ from restaurar_base import (  # noqa: E402
 )
 
 SAVE_PATH = "Pal/Saved/SaveGames/0/{guid}/Level.sav"
+
+# Início do mundo atual de cada servidor (UTC) — espelho de `wipeEm` em
+# lib/servers.ts. Recorte anterior é de outra season e é recusado aqui também,
+# não só no site. Atualizar os dois a cada wipe.
+WIPE_EM = {
+    "pvp-free": datetime(2026, 10, 23, tzinfo=timezone.utc),
+}
 
 
 def esperar_estado(pid: str, alvo: str, limite: int = 300) -> None:
@@ -185,6 +193,11 @@ def processar_servidor(conn, cfg, rows: list[dict], aplicar: bool) -> None:
         if formato < 2:
             _marcar(r["id"], "recusado",
                     "snapshot em formato antigo, sem o fecho de referências")
+            continue
+
+        wipe = WIPE_EM.get(cfg.slug)
+        if wipe and quando < wipe:
+            _marcar(r["id"], "recusado", "essa base é de antes do wipe")
             continue
 
         if base_id in base_camp_por_id(atual):
