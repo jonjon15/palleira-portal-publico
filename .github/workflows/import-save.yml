@@ -8,7 +8,11 @@ on:
     # e são só 26 MB — o servidor nem sente. O limite real é o minuto de CI
     # do GitHub (2.000/mês no plano grátis): 12 execuções por dia consomem
     # ~720, com folga. Aumentar a frequência daqui exige olhar essa conta.
-    - cron: "0 */2 * * *"
+    #
+    # Pula a madrugada (2h às 8h de Brasília = 5h às 11h UTC): ninguém olha o
+    # ranking nessa hora, e cada execução acorda o banco do Neon, cuja cota
+    # grátis estourou em 29/09 e 29/10/2026.
+    - cron: "0 0-4/2,12-22/2 * * *"
   workflow_dispatch: # permite rodar na mão pelo painel do GitHub
 
 jobs:

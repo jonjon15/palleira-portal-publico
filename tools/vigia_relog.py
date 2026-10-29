@@ -635,7 +635,9 @@ def bater_ponto(slug: str, detalhe: dict | None = None) -> None:
         pass  # ver o docstring: reportar é secundário, punir é o trabalho
 
 
-PONTO_A_CADA_S = 15 * 60
+# De hora em hora: cada ponto acorda o banco do Neon por 5 min, e de 15 em
+# 15 isso sozinho deixava o banco ligado 1/3 do dia (cota estourou 29/10/2026).
+PONTO_A_CADA_S = 60 * 60
 
 
 # -------------------------------------------------------------------- rodada

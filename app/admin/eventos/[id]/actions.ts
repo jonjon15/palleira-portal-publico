@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { TAG_EVENTOS } from "@/lib/eventos";
 import { auth } from "@/auth";
 import { levelOf, canManageEvents } from "@/lib/roles";
 import {
@@ -44,6 +45,7 @@ export async function salvarEdicao(
   const resultado = await editarEvento(eventId, input);
   if (resultado.ok) {
     revalidatePath("/");
+    revalidateTag(TAG_EVENTOS);
     revalidatePath("/eventos");
     revalidatePath(`/eventos/${eventId}`);
     revalidatePath(`/admin/eventos/${eventId}`);
@@ -67,6 +69,7 @@ export async function adicionarFoto(
   );
   if (resultado.ok) {
     revalidatePath(`/admin/eventos/${eventId}`);
+    revalidateTag(TAG_EVENTOS);
     revalidatePath("/eventos");
   }
   return resultado;
@@ -84,6 +87,7 @@ export async function removerFoto(
   const resultado = await removerImagemDoEvento(imageId);
   if (resultado.ok) {
     revalidatePath(`/admin/eventos/${eventId}`);
+    revalidateTag(TAG_EVENTOS);
     revalidatePath("/eventos");
   }
   return resultado;

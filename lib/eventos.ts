@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { sql } from "@/lib/db";
 
 /**
@@ -68,7 +69,7 @@ const paraEvento = (r: LinhaEvento): Evento => ({
 /* ----------------------------------------------------------------- leitura */
 
 /** O evento em destaque — fixado, senão o publicado mais recente. Home e topo do mural. */
-export async function eventoAtual(): Promise<Evento | null> {
+async function eventoAtualSemCache(): Promise<Evento | null> {
   const rows = (await sql`
     select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
            starts_at, ends_at, status, pinned, created_by, created_by_name,
@@ -82,7 +83,7 @@ export async function eventoAtual(): Promise<Evento | null> {
 }
 
 /** O mural inteiro — fixado primeiro, depois do mais novo pro mais velho. */
-export async function listarEventosPublicados(limite = 30): Promise<Evento[]> {
+async function listarEventosPublicadosSemCache(limite = 30): Promise<Evento[]> {
   const rows = (await sql`
     select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
            starts_at, ends_at, status, pinned, created_by, created_by_name,
@@ -96,7 +97,7 @@ export async function listarEventosPublicados(limite = 30): Promise<Evento[]> {
 }
 
 /** Barra lateral "próximos eventos" — só quem tem data futura marcada. */
-export async function proximosEventos(limite = 5): Promise<Evento[]> {
+async function proximosEventosSemCache(limite = 5): Promise<Evento[]> {
   const rows = (await sql`
     select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
            starts_at, ends_at, status, pinned, created_by, created_by_name,
@@ -109,7 +110,7 @@ export async function proximosEventos(limite = 5): Promise<Evento[]> {
   return rows.map(paraEvento);
 }
 
-export async function buscarEventoPorSlug(slug: string): Promise<Evento | null> {
+async function buscarEventoPorSlugSemCache(slug: string): Promise<Evento | null> {
   const rows = (await sql`
     select id, title, slug, body, cover_emoji, cover_image_url, server_slug,
            starts_at, ends_at, status, pinned, created_by, created_by_name,
@@ -386,7 +387,7 @@ const paraImagem = (r: LinhaImagemEvento): ImagemEvento => ({
   createdAt: r.created_at,
 });
 
-export async function imagensDoEvento(eventId: number): Promise<ImagemEvento[]> {
+async function imagensDoEventoSemCache(eventId: number): Promise<ImagemEvento[]> {
   const rows = (await sql`
     select id, event_id, url, caption, created_at
     from event_images
@@ -419,3 +420,30 @@ export async function removerImagemDoEvento(imageId: number): Promise<Resultado>
   if (!rows.length) return { ok: false, mensagem: "Essa foto já não existe mais." };
   return { ok: true, mensagem: "Foto removida." };
 }
+
+/* ------------------------------------------------------- leitura em cache */
+
+/**
+ * O que o público vê do mural, guardado por 5 min.
+ *
+ * Home e /eventos abrem a toda hora (inclusive no prefetch dos links do
+ * menu), e cada abertura acordava o banco — foi parte do que estourou a cota
+ * do Neon grátis em 29/09 e 29/10/2026. Quem mexe em evento chama
+ * `revalidateTag(TAG_EVENTOS)`, então a mudança aparece na hora mesmo assim.
+ */
+export const TAG_EVENTOS = "eventos";
+const opcoes = { revalidate: 300, tags: [TAG_EVENTOS] };
+
+export const eventoAtual = unstable_cache(eventoAtualSemCache, ["evento-atual"], opcoes);
+export const listarEventosPublicados = unstable_cache(
+  listarEventosPublicadosSemCache,
+  ["eventos-publicados"],
+  opcoes,
+);
+export const proximosEventos = unstable_cache(proximosEventosSemCache, ["proximos-eventos"], opcoes);
+export const buscarEventoPorSlug = unstable_cache(
+  buscarEventoPorSlugSemCache,
+  ["evento-por-slug"],
+  opcoes,
+);
+export const imagensDoEvento = unstable_cache(imagensDoEventoSemCache, ["imagens-do-evento"], opcoes);

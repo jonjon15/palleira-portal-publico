@@ -5,6 +5,7 @@ import { ServerCard, type ServerCardData } from "@/components/server-card";
 import { activeServers } from "@/lib/servers";
 import { getRates, getPlayers } from "@/lib/palworld/rest";
 import { servidoresVisiveis, type Presenca } from "@/lib/presenca-de-servidor";
+import { unstable_cache } from "next/cache";
 import { communityStats, topPlayers } from "@/lib/db";
 import { eventoAtual, imagensDoEvento } from "@/lib/eventos";
 import { EventoSelo } from "@/components/evento-selo";
@@ -63,6 +64,26 @@ async function loadJogandoAgora(presentes: Presenca[]): Promise<JogandoAgora[]> 
   return listas.flat().sort((a, b) => b.level - a.level);
 }
 
+/**
+ * O que a home lê do banco, guardado por alguns minutos. A home abre a toda
+ * hora (e no prefetch do logo), e cada abertura acordava o banco — parte do
+ * que estourou a cota do Neon grátis em 29/09 e 29/10/2026. Os números vêm
+ * do import do save, que roda de 2 em 2h: 5 min de atraso não se nota.
+ */
+const estatisticasEmCache = unstable_cache(
+  (slugs: string[]) => communityStats(slugs),
+  ["home-estatisticas"],
+  { revalidate: 300 },
+);
+const melhoresEmCache = unstable_cache(
+  (slugs: string[]) => topPlayers(5, slugs),
+  ["home-melhores"],
+  { revalidate: 300 },
+);
+const ritualEmCache = unstable_cache(() => ritualEmDestaque(), ["home-ritual"], {
+  revalidate: 120,
+});
+
 export default async function Home() {
   // Primeiro quem está no ar: números e ranking somam só esses mundos, senão
   // o save parado de um servidor desligado domina o "melhores da Palleira".
@@ -71,11 +92,11 @@ export default async function Home() {
 
   const [servers, stats, best, jogando, evento, purificando] = await Promise.all([
     loadServers(presentes),
-    communityStats(slugs).catch(() => null),
-    topPlayers(5, slugs).catch(() => []),
+    estatisticasEmCache(slugs).catch(() => null),
+    melhoresEmCache(slugs).catch(() => []),
     loadJogandoAgora(presentes),
     eventoAtual().catch(() => null),
-    ritualEmDestaque().catch(() => null),
+    ritualEmCache().catch(() => null),
   ]);
 
   // Quem do top está jogando agora entra com o level do momento, não o do

@@ -12,9 +12,12 @@ name: eventos do Discord
 
 on:
   schedule:
-    # De hora em hora. O canal recebe poucos posts por semana, e quem quer
-    # ver na hora abre /admin/eventos, que sincroniza ao carregar.
-    - cron: "7 * * * *"
+    # De 2 em 2h, 3 min depois do import do save: os dois acordam o banco do
+    # Neon na mesma janela em vez de cada um na sua (a cota grátis estourou
+    # em 29/09 e 29/10/2026). O canal recebe poucos posts por semana, e quem
+    # quer ver na hora abre /admin/eventos, que sincroniza ao carregar.
+    # A renovação dos cartazes (link do Discord vence em ~24h) folga com isso.
+    - cron: "3 */2 * * *"
   workflow_dispatch: {}
 
 jobs:

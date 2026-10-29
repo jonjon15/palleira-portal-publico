@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { TAG_EVENTOS } from "@/lib/eventos";
 import { auth } from "@/auth";
 import { levelOf, canManageEvents } from "@/lib/roles";
 import {
@@ -31,6 +32,7 @@ async function exigirCriador() {
 
 function revalidarMural() {
   revalidatePath("/");
+  revalidateTag(TAG_EVENTOS);
   revalidatePath("/eventos");
   revalidatePath("/admin/eventos");
 }

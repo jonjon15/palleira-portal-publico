@@ -28,11 +28,12 @@ export interface Sinal {
 
 /** Quanto tempo sem notícias antes de acender o alerta, por tipo de robô. */
 const LIMITES = {
-  // O cron é de 2 em 2h; 3h já significa uma execução perdida.
-  import: { atencao: 3 * 3600, ruim: 6 * 3600 },
-  // O vigia bate ponto a cada 15 min (antes era a cada rodada de 60s — isso
-  // não deixava o banco dormir e estourou a cota do Neon em 29/09/2026).
-  vigia: { atencao: 35 * 60, ruim: 60 * 60 },
+  // O cron é de 2 em 2h, com um buraco de 8h na madrugada (4h→12h UTC).
+  import: { atencao: 9 * 3600, ruim: 12 * 3600 },
+  // O vigia bate ponto de hora em hora (era a cada 60s, depois 15 min — os
+  // dois não deixavam o banco dormir; a cota do Neon estourou em 29/09 e em
+  // 29/10/2026).
+  vigia: { atencao: 80 * 60, ruim: 150 * 60 },
 } as const;
 
 function idadeEmSegundos(quando: string | Date): number {

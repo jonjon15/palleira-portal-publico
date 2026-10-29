@@ -8,6 +8,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 
 - **Site em manutenção parcial até 31/10 às 21h.** O banco de dados do site atingiu o limite mensal de uso de novo. Até lá as páginas abrem, mas ranking, cofre, loja, kits e resgates ficam sem dados. Nada foi apagado: tudo volta nesse horário. O servidor do jogo segue normal.
 - **Entregar itens funciona mesmo com o banco fora.** A lista de quem recebe agora mostra todo mundo que está online, inclusive quem não vinculou a conta. Enquanto o banco não volta, dá para montar kits de prêmio provisórios, que ficam salvos no navegador de quem montou. Os kits antigos voltam em 31/10.
+- **Site mais econômico com o banco.** Início, mural de eventos e a barra de servidores passaram a guardar os dados por alguns minutos, e as tarefas automáticas rodam menos vezes de madrugada. É para o banco não bater o limite do mês de novo. Os eventos do Discord chegam ao mural em até 2h (antes era 1h).
 
 ## 2026-10-28
 

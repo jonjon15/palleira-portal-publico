@@ -19,6 +19,7 @@
  * `painel-enx-restart-e-sem-backup`).
  */
 
+import { unstable_cache } from "next/cache";
 import { sql } from "@/lib/db";
 import { activeServers, type PalleiraServer } from "@/lib/servers";
 import { getMetrics, type ServerMetrics } from "@/lib/palworld/rest";
@@ -93,20 +94,39 @@ async function ultimaVezVivo(): Promise<Map<string, number>> {
  * `getMetrics` cacheia por 60s por URL, então chamar isto em vários lugares da
  * mesma página não soma requisição nenhuma.
  */
-export async function presencaDosServidores(): Promise<Presenca[]> {
-  const [status, idades] = await Promise.all([
-    Promise.all(
-      activeServers().map(async (server) => ({
-        server,
-        metrics: await getMetrics(server).catch(() => null),
-      })),
-    ),
-    ultimaVezVivo(),
-  ]);
+/**
+ * Carimbo + leitura das idades, no máximo uma vez a cada 10 min por
+ * combinação de vivos/mortos.
+ *
+ * 🔴 Isto roda no topo de TODAS as páginas (o `ServerTicker` do layout),
+ * inclusive em cada prefetch de link do menu: sem cache era uma escrita no
+ * banco por página aberta, e o banco nunca dormia — a cota do Neon grátis
+ * estourou em 29/09 e de novo em 29/10/2026. A janela de 30 min para sumir
+ * aguenta folgado um carimbo de 10 em 10. A chave leva quem está vivo e quem
+ * está morto, então um servidor que cai ou volta é carimbado na hora.
+ */
+const carimbarELer = unstable_cache(
+  async (vivos: string[], mortos: string[]): Promise<Record<string, number>> => {
+    const idades = await ultimaVezVivo();
+    await carimbar(vivos, mortos);
+    return Object.fromEntries(idades);
+  },
+  ["presenca-de-servidor"],
+  { revalidate: 600 },
+);
 
-  await carimbar(
-    status.filter((s) => s.metrics !== null).map((s) => s.server.slug),
-    status.filter((s) => s.metrics === null).map((s) => s.server.slug),
+export async function presencaDosServidores(): Promise<Presenca[]> {
+  const status = await Promise.all(
+    activeServers().map(async (server) => ({
+      server,
+      metrics: await getMetrics(server).catch(() => null),
+    })),
+  );
+
+  const vivos = status.filter((s) => s.metrics !== null).map((s) => s.server.slug);
+  const mortos = status.filter((s) => s.metrics === null).map((s) => s.server.slug);
+  const idades = new Map(
+    Object.entries(await carimbarELer(vivos, mortos).catch(() => ({}))),
   );
 
   return status.map(({ server, metrics }) => {

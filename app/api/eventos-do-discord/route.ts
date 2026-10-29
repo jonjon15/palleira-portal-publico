@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { TAG_EVENTOS } from "@/lib/eventos";
 import { sincronizarEventosDoDiscord } from "@/lib/eventos-do-discord";
 
 /**
@@ -34,8 +35,9 @@ async function executar(req: Request) {
 
   const r = await sincronizarEventosDoDiscord();
 
-  if (r.criados > 0) {
+  if (r.criados > 0 || r.imagensRenovadas > 0) {
     revalidatePath("/");
+    revalidateTag(TAG_EVENTOS);
     revalidatePath("/eventos");
     revalidatePath("/admin/eventos");
   }
