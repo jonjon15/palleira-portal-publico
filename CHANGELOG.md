@@ -4,6 +4,10 @@ Registro das mudanças do palleira.com.br entregues em produção. Começa em 03
 
 Escrito para quem usa o site, não para quem mexe no código: ferramenta interna, sonda de investigação e correção de bug que ninguém chegou a ver ficam de fora, nos commits.
 
+## 2026-10-29
+
+- **Site em manutenção parcial até 31/10 às 21h.** O banco de dados do site atingiu o limite mensal de uso de novo. Até lá as páginas abrem, mas ranking, cofre, loja, kits e resgates ficam sem dados. Nada foi apagado: tudo volta nesse horário. O servidor do jogo segue normal.
+
 ## 2026-10-28
 
 - **Corrigido: restaurar base de antes do wipe.** A restauração de base oferecia também a base da season passada do Dominantes. Agora só aparecem e só são aceitas bases do mundo atual.

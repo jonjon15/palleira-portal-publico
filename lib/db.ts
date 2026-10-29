@@ -32,7 +32,7 @@ export const sql = (async (partes: TemplateStringsArray, ...valores: unknown[]) 
     if (!bancoForaDoAr(e)) throw e;
     if (ehLeitura(partes)) return [];
     throw new Error(
-      "O banco do site está em manutenção. Tente de novo depois de 30/09 às 21h.",
+      "O banco do site está em manutenção. Tente de novo depois de 31/10 às 21h.",
     );
   }
 }) as unknown as typeof conexao;
