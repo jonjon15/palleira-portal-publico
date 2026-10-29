@@ -37,6 +37,22 @@ export const sql = (async (partes: TemplateStringsArray, ...valores: unknown[]) 
   }
 }) as unknown as typeof conexao;
 
+/**
+ * O banco está respondendo? `sql` devolve `[]` com o banco fora por cota, e
+ * para a maioria das telas isso basta — mas onde "vazio" e "fora do ar"
+ * pedem telas diferentes (os kits de prêmio, que senão parecem apagados),
+ * esta é a pergunta direta.
+ */
+export async function bancoNoAr(): Promise<boolean> {
+  try {
+    await conexao`select 1`;
+    return true;
+  } catch (e) {
+    if (bancoForaDoAr(e)) return false;
+    throw e;
+  }
+}
+
 export interface GuildRow {
   server_slug: string;
   guild_id: string;

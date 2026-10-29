@@ -8,6 +8,7 @@ import { logarNoDiscord } from "@/lib/discord";
 import { nomeDoItem } from "@/lib/itens";
 import {
   entregarItensParaJogadores,
+  mencao,
   type ItemPedido,
   type ResultadoEntrega,
 } from "@/lib/admin-entregar-itens";
@@ -78,7 +79,7 @@ export async function acaoEntregarItens(
   if (r.resultados.length > 0) {
     await logarNoDiscord(
       `🛠️ Entrega de itens manual · ${resumoItens} — <@${actorId}> → ${alvos
-        .map((a) => `<@${a.discordId}>`)
+        .map(mencao)
         .join(", ")}\n> ${r.mensagem}`,
     );
   }
@@ -247,7 +248,7 @@ export async function acaoEntregarKitPremio(
   if (r.resultados.length > 0) {
     await logarNoDiscord(
       `🎁 Kit de prêmio entregue — <@${actorId}> → ${alvos
-        .map((a) => `<@${a.discordId}>`)
+        .map(mencao)
         .join(", ")}\n> ${r.mensagem}`,
     );
   }

@@ -6,7 +6,13 @@ import { levelOf, canPowerServer } from "@/lib/roles";
 import { jogadoresOnlineParaItens } from "@/lib/admin-entregar-itens";
 import { catalogoDeItens } from "@/lib/itens";
 import { todosOsKitsPremio } from "@/lib/kits-premio";
-import { EntregarItens, FormularioDeKitPremio, LinhaDeKitPremio } from "./formularios";
+import { bancoNoAr } from "@/lib/db";
+import {
+  EntregarItens,
+  FormularioDeKitPremio,
+  LinhaDeKitPremio,
+} from "./formularios";
+import { KitsDoNavegador } from "./kits-do-navegador";
 
 export const metadata: Metadata = { title: "Entregar itens" };
 export const dynamic = "force-dynamic";
@@ -34,9 +40,10 @@ export default async function EntregarItensPage() {
     notFound();
   }
 
-  const [online, kits] = await Promise.all([
+  const [online, kits, noAr] = await Promise.all([
     jogadoresOnlineParaItens().catch(() => []),
     todosOsKitsPremio(),
+    bancoNoAr().catch(() => true),
   ]);
   const catalogo = catalogoDeItens();
 
@@ -67,6 +74,24 @@ export default async function EntregarItensPage() {
           </div>
         </section>
 
+        {!noAr ? (
+          // Banco fora por cota: os kits salvos não somem, só não dá para
+          // ler. Enquanto isso, kits guardados no próprio navegador — a
+          // entrega é RCON direto e não precisa do banco.
+          <section className="mt-8 rounded-[var(--radius-card)] border border-amber-500/30 bg-surface p-6">
+            <h2 className="text-lg font-semibold">Kits de prêmio (modo provisório)</h2>
+            <p className="mt-1.5 max-w-3xl text-sm text-muted">
+              O banco do site está fora até <strong>31/10 às 21h</strong>. Os kits
+              que você já tinha criado <strong>não foram apagados</strong> e voltam
+              nesse horário. Até lá, monte os kits aqui: eles ficam salvos só neste
+              navegador e entregam normalmente.
+            </p>
+            <div className="mt-5">
+              <KitsDoNavegador catalogo={catalogo} online={online} />
+            </div>
+          </section>
+        ) : (
+          <>
         {/* --------------------------------------------- montar kit de prêmio */}
         <section className="mt-8 rounded-[var(--radius-card)] border border-line bg-surface p-6">
           <h2 className="text-lg font-semibold">Montar um kit de prêmio novo</h2>
@@ -102,6 +127,8 @@ export default async function EntregarItensPage() {
             </ul>
           )}
         </section>
+          </>
+        )}
       </div>
     </>
   );

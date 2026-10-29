@@ -23,19 +23,19 @@ const SEM_ESTADO: Estado = { ok: false, mensagem: "" };
 const SEM_ENTREGA_ITENS: EstadoEntregaItens = { ok: false, mensagem: "" };
 const SEM_ENTREGA_KIT: EstadoEntregaKit = { ok: false, mensagem: "" };
 
-const botao =
+export const botao =
   "inline-flex items-center justify-center rounded-[var(--radius-control)] bg-gold px-5 py-2.5 font-semibold text-[#14120f] transition-colors hover:bg-gold-hi disabled:cursor-not-allowed disabled:opacity-50";
 
-const botaoFantasma =
+export const botaoFantasma =
   "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50";
 
-const botaoPerigo =
+export const botaoPerigo =
   "inline-flex items-center justify-center rounded-[var(--radius-control)] border border-danger bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-50";
 
-const campo =
+export const campo =
   "w-full rounded-[var(--radius-control)] border border-line bg-bg px-4 py-2.5 outline-none focus:border-gold";
 
-function Aviso({ ok, mensagem }: Estado) {
+export function Aviso({ ok, mensagem }: Estado) {
   if (!mensagem) return null;
   return (
     <p
@@ -57,7 +57,7 @@ function Aviso({ ok, mensagem }: Estado) {
  * O checkbox de "quem recebe", compartilhado pela entrega avulsa e pela
  * entrega de kit — mesma lista, mesmo comportamento.
  */
-function ListaDeJogadores({
+export function ListaDeJogadores({
   online,
   selecionados,
   onAlternar,
@@ -84,6 +84,9 @@ function ListaDeJogadores({
                   className="size-4 shrink-0 accent-[var(--gold)]"
                 />
                 <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                {!p.vinculado && (
+                  <span className="shrink-0 text-[0.65rem] text-muted uppercase">sem vínculo</span>
+                )}
                 <span className="shrink-0 text-xs text-muted">{p.serverName}</span>
               </label>
             </li>

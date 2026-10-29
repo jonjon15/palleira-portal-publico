@@ -36,12 +36,18 @@ async function exigirStaff(): Promise<{ ok: true; discordId: string } | Resultad
 }
 
 export interface JogadorOnlineParaItens {
+  /** Discord de quem vinculou; sem vínculo, vira `uid:<playerId>` — só serve de chave na tela. */
   discordId: string;
   nome: string;
   uid: string;
   serverSlug: string;
   serverName: string;
+  vinculado: boolean;
 }
+
+/** Menção do Discord para quem tem vínculo; o nome do jogo para quem não tem. */
+export const mencao = (a: { discordId: string; nome: string }) =>
+  /^\d+$/.test(a.discordId) ? `<@${a.discordId}>` : a.nome;
 
 /**
  * Quem está no jogo agora, para o multi-select da tela — igual a
@@ -55,6 +61,10 @@ export interface JogadorOnlineParaItens {
  * vinculou no PVE Free e hoje joga no Dominantes, que é justamente para
  * quem o `giveitems` precisa ir. Medido em 20/09/2026: o xNEGANx estava
  * online no Dominantes, com vínculo, e não aparecia na tela.
+ *
+ * Quem não vinculou também aparece: o `giveitems` só precisa do UID, que a
+ * REST já dá. Antes a lista exigia vínculo, e com o banco fora por cota
+ * (29/10/2026) não vinha ninguém — a entrega parava inteira sem precisar.
  */
 export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens[]> {
   const staff = await exigirStaff();
@@ -63,8 +73,7 @@ export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens
   const { sql } = await import("@/lib/db");
   const vinculos = (await sql`
     select discord_id, server_slug, palworld_uid from account_links
-  `) as { discord_id: string; server_slug: string; palworld_uid: string }[];
-  if (vinculos.length === 0) return [];
+  `.catch(() => [])) as { discord_id: string; server_slug: string; palworld_uid: string }[];
 
   const porUid = new Map(vinculos.map((v) => [v.palworld_uid, v]));
 
@@ -75,9 +84,9 @@ export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens
         const online = await getPlayers(server);
         for (const p of online) {
           const vinculo = porUid.get(p.playerId);
-          if (!vinculo) continue;
           achados.push({
-            discordId: vinculo.discord_id,
+            discordId: vinculo?.discord_id ?? `uid:${p.playerId}`,
+            vinculado: !!vinculo,
             nome: p.name,
             // O slug é o do servidor em que ela está AGORA: é para ele que o
             // RCON vai mandar o comando, e é onde o jogo vai achar a pessoa.
@@ -100,8 +109,12 @@ export async function jogadoresOnlineParaItens(): Promise<JogadorOnlineParaItens
   for (const a of achados) if (!unicos.has(a.discordId)) unicos.set(a.discordId, a);
   const lista = [...unicos.values()];
 
-  const nomes = await nomesDe(lista.map((a) => a.discordId)).catch(() => new Map<string, string>());
-  return lista.map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }));
+  const nomes = await nomesDe(lista.filter((a) => a.vinculado).map((a) => a.discordId)).catch(
+    () => new Map<string, string>(),
+  );
+  return lista
+    .map((a) => ({ ...a, nome: nomes.get(a.discordId) ?? a.nome }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
 export interface ItemPedido {

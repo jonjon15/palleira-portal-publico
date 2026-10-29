@@ -7,6 +7,7 @@ Escrito para quem usa o site, não para quem mexe no código: ferramenta interna
 ## 2026-10-29
 
 - **Site em manutenção parcial até 31/10 às 21h.** O banco de dados do site atingiu o limite mensal de uso de novo. Até lá as páginas abrem, mas ranking, cofre, loja, kits e resgates ficam sem dados. Nada foi apagado: tudo volta nesse horário. O servidor do jogo segue normal.
+- **Entregar itens funciona mesmo com o banco fora.** A lista de quem recebe agora mostra todo mundo que está online, inclusive quem não vinculou a conta. Enquanto o banco não volta, dá para montar kits de prêmio provisórios, que ficam salvos no navegador de quem montou. Os kits antigos voltam em 31/10.
 
 ## 2026-10-28
 
